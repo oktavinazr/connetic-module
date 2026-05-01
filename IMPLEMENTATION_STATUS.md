@@ -48,7 +48,7 @@
 ## ⚠️ Yang Perlu Dilengkapi:
 
 ### 1. Data Pertemuan 2, 3, 4
-Pertemuan 2 (IP Address), 3 (IPv4), dan 4 (IPv6) masih menggunakan struktur lama.
+Pertemuan 2 (Mekanisme TCP), 3 (IPv4), dan 4 (IPv6) masih menggunakan struktur lama.
 
 **Yang harus ditambahkan untuk masing-masing pertemuan:**
 ```typescript
