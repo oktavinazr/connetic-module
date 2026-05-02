@@ -147,20 +147,14 @@ export function LandingPage() {
 
       {/* ── BERANDA ─────────────────────────────────────────────────────────── */}
       <section id="home" className="relative flex min-h-[calc(100vh-76px)] scroll-mt-20 items-center overflow-hidden py-16 lg:py-0">
-        {/* Background Accents — Premium Look */}
         <div className="absolute inset-0 bg-[#F0F3FA]" />
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#395886 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
         
-        {/* Decorative Blobs */}
-        <div className="absolute -left-24 top-1/4 h-[500px] w-[500px] rounded-full bg-gradient-to-br from-[#628ECB]/20 to-transparent blur-3xl" />
-        <div className="absolute right-0 top-0 h-[600px] w-[600px] rounded-full bg-gradient-to-bl from-[#10B981]/10 to-transparent blur-3xl" />
-
         <div className={`${desktopContainer} relative`}>
           <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20">
             <div className="space-y-6 animate-in fade-in slide-in-from-left-8 duration-1000">
               {/* Brand Label — Modernized */}
               <div className="space-y-4">
-                <div className="inline-flex items-center gap-2.5 rounded-[1.25rem] bg-gradient-to-r from-[#10B981]/10 to-[#10B981]/5 border border-[#10B981]/20 px-5 py-2 text-sm font-bold text-[#0F8A66] shadow-sm">
+                <div className="inline-flex items-center gap-2.5 rounded-[1.25rem] bg-white border border-[#10B981]/20 px-5 py-2 text-sm font-bold text-[#0F8A66] shadow-sm">
                   <GraduationCap className="h-4 w-4" />
                   Media Pembelajaran Interaktif Berbasis CTL
                 </div>
@@ -178,13 +172,10 @@ export function LandingPage() {
                   </p>
                 </div>
 
-                <div className="h-1.5 w-24 rounded-full bg-gradient-to-r from-[#628ECB] to-transparent" />
+                <div className="h-1.5 w-24 rounded-full bg-[#628ECB]" />
 
                 <p className="max-w-xl text-lg leading-relaxed text-[#395886]/70 font-medium">
-                  Optimalkan pemahaman konsep <span className="text-[#395886] font-bold">TCP </span> dan <span className="text-[#395886] font-bold">IP Address</span> melalui model 7 tahapan CTL yang dirancang khusus untuk meningkatkan <span className="relative inline-block">
-                    <span className="relative z-10 font-bold text-[#395886]">Logical Thinking</span>
-                    <span className="absolute bottom-1 left-0 h-2.5 w-full bg-[#10B981]/15 -rotate-1" />
-                  </span> siswa SMK.
+                  Optimalkan pemahaman konsep <span className="text-[#395886] font-bold">TCP</span> dan <span className="text-[#395886] font-bold">IP Address</span> melalui model 7 tahapan CTL yang dirancang khusus untuk meningkatkan <span className="font-bold text-[#395886]">Logical Thinking</span> siswa SMK.
                 </p>
               </div>
 
@@ -192,9 +183,8 @@ export function LandingPage() {
               <div className="flex flex-wrap items-center gap-4">
                 <Link
                   to="/login"
-                  className="group relative inline-flex items-center gap-3 overflow-hidden rounded-[2rem] bg-[#395886] px-10 py-5 text-base font-black text-white shadow-2xl shadow-[#395886]/30 transition-all hover:bg-[#628ECB] hover:-translate-y-1 active:scale-95"
+                  className="group relative inline-flex items-center gap-3 overflow-hidden rounded-[2rem] bg-[#395886] px-10 py-5 text-base font-black text-white shadow-xl shadow-[#395886]/20 transition-all hover:bg-[#628ECB] hover:-translate-y-1 active:scale-95"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   Mulai Belajar Sekarang
                   <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
@@ -202,17 +192,11 @@ export function LandingPage() {
             </div>
 
             <div className="relative hidden lg:block animate-in fade-in zoom-in-95 duration-1000 delay-200">
-              {/* Main Card — Premium Glassmorphism */}
-              <div className="absolute -left-12 -top-12 h-64 w-64 rounded-full bg-[#628ECB]/10 blur-3xl animate-pulse" />
-              <div className="absolute -bottom-12 -right-12 h-48 w-48 rounded-full bg-[#10B981]/10 blur-2xl animate-pulse" />
-              
-              <div className="relative overflow-hidden rounded-[3.5rem] border border-white/40 bg-white/40 backdrop-blur-xl p-3 shadow-[0_32px_64px_-16px_rgba(57,88,134,0.2)]">
-                <div className="relative overflow-hidden rounded-[3rem] border border-white/60 bg-gradient-to-br from-[#395886] to-[#628ECB] p-10 text-white shadow-inner">
-                  <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 h-64 w-64 rounded-full bg-white/5 blur-2xl" />
-                  
+              <div className="relative overflow-hidden rounded-[3.5rem] border border-[#D5DEEF] bg-white p-3 shadow-xl">
+                <div className="relative overflow-hidden rounded-[3rem] bg-gradient-to-br from-[#395886] to-[#628ECB] p-10 text-white shadow-inner">
                   <div className="relative space-y-8">
                     <div className="flex items-center gap-4">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-white/15 backdrop-blur-md shadow-lg border border-white/20">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-white/20 shadow-lg border border-white/20">
                         <Network className="h-8 w-8 text-white" />
                       </div>
                       <div>
@@ -228,14 +212,14 @@ export function LandingPage() {
                         { num: 3, topic: 'IPv4' },
                         { num: 4, topic: 'IPv6' },
                       ].map((item) => (
-                        <div key={item.num} className="group relative overflow-hidden rounded-2xl bg-white/10 hover:bg-white/20 p-4 transition-all border border-white/10 hover:border-white/30">
+                        <div key={item.num} className="group relative overflow-hidden rounded-2xl bg-white/10 p-4 transition-all border border-white/10 hover:border-white/30">
                           <p className="text-[10px] font-black uppercase tracking-widest text-white/50 group-hover:text-white/70 transition-colors">Modul {item.num}</p>
                           <p className="mt-1 text-sm font-extrabold text-white">{item.topic}</p>
                         </div>
                       ))}
                     </div>
 
-                    <div className="rounded-2xl bg-white/10 p-6 backdrop-blur-md border border-white/10">
+                    <div className="rounded-2xl bg-white/10 p-6 border border-white/10">
                       <div className="mb-3 flex items-center gap-3">
                         <div className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
                         <h3 className="text-sm font-black uppercase tracking-widest text-white/80">Evaluasi Terintegrasi</h3>
@@ -254,7 +238,7 @@ export function LandingPage() {
                   { val: '4', label: 'Modul', color: 'text-[#628ECB]' },
                   { val: '7', label: 'CTL Stages', color: 'text-[#10B981]' },
                 ].map((stat, i) => (
-                  <div key={i} className="flex flex-col items-center rounded-2xl border border-white/60 bg-white/80 p-4 shadow-xl backdrop-blur-md transition-transform hover:-translate-x-1">
+                  <div key={i} className="flex flex-col items-center rounded-2xl border border-[#D5DEEF] bg-white p-4 shadow-xl transition-transform hover:-translate-x-1">
                     <p className={`text-2xl font-black ${stat.color}`}>{stat.val}</p>
                     <p className="text-[9px] font-black uppercase tracking-widest text-[#395886]/50">{stat.label}</p>
                   </div>
@@ -354,7 +338,7 @@ export function LandingPage() {
             <div className="flex flex-col items-center lg:items-start">
               {/* Foto Profil */}
               <div className="relative mb-6 group">
-                <div className="relative h-44 w-44 overflow-hidden rounded-[2.5rem] border-4 border-white bg-[#D5DEEF] shadow-2xl shadow-[#628ECB]/20 transition-all duration-500 group-hover:scale-[1.02] group-hover:shadow-[#628ECB]/30">
+                <div className="relative h-44 w-44 overflow-hidden rounded-[2.5rem] border-4 border-white bg-[#D5DEEF] shadow-lg transition-all duration-500 group-hover:scale-[1.02]">
                   <img
                     src={profileImg}
                     alt="Oktavina Zahra Rahmawati"
@@ -369,17 +353,17 @@ export function LandingPage() {
                     }}
                   />
                   {/* Fallback initials if image fails to load */}
-                  <div className="profile-fallback absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#395886] to-[#628ECB] hidden">
+                  <div className="profile-fallback absolute inset-0 flex items-center justify-center bg-[#395886] hidden">
                     <span className="text-5xl font-black text-white tracking-tighter">OZ</span>
                   </div>
                   {/* Always show if profileImg is not defined or fails immediately */}
                   {!profileImg && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#395886] to-[#628ECB]">
+                    <div className="absolute inset-0 flex items-center justify-center bg-[#395886]">
                       <span className="text-5xl font-black text-white tracking-tighter">OZ</span>
                     </div>
                   )}
                 </div>
-                <div className="absolute -bottom-2 -right-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#10B981] shadow-lg ring-4 ring-white transition-transform duration-500 group-hover:rotate-12">
+                <div className="absolute -bottom-2 -right-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#10B981] shadow-md transition-transform duration-500 group-hover:rotate-12">
                   <GraduationCap className="h-6 w-6 text-white" />
                 </div>
               </div>

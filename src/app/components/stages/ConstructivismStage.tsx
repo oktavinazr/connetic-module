@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   ChevronRight, CheckCircle, XCircle, Lightbulb, HelpCircle, PlayCircle,
   RotateCcw, AlertCircle, Info, BookOpen, GripVertical, PenLine, ArrowRight,
@@ -7,7 +7,7 @@ import { useDrag, useDrop } from 'react-dnd';
 import { getCurrentUser } from '../../utils/auth';
 import { getLessonProgress, saveStageAttempt } from '../../utils/progress';
 
-// ── Types ──────────────────────────────────────────────────────────────────────
+// -- Types ----------------------------------------------------------------------
 
 interface StoryFragment { id: string; text: string; order: number }
 interface AnalogyGroup { id: string; label: string; colorClass: 'blue' | 'green' | 'purple' | 'amber' }
@@ -37,14 +37,14 @@ interface ConstructivismStageProps {
   isCompleted?: boolean;
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// -- Helpers -------------------------------------------------------------------
 
 function getYouTubeId(url: string) {
   const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
   return match && match[2].length === 11 ? match[2] : null;
 }
 
-// ── Essay Box ─────────────────────────────────────────────────────────────────
+// -- Essay Box -----------------------------------------------------------------
 
 function EssayBox({
   prompt, objectiveLabel, submitLabel, onSubmit,
@@ -60,7 +60,7 @@ function EssayBox({
     <div className="mt-5 p-5 rounded-2xl bg-gradient-to-br from-[#628ECB]/8 to-[#395886]/5 border-2 border-[#628ECB]/30">
       <div className="flex items-center gap-2 mb-1">
         <PenLine className="w-4 h-4 text-[#628ECB] shrink-0" />
-        <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Esai Mandiri — {objectiveLabel}</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Esai Mandiri - {objectiveLabel}</p>
       </div>
       <p className="text-sm font-semibold text-[#395886] leading-relaxed mb-3 mt-1">{prompt}</p>
       <textarea
@@ -95,7 +95,7 @@ function EssayBox({
   );
 }
 
-// ── Story Scramble — Slot-Based DnD ───────────────────────────────────────────
+// -- Story Scramble - Slot-Based DnD -------------------------------------------
 
 const DRAG_SCRAMBLE = 'STORY_CARD_DRAG';
 
@@ -159,7 +159,7 @@ function StoryDropSlot({ slotNum, fragment, validated, onDrop, onReturn }: {
                 className="shrink-0 text-[#395886]/30 hover:text-red-400 transition text-sm font-bold leading-none mt-0.5"
                 title="Kembalikan ke pool"
               >
-                ×
+                x
               </button>
             )}
             {isCorrect && <CheckCircle className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" />}
@@ -167,7 +167,7 @@ function StoryDropSlot({ slotNum, fragment, validated, onDrop, onReturn }: {
           </div>
         ) : (
           <p className={`text-[11px] font-medium text-center py-2 transition-colors ${isOver ? 'text-[#628ECB]' : 'text-[#395886]/30'}`}>
-            {isOver ? '↓ Lepaskan di sini' : 'Seret cerita ke sini...'}
+            {isOver ? '(drop)' : 'Seret cerita ke sini...'}
           </p>
         )}
       </div>
@@ -197,7 +197,6 @@ function StoryScramblePhase({
     return arr;
   }, []);
 
-  // slots: slot number (1-based) → fragment id
   const [slots, setSlots] = useState<Record<number, string>>({});
   const [validated, setValidated] = useState(false);
   const [attempts, setAttempts] = useState(0);
@@ -261,7 +260,6 @@ function StoryScramblePhase({
 
   return (
     <div className="max-w-4xl mx-auto space-y-5">
-      {/* Video / Apersepsi */}
       {(videoUrl || apersepsi) && (
         <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm overflow-hidden">
           <div className="flex items-center gap-3 px-5 py-3 bg-[#628ECB]/8 border-b border-[#628ECB]/20">
@@ -294,14 +292,13 @@ function StoryScramblePhase({
         </div>
       )}
 
-      {/* Story Scramble header */}
       <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-5 py-3 bg-[#628ECB]/8 border-b border-[#628ECB]/20">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#628ECB]/15">
             <BookOpen className="w-4 h-4 text-[#628ECB]" />
           </div>
           <div className="flex-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Aktivitas 1 — Story Scramble (X.TCP.1)</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Aktivitas 1 - Story Scramble (X.TCP.1)</p>
             <h3 className="text-sm font-bold text-[#395886]">Susun Cerita Digital Menjadi Urutan Logis</h3>
           </div>
           <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-bold
@@ -316,19 +313,16 @@ function StoryScramblePhase({
             <p className="text-sm text-[#395886]/80 leading-relaxed">{storyScramble.instruction}</p>
           </div>
           <p className="mt-2 text-xs text-[#628ECB] font-semibold">
-            💡 Seret kartu dari panel kanan ke slot bernomor di kiri. Klik × pada kartu yang sudah ditempatkan untuk mengembalikannya.
+            Hint: Seret kartu dari panel kanan ke slot bernomor di kiri. Klik x pada kartu yang sudah ditempatkan untuk mengembalikannya.
           </p>
         </div>
       </div>
 
-      {/* Two-column: slots (left) + pool (right) */}
       <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-5">
         <div className="grid lg:grid-cols-[1fr_280px] gap-5">
-
-          {/* Left: numbered slots */}
           <div className="space-y-2.5">
             <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/50 mb-3">
-              Urutan Cerita (Slot 1–{storyScramble.fragments.length})
+              Urutan Cerita (Slot 1-{storyScramble.fragments.length})
             </p>
             {storyScramble.fragments.map((_, i) => {
               const slotNum = i + 1;
@@ -347,7 +341,6 @@ function StoryScramblePhase({
             })}
           </div>
 
-          {/* Right: pool of story cards */}
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/50 mb-3">
               Kartu Cerita ({pool.length} tersisa)
@@ -358,7 +351,7 @@ function StoryScramblePhase({
               ))}
               {pool.length === 0 && !validated && (
                 <div className="text-center py-6 text-xs text-[#395886]/30 border-2 border-dashed border-[#D5DEEF] rounded-xl">
-                  Semua kartu sudah ditempatkan ✓
+                  Semua kartu sudah ditempatkan
                 </div>
               )}
               {validated && (
@@ -367,15 +360,14 @@ function StoryScramblePhase({
                   {isCorrectOrder
                     ? <><CheckCircle className="inline w-3.5 h-3.5 mr-1" />{storyScramble.successMessage}</>
                     : attempts < 3
-                    ? <><XCircle className="inline w-3.5 h-3.5 mr-1" />Urutan belum tepat — slot merah perlu diperbaiki.</>
-                    : <><Info className="inline w-3.5 h-3.5 mr-1" />Lihat slot yang benar: urutan 1→{storyScramble.fragments.length} sesuai alur logis cerita.</>}
+                    ? <><XCircle className="inline w-3.5 h-3.5 mr-1" />Urutan belum tepat - slot merah perlu diperbaiki.</>
+                    : <><Info className="inline w-3.5 h-3.5 mr-1" />Lihat slot yang benar: urutan 1 ke {storyScramble.fragments.length} sesuai alur logis cerita.</>}
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Progress bar */}
         <div className="mt-5 flex items-center gap-3">
           <div className="flex-1 h-1.5 bg-[#EEF2FF] rounded-full overflow-hidden">
             <div
@@ -391,7 +383,6 @@ function StoryScramblePhase({
           </span>
         </div>
 
-        {/* Action buttons */}
         <div className="mt-4 space-y-3">
           {!validated && (
             <button
@@ -410,7 +401,6 @@ function StoryScramblePhase({
           )}
         </div>
 
-        {/* Show correct answer when failed 3 times */}
         {isTerminal && !isCorrectOrder && (
           <div className="mt-4 p-4 rounded-xl bg-amber-50 border-2 border-amber-200">
             <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 mb-2">Urutan yang Benar:</p>
@@ -425,12 +415,11 @@ function StoryScramblePhase({
           </div>
         )}
 
-        {/* Essay (X.TCP.1) */}
         {showPost && essayPrompt && (
           <EssayBox
             prompt={essayPrompt}
             objectiveLabel="X.TCP.1"
-            submitLabel="Lanjut ke Aktivitas 2 — Process Chain"
+            submitLabel="Lanjut ke Aktivitas 2 - Process Chain"
             onSubmit={(text) => onComplete(text)}
           />
         )}
@@ -447,104 +436,84 @@ function StoryScramblePhase({
   );
 }
 
-// ── Ordered Process Chain (X.TCP.2) ───────────────────────────────────────────
+type BoxItemType = 'courier' | 'tcp';
 
-// ── Sortable Step Card (Used in OrderedProcessChain) ─────────────────────────
+interface BoxItem {
+  id: string;
+  sourceId: string;
+  type: BoxItemType;
+  text: string;
+  correctOrder: number;
+}
 
-function SortableStepCard({
-  item,
-  index,
-  moveItem,
-  validated,
-  isCorrect,
-  hasAnalogy,
-}: {
-  item: AnalogyItem;
-  index: number;
-  moveItem: (from: number, to: number) => void;
-  validated: boolean;
-  isCorrect: boolean;
-  hasAnalogy: boolean;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
+const DRAG_TYPE_BOX = 'TWO_BOX_ITEM';
 
+function BoxDraggableCard({ item }: { item: BoxItem }) {
   const [{ isDragging }, drag] = useDrag({
-    type: 'ANALOGY_ITEM_SORT',
-    item: { index },
-    canDrag: !validated,
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
+    type: DRAG_TYPE_BOX,
+    item: { id: item.id, itemType: item.type },
+    collect: m => ({ isDragging: m.isDragging() }),
   });
-
-  const [, drop] = useDrop({
-    accept: 'ANALOGY_ITEM_SORT',
-    hover(draggedItem: { index: number }) {
-      if (!ref.current) return;
-      const dragIndex = draggedItem.index;
-      const hoverIndex = index;
-      if (dragIndex === hoverIndex) return;
-      moveItem(dragIndex, hoverIndex);
-      draggedItem.index = hoverIndex;
-    },
-  });
-
-  drag(drop(ref));
-
+  const isCourier = item.type === 'courier';
   return (
     <div
-      ref={ref}
-      className={`relative group flex flex-col md:flex-row items-stretch gap-0 md:gap-4 rounded-2xl border-2 transition-all duration-300 overflow-hidden ${
-        isDragging ? 'opacity-30 scale-[0.98]' : 'opacity-100'
-      } ${
-        validated 
-          ? isCorrect 
-            ? 'border-[#10B981] bg-[#ECFDF5]/30' 
-            : 'border-red-300 bg-red-50/30'
-          : 'border-[#D5DEEF] bg-white hover:border-[#628ECB]/40 hover:shadow-md'
-      }`}
+      ref={drag as unknown as React.Ref<HTMLDivElement>}
+      className={`flex items-start gap-2 p-2.5 rounded-xl border-2 text-xs font-medium leading-relaxed select-none transition-all cursor-grab active:cursor-grabbing
+        ${isCourier
+          ? 'border-[#628ECB]/30 bg-[#EEF4FF] text-[#395886] hover:border-[#628ECB]/60'
+          : 'border-[#10B981]/30 bg-[#ECFDF5] text-[#395886] hover:border-[#10B981]/60'}
+        ${isDragging ? 'opacity-30 scale-95' : 'hover:shadow-sm hover:-translate-y-px'}`}
     >
-      <div className={`flex items-center justify-center px-4 py-3 md:py-0 font-black text-sm shrink-0 transition-colors ${
-        validated 
+      <GripVertical className="w-3.5 h-3.5 text-[#395886]/30 shrink-0 mt-0.5" />
+      <span className="flex-1">{item.text}</span>
+    </div>
+  );
+}
+
+function BoxDropSlot({ slotNum, placedItem, validated, isCorrect, onDrop, onReturn, boxType }: {
+  slotNum: number; placedItem?: BoxItem; validated: boolean; isCorrect?: boolean;
+  onDrop: (slot: number, id: string) => void; onReturn: (slot: number) => void;
+  boxType: BoxItemType;
+}) {
+  const isCourier = boxType === 'courier';
+  const [{ isOver, canDrop }, drop] = useDrop({
+    accept: DRAG_TYPE_BOX,
+    canDrop: (d: { id: string; itemType: BoxItemType }) => d.itemType === boxType,
+    drop: (d: { id: string }) => onDrop(slotNum, d.id),
+    collect: m => ({ isOver: m.isOver(), canDrop: m.canDrop() }),
+  });
+  const isActive = isOver && canDrop;
+
+  return (
+    <div className="flex items-stretch gap-2">
+      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black mt-1.5
+        ${validated
           ? isCorrect ? 'bg-[#10B981] text-white' : 'bg-red-400 text-white'
-          : 'bg-gray-100 text-[#395886]/40 group-hover:bg-[#628ECB]/10 group-hover:text-[#628ECB]'
-      }`}>
-        {index + 1}
+          : isCourier ? 'bg-[#628ECB]/15 text-[#628ECB]' : 'bg-[#10B981]/15 text-[#10B981]'}`}>
+        {slotNum}
       </div>
-
-      <div className="flex-1 flex flex-col md:flex-row items-center gap-4 p-4">
-        {!validated && (
-          <div className="hidden md:flex items-center text-[#D5DEEF] group-hover:text-[#628ECB]/40 cursor-grab active:cursor-grabbing">
-            <GripVertical className="w-5 h-5" />
-          </div>
-        )}
-
-        <div className={`flex-1 grid ${hasAnalogy ? 'md:grid-cols-2' : ''} gap-4 w-full`}>
-          {hasAnalogy && (
-            <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/50">Tugas Kurir Fisik</p>
-              <p className="text-[13px] font-bold text-[#395886] leading-relaxed italic">
-                {item.courierAnalogy || "Memproses kiriman barang..."}
-              </p>
-            </div>
-          )}
-
-          <div className={`space-y-1 ${hasAnalogy ? 'border-t md:border-t-0 md:border-l border-[#D5DEEF] pt-3 md:pt-0 md:pl-4' : ''}`}>
-            <p className={`text-[10px] font-black uppercase tracking-widest ${hasAnalogy ? 'text-[#10B981]/60' : 'text-[#628ECB]/50'}`}>Fungsi TCP Jaringan</p>
-            <p className="text-[13px] font-medium text-[#395886]/80 leading-relaxed">
-              {item.text}
-            </p>
-          </div>
-        </div>
-
-        {validated && (
-          <div className="shrink-0 flex items-center justify-center">
-            {isCorrect ? (
-              <CheckCircle className="w-5 h-5 text-[#10B981]" />
-            ) : (
-              <XCircle className="w-5 h-5 text-red-500" />
+      <div
+        ref={drop as unknown as React.Ref<HTMLDivElement>}
+        className={`flex-1 min-h-[52px] rounded-xl border-2 transition-all p-2.5
+          ${isActive ? (isCourier ? 'border-[#628ECB] bg-[#628ECB]/8 shadow-md' : 'border-[#10B981] bg-[#10B981]/8 shadow-md') : ''}
+          ${!placedItem && !isActive ? 'border-dashed border-[#D5DEEF] bg-[#F8FAFF]' : ''}
+          ${placedItem && !validated && !isActive ? (isCourier ? 'border-[#628ECB]/40 bg-[#EEF4FF]' : 'border-[#10B981]/40 bg-[#ECFDF5]') : ''}
+          ${validated && isCorrect ? 'border-[#10B981] bg-[#10B981]/8' : ''}
+          ${validated && !isCorrect && placedItem ? 'border-red-300 bg-red-50' : ''}`}
+      >
+        {placedItem ? (
+          <div className="flex items-start gap-2">
+            <p className="flex-1 text-xs text-[#395886] leading-relaxed">{placedItem.text}</p>
+            {!validated && (
+              <button onClick={() => onReturn(slotNum)} className="shrink-0 text-[#395886]/30 hover:text-red-400 transition text-sm font-bold leading-none mt-0.5">x</button>
             )}
+            {validated && isCorrect && <CheckCircle className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" />}
+            {validated && !isCorrect && <XCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />}
           </div>
+        ) : (
+          <p className={`text-[10px] font-medium text-center py-2.5 transition-colors ${isActive ? (isCourier ? 'text-[#628ECB]' : 'text-[#10B981]') : 'text-[#395886]/30'}`}>
+            {isActive ? '(drop)' : `Slot ${slotNum}`}
+          </p>
         )}
       </div>
     </div>
@@ -552,21 +521,25 @@ function SortableStepCard({
 }
 
 function OrderedProcessChain({ items, essayPrompt, lessonId, stageIndex, onComplete }: {
-  items: AnalogyItem[];
-  essayPrompt?: string;
-  lessonId: string;
-  stageIndex: number;
+  items: AnalogyItem[]; essayPrompt?: string; lessonId: string; stageIndex: number;
   onComplete: (essayText?: string) => void;
 }) {
   const user = getCurrentUser();
-  const [ordered, setOrdered] = useState<AnalogyItem[]>(() => {
-    const arr = [...items];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
+
+  const allBoxItems = useMemo<BoxItem[]>(() => {
+    const result: BoxItem[] = [];
+    for (const item of items) {
+      result.push({ id: `courier-${item.id}`, sourceId: item.id, type: 'courier', text: item.courierAnalogy || '...', correctOrder: item.correctOrder ?? 0 });
+      result.push({ id: `tcp-${item.id}`, sourceId: item.id, type: 'tcp', text: item.text, correctOrder: item.correctOrder ?? 0 });
     }
-    return arr;
-  });
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+  }, []);
+
+  const [slots, setSlots] = useState<Record<string, string>>({});
   const [validated, setValidated] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [showEssay, setShowEssay] = useState(false);
@@ -577,41 +550,50 @@ function OrderedProcessChain({ items, essayPrompt, lessonId, stageIndex, onCompl
     );
   }, []);
 
-  const moveItem = (fromIndex: number, toIndex: number) => {
+  const placedIds = new Set(Object.values(slots));
+  const pool = allBoxItems.filter(it => !placedIds.has(it.id));
+  const allPlaced = placedIds.size === allBoxItems.length;
+
+  const getItemById = (id: string) => allBoxItems.find(it => it.id === id);
+
+  const handleDrop = (boxType: BoxItemType, slotNum: number, itemId: string) => {
     if (validated) return;
-    const arr = [...ordered];
-    const [movedItem] = arr.splice(fromIndex, 1);
-    arr.splice(toIndex, 0, movedItem);
-    setOrdered(arr);
+    setSlots(prev => {
+      const next = { ...prev };
+      Object.keys(next).forEach(k => { if (next[k] === itemId) delete next[k]; });
+      next[`${boxType}-${slotNum}`] = itemId;
+      return next;
+    });
   };
 
-  const isCorrectOrder = ordered.every((item, idx) => item.correctOrder === idx + 1);
-  const hasAnalogy = items.some(it => it.courierAnalogy);
+  const handleReturn = (boxType: BoxItemType, slotNum: number) => {
+    if (validated) return;
+    setSlots(prev => { const next = { ...prev }; delete next[`${boxType}-${slotNum}`]; return next; });
+  };
+
+  const isCorrectOrder = allPlaced && allBoxItems.every(item => slots[`${item.type}-${item.correctOrder}`] === item.id);
 
   const handleValidate = async () => {
     const ok = isCorrectOrder;
     const newA = await saveStageAttempt(user!.id, lessonId, stageIndex, ok, `stage_${stageIndex}_analogy`);
     setAttempts(newA);
     setValidated(true);
-    if (ok || newA >= 3) setShowEssay(true);
+    if (isCorrectOrder || newA >= 3) setShowEssay(true);
   };
 
-  const handleRetry = () => {
-    setValidated(false);
-  };
-
+  const handleRetry = () => setValidated(false);
   const isTerminal = validated && (isCorrectOrder || attempts >= 3);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-5">
+    <div className="max-w-5xl mx-auto space-y-5">
       <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-5 py-3 bg-[#628ECB]/8 border-b border-[#628ECB]/20">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#628ECB]/15">
             <BookOpen className="w-4 h-4 text-[#628ECB]" />
           </div>
           <div className="flex-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Aktivitas 2 — Analogy Sorting (X.TCP.2)</p>
-            <h3 className="text-sm font-bold text-[#395886]">Urutkan Proses: Kurir vs TCP</h3>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Aktivitas 2 - Analogy Sorting (X.TCP.2)</p>
+            <h3 className="text-sm font-bold text-[#395886]">Urutkan: Tugas Kurir & Fungsi TCP</h3>
           </div>
           <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-bold
             ${attempts >= 3 ? 'border-red-200 bg-red-50 text-red-500' : 'border-[#628ECB]/20 bg-white text-[#628ECB]'}`}>
@@ -622,40 +604,85 @@ function OrderedProcessChain({ items, essayPrompt, lessonId, stageIndex, onCompl
         <div className="px-5 py-4 bg-gradient-to-br from-[#628ECB]/5 to-transparent">
           <div className="flex items-start gap-3">
             <Lightbulb className="w-4 h-4 text-[#628ECB] mt-0.5 shrink-0" />
-            <p className="text-sm text-[#395886]/80 leading-relaxed font-medium">
-              Susun kartu di bawah agar tugas kurir fisik berpasangan dengan fungsi TCP yang tepat dalam urutan logis yang benar. 
-              Seret kartu untuk mengatur urutan (1-6).
+            <p className="text-sm text-[#395886]/80 leading-relaxed">
+              Seret setiap kartu ke kotak yang sesuai pada nomor slot yang tepat (1-6).
+              Kartu <span className="font-bold text-[#628ECB]">biru</span> = tugas kurir, kartu <span className="font-bold text-[#10B981]">hijau</span> = fungsi TCP.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="space-y-3">
-        {ordered.map((item, index) => (
-          <SortableStepCard
-            key={item.id}
-            item={item}
-            index={index}
-            moveItem={moveItem}
-            validated={validated}
-            isCorrect={item.correctOrder === index + 1}
-            hasAnalogy={hasAnalogy}
-          />
-        ))}
+      {pool.length > 0 && (
+        <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-5">
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/50 mb-3">Kartu Tersedia ({pool.length})</p>
+          <div className="grid sm:grid-cols-2 gap-2">
+            {pool.map(item => <BoxDraggableCard key={item.id} item={item} />)}
+          </div>
+        </div>
+      )}
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-2.5 px-5 py-3 bg-[#628ECB] text-white">
+            <GripVertical className="w-4 h-4 opacity-80" />
+            <h4 className="text-sm font-bold tracking-widest uppercase">Kurir</h4>
+          </div>
+          <div className="p-4 space-y-2">
+            {Array.from({ length: items.length }, (_, i) => {
+              const slotNum = i + 1;
+              const placedId = slots[`courier-${slotNum}`];
+              const placedItem = placedId ? getItemById(placedId) : undefined;
+              const correct = validated && placedItem?.correctOrder === slotNum;
+              return (
+                <BoxDropSlot key={slotNum} slotNum={slotNum} placedItem={placedItem}
+                  validated={validated} isCorrect={validated ? correct : undefined}
+                  onDrop={(s, id) => handleDrop('courier', s, id)}
+                  onReturn={s => handleReturn('courier', s)} boxType="courier" />
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border-2 border-[#10B981]/20 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-2.5 px-5 py-3 bg-[#10B981] text-white">
+            <BookOpen className="w-4 h-4 opacity-80" />
+            <h4 className="text-sm font-bold tracking-widest uppercase">TCP</h4>
+          </div>
+          <div className="p-4 space-y-2">
+            {Array.from({ length: items.length }, (_, i) => {
+              const slotNum = i + 1;
+              const placedId = slots[`tcp-${slotNum}`];
+              const placedItem = placedId ? getItemById(placedId) : undefined;
+              const correct = validated && placedItem?.correctOrder === slotNum;
+              return (
+                <BoxDropSlot key={slotNum} slotNum={slotNum} placedItem={placedItem}
+                  validated={validated} isCorrect={validated ? correct : undefined}
+                  onDrop={(s, id) => handleDrop('tcp', s, id)}
+                  onReturn={s => handleReturn('tcp', s)} boxType="tcp" />
+              );
+            })}
+          </div>
+        </div>
       </div>
 
-      <div className="mt-4 space-y-3">
+      <div className="flex items-center gap-3">
+        <div className="flex-1 h-1.5 bg-[#EEF2FF] rounded-full overflow-hidden">
+          <div className="h-1.5 rounded-full transition-all duration-500"
+            style={{ width: `${(placedIds.size / allBoxItems.length) * 100}%`, background: allPlaced ? 'linear-gradient(90deg,#10B981,#059669)' : 'linear-gradient(90deg,#628ECB,#395886)' }} />
+        </div>
+        <span className={`text-[10px] font-bold shrink-0 ${allPlaced ? 'text-[#10B981]' : 'text-[#395886]/50'}`}>{placedIds.size}/{allBoxItems.length}</span>
+      </div>
+
+      <div className="space-y-3">
         {!validated && (
-          <button
-            onClick={handleValidate}
-            className="w-full py-3 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm transition-all"
-          >
-            Periksa Urutan & Pasangan
+          <button onClick={handleValidate} disabled={!allPlaced}
+            className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${allPlaced ? 'bg-[#628ECB] text-white hover:bg-[#395886] shadow-sm' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}>
+            {allPlaced ? 'Periksa Jawaban' : `Tempatkan ${allBoxItems.length - placedIds.size} kartu lagi...`}
           </button>
         )}
         {validated && !isCorrectOrder && attempts < 3 && (
           <button onClick={handleRetry} className="w-full py-2.5 rounded-xl font-bold text-sm bg-red-50 text-red-600 border-2 border-red-200 hover:bg-red-100 flex items-center justify-center gap-2">
-            <RotateCcw className="w-4 h-4" /> Perbaiki Urutan
+            <RotateCcw className="w-4 h-4" /> Perbaiki Jawaban
           </button>
         )}
       </div>
@@ -664,49 +691,48 @@ function OrderedProcessChain({ items, essayPrompt, lessonId, stageIndex, onCompl
         <div className={`p-4 rounded-xl border-2 ${isCorrectOrder ? 'bg-[#ECFDF5] border-[#10B981]/30 text-[#065F46]' : attempts < 3 ? 'bg-red-50 border-red-200 text-red-700' : 'bg-amber-50 border-amber-200 text-amber-800'}`}>
           <div className="flex items-start gap-3">
             {isCorrectOrder ? <CheckCircle className="w-5 h-5 shrink-0 mt-0.5" /> : attempts < 3 ? <XCircle className="w-5 h-5 shrink-0 mt-0.5" /> : <Info className="w-5 h-5 shrink-0 mt-0.5" />}
-            <div>
-              <p className="text-sm font-bold">
-                {isCorrectOrder
-                  ? 'Luar biasa! Kamu memahami alur TCP dengan sangat baik.'
-                  : attempts < 3
-                  ? `${ordered.filter((it, idx) => it.correctOrder === idx + 1).length}/${items.length} posisi benar. Coba lagi!`
-                  : 'Kamu telah mencoba 3 kali. Pelajari urutan yang benar di bawah.'}
-              </p>
-            </div>
+            <p className="text-sm font-bold">
+              {isCorrectOrder ? 'Luar biasa! Semua kartu berada di kotak dan slot yang tepat.'
+                : attempts < 3 ? `Masih ada yang salah posisi. Sisa ${3 - attempts} percobaan.`
+                : 'Coba perhatikan kunci jawaban di bawah untuk memahami urutan yang benar.'}
+            </p>
           </div>
         </div>
       )}
 
       {isTerminal && !isCorrectOrder && (
-        <div className="mt-4 p-4 rounded-xl bg-amber-50 border-2 border-amber-200 shadow-sm">
+        <div className="p-4 rounded-xl bg-amber-50 border-2 border-amber-200 shadow-sm">
           <h4 className="text-xs font-black uppercase tracking-widest text-amber-600 mb-3 flex items-center gap-2">
-            <Lightbulb className="w-4 h-4" /> Kunci Urutan yang Benar
+            <Lightbulb className="w-4 h-4" /> Kunci Jawaban
           </h4>
-          <div className="space-y-2">
-            {[...items].sort((a, b) => (a.correctOrder ?? 0) - (b.correctOrder ?? 0)).map((item, idx) => (
-              <div key={item.id} className="flex items-center gap-3 text-xs font-medium text-[#395886]/80 p-2 rounded-lg bg-white/50">
-                <span className="font-black text-amber-600">{idx + 1}.</span>
-                <span>{item.courierAnalogy || item.text} → {item.text}</span>
-              </div>
-            ))}
+          <div className="grid md:grid-cols-2 gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB] mb-2">Kotak Kurir</p>
+              {[...items].sort((a, b) => (a.correctOrder ?? 0) - (b.correctOrder ?? 0)).map(it => (
+                <div key={it.id} className="flex items-start gap-2 text-xs text-amber-800 p-2 rounded-lg bg-white/50 mb-1.5">
+                  <span className="font-black text-amber-600 shrink-0">{it.correctOrder}.</span>
+                  <span>{it.courierAnalogy}</span>
+                </div>
+              ))}
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981] mb-2">Kotak TCP</p>
+              {[...items].sort((a, b) => (a.correctOrder ?? 0) - (b.correctOrder ?? 0)).map(it => (
+                <div key={it.id} className="flex items-start gap-2 text-xs text-amber-800 p-2 rounded-lg bg-white/50 mb-1.5">
+                  <span className="font-black text-amber-600 shrink-0">{it.correctOrder}.</span>
+                  <span>{it.text}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Essay X.TCP.2 - Inline Reflection */}
       {showEssay && essayPrompt && (
-        <EssayBox
-          prompt={essayPrompt}
-          objectiveLabel="X.TCP.2"
-          submitLabel="Selesaikan & Lanjutkan"
-          onSubmit={(text) => onComplete(text)}
-        />
+        <EssayBox prompt={essayPrompt} objectiveLabel="X.TCP.2" submitLabel="Selesai & Lanjutkan" onSubmit={(text) => onComplete(text)} />
       )}
       {showEssay && !essayPrompt && (
-        <button
-          onClick={() => onComplete(undefined)}
-          className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm transition-all"
-        >
+        <button onClick={() => onComplete(undefined)} className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm">
           Lanjutkan ke Tahap Berikutnya <ChevronRight className="w-4 h-4" />
         </button>
       )}
@@ -714,11 +740,9 @@ function OrderedProcessChain({ items, essayPrompt, lessonId, stageIndex, onCompl
   );
 }
 
-// ── Group Buckets (for non-ordered analogy, other lessons) ────────────────────
-
 const DRAG_TYPE = 'ANALOGY_ITEM';
 
-const colorMap = {
+const analogyColorMap = {
   blue:   { border: 'border-[#628ECB]', bg: 'bg-[#628ECB]/8',  badge: 'bg-[#628ECB] text-white' },
   green:  { border: 'border-[#10B981]', bg: 'bg-[#10B981]/8',  badge: 'bg-[#10B981] text-white' },
   purple: { border: 'border-[#8B5CF6]', bg: 'bg-[#8B5CF6]/8',  badge: 'bg-[#8B5CF6] text-white' },
@@ -751,7 +775,7 @@ function AnalogyChip({ item, placed, validated, isCorrect }: { item: AnalogyItem
 }
 
 function AnalogyBucket({ group, items, validated, onDrop }: { group: AnalogyGroup; items: AnalogyItem[]; validated: boolean; onDrop: (groupId: string, itemId: string) => void }) {
-  const colors = colorMap[group.colorClass];
+  const colors = analogyColorMap[group.colorClass];
   const [{ isOver }, drop] = useDrop({
     accept: DRAG_TYPE,
     drop: (dragged: { id: string }) => onDrop(group.id, dragged.id),
@@ -769,8 +793,6 @@ function AnalogyBucket({ group, items, validated, onDrop }: { group: AnalogyGrou
     </div>
   );
 }
-
-// ── Group Bucket Content (original group-mode, extracted to avoid conditional hooks) ──
 
 function GroupBucketContent({
   groups, items, essayPrompt, lessonId, stageIndex, onComplete,
@@ -835,7 +857,7 @@ function GroupBucketContent({
             <BookOpen className="w-4 h-4 text-[#F59E0B]" />
           </div>
           <div className="flex-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">Aktivitas 2 — Analogy Sorting (X.TCP.2)</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">Aktivitas 2 - Analogy Sorting (X.TCP.2)</p>
             <h3 className="text-sm font-bold text-[#395886]">Kelompokkan: Tugas Kurir vs Fungsi TCP</h3>
           </div>
           <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-bold
@@ -846,7 +868,7 @@ function GroupBucketContent({
         </div>
         <div className="px-5 py-4 bg-gradient-to-br from-[#F59E0B]/5 to-transparent">
           <p className="text-sm text-[#395886]/80 leading-relaxed">
-            Seret setiap kartu ke kelompok yang tepat — apakah ini <strong>tugas kurir fisik</strong> atau <strong>fungsi protokol TCP</strong>?
+            Seret setiap kartu ke kelompok yang tepat - apakah ini <strong>tugas kurir fisik</strong> atau <strong>fungsi protokol TCP</strong>?
           </p>
         </div>
       </div>
@@ -862,7 +884,7 @@ function GroupBucketContent({
         </div>
 
         {unplaced.length > 0 && !showExplanation && (
-          <div className="mb-5 p-4 bg-[#F8FAFF] rounded-xl border-2 border-dashed border-[#D5DEEF]">
+          <div className="mb-5 p-4 bg-[#F8FAFD] rounded-xl border-2 border-dashed border-[#D5DEEF]">
             <p className="text-xs font-bold text-[#395886]/60 mb-3 uppercase tracking-wide">Item tersedia ({unplaced.length})</p>
             <div className="flex flex-wrap gap-2">
               {unplaced.map(item => <AnalogyChip key={item.id} item={item} placed={false} validated={false} />)}
@@ -882,7 +904,7 @@ function GroupBucketContent({
             <div className="grid gap-2 sm:grid-cols-2">
               {items.map(item => {
                 const group = groups.find(g => g.id === item.correctGroup);
-                const colors = colorMap[group?.colorClass || 'blue'];
+                const colors = analogyColorMap[group?.colorClass || 'blue'];
                 return (
                   <div key={item.id} className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-[#D5DEEF] shadow-sm gap-2">
                     <span className="text-xs font-medium text-[#395886] flex-1">{item.text}</span>
@@ -929,8 +951,6 @@ function GroupBucketContent({
   );
 }
 
-// ── Analogy Phase (auto-detects ordered vs group mode) ────────────────────────
-
 function AnalogyContent(props: {
   groups: AnalogyGroup[];
   items: AnalogyItem[];
@@ -957,8 +977,6 @@ function AnalogyPhase(props: {
 }) {
   return <AnalogyContent {...props} />;
 }
-
-// ── Original MCQ Phase ─────────────────────────────────────────────────────────
 
 function MCQPhase({
   apersepsi, question, options, correctAnswer, feedback, videoUrl, lessonId, stageIndex, onComplete,
@@ -1080,8 +1098,6 @@ function MCQPhase({
     </div>
   );
 }
-
-// ── Main export ────────────────────────────────────────────────────────────────
 
 export function ConstructivismStage(props: ConstructivismStageProps) {
   const {

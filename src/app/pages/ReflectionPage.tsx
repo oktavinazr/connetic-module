@@ -74,7 +74,7 @@ export function ReflectionPage() {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Pembuka */}
         <div className="bg-white rounded-3xl border-2 border-[#F59E0B]/20 shadow-sm p-8 flex flex-col items-center text-center mb-8">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#F59E0B] to-[#D97706] flex items-center justify-center text-white mb-6 shadow-lg ring-4 ring-[#F59E0B]/10">
+          <div className="w-20 h-20 rounded-full bg-[#F59E0B] flex items-center justify-center text-white mb-6 shadow-md">
             <User className="w-10 h-10" strokeWidth={2.5} />
           </div>
           <h1 className="text-2xl font-black text-[#395886] mb-3">Refleksi Belajar Mandiri</h1>

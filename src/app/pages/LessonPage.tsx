@@ -5,7 +5,7 @@ import {
   BookOpen,
   CheckCircle,
   ChevronLeft,
-  ChevronDown, // <-- Tambahan icon untuk accordion
+  ChevronDown,
   Eye,
   FileText,
   HelpCircle,
@@ -214,7 +214,7 @@ function InlineReflectionEssay({ prompt, onDone }: { prompt: string; onDone: (es
         />
         <div className="flex items-center justify-between mt-2">
           <span className={`text-[10px] font-bold ${essay.length >= 30 ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
-            {essay.length} karakter{essay.length > 0 && essay.length < 30 ? ` (${30 - essay.length} lagi)` : ''}{essay.length >= 30 ? ' ✓' : ''}
+            {essay.length} karakter{essay.length > 0 && essay.length < 30 ? ` (${30 - essay.length} lagi)` : ''}{essay.length >= 30 ? ' (v)' : ''}
           </span>
           {!submitted ? (
             <button
@@ -267,10 +267,12 @@ export function LessonPage() {
   const [pendingReflection, setPendingReflection] = useState<{ stageAnswer: unknown } | null>(null);
 
   useEffect(() => {
-    getLessonProgress(user!.id, lessonId!).then((value) => {
-      setProgress(value);
-      setProgressLoaded(true);
-    });
+    if (user && lessonId) {
+      getLessonProgress(user.id, lessonId).then((value) => {
+        setProgress(value);
+        setProgressLoaded(true);
+      });
+    }
   }, [lessonId, user]);
 
   const fullyCompleted =
@@ -326,11 +328,9 @@ export function LessonPage() {
     setProgress(updatedProgress);
     setPendingReflection(null);
     window.scrollTo(0, 0);
-    // isStageCompleted will now be true from updatedProgress — the completed view renders automatically
   };
 
   const handleStageClick = (index: number) => {
-    // Dapat diklik jika: pelajaran sudah selesai penuh, ATAU tahap ini sudah pernah diselesaikan, ATAU tahap ini adalah tahap berikutnya yang harus dikerjakan
     const isCompleted = progress.completedStages.includes(index);
     const isNextToComplete = index === 0 || progress.completedStages.includes(index - 1);
     
@@ -420,7 +420,10 @@ export function LessonPage() {
             encapsulationCaseData={currentStage.encapsulationCaseData}
             encapsulationCase={currentStage.encapsulationCase}
             decapsulationCase={currentStage.decapsulationCase}
+            layers5={currentStage.layers5}
             groupActivity={currentStage.groupActivity}
+            moduleId={currentStage.moduleId || ''}
+            groupName={user?.groupName}
           />
         );
       case 'modeling': {
@@ -437,7 +440,9 @@ export function LessonPage() {
           <ModelingStage 
             {...commonProps} 
             modelingSteps={modelingStepsData} 
-            practiceInstructions={currentStage.practiceInstructions}
+            title={currentStage.title}
+            description={currentStage.description}
+            objectiveCode={currentStage.objectiveCode}
           />
         );
       }
@@ -445,10 +450,7 @@ export function LessonPage() {
         return (
           <ReflectionStage
             {...commonProps}
-            essayReflection={currentStage.essayReflection}
-            selfEvaluationCriteria={currentStage.selfEvaluationCriteria}
-            conceptMapNodes={currentStage.conceptMapNodes}
-            conceptMapConnections={currentStage.conceptMapConnections}
+            moduleId={currentStage.moduleId || ''}
           />
         );
       case 'authentic-assessment':
@@ -507,7 +509,6 @@ export function LessonPage() {
         </aside>
 
         <main className="min-w-0 flex-1 flex flex-col gap-6">
-          {/* Mobile Progress Bar */}
           <div className="lg:hidden rounded-2xl border border-[#D5DEEF] bg-white px-4 py-3 shadow-sm">
             <div className="mb-2.5 flex items-center justify-between gap-3">
               <div className="min-w-0">
@@ -550,11 +551,8 @@ export function LessonPage() {
             </div>
           </div>
 
-          {/* STAGE HEADER CARD */}
           <div className={`relative overflow-hidden rounded-2xl border-2 shadow-sm transition-colors duration-500 ${guide.borderColor} ${guide.bgColor}`}>
             <div className="p-5 sm:p-6 space-y-4">
-
-              {/* Header row */}
               <div className="flex items-start gap-4">
                 <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ${guide.accentColor}`}>
                   {guide.icon}
@@ -570,10 +568,7 @@ export function LessonPage() {
                 </div>
               </div>
 
-              {/* Integrated ATP + Guide card */}
               <div className="space-y-3">
-
-                {/* ATP objectives — always visible */}
                 {stageLearningObjectives.length > 0 && (
                   <div className="rounded-xl border border-white/70 bg-white/50 overflow-hidden px-4 pt-3 pb-4">
                     <p className={`text-[9px] font-black uppercase tracking-widest mb-2 ${guide.accentColor}`}>
@@ -592,7 +587,6 @@ export function LessonPage() {
                   </div>
                 )}
 
-                {/* Panduan Aktivitas accordion — with spacing from ATP */}
                 <div className="rounded-xl border border-white/70 bg-white/50 overflow-hidden">
                   <button
                     onClick={() => setGuideVisible(!guideVisible)}
@@ -624,7 +618,6 @@ export function LessonPage() {
                 </div>
               </div>
 
-              {/* ADMIN ONLY */}
               {user?.role === 'admin' && (atpAbcd || logicalThinkingIndicators.length > 0 || facilitatorNotes.length > 0) && (
                 <div className="pt-3 border-t border-white/50">
                   <div className="mb-3 inline-flex items-center gap-2 rounded-lg bg-red-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-red-600">
@@ -677,11 +670,8 @@ export function LessonPage() {
             </div>
           </div>
 
-          {/* STAGE CONTENT — show interactive stage only if not yet completed */}
           {isStageCompleted && pendingReflection === null ? (
-            /* COMPLETED STAGE VIEW */
             <div className="flex flex-col gap-4">
-              {/* Tahap Selesai Banner */}
               <div className="rounded-2xl border-2 border-[#10B981]/30 bg-gradient-to-r from-[#ECFDF5] to-white p-5 flex items-center gap-4 shadow-sm">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#10B981] shadow-md">
                   <CheckCircle className="w-6 h-6 text-white" strokeWidth={2.5} />
@@ -693,7 +683,6 @@ export function LessonPage() {
                 </div>
               </div>
 
-              {/* Saved answer preview */}
               {progress.answers[currentStageIndex] && (
                 <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm overflow-hidden">
                   <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#628ECB]/8 to-transparent border-b border-[#628ECB]/10">
@@ -706,7 +695,6 @@ export function LessonPage() {
                 </div>
               )}
 
-              {/* Reflection if present */}
               {(progress.answers[currentStageIndex] as any)?.reflection && (
                 <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm overflow-hidden">
                   <div className="flex items-center gap-3 px-5 py-3 bg-[#628ECB]/5 border-b border-[#628ECB]/10">
@@ -719,7 +707,6 @@ export function LessonPage() {
                 </div>
               )}
 
-              {/* Single Lanjutkan button */}
               <div className="flex items-center justify-between py-4 border-t border-[#D5DEEF]">
                 <div className="flex items-center gap-2 text-xs text-[#10B981] font-semibold">
                   <CheckCircle className="w-4 h-4" />
@@ -742,12 +729,10 @@ export function LessonPage() {
               </div>
             </div>
           ) : (
-            /* INTERACTIVE STAGE */
             <div className="w-full">
               <DndProvider backend={HTML5Backend}>
                 {renderStage()}
               </DndProvider>
-              {/* Inline reflection essay — appears after activity complete, before stage is saved */}
               {pendingReflection !== null && (
                 <InlineReflectionEssay
                   prompt={stageReflectionPrompts[currentStage.type as StageType]}
@@ -761,18 +746,15 @@ export function LessonPage() {
 
       <Dialog open={showStageSummary} onOpenChange={() => {}}>
         <DialogContent
-          className="overflow-hidden rounded-[2rem] border-none p-0 shadow-2xl sm:max-w-[400px]"
+          className="overflow-hidden rounded-3xl border-none p-0 shadow-2xl sm:max-w-[400px]"
           onInteractOutside={(event) => event.preventDefault()}
         >
-          <div className="relative p-8 text-center">
-            <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#628ECB]/10 to-white" />
-
+          <div className="relative p-8 text-center bg-white">
             <div className="relative mb-6 inline-block">
-              <div className="absolute inset-0 h-20 w-20 rotate-12 rounded-3xl bg-gradient-to-br from-[#395886] to-[#628ECB] opacity-40 blur-lg animate-pulse" />
-              <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-[#395886] to-[#628ECB] shadow-xl">
+              <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[#395886] to-[#628ECB] shadow-lg">
                 <Trophy className="h-10 w-10 text-white" />
               </div>
-              <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full border-4 border-white bg-[#10B981] text-white shadow-lg">
+              <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full border-4 border-white bg-[#10B981] text-white shadow-md">
                 <CheckCircle className="h-4 w-4" strokeWidth={3} />
               </div>
             </div>

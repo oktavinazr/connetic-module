@@ -14,6 +14,8 @@ export function LessonPretestPage() {
   const [user] = useState(getCurrentUser);
   const lesson = lessonId ? lessons[lessonId] : null;
 
+  const [testActive, setTestActive] = useState(false);
+
   const [progress, setProgress] = useState<LessonProgress>({
     lessonId: lessonId ?? '',
     userId: user?.id ?? '',
@@ -34,6 +36,16 @@ export function LessonPretestPage() {
     isLessonUnlocked(user.id, lessonId!).then(setUnlocked);
     loadTestQuestions(`lesson_${lessonId}_pretest`).then(setQuestions);
   }, [user, lesson, lessonId, navigate]);
+
+  useEffect(() => {
+    if (!testActive || progress.pretestCompleted) return;
+    window.history.pushState(null, '', window.location.href);
+    const handlePopState = () => {
+      window.history.pushState(null, '', window.location.href);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [testActive, progress.pretestCompleted]);
 
   if (!lesson) return null;
 
@@ -102,7 +114,8 @@ export function LessonPretestPage() {
       showResults={progress.pretestCompleted}
       existingAnswers={existingAnswers}
       existingScore={progress.pretestScore}
-      duration={10}
+      duration={5}
+      onStart={() => setTestActive(true)}
       isLessonPretest={true}
       lessonFlow={{
         step: 2,

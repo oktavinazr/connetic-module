@@ -2,6 +2,7 @@
 export interface Stage {
   type: 'constructivism' | 'inquiry' | 'questioning' | 'learning-community' | 'modeling' | 'reflection' | 'authentic-assessment';
   title: string;
+  activityNumber?: number;
   description: string;
   objectiveCode?: string;
   objectiveDescription?: string;
@@ -545,8 +546,11 @@ export const lessons: Record<string, Lesson> = {
     topic: 'Konsep Dasar TCP',
     description: 'Memahami dasar-dasar Transmission Control Protocol (TCP), komponen TCP Header, dan proses encapsulation/decapsulation',
     objectives: ['X.TCP.1', 'X.TCP.2', 'X.TCP.3', 'X.TCP.4', 'X.TCP.5', 'X.TCP.6', 'X.TCP.7', 'X.TCP.8', 'X.TCP.9', 'X.TCP.10'],
-    initialCompetencies: ['Dasar jaringan komputer', 'Konsep protokol komunikasi', 'Model lapisan jaringan'],
-    materials: ['Definisi & Fungsi TCP', 'Lapisan TCP/IP', 'Komponen TCP Header', 'Proses Encapsulation & Dekapsulasi'],
+    initialCompetencies: [
+      'Peserta didik telah mengenal penggunaan komputer dan internet dalam kehidupan sehari-hari serta memahami secara umum fungsi jaringan komputer',
+      'Peserta didik juga memiliki kemampuan dasar dalam mengikuti pembelajaran, berpikir logis sederhana, serta menunjukkan sikap disiplin dan tanggung jawab dalam penggunaan teknologi',
+    ],
+    materials: ['Transmission Control Protocol (TCP)', 'Fungsi TCP dalam Protokol TCP/IP', 'Lapisan Protokol TCP/IP', 'Alur Transmisi Data (Encapsulation & Decapsulation)'],
     pretest: {
       questions: [
         {

@@ -1,20 +1,52 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import {
-  BookOpen,
   ChevronLeft,
-  Target,
-  Lightbulb,
-  ArrowRight,
   CheckCircle,
   Lock,
   BookMarked,
+  Network,
+  Layers,
+  ArrowLeftRight,
+  ListChecks,
+  ArrowRight,
 } from 'lucide-react';
 import { getCurrentUser } from '../utils/auth';
 import { isLessonUnlocked, getLessonProgress } from '../utils/progress';
-import { lessons, lessonMainObjectives } from '../data/lessons';
+import { lessons } from '../data/lessons';
 import { LessonFlowSidebar } from '../components/LessonFlowSidebar';
 import { Logo } from '../components/layout/Logo';
+
+const topicCardConfig = [
+  {
+    Icon: Network,
+    gradient: 'from-[#628ECB] to-[#395886]',
+    border: 'border-[#628ECB]/20',
+    text: 'text-[#628ECB]',
+    num: '01',
+  },
+  {
+    Icon: ListChecks,
+    gradient: 'from-[#10B981] to-[#059669]',
+    border: 'border-[#10B981]/20',
+    text: 'text-[#10B981]',
+    num: '02',
+  },
+  {
+    Icon: Layers,
+    gradient: 'from-[#8B5CF6] to-[#7C3AED]',
+    border: 'border-[#8B5CF6]/20',
+    text: 'text-[#8B5CF6]',
+    num: '03',
+  },
+  {
+    Icon: ArrowLeftRight,
+    gradient: 'from-[#EC4899] to-[#DB2777]',
+    border: 'border-[#EC4899]/20',
+    text: 'text-[#EC4899]',
+    num: '04',
+  },
+];
 
 export function LessonIntroPage() {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -47,19 +79,14 @@ export function LessonIntroPage() {
 
   if (!lesson) return null;
 
-  // Header bersama
   const header = (
     <header className="sticky top-0 z-50 w-full border-b border-[#C8D8F0] bg-white/95 shadow-md backdrop-blur-md transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex min-h-[76px] items-center justify-between gap-6">
           <div className="flex min-w-0 items-center gap-4">
             <Link to="/dashboard" className="flex items-center gap-3">
-              <div className="hidden sm:block min-w-0">
-                <Logo />
-              </div>
-              <div className="sm:hidden">
-                <Logo size="sm" />
-              </div>
+              <div className="hidden sm:block min-w-0"><Logo /></div>
+              <div className="sm:hidden"><Logo size="sm" /></div>
             </Link>
             <div className="h-8 w-px bg-[#D5DEEF] hidden sm:block" />
             <span className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-[#628ECB]/10 px-3 py-1 text-xs font-bold text-[#628ECB] uppercase tracking-widest border border-[#628ECB]/20">
@@ -83,7 +110,7 @@ export function LessonIntroPage() {
       <div className="min-h-screen bg-[#F0F3FA]">
         {header}
         <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="bg-white rounded-[2rem] shadow-lg p-8 text-center border border-[#D5DEEF]">
+          <div className="bg-white rounded-2xl shadow-lg p-8 text-center border border-[#D5DEEF]">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 mx-auto mb-6">
               <Lock className="w-10 h-10 text-gray-400" />
             </div>
@@ -104,12 +131,11 @@ export function LessonIntroPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F0F3FA]">
+    <div className="min-h-screen bg-[#F8FAFD]">
       {header}
 
-      <div className="max-w-7xl mx-auto lg:flex lg:items-start lg:gap-6 px-4 sm:px-6 lg:px-8 py-6">
-        {/* Sidebar (Hanya Desktop) */}
-        <aside className="hidden lg:block lg:w-64 lg:shrink-0 lg:sticky lg:top-[92px]">
+      <div className="max-w-7xl mx-auto lg:flex lg:items-start lg:gap-8 px-4 sm:px-6 lg:px-8 py-8">
+        <aside className="hidden lg:block lg:w-64 lg:shrink-0 lg:sticky lg:top-[100px]">
           <LessonFlowSidebar
             lesson={lesson}
             lessonId={lessonId!}
@@ -119,85 +145,101 @@ export function LessonIntroPage() {
           />
         </aside>
 
-        {/* Konten utama */}
         <main className="flex-1 min-w-0">
-          {/* Mobile: strip identitas pertemuan */}
-          <div className="lg:hidden mb-4 bg-gradient-to-r from-[#395886] to-[#628ECB] rounded-2xl px-4 py-3">
-            <p className="text-white/60 text-[10px] font-black uppercase tracking-widest">{lesson.title}</p>
-            <p className="text-sm font-bold text-white">{lesson.topic}</p>
+          {/* Mobile Header */}
+          <div className="lg:hidden mb-6 bg-gradient-to-br from-[#395886] to-[#628ECB] rounded-2xl px-5 py-4 shadow-lg shadow-[#628ECB]/20">
+            <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.2em] mb-1">{lesson.title}</p>
+            <p className="text-base font-black text-white leading-tight tracking-tight">{lesson.topic}</p>
           </div>
 
-          <div className="space-y-4">
-            {/* Tujuan Pembelajaran Utama */}
-            <div className="bg-white rounded-[2rem] border border-[#D5DEEF] shadow-sm overflow-hidden">
-              <div className="flex items-center gap-3 border-b border-[#628ECB]/10 bg-[#628ECB]/5 px-6 py-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-sm">
-                  <Target className="h-4 w-4 text-[#628ECB]" />
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
+
+            {/* Pendahuluan Banner */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-[#395886] to-[#628ECB] rounded-[2rem] px-8 py-7 text-white shadow-xl shadow-[#628ECB]/20">
+              <div className="relative z-10">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md shadow-lg ring-1 ring-white/30">
+                    <BookMarked className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60 mb-1">Eksplorasi Pembelajaran</p>
+                    <h2 className="text-xl font-black tracking-tight">Pendahuluan — {lesson.topic}</h2>
+                  </div>
                 </div>
-                <h2 className="text-base font-bold text-[#395886]">Tujuan Pembelajaran Utama</h2>
-              </div>
-              <div className="p-6">
-                <p className="text-sm font-medium leading-relaxed text-[#395886]/80">
-                  {lessonMainObjectives[lesson.id] ?? lesson.description}
+                <p className="text-sm font-medium text-white/80 leading-relaxed max-w-2xl">
+                  Selamat datang di pertemuan ini! Di bawah ini adalah ringkasan materi yang akan Anda eksplorasi. Pastikan untuk meninjau kompetensi awal sebelum memulai Pre-Test untuk hasil maksimal.
                 </p>
               </div>
             </div>
 
-            {/* Materi yang Akan Dipelajari */}
+            {/* 4 Interactive Topic Cards */}
             {lesson.materials && lesson.materials.length > 0 && (
-              <div className="bg-white rounded-[2rem] border border-[#D5DEEF] shadow-sm overflow-hidden">
-                <div className="flex items-center gap-3 border-b border-[#EC4899]/10 bg-[#EC4899]/5 px-6 py-4">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-sm">
-                    <BookMarked className="h-4 w-4 text-[#EC4899]" />
-                  </div>
-                  <h2 className="text-base font-bold text-[#395886]">Materi yang Akan Dipelajari</h2>
-                </div>
-                <div className="p-6">
-                  <ul className="space-y-3">
-                    {lesson.materials.map((mat, i) => (
-                      <li key={i} className="flex items-start gap-3">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#EC4899]/10 text-[10px] font-bold text-[#EC4899] mt-0.5">
-                          {i + 1}
-                        </span>
-                        <span className="text-sm font-medium text-[#395886]/80 leading-relaxed">{mat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {lesson.materials.map((mat, i) => {
+                  const cfg = topicCardConfig[i % topicCardConfig.length];
+                  const { Icon, gradient, border, text, num } = cfg;
+                  return (
+                    <div
+                      key={i}
+                      className={`bg-white rounded-[1.5rem] border-2 ${border} shadow-sm overflow-hidden hover:-translate-y-1 hover:shadow-xl hover:border-[#628ECB]/30 transition-all duration-300 group`}
+                    >
+                      <div className="flex items-center gap-5 p-6">
+                        <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.2rem] bg-gradient-to-br ${gradient} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                          <Icon className="h-7 w-7 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${text} mb-1.5`}>
+                            Materi {num}
+                          </p>
+                          <p className="text-[15px] font-black text-[#395886] leading-snug tracking-tight">{mat}</p>
+                        </div>
+                      </div>
+                      <div className={`h-1.5 w-full bg-gradient-to-r ${gradient} opacity-20 group-hover:opacity-100 transition-opacity duration-300`} />
+                    </div>
+                  );
+                })}
               </div>
             )}
 
-            {/* Kompetensi Awal */}
-            <div className="bg-white rounded-[2rem] border border-[#D5DEEF] shadow-sm overflow-hidden">
-              <div className="flex items-center gap-3 border-b border-[#10B981]/10 bg-[#10B981]/5 px-6 py-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-sm">
-                  <Lightbulb className="h-4 w-4 text-[#10B981]" />
+            {/* Kompetensi Awal - Redesigned */}
+            <div className="bg-white rounded-[2rem] border-2 border-[#D5DEEF] shadow-sm overflow-hidden">
+              <div className="flex items-center gap-4 border-b-2 border-[#D5DEEF]/60 bg-[#F8FAFD] px-8 py-5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-md border border-[#D5DEEF]/40">
+                  <CheckCircle className="h-5 w-5 text-[#10B981]" />
                 </div>
-                <h2 className="text-base font-bold text-[#395886]">Kompetensi Awal</h2>
+                <div>
+                  <h2 className="text-base font-black text-[#395886] tracking-tight">Kompetensi Awal</h2>
+                  <p className="text-[10px] font-bold text-[#395886]/40 uppercase tracking-widest mt-0.5">Syarat Minimum Pembelajaran</p>
+                </div>
               </div>
-              <div className="p-6">
-                <div className="grid gap-3 sm:grid-cols-3">
+              <div className="p-8">
+                <div className="grid gap-4 sm:grid-cols-1">
                   {lesson.initialCompetencies.map((comp, i) => (
-                    <div key={i} className="flex items-start gap-3 p-3 rounded-2xl bg-[#F0FDF4] border border-[#DCFCE7] transition-all hover:border-[#10B981]/30 hover:shadow-sm">
-                      <CheckCircle className="h-5 w-5 shrink-0 text-[#10B981]" />
-                      <span className="text-xs font-medium text-[#395886]/80 leading-snug">{comp}</span>
+                    <div key={i} className="flex items-center gap-5 p-5 rounded-2xl bg-[#F0FDF4]/50 border-2 border-[#10B981]/10 transition-all hover:bg-[#F0FDF4] hover:border-[#10B981]/30 group">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#10B981] shadow-sm border border-[#10B981]/20 group-hover:scale-110 transition-transform">
+                        <CheckCircle className="h-5 w-5" />
+                      </div>
+                      <span className="text-sm font-bold text-[#395886]/80 leading-relaxed">{comp}</span>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* Tombol Aksi */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white rounded-2xl border border-[#D5DEEF] shadow-sm px-5 py-4">
-              <p className="text-sm text-[#395886]/60 font-medium text-center sm:text-left">
-                Siap memulai? Kerjakan pre-test untuk mengukur pemahaman awal Anda.
-              </p>
+            {/* Action Section - Polished */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 bg-gradient-to-r from-white to-[#F8FAFD] rounded-[2rem] border-2 border-[#D5DEEF] shadow-lg px-8 py-6">
+              <div className="flex-1 min-w-0 text-center sm:text-left">
+                <h3 className="text-base font-black text-[#395886] mb-1">Siap Memulai Tantangan?</h3>
+                <p className="text-[13px] text-[#395886]/60 font-bold">
+                  Kerjakan Pre-Test sekarang untuk menguji pemahaman awal Anda.
+                </p>
+              </div>
               <Link
                 to={`/lesson-pretest/${lessonId}`}
-                className="shrink-0 inline-flex items-center gap-2 bg-[#628ECB] text-white px-6 py-2.5 rounded-xl hover:bg-[#395886] transition-all font-bold text-sm shadow-md active:scale-95"
+                className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-3 bg-[#628ECB] text-white px-8 py-4 rounded-[1.2rem] hover:bg-[#395886] hover:shadow-xl hover:shadow-[#395886]/20 transition-all font-black text-sm shadow-lg active:scale-95 group"
               >
                 Mulai Pre-Test
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           </div>

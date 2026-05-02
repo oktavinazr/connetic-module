@@ -370,24 +370,24 @@ export const lesson1Stages: Stage[] = [
       id: 'X.TCP.6',
       title: 'Aktivitas X.TCP.6: Enkapsulasi (Sender Side)',
       concept: 'Enkapsulasi adalah proses "pembungkusan" data dari lapisan atas ke bawah. Bayangkan seperti mengirim kado: kamu membungkus barang (Data), memasukkannya ke kotak (Segment/Packet), lalu memberi label alamat (Frame/Bits) agar siap dikirim.',
-      scenario: 'Alya sedang mengirim email tugas kepada gurunya. Saat ia menekan tombol "Kirim", data email tersebut harus melewati proses enkapsulasi agar tidak rusak atau salah alamat di perjalanan.',
-      question: 'Manakah logika urutan pembungkusan yang menurutmu paling aman agar email Alya sampai dengan utuh?',
+      scenario: 'Bayangkan Alya akan mengirim sebuah paket kado pecah belah melalui jasa ekspedisi. Sebelum paket diserahkan ke kurir, ada beberapa lapisan perlindungan yang harus ditambahkan agar isi kado selamat sampai tujuan.',
+      question: 'Manakah urutan penanganan paket yang paling logis agar kado Alya tidak rusak dan sampai ke alamat yang tepat?',
       options: [
-        { id: 'e_opt1', text: 'Membungkus data dari lapisan aplikasi turun satu per satu (L5 → L1) agar setiap lapisan memiliki identitas lengkap.', logic: 'Menjamin keruntutan protokol standar.' },
-        { id: 'e_opt2', text: 'Memberikan alamat rute IP terlebih dahulu di awal agar data langsung tahu jalannya, baru kemudian menentukan aplikasi pengirimnya.', logic: 'Memprioritaskan kecepatan penentuan jalur.' },
-        { id: 'e_opt3', text: 'Memecah data menjadi bagian-bagian kecil (segmentasi) terlebih dahulu sebelum menambahkan identitas lainnya.', logic: 'Memprioritaskan efisiensi penanganan data besar.' }
+        { id: 'e_opt1', text: 'Membungkus kado dengan bubble wrap, memasukkannya ke kardus, lalu menempelkan label alamat pengiriman.', logic: 'Analogi Enkapsulasi: Data (Kado) dibungkus Header Transport (Bubble Wrap), Header Network (Kardus), dan Header Data Link (Label).' },
+        { id: 'e_opt2', text: 'Menempelkan label alamat langsung pada kado, baru kemudian membungkusnya dengan kardus tebal.', logic: 'Analogi ini kurang tepat karena label alamat (Data Link) biasanya berada di lapisan paling luar setelah pembungkusan selesai.' },
+        { id: 'e_opt3', text: 'Menyiapkan kardus kosong yang sudah dilabeli, baru kemudian mencari kado yang ingin dikirim.', logic: 'Analogi ini tidak efisien karena proses dimulai dari pembungkus luar sebelum ada isi data yang jelas.' }
       ]
     },
     decapsulationCase: {
       id: 'X.TCP.7',
       title: 'Aktivitas X.TCP.7: Dekapsulasi (Receiver Side)',
       concept: 'Dekapsulasi adalah proses sebaliknya, yaitu "membuka bungkus" kado dari lapisan terbawah ke atas. Komputer penerima menerima sinyal fisik, membuka kotak luar, memverifikasi alamat, hingga akhirnya menampilkan isi kado asli ke aplikasi.',
-      scenario: 'Komputer tujuan menerima kiriman data email Alya dalam bentuk bit-bit listrik. Sistem harus melakukan dekapsulasi untuk menampilkan kembali isi email tersebut di layar monitor.',
-      question: 'Bagaimana komputer penerima sebaiknya membuka bungkus data agar pesan Alya terbaca dengan benar?',
+      scenario: 'Paket kado Alya telah sampai di rumah gurunya. Untuk mendapatkan isi kado tersebut, sang guru harus melakukan serangkaian tindakan pembukaan pembungkus secara berurutan.',
+      question: 'Bagaimana langkah pembukaan paket yang paling benar agar isi kado dapat diambil dengan aman?',
       options: [
-        { id: 'd_opt1', text: 'Membuka semua bungkus sekaligus di awal agar aplikasi bisa langsung menampilkan data secepat mungkin.', logic: 'Memprioritaskan kecepatan penyajian data.' },
-        { id: 'd_opt2', text: 'Memverifikasi dan melepas bungkus satu per satu dari lapisan terbawah naik ke atas (L1 → L5) untuk akurasi alamat.', logic: 'Menjamin validasi data di setiap tahap.' },
-        { id: 'd_opt3', text: 'Menunggu semua potongan paket terkumpul lengkap terlebih dahulu di memori, baru kemudian membukanya dari lapisan atas.', logic: 'Menjamin kelengkapan data sebelum diproses.' }
+        { id: 'd_opt1', text: 'Memeriksa label alamat, membuka kardus luar, lalu melepas bubble wrap untuk mengambil kado.', logic: 'Analogi Dekapsulasi: Memeriksa Header Data Link (Label), Header Network (Kardus), Header Transport (Bubble Wrap), hingga mendapatkan Data (Kado).' },
+        { id: 'd_opt2', text: 'Langsung merobek kardus tanpa melihat label alamat terlebih dahulu.', logic: 'Analogi ini berisiko karena validasi alamat fisik (Data Link) harus dilakukan sebelum memproses isi paket.' },
+        { id: 'd_opt3', text: 'Menunggu semua kado dari murid lain terkumpul, baru membuka semua pembungkusnya sekaligus.', logic: 'Analogi ini kurang tepat karena setiap paket harus divalidasi lapisannya secara mandiri saat tiba.' }
       ]
     },
     groupActivity: {
@@ -397,9 +397,10 @@ export const lesson1Stages: Stage[] = [
   },
   {
     type: 'modeling',
-    title: 'Modeling',
+    title: 'Demonstrasi Step-by-Step',
+    activityNumber: 8,
     description:
-      'Siswa mengikuti simulasi langkah demi langkah proses encapsulation, transmission, and decapsulation untuk memahami cara kerja TCP secara utuh.',
+      'Siswa akan mempraktikkan secara langsung proses kerja TCP/IP dari pengirim (PC A) hingga penerima (PC B) melalui alur step-by-step Encapsulation → Transmisi → Decapsulation.',
     objectiveCode: 'X.TCP.8',
     activityGuide: [
       'Ikuti urutan simulasi dari Application Layer sampai data diterima kembali.',
@@ -436,76 +437,67 @@ export const lesson1Stages: Stage[] = [
     },
     modelingSteps: [
       {
-        id: 'mw1',
-        type: 'example',
-        title: 'Step 1 - Application Layer membuat data',
-        content:
-          'Alya menulis pesan dan menyiapkan lampiran tugas pada aplikasi email. Pada tahap ini data masih berupa isi pesan and file asli tanpa header jaringan.',
-        interactiveAction:
-          'Teruskan data dari aplikasi ke Transport Layer untuk memulai proses pengiriman.',
-      },
-      {
-        id: 'mw2',
-        type: 'example',
-        title: 'Step 2 - Transport Layer menambah TCP Header',
-        content:
-          'TCP memecah data menjadi segmen dan menambahkan informasi seperti Source Port, Destination Port, Sequence Number, dan Checksum.',
-        interactiveAction:
-          'Bungkus data dengan TCP Header agar segmen siap diteruskan ke layer berikutnya.',
-      },
-      {
-        id: 'mw3',
-        type: 'example',
-        title: 'Step 3 - Internet Layer menambah IP Header',
-        content:
-          'Internet Layer menambahkan alamat IP sumber dan tujuan agar paket dapat diarahkan menuju perangkat yang benar.',
-        interactiveAction:
-          'Tambahkan alamat IP sumber dan tujuan pada paket sebelum dikirim ke jaringan.',
-      },
-      {
-        id: 'mw4',
-        type: 'example',
-        title: 'Step 4 - Network Access Layer mengirim frame',
-        content:
-          'Paket dibungkus menjadi frame and diubah menjadi sinyal agar dapat melintas melalui media jaringan.',
-        interactiveAction:
-          'Kirim frame ke media jaringan dan bayangkan paket melintasi router menuju tujuan.',
-      },
-      {
-        id: 'mw5',
+        id: 'step1',
         type: 'practice',
-        title: 'Step 5 - Network Access menerima frame',
-        content:
-          'Di sisi penerima, sinyal diubah kembali menjadi frame digital lalu Frame Header diperiksa.',
-        interactiveAction:
-          'Lepaskan Frame Header agar data bisa naik ke Internet Layer.',
+        title: 'Step 1: Input Data',
+        content: 'Mulailah dengan mengetik pesan yang ingin Anda kirim di Application Layer.',
+        interactiveAction: 'Ketik pesan di kolom input di bawah untuk memulai.',
       },
       {
-        id: 'mw6',
+        id: 'step2',
         type: 'practice',
-        title: 'Step 6 - Internet Layer melepas IP Header',
-        content:
-          'Internet Layer memeriksa alamat tujuan. Setelah cocok, IP Header dilepas agar segmen diteruskan ke TCP.',
-        interactiveAction:
-          'Verifikasi alamat IP and lepaskan IP Header untuk melanjutkan proses decapsulation.',
+        title: 'Step 2: Tambah TCP Header',
+        content: 'TCP perlu memecah data and memberi nomor urut. Seret TCP Header ke pesan Anda.',
+        interactiveAction: 'Seret label "TCP Header" and jatuhkan ke dalam kotak data.',
       },
       {
-        id: 'mw7',
+        id: 'step3',
         type: 'practice',
-        title: 'Step 7 - TCP memverifikasi dan menyusun segmen',
-        content:
-          'TCP memeriksa checksum, mengurutkan segmen berdasarkan sequence number, lalu menyiapkan acknowledgment.',
-        interactiveAction:
-          'Periksa checksum, susun segmen, dan kirim acknowledgment ke pengirim.',
+        title: 'Step 3: Pasang IP Address',
+        content: 'Internet Layer membutuhkan alamat pengenal. Pilih IP Address tujuan yang tepat.',
+        interactiveAction: 'Klik pada IP Address tujuan (PC B) untuk menempelkannya.',
       },
       {
-        id: 'mw8',
+        id: 'step4',
         type: 'practice',
-        title: 'Step 8 - Application menerima data utuh',
-        content:
-          'Setelah semua header dilepas, aplikasi penerima mendapatkan kembali pesan and file yang sama seperti saat dikirim.',
-        interactiveAction:
-          'Buka kembali pesan dan lampiran di aplikasi untuk menutup seluruh alur TCP.',
+        title: 'Step 4: Aktifkan Frame',
+        content: 'Data Link Layer membungkus paket menjadi Frame and menambahkan MAC Address.',
+        interactiveAction: 'Klik tombol "Aktifkan Frame" untuk melengkapi proses Enkapsulasi.',
+      },
+      {
+        id: 'step5',
+        type: 'practice',
+        title: 'Step 5: Listen (CSMA/CD)',
+        content: 'Sebelum mengirim, sistem harus mengecek apakah jalur media sedang kosong.',
+        interactiveAction: 'Tekan "Listen" and tunggu indikator berubah menjadi Hijau (IDLE).',
+      },
+      {
+        id: 'step6',
+        type: 'practice',
+        title: 'Step 6: Kirim Data',
+        content: 'Jalur sudah aman. Sekarang kirimkan frame data melintasi media fisik.',
+        interactiveAction: 'Klik "Kirim" untuk mentransmisikan bit data ke PC B.',
+      },
+      {
+        id: 'step7',
+        type: 'practice',
+        title: 'Step 7: Lepas MAC & IP',
+        content: 'PC B menerima data. Sekarang lepaskan pembungkus lapisan bawah (Data Link & Internet).',
+        interactiveAction: 'Klik pada bagian MAC and IP untuk melepasnya dari data.',
+      },
+      {
+        id: 'step8',
+        type: 'practice',
+        title: 'Step 8: Buka TCP Header',
+        content: 'Data sudah sampai di Transport Layer. Verifikasi integritas data and buka header TCP.',
+        interactiveAction: 'Klik "Buka TCP" untuk mendapatkan kembali data asli.',
+      },
+      {
+        id: 'step9',
+        type: 'practice',
+        title: 'Step 9: Baca Pesan',
+        content: 'Proses Dekapsulasi selesai! Aplikasi penerima kini menampilkan pesan asli Anda.',
+        interactiveAction: 'Amati pesan yang muncul di layar monitor PC B.',
       },
     ],
   },

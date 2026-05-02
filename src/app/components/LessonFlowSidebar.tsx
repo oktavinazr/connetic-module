@@ -11,6 +11,7 @@ interface LessonFlowSidebarProps {
   currentStageIndex?: number;
   fullyCompleted?: boolean;
   onStageClick?: (index: number) => void;
+  isLocked?: boolean;
 }
 
 export function LessonFlowSidebar({
@@ -21,10 +22,11 @@ export function LessonFlowSidebar({
   currentStageIndex,
   fullyCompleted = false,
   onStageClick,
+  isLocked = false,
 }: LessonFlowSidebarProps) {
   type StepItem = { step: number; label: string; completed: boolean; href: string; alwaysCompleted?: boolean; isCtl?: boolean };
   const mainSteps: StepItem[] = [
-    { step: 1, label: 'Tujuan & Kompetensi', completed: false, href: `/lesson-intro/${lessonId}`, alwaysCompleted: true },
+    { step: 1, label: 'Pendahuluan', completed: false, href: `/lesson-intro/${lessonId}`, alwaysCompleted: true },
     { step: 2, label: 'Pre-Test', completed: progress.pretestCompleted, href: `/lesson-pretest/${lessonId}` },
     { step: 3, label: 'Aktivitas CTL', completed: progress.completedStages.length === lesson.stages.length, href: `/lesson/${lessonId}`, isCtl: true },
     { step: 4, label: 'Post-Test', completed: progress.posttestCompleted, href: `/evaluation/${lessonId}` },
@@ -45,7 +47,7 @@ export function LessonFlowSidebar({
           const isActive = item.step === currentStep;
           const isCompleted = item.alwaysCompleted || item.completed;
           // Dapat diklik jika: sudah selesai penuh dan bukan halaman saat ini, atau langkah sudah selesai
-          const isClickable = (fullyCompleted || isCompleted) && !isActive && item.href !== null;
+          const isClickable = !isLocked && (fullyCompleted || isCompleted) && !isActive && item.href !== null;
 
           return (
             <div key={item.step}>
@@ -85,7 +87,7 @@ export function LessonFlowSidebar({
                     const stageCompleted = progress.completedStages.includes(index);
                     const isCurrent = currentStep === 3 && index === currentStageIndex;
                     // Dapat diklik jika: pelajaran sudah selesai penuh, ATAU tahap ini sudah pernah diselesaikan, ATAU ini adalah tahap yang sedang aktif (tapi disabled agar tidak re-click)
-                    const stageClickable = (fullyCompleted || stageCompleted) && !isCurrent && onStageClick;
+                    const stageClickable = !isLocked && (fullyCompleted || stageCompleted) && !isCurrent && onStageClick;
                     return (
                       <button
                         key={index}

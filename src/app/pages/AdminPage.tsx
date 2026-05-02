@@ -290,23 +290,29 @@ function StudentDetailModal({ activity, onClose }: { activity: StudentActivitySu
                     <p className="text-[#395886]"><span className="text-[#395886]/60">Kelompok:</span> {activity.group ?? <span className="italic text-[#395886]/40">Belum memilih</span>}</p>
                   </div>
                 </div>
-                <div className="rounded-2xl border border-[#D5DEEF] bg-[#F8FAFD] p-4 text-center">
-                  <p className="text-xs font-bold text-[#395886]/50 uppercase tracking-wide mb-2">Pre-Test Umum</p>
+                <div className="rounded-2xl border border-[#D5DEEF] bg-[#F8FAFD] p-4 text-center flex flex-col justify-center">
+                  <p className="text-[10px] font-black text-[#395886]/50 uppercase tracking-widest mb-2">Pre-Test Umum</p>
                   {activity.globalPretestCompleted ? (
                     <>
-                      <p className="text-3xl font-bold text-[#628ECB]">{activity.globalPretest}/{globalPretest.questions.length}</p>
-                      <p className="text-sm text-[#628ECB]/70 mt-1">{Math.round(((activity.globalPretest ?? 0) / globalPretest.questions.length) * 100)}%</p>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <span className="text-2xl font-black text-[#628ECB]">{activity.globalPretest}</span>
+                        <span className="text-sm font-bold text-[#628ECB]/30">/ {globalPretest.questions.length}</span>
+                      </div>
+                      <p className="text-[10px] font-black text-[#628ECB]/50 mt-1 uppercase tracking-tighter">Nilai: {Math.round(((activity.globalPretest ?? 0) / globalPretest.questions.length) * 100)}</p>
                     </>
-                  ) : <p className="text-2xl font-bold text-gray-300 mt-2">—</p>}
+                  ) : <p className="text-2xl font-bold text-gray-200 mt-1">—</p>}
                 </div>
-                <div className="rounded-2xl border border-[#D5DEEF] bg-[#F8FAFD] p-4 text-center">
-                  <p className="text-xs font-bold text-[#395886]/50 uppercase tracking-wide mb-2">Post-Test Umum</p>
+                <div className="rounded-2xl border border-[#D5DEEF] bg-[#F8FAFD] p-4 text-center flex flex-col justify-center">
+                  <p className="text-[10px] font-black text-[#395886]/50 uppercase tracking-widest mb-2">Post-Test Umum</p>
                   {activity.globalPosttestCompleted ? (
                     <>
-                      <p className="text-3xl font-bold text-[#F59E0B]">{activity.globalPosttest}/{globalPosttest.questions.length}</p>
-                      <p className="text-sm text-[#F59E0B]/70 mt-1">{Math.round(((activity.globalPosttest ?? 0) / globalPosttest.questions.length) * 100)}%</p>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <span className="text-2xl font-black text-[#F59E0B]">{activity.globalPosttest}</span>
+                        <span className="text-sm font-bold text-[#F59E0B]/30">/ {globalPosttest.questions.length}</span>
+                      </div>
+                      <p className="text-[10px] font-black text-[#F59E0B]/50 mt-1 uppercase tracking-tighter">Nilai: {Math.round(((activity.globalPosttest ?? 0) / globalPosttest.questions.length) * 100)}</p>
                     </>
-                  ) : <p className="text-2xl font-bold text-gray-300 mt-2">—</p>}
+                  ) : <p className="text-2xl font-bold text-gray-200 mt-1">—</p>}
                 </div>
               </div>
               <div>
@@ -507,7 +513,7 @@ function AdminSidebar({
     <div className="hidden lg:flex flex-col w-64 shrink-0 bg-white border-r border-[#D5DEEF]">
       <div className="sticky top-[76px] h-[calc(100vh-76px)] flex flex-col overflow-y-auto">
         {/* User info */}
-        <div className="px-4 py-5 border-b border-[#D5DEEF] bg-gradient-to-br from-[#395886]/5 to-[#628ECB]/5">
+        <div className="px-4 py-5 border-b border-[#D5DEEF] bg-[#F8FAFD]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#628ECB]/10 flex items-center justify-center shrink-0">
               <User className="w-5 h-5 text-[#628ECB]" />
@@ -565,13 +571,15 @@ function ScoreBadge({ score, total, completed }: { score: number | null; total: 
   if (!completed) return <span className="text-xs text-[#395886]/30 font-medium">—</span>;
   const pct = Math.round(((score ?? 0) / total) * 100);
   return (
-    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-      pct >= 80 ? 'bg-[#10B981]/10 text-[#10B981]'
-      : pct >= 60 ? 'bg-[#F59E0B]/10 text-[#F59E0B]'
-      : 'bg-red-50 text-red-600'
-    }`}>
-      {score}/{total}
-    </span>
+    <div className={`inline-flex flex-col items-center px-2 py-1 rounded-lg border ${
+      pct >= 86 ? 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20'
+      : pct >= 71 ? 'bg-[#628ECB]/10 text-[#628ECB] border-[#628ECB]/20'
+      : pct >= 60 ? 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20'
+      : 'bg-red-50 text-red-600 border-red-100'
+    } min-w-[48px]`}>
+      <span className="text-[11px] font-black leading-none">{score}/{total}</span>
+      <span className="text-[8px] font-bold opacity-60 mt-0.5 tracking-tighter">Nilai: {pct}</span>
+    </div>
   );
 }
 
@@ -642,18 +650,6 @@ export function AdminPage() {
     }, { replace: true });
   }, [section, setSearchParams]);
 
-  const groupAssignments = useMemo<Record<string, string>>(
-    () => {
-      try {
-        return JSON.parse(localStorage.getItem(GROUP_STORAGE_KEY) || '{}');
-      } catch (error) {
-        console.error('Error parsing group assignments in AdminPage:', error);
-        return {};
-      }
-    },
-    []
-  );
-
   const availableGroups = useMemo<string[]>(() => {
     const firstLesson = Object.values(lessons)[0];
     const lcStage = firstLesson?.stages.find(s => s.type === 'learning-community');
@@ -705,7 +701,7 @@ export function AdminPage() {
             id: student.id, name: student.name, username: student.username,
             email: student.email, gender: student.gender, class: student.class, nis: student.nis,
           },
-          group: groupAssignments[student.id] ?? null,
+          group: student.groupName ?? null,
           globalPretestCompleted: globalTests.globalPretestCompleted,
           globalPretest: globalTests.globalPretestScore ?? null,
           globalPretestAnswers: globalTests.globalPretestAnswers ?? [],
@@ -717,7 +713,7 @@ export function AdminPage() {
         };
       })
     ).then(setStudentActivities);
-  }, [students, groupAssignments]);
+  }, [students]);
 
   // Stats
   const totalStudents = studentActivities.length;
@@ -1143,11 +1139,14 @@ export function AdminPage() {
                             <p className="font-semibold text-sm text-[#395886] truncate">{s.student.name}</p>
                             <p className="text-xs text-[#395886]/50">{s.student.class}{s.group ? ` · ${s.group}` : ''}</p>
                           </div>
-                          <div className="flex items-center gap-2.5 shrink-0">
-                            <div className="w-20 bg-[#D5DEEF] rounded-full h-2 overflow-hidden">
+                          <div className="flex items-center gap-3 shrink-0">
+                            <div className="text-right">
+                              <p className="text-xs font-black text-[#628ECB] leading-none">{s.overallProgress}<span className="text-[10px] opacity-40">%</span></p>
+                              <p className="text-[8px] font-bold text-[#395886]/30 uppercase tracking-tighter mt-0.5">Progress</p>
+                            </div>
+                            <div className="w-12 bg-[#D5DEEF] rounded-full h-1 overflow-hidden">
                               <div className={`h-full rounded-full ${s.overallProgress === 100 ? 'bg-[#10B981]' : 'bg-[#628ECB]'}`} style={{ width: `${s.overallProgress}%` }} />
                             </div>
-                            <span className="text-xs font-bold text-[#628ECB] w-9 text-right">{s.overallProgress}%</span>
                           </div>
                         </div>
                       ))}
@@ -1549,7 +1548,7 @@ export function AdminPage() {
                         <tr className="bg-[#F0F3FA]">
                           <th className="px-4 py-3 text-left text-xs font-bold text-[#395886]/55 uppercase tracking-wide sticky left-0 bg-[#F0F3FA] z-10 min-w-[160px]">Siswa</th>
                           <th className="px-4 py-3 text-left text-xs font-bold text-[#395886]/55 uppercase tracking-wide">Kelas</th>
-                          <th className="px-4 py-3 text-left text-xs font-bold text-[#395886]/55 uppercase tracking-wide">Kelompok</th>
+                          <th className="px-4 py-3 text-left text-xs font-bold text-[#395886]/55 uppercase tracking-wide min-w-[120px]">Kelompok</th>
                           <th className="px-4 py-3 text-center text-xs font-bold text-[#628ECB]/70 uppercase tracking-wide bg-[#628ECB]/5">Pre-Umum</th>
                           <th className="px-4 py-3 text-center text-xs font-bold text-[#F59E0B]/80 uppercase tracking-wide bg-[#F59E0B]/5">Post-Umum</th>
                           {lessonList.map(l => (
@@ -1600,9 +1599,9 @@ export function AdminPage() {
                                 </div>
                               </td>
                               <td className="px-4 py-3 text-sm text-[#395886]/70">{s.student.class}</td>
-                              <td className="px-4 py-3">
+                              <td className="px-4 py-3 whitespace-nowrap">
                                 {s.group ? (
-                                  <span className="text-xs font-bold bg-[#628ECB]/10 text-[#628ECB] px-2 py-0.5 rounded-full">{s.group}</span>
+                                  <span className="text-xs font-bold bg-[#628ECB]/10 text-[#628ECB] px-3 py-1 rounded-full">{s.group}</span>
                                 ) : <span className="text-xs text-[#395886]/30">—</span>}
                               </td>
                               <td className="px-4 py-3 text-center bg-[#628ECB]/3">
@@ -1625,14 +1624,14 @@ export function AdminPage() {
                                 );
                               })}
                               <td className="px-4 py-3 text-center">
-                                <div className="flex items-center gap-1.5 justify-center">
-                                  <div className="w-12 bg-[#D5DEEF] rounded-full h-1.5 overflow-hidden">
+                                <div className="flex flex-col items-center gap-1">
+                                  <div className="w-12 bg-[#D5DEEF] rounded-full h-1 overflow-hidden">
                                     <div
                                       className={`h-full rounded-full ${s.overallProgress === 100 ? 'bg-[#10B981]' : 'bg-[#628ECB]'}`}
                                       style={{ width: `${s.overallProgress}%` }}
                                     />
                                   </div>
-                                  <span className="text-xs font-bold text-[#628ECB]">{s.overallProgress}%</span>
+                                  <span className="text-[10px] font-black text-[#628ECB] leading-none">{s.overallProgress}<span className="opacity-40 font-bold">%</span></span>
                                 </div>
                               </td>
                             </tr>

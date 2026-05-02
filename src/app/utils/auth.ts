@@ -9,6 +9,7 @@ export interface User {
   class: string;
   nis: string;
   role: 'student' | 'admin';
+  groupName?: string;
   registeredAt?: string;
 }
 
@@ -335,6 +336,7 @@ export const updateUser = async (
   if (updates.email) dbUpdates.email = updates.email.trim().toLowerCase();
   if (updates.username) dbUpdates.username = updates.username.trim().toLowerCase();
   if (updates.nis) dbUpdates.nis = updates.nis.trim();
+  if (updates.groupName !== undefined) dbUpdates.group_name = updates.groupName;
 
   const localUsers = getLocalUsers();
   const localIndex = localUsers.findIndex((user) => user.id === userId);
@@ -358,12 +360,21 @@ export const updateUser = async (
     return true;
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('users')
     .update(dbUpdates)
-    .eq('id', userId);
+    .eq('id', userId)
+    .select();
 
-  if (error) return false;
+  if (error) {
+    console.error('[updateUser] Supabase error:', error);
+    return false;
+  }
+
+  if (!data || data.length === 0) {
+    console.warn('[updateUser] No rows updated. Check RLS policies on "users" table.');
+    return false;
+  }
 
   const currentUser = getCurrentUser();
   if (currentUser && currentUser.id === userId) {
@@ -380,7 +391,7 @@ export const getAllStudents = async (): Promise<User[]> => {
 
   const { data, error } = await supabase
     .from('users')
-    .select('id, name, username, email, gender, class, nis, role, registered_at')
+    .select('id, name, username, email, gender, class, nis, role, group_name, registered_at')
     .eq('role', 'student');
 
   if (error || !data) return localStudents;
@@ -394,6 +405,7 @@ export const getAllStudents = async (): Promise<User[]> => {
     class: u.class,
     nis: u.nis,
     role: u.role as 'student' | 'admin',
+    groupName: u.group_name,
     registeredAt: u.registered_at,
   }));
 

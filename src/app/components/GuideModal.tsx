@@ -73,7 +73,7 @@ export function GuideModal({ isOpen, onClose }: GuideModalProps) {
                 {
                   step: 2,
                   title: 'Pertemuan 1–4 (Berurutan)',
-                  desc: 'Setiap pertemuan memiliki alur: Tujuan & Kompetensi → Pre-Test Pertemuan → 7 Tahapan CTL → Post-Test Pertemuan. Pertemuan berikutnya terbuka setelah pertemuan sebelumnya selesai.',
+                  desc: 'Setiap pertemuan memiliki alur: Pendahuluan → Pre-Test Pertemuan → 7 Tahapan CTL → Post-Test Pertemuan. Pertemuan berikutnya terbuka setelah pertemuan sebelumnya selesai.',
                 },
                 {
                   step: 3,

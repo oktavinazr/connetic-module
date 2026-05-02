@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router';
 import { BookOpen, CheckCircle, HelpCircle, LogOut, Lock, Target, Trophy, User, Users, ArrowRight, ClipboardList, X, ChevronRight, Award } from 'lucide-react';
-import { getAllStudents, getCurrentUser, logout } from '../utils/auth';
+import { getAllStudents, getCurrentUser, logout, updateUser } from '../utils/auth';
 import {
   getAllProgress,
   getGlobalTestProgress,
@@ -9,10 +9,8 @@ import {
   LessonProgress,
   GlobalTestProgress,
 } from '../utils/progress';
-import { lessons, globalPretest, globalPosttest, type TestQuestion } from '../data/lessons';
-import { ProfileModal } from '../components/ProfileModal';
-import { GuideModal } from '../components/GuideModal';
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { lessons, TestQuestion } from '../data/lessons';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,11 +30,9 @@ import {
 } from '../components/ui/dialog';
 import { Header } from '../components/layout/Header';
 
-const GROUP_STORAGE_KEY = 'student-groups';
-
 export function DashboardPage() {
   const navigate = useNavigate();
-  const [user] = useState(getCurrentUser);
+  const [user, setUser] = useState(getCurrentUser);
 
   const [progress, setProgress] = useState<LessonProgress[]>([]);
   const [globalTestProgress, setGlobalTestProgress] = useState<GlobalTestProgress>({
@@ -60,7 +56,7 @@ export function DashboardPage() {
       Object.keys(lessons).map(async (id) => [id, await isLessonUnlocked(user.id, id)] as [string, boolean])
     );
     setLessonUnlockMap(Object.fromEntries(unlockEntries));
-  }, [user]);
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user) {
@@ -68,13 +64,12 @@ export function DashboardPage() {
       return;
     }
     loadDashboardData();
-  }, [user, loadDashboardData, navigate]);
+  }, [loadDashboardData, navigate]);
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const [isGroupOpen, setIsGroupOpen] = useState(false);
-  const [groupVersion, setGroupVersion] = useState(0);
 
   const [mainTab, setMainTab] = useState<'kegiatan' | 'hasil'>('kegiatan');
 
@@ -87,29 +82,13 @@ export function DashboardPage() {
 
   const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E'];
 
-  const openReview = (
-    title: string,
-    questions: TestQuestion[],
-    studentAnswers: number[],
-    score: number,
-  ) => setReviewModal({ title, questions, studentAnswers, score });
-
-  const availableGroups = useMemo(() => {
+  const availableGroups = useMemo<string[]>(() => {
     const firstLesson = Object.values(lessons)[0];
     const learningCommunityStage = firstLesson?.stages.find((stage) => stage.type === 'learning-community');
     return learningCommunityStage?.groupActivity?.groupNames ?? ['Kelompok 1', 'Kelompok 2', 'Kelompok 3', 'Kelompok 4', 'Kelompok 5', 'Kelompok 6', 'Kelompok 7', 'Kelompok 8'];
   }, []);
 
-  const groupAssignments = useMemo(() => {
-    try {
-      return JSON.parse(localStorage.getItem(GROUP_STORAGE_KEY) || '{}') as Record<string, string>;
-    } catch (error) {
-      console.error('Error parsing group assignments from localStorage:', error);
-      return {} as Record<string, string>;
-    }
-  }, [groupVersion]);
-
-  const selectedGroup = user ? groupAssignments[user.id] || '' : '';
+  const selectedGroup = user?.groupName || '';
 
   const [allStudents, setAllStudents] = useState<Awaited<ReturnType<typeof getAllStudents>>>([]);
   useEffect(() => {
@@ -119,25 +98,27 @@ export function DashboardPage() {
 
   const studentsInSelectedGroup = useMemo(() => {
     if (!selectedGroup) return [];
-    return allStudents.filter((student) => groupAssignments[student.id] === selectedGroup);
-  }, [allStudents, groupAssignments, selectedGroup]);
+    return allStudents.filter((student) => student.groupName === selectedGroup);
+  }, [allStudents, selectedGroup]);
 
-  const saveGroupSelection = (groupName: string) => {
+  const saveGroupSelection = async (groupName: string) => {
     if (!user) return;
 
     // Check if group is full
-    const studentsInGroup = allStudents.filter((student) => groupAssignments[student.id] === groupName);
-    if (studentsInGroup.length >= 5 && groupAssignments[user.id] !== groupName) {
+    const studentsInGroup = allStudents.filter((student) => student.groupName === groupName);
+    if (studentsInGroup.length >= 5 && user.groupName !== groupName) {
       alert(`${groupName} sudah penuh (maksimal 5 orang). Silakan pilih kelompok lain.`);
       return;
     }
 
-    const nextAssignments = {
-      ...groupAssignments,
-      [user.id]: groupName,
-    };
-    localStorage.setItem(GROUP_STORAGE_KEY, JSON.stringify(nextAssignments));
-    setGroupVersion((value) => value + 1);
+    const success = await updateUser(user.id, { groupName });
+    if (success) {
+      setUser(getCurrentUser()); // Update local state immediately
+      loadDashboardData();
+      getAllStudents().then(setAllStudents);
+    } else {
+      alert('Gagal menyimpan pilihan kelompok. Silakan coba lagi.');
+    }
   };
 
   const handleLogout = () => {
@@ -155,25 +136,15 @@ export function DashboardPage() {
       <Header
         user={user}
         onLogout={() => setIsLogoutOpen(true)}
-        onOpenProfile={() => setIsProfileOpen(true)}
-        onOpenGuide={() => setIsGuideOpen(true)}
-        onOpenGroup={() => setIsGroupOpen(true)}
-        selectedGroup={selectedGroup}
-        isPretestCompleted={globalTestProgress.globalPretestCompleted}
-        activeSection="Dashboard"
-        role="student"
+        onProfile={() => setIsProfileOpen(true)}
+        onGuide={() => setIsGuideOpen(true)}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome + Capaian */}
         <div className="flex flex-col gap-5 mb-8">
-          {/* Hero Welcome Card */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#395886] via-[#4A6FA8] to-[#628ECB] shadow-xl">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(255,255,255,0.08),_transparent_50%)]" />
-            <div className="absolute top-0 right-0 h-64 w-64 -translate-y-16 translate-x-16 rounded-full bg-white/5 blur-3xl" />
-            <div className="absolute bottom-0 left-0 h-48 w-48 translate-y-12 -translate-x-12 rounded-full bg-[#628ECB]/30 blur-2xl" />
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#395886] via-[#4A6FA8] to-[#628ECB] shadow-lg">
             <div className="relative flex flex-col gap-6 p-7 sm:flex-row sm:items-center sm:p-9">
-              {/* Greeting */}
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-black uppercase tracking-[0.45em] text-white/60 mb-1">Ruang Belajar Siswa</p>
                 <h1 className="text-2xl font-black text-white sm:text-3xl tracking-tight">
@@ -183,658 +154,504 @@ export function DashboardPage() {
                   Lanjutkan aktivitas belajar dan pantau progres pembelajaran Anda hari ini.
                 </p>
               </div>
-              {/* Quick progress stats */}
+
+              <div className="flex shrink-0 items-center gap-3">
+                <div className="flex flex-col items-end gap-1 px-4 py-2.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10">
+                  <p className="text-[10px] font-black text-white/50 uppercase tracking-widest leading-none">Pre-Test Umum</p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <p className="text-lg font-black text-white leading-none">
+                      {globalTestProgress.globalPretestCompleted ? (globalTestProgress.globalPretestScore ?? 0) : <span className="text-white/40">-</span>}
+                    </p>
+                    {globalTestProgress.globalPretestCompleted ? <CheckCircle className="h-5 w-5 text-[#34D399]" /> : <span className="text-white/40">-</span>}
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1 px-4 py-2.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10">
+                  <p className="text-[10px] font-black text-white/50 uppercase tracking-widest leading-none">Post-Test Umum</p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <p className="text-lg font-black text-white leading-none">
+                      {globalTestProgress.globalPosttestCompleted ? (globalTestProgress.globalPosttestScore ?? 0) : <span className="text-white/40">-</span>}
+                    </p>
+                    {globalTestProgress.globalPosttestCompleted ? <CheckCircle className="h-5 w-5 text-[#FCD34D]" /> : <span className="text-white/40">-</span>}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* MAIN TABS ------------------------------------------------------------- */}
+        <div className="flex items-center gap-2 mb-8 bg-white/50 p-1.5 rounded-[1.5rem] border border-[#D5DEEF] w-fit shadow-sm">
+          <button
+            onClick={() => setMainTab('kegiatan')}
+            className={`flex items-center gap-2.5 px-6 py-3 rounded-2xl text-sm font-black transition-all duration-200 ${
+              mainTab === 'kegiatan'
+                ? 'bg-[#395886] text-white shadow-lg shadow-[#395886]/20'
+                : 'text-[#395886]/55 hover:bg-white hover:text-[#395886]'
+            }`}
+          >
+            <ClipboardList className="w-4 h-4" />
+            Kegiatan Pembelajaran
+          </button>
+          <button
+            onClick={() => setMainTab('hasil')}
+            className={`flex items-center gap-2.5 px-6 py-3 rounded-2xl text-sm font-black transition-all duration-200 ${
+              mainTab === 'hasil'
+                ? 'bg-gradient-to-r from-[#395886] to-[#628ECB] text-white shadow-md'
+                : 'text-[#395886]/55 hover:bg-[#F0F3FA] hover:text-[#395886]'
+            }`}
+          >
+            <Target className="w-4 h-4" />
+            Hasil Belajar
+          </button>
+        </div>
+
+        {/* TAB: KEGIATAN PEMBELAJARAN ----------------------------------------------- */}
+        {mainTab === 'kegiatan' && (
+          <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] gap-8 animate-in fade-in duration-500">
+            <div className="space-y-6">
+              <div className="grid gap-5">
+                {/* Global Pretest */}
+                <div className="group relative bg-white p-5 rounded-3xl border border-[#D5DEEF] hover:border-[#628ECB] transition-all shadow-sm hover:shadow-xl hover:-translate-y-1">
+                  <div className="flex items-center gap-5">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#EEF2FF] group-hover:bg-[#628ECB] transition-colors">
+                      <Target className="h-7 w-7 text-[#628ECB] group-hover:text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[#628ECB] bg-[#EEF2FF] px-2 py-0.5 rounded">Pre-Evaluation</span>
+                      </div>
+                      <h3 className="text-base font-black text-[#395886] group-hover:text-[#628ECB] transition-colors">Pre-Test Umum</h3>
+                      <p className="text-xs text-[#395886]/55 font-medium mt-1">
+                        {globalTestProgress.globalPretestCompleted ? 'Sudah dikerjakan - kerjakan sebelum memulai pertemuan' : 'Belum dikerjakan - kerjakan sebelum memulai pertemuan'}
+                      </p>
+                    </div>
+                    <div className="shrink-0">
+                      {globalTestProgress.globalPretestCompleted ? (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#10B981]/10 border border-[#10B981]/20">
+                          <CheckCircle className="h-5 w-5 text-[#10B981]" />
+                        </div>
+                      ) : (
+                        <Link to="/global-pretest" className="flex h-10 w-10 items-center justify-center rounded-full bg-[#395886] text-white shadow-lg hover:bg-[#628ECB] transition-all group-hover:scale-110">
+                          <ArrowRight className="h-5 w-5" />
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Lesson Modules */}
+                {Object.values(lessons).map((lesson, idx) => {
+                  const isUnlocked = lessonUnlockMap[lesson.id];
+                  const lp = progress.find((p) => p.lessonId === lesson.id);
+                  const isCompleted =
+                    lp?.pretestCompleted &&
+                    lp?.completedStages.length === lesson.stages.length &&
+                    lp?.posttestCompleted;
+
+                  return (
+                    <div key={lesson.id} className={`group relative bg-white p-5 rounded-3xl border border-[#D5DEEF] transition-all shadow-sm ${isUnlocked ? 'hover:border-[#628ECB] hover:shadow-xl hover:-translate-y-1' : 'opacity-60 bg-gray-50/50 grayscale-[0.5]'}`}>
+                      <div className="flex items-center gap-5">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#D5DEEF]/30">
+                          {isUnlocked ? (
+                            <BookOpen className="h-7 w-7 text-[#628ECB]" />
+                          ) : (
+                            <Lock className="h-7 w-7 text-[#D5DEEF]" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${isUnlocked ? 'bg-[#EEF2FF] text-[#628ECB]' : 'bg-gray-200 text-gray-400'}`}>Pertemuan {idx + 1}</span>
+                            {isCompleted && <span className="text-[10px] font-black uppercase bg-[#10B981]/10 text-[#10B981] px-2 py-0.5 rounded border border-[#10B981]/20">Selesai</span>}
+                          </div>
+                          <h3 className="text-base font-black text-[#395886]">{lesson.topic}</h3>
+                          {!isUnlocked && (
+                            <p className="text-[10px] font-bold text-red-400 uppercase mt-1 flex items-center gap-1">
+                              <Lock className="w-3 h-3" /> Selesaikan pertemuan sebelumnya
+                            </p>
+                          )}
+                        </div>
+                        <div className="shrink-0">
+                          {isUnlocked ? (
+                            <Link to={`/lesson-intro/${lesson.id}`} className="flex h-10 w-10 items-center justify-center rounded-full bg-[#395886] text-white shadow-lg hover:bg-[#628ECB] transition-all group-hover:scale-110">
+                              <ArrowRight className="h-5 w-5" />
+                            </Link>
+                          ) : (
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-white cursor-not-allowed">
+                              <Lock className="h-5 w-5" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Global Posttest */}
+                {(() => {
+                  const done = globalTestProgress.globalPosttestCompleted;
+                  return (
+                    <div className={`group relative bg-[#FFFBEB] p-5 rounded-3xl border transition-all shadow-sm ${globalPosttestUnlocked ? 'border-amber-200 hover:border-[#F59E0B] hover:shadow-xl hover:-translate-y-1' : 'border-[#D5DEEF] opacity-60 grayscale'}`}>
+                      <div className="flex items-center gap-5">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm">
+                          <Award className={`h-7 w-7 ${globalPosttestUnlocked ? 'text-[#F59E0B]' : 'text-gray-300'}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${globalPosttestUnlocked ? 'bg-amber-100 text-[#92400E]' : 'bg-gray-200 text-gray-400'}`}>Final Evaluation</span>
+                          </div>
+                          <h3 className="text-base font-black text-[#395886]">Post-Test Umum</h3>
+                          <p className="text-xs text-[#92400E]/55 font-medium">
+                            {globalTestProgress.globalPosttestCompleted
+                              ? 'Sudah dikerjakan'
+                              : globalPosttestUnlocked
+                                ? 'Siap dikerjakan - selesaikan evaluasi akhir Anda'
+                                : 'Terkunci - selesaikan semua modul pertemuan'}
+                          </p>
+                        </div>
+                        <div className="shrink-0">
+                          {done ? (
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#10B981]/10 border border-[#10B981]/20">
+                              <CheckCircle className="h-5 w-5 text-[#10B981]" />
+                            </div>
+                          ) : globalPosttestUnlocked ? (
+                            <Link to="/global-posttest" className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F59E0B] text-white shadow-lg hover:bg-[#D97706] transition-all group-hover:scale-110">
+                              <ArrowRight className="h-5 w-5" />
+                            </Link>
+                          ) : (
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-white cursor-not-allowed">
+                              <Lock className="h-5 w-5" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Sidebar dashboard - info kelompok, dll */}
+            <aside className="space-y-6">
+              <div className="bg-white rounded-[2.5rem] border-2 border-[#D5DEEF] p-8 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-10 w-10 rounded-xl bg-[#628ECB]/10 flex items-center justify-center text-[#628ECB]"><Users className="w-6 h-6" /></div>
+                  <h3 className="text-lg font-black text-[#395886]">Kelompok Belajar</h3>
+                </div>
+
+                {!selectedGroup ? (
+                  <div className="space-y-4">
+                    <p className="text-xs font-bold text-[#395886]/60 leading-relaxed">Anda belum memilih kelompok. Silakan bergabung dengan kelompok untuk berdiskusi di tahap Learning Community.</p>
+                    <button onClick={() => setIsGroupOpen(true)} className="w-full py-3.5 rounded-2xl bg-[#628ECB] text-white font-black text-xs hover:bg-[#395886] transition-all shadow-lg shadow-[#628ECB]/20 active:scale-95">Pilih Kelompok Sekarang</button>
+                  </div>
+                ) : (
+                  <div className="space-y-5">
+                    <div className="flex items-center justify-between">
+                      <div className="px-4 py-1.5 rounded-xl bg-[#628ECB] text-white text-[10px] font-black uppercase tracking-widest shadow-md">{selectedGroup}</div>
+                      <button onClick={() => setIsGroupOpen(true)} className="text-[10px] font-black text-[#628ECB] uppercase hover:underline">Ganti</button>
+                    </div>
+                    
+                    <div className="space-y-2.5">
+                      <p className="text-[10px] font-black text-[#395886]/40 uppercase tracking-widest ml-1">Rekan Kelompok ({studentsInSelectedGroup.length}/5)</p>
+                      <div className="grid gap-2">
+                        {studentsInSelectedGroup.map(s => (
+                          <div key={s.id} className={`flex items-center gap-3 p-3 rounded-2xl border ${s.id === user.id ? 'bg-[#EEF2FF] border-[#628ECB]/30' : 'bg-[#F8FAFD] border-[#D5DEEF]'}`}>
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black ${s.id === user.id ? 'bg-[#628ECB] text-white' : 'bg-[#D5DEEF] text-[#395886]/50'}`}>{s.name.substring(0,2).toUpperCase()}</div>
+                            <span className={`text-xs font-bold ${s.id === user.id ? 'text-[#395886]' : 'text-[#395886]/70'}`}>{s.name} {s.id === user.id && '(Kamu)'}</span>
+                          </div>
+                        ))}
+                        {studentsInSelectedGroup.length === 0 && <p className="text-xs italic text-[#395886]/40 py-2">Memuat data kelompok...</p>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-[#EEF2FF] rounded-[2rem] p-8 border border-[#628ECB]/10">
+                <div className="flex items-center gap-3 mb-4">
+                  <Lightbulb className="w-5 h-5 text-[#628ECB]" />
+                  <p className="text-[10px] font-black text-[#628ECB] uppercase tracking-widest">Informasi</p>
+                </div>
+                <p className="text-xs font-bold text-[#395886]/70 leading-relaxed italic">"Gunakan modul ini secara berurutan. Setiap pertemuan akan terbuka secara otomatis setelah pertemuan sebelumnya diselesaikan."</p>
+              </div>
+            </aside>
+          </div>
+        )}
+
+        {/* TAB: HASIL BELAJAR ------------------------------------------------------ */}
+        {mainTab === 'hasil' && (
+          <div className="space-y-6 animate-in fade-in duration-500">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Global Pretest Result Card */}
               {(() => {
-                const completedLessons = progress.filter(p => {
-                  const lesson = lessons[p.lessonId];
-                  return p.pretestCompleted && p.completedStages.length === lesson?.stages.length && p.posttestCompleted;
-                }).length;
-                const totalLessons = Object.keys(lessons).length;
+                const done = globalTestProgress.globalPretestCompleted;
+                const score = globalTestProgress.globalPretestScore ?? 0;
+                const total = 30;
                 return (
-                  <div className="flex items-center gap-2.5 sm:shrink-0">
-                    <div className="flex flex-col items-center rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 px-5 py-3.5">
-                      <p className="text-xl font-extrabold text-white">{completedLessons}<span className="text-sm text-white/60">/{totalLessons}</span></p>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-white/55 mt-0.5">Pertemuan</p>
+                  <div className="bg-white p-6 rounded-3xl border border-[#D5DEEF] shadow-sm relative overflow-hidden group hover:border-[#8B5CF6] transition-all">
+                    <div className="relative z-10 flex flex-col h-full justify-between">
+                      <div className="mb-6">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#8B5CF6]" />
+                          <p className="text-[10px] font-black text-[#8B5CF6] uppercase tracking-widest">Pre-Test Umum</p>
+                        </div>
+                        <p className="text-xs font-bold text-[#395886]/60 leading-relaxed">Capaian awal sebelum pembelajaran.</p>
+                      </div>
+                      
+                      <div className="flex items-end justify-between gap-4">
+                        {done ? (
+                          <>
+                            <div>
+                              <p className="text-3xl font-black text-[#395886] leading-none tabular-nums">
+                                {Math.round((score/total)*100)}
+                              </p>
+                              <div className="flex items-center gap-1.5 mt-2">
+                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${
+                                  (score/total)*100 >= 86 ? 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20' :
+                                  (score/total)*100 >= 71 ? 'bg-[#628ECB]/10 text-[#628ECB] border-[#628ECB]/20' :
+                                  (score/total)*100 >= 60 ? 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20' :
+                                  'bg-red-50 text-red-500 border-red-100'
+                                }`}>
+                                  { (score/total)*100 >= 86 ? 'Sangat Baik' : (score/total)*100 >= 71 ? 'Baik' : (score/total)*100 >= 60 ? 'Cukup' : 'Perlu Latihan' }
+                                </span>
+                                <p className="text-[9px] font-bold text-[#395886]/40 uppercase tracking-widest">{score}/{total} BENAR</p>
+                              </div>
+                            </div>
+                            <button 
+                              onClick={() => setReviewModal({ title: 'Pre-Test Umum', questions: [], studentAnswers: globalTestProgress.globalPretestAnswers ?? [], score })}
+                              className="relative z-10 px-5 py-2.5 bg-white border-2 border-[#D5DEEF] rounded-2xl text-xs font-black text-[#395886] hover:border-[#8B5CF6] hover:text-[#8B5CF6] transition-all shadow-sm active:scale-95"
+                            >
+                              Review
+                            </button>
+                          </>
+                        ) : (
+                          <div className="flex items-center gap-2 text-gray-300">
+                             <Lock className="w-4 h-4" />
+                             <span className="text-xs font-bold uppercase tracking-widest">Belum Ada Data</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex flex-col items-center rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 px-5 py-3.5">
-                      <p className="text-xl font-extrabold text-white">
-                        {globalTestProgress.globalPretestCompleted ? <CheckCircle className="h-5 w-5 text-[#34D399]" /> : <span className="text-white/40">—</span>}
-                      </p>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-white/55 mt-0.5">Pre-Test</p>
-                    </div>
-                    <div className="flex flex-col items-center rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 px-5 py-3.5">
-                      <p className="text-xl font-extrabold text-white">
-                        {globalTestProgress.globalPosttestCompleted ? <CheckCircle className="h-5 w-5 text-[#FCD34D]" /> : <span className="text-white/40">—</span>}
-                      </p>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-white/55 mt-0.5">Post-Test</p>
+                  </div>
+                );
+              })()}
+
+              {/* Global Posttest Result Card */}
+              {(() => {
+                const done = globalTestProgress.globalPosttestCompleted;
+                const score = globalTestProgress.globalPosttestScore ?? 0;
+                const total = 30;
+                return (
+                  <div className="bg-white p-6 rounded-3xl border border-[#D5DEEF] shadow-sm relative overflow-hidden group hover:border-[#F59E0B] transition-all">
+                    <div className="relative z-10 flex flex-col h-full justify-between">
+                      <div className="mb-6">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#F59E0B]" />
+                          <p className="text-[10px] font-black text-[#F59E0B] uppercase tracking-widest">Post-Test Umum</p>
+                        </div>
+                        <p className="text-xs font-bold text-[#395886]/60 leading-relaxed">Capaian akhir setelah pembelajaran.</p>
+                      </div>
+                      
+                      <div className="flex items-end justify-between gap-4">
+                        {done ? (
+                          <>
+                            <div>
+                              <p className="text-3xl font-black text-[#395886] leading-none tabular-nums">
+                                {Math.round((score/total)*100)}
+                              </p>
+                              <div className="flex items-center gap-1.5 mt-2">
+                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${
+                                  (score/total)*100 >= 86 ? 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20' :
+                                  (score/total)*100 >= 71 ? 'bg-[#628ECB]/10 text-[#628ECB] border-[#628ECB]/20' :
+                                  (score/total)*100 >= 60 ? 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20' :
+                                  'bg-red-50 text-red-500 border-red-100'
+                                }`}>
+                                  { (score/total)*100 >= 86 ? 'Sangat Baik' : (score/total)*100 >= 71 ? 'Baik' : (score/total)*100 >= 60 ? 'Cukup' : 'Perlu Latihan' }
+                                </span>
+                                <p className="text-[9px] font-bold text-[#395886]/40 uppercase tracking-widest">{score}/{total} BENAR</p>
+                              </div>
+                            </div>
+                            <button 
+                              onClick={() => setReviewModal({ title: 'Post-Test Umum', questions: [], studentAnswers: globalTestProgress.globalPosttestAnswers ?? [], score })}
+                              className="relative z-10 px-5 py-2.5 bg-white border-2 border-[#D5DEEF] rounded-2xl text-xs font-black text-[#395886] hover:border-[#F59E0B] hover:text-[#F59E0B] transition-all shadow-sm active:scale-95"
+                            >
+                              Review
+                            </button>
+                          </>
+                        ) : (
+                          <div className="flex items-center gap-2 text-gray-300">
+                             <Lock className="w-4 h-4" />
+                             <span className="text-xs font-bold uppercase tracking-widest">Belum Ada Data</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
               })()}
             </div>
-          </div>
 
-          {/* Capaian Pembelajaran */}
-          <div className="relative overflow-hidden rounded-3xl bg-white border border-[#C8D8F0] shadow-sm">
-            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-[#395886] to-[#628ECB] rounded-l-3xl" />
-            <div className="flex items-start gap-5 p-6 pl-7">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#395886] to-[#628ECB] text-white shadow-md">
-                <Target className="w-5 h-5" />
+            {/* Individual Lesson Results Table */}
+            <div className="bg-white rounded-3xl border border-[#D5DEEF] overflow-hidden shadow-sm">
+              <div className="p-6 border-b border-[#D5DEEF] bg-[#F8FAFD]">
+                <h3 className="text-base font-black text-[#395886]">Detail Hasil Per Pertemuan</h3>
               </div>
-              <div className="space-y-2 flex-1">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-base font-extrabold text-[#395886]">Capaian Pembelajaran</h2>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#628ECB] bg-[#628ECB]/10 px-2.5 py-1 rounded-lg">Fase E</span>
-                </div>
-                <p className="text-[11px] font-semibold text-[#628ECB] uppercase tracking-wider">Elemen: Media dan Jaringan Telekomunikasi</p>
-                <p className="text-sm text-[#395886]/70 leading-relaxed">
-                  Pada akhir fase E peserta didik mampu memahami{' '}
-                  <strong className="font-bold text-[#395886]">prinsip dasar sistem IPv4/IPv6, TCP/IP</strong>,
-                  Networking Service, Sistem Keamanan Jaringan Telekomunikasi, Sistem Seluler,
-                  Sistem Microwave, Sistem VSAT IP, Sistem Optik, dan Sistem WLAN.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50/50">
+                      <th className="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-[#395886]/40 border-b border-[#D5DEEF]">Modul</th>
+                      <th className="px-6 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#395886]/40 border-b border-[#D5DEEF]">Pre-Test</th>
+                      <th className="px-6 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#395886]/40 border-b border-[#D5DEEF]">Tahap CTL</th>
+                      <th className="px-6 py-4 text-center text-[10px] font-black uppercase tracking-widest text-[#395886]/40 border-b border-[#D5DEEF]">Post-Test</th>
+                      <th className="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest text-[#395886]/40 border-b border-[#D5DEEF]">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {Object.values(lessons).map(lesson => {
+                      const lp = progress.find(p => p.lessonId === lesson.id);
+                      const preDone = lp?.pretestCompleted;
+                      const postDone = lp?.posttestCompleted;
+                      const ctlDoneCount = lp?.completedStages.length ?? 0;
+                      const ctlTotal = lesson.stages.length;
 
-        {/* ── MAIN TABS ─────────────────────────────────────────────────────── */}
-        <div className="mb-6 flex justify-center">
-          <div className="inline-flex gap-1 rounded-2xl border border-[#C8D8F0] bg-white p-1.5 shadow-md">
-            <button
-              onClick={() => setMainTab('kegiatan')}
-              className={`inline-flex items-center gap-2 rounded-xl px-7 py-2.5 text-sm font-bold transition-all duration-200 ${
-                mainTab === 'kegiatan'
-                  ? 'bg-gradient-to-r from-[#395886] to-[#628ECB] text-white shadow-md'
-                  : 'text-[#395886]/55 hover:bg-[#F0F3FA] hover:text-[#395886]'
-              }`}
-            >
-              <BookOpen className="h-4 w-4" />
-              Kegiatan Pembelajaran
-            </button>
-            <button
-              onClick={() => setMainTab('hasil')}
-              className={`inline-flex items-center gap-2 rounded-xl px-7 py-2.5 text-sm font-bold transition-all duration-200 ${
-                mainTab === 'hasil'
-                  ? 'bg-gradient-to-r from-[#395886] to-[#628ECB] text-white shadow-md'
-                  : 'text-[#395886]/55 hover:bg-[#F0F3FA] hover:text-[#395886]'
-              }`}
-            >
-              <ClipboardList className="h-4 w-4" />
-              Hasil Belajar
-            </button>
-          </div>
-        </div>
-
-        {/* ── TAB: KEGIATAN PEMBELAJARAN ──────────────────────────────────── */}
-        {mainTab === 'kegiatan' && (
-          <>
-            {/* Compact Pre-Test Umum strip */}
-            <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-[#C4B5FD]/60 bg-gradient-to-r from-[#F5F3FF] to-[#EDE9FE] px-5 py-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#7C3AED]/15 text-[#7C3AED]">
-                  <Trophy className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-[#3B1F6E]">Pre-Test Umum</p>
-                  <p className="text-xs text-[#3B1F6E]/55 font-medium">
-                    {globalTestProgress.globalPretestCompleted ? 'Sudah dikerjakan' : 'Belum dikerjakan — kerjakan sebelum memulai pertemuan'}
-                  </p>
-                </div>
-              </div>
-              <Link
-                to="/global-pretest"
-                className="shrink-0 rounded-xl bg-[#7C3AED] px-5 py-2 text-xs font-bold text-white shadow-md transition-all hover:bg-[#6D28D9] active:scale-95"
-              >
-                {globalTestProgress.globalPretestCompleted ? 'Tinjau' : 'Mulai Pre-Test'}
-              </Link>
-            </div>
-
-            {/* Lesson grid */}
-            <div className="grid md:grid-cols-2 gap-5 mb-6">
-          {Object.values(lessons).map((lesson) => {
-            const lessonProgress = progress.find((p) => p.lessonId === lesson.id);
-            const pretestCompleted = lessonProgress?.pretestCompleted || false;
-            const completedStages = lessonProgress?.completedStages.length || 0;
-            const totalStages = lesson.stages.length;
-            const posttestCompleted = lessonProgress?.posttestCompleted || false;
-            const unlocked = lessonUnlockMap[lesson.id] ?? false;
-
-            const totalSteps = 1 + totalStages + 1;
-            let completedSteps = 0;
-            if (pretestCompleted) completedSteps += 1;
-            completedSteps += completedStages;
-            if (posttestCompleted) completedSteps += 1;
-
-            const progressPercentage = Math.round((completedSteps / totalSteps) * 100);
-            const fullyCompleted = pretestCompleted && completedStages === totalStages && posttestCompleted;
-
-            return (
-              <div
-                key={lesson.id}
-                className={`group bg-white rounded-3xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-xl border ${
-                  unlocked ? 'border-[#C8D8F0] hover:border-[#628ECB]/40' : 'border-[#E0E7F5] opacity-65'
-                }`}
-              >
-                {/* Card accent bar */}
-                <div className={`h-1.5 w-full ${unlocked ? 'bg-gradient-to-r from-[#395886] to-[#628ECB]' : 'bg-gray-200'}`} />
-                <div className="p-7">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="space-y-0.5 flex-1 min-w-0 pr-3">
-                      <h2 className="text-xl font-extrabold text-[#395886] group-hover:text-[#628ECB] transition-colors leading-tight">{lesson.title}</h2>
-                      <h3 className="text-[#628ECB] font-semibold text-xs mt-1">{lesson.topic}</h3>
-                    </div>
-                    {unlocked ? (
-                      fullyCompleted
-                        ? <div className="h-9 w-9 shrink-0 bg-[#10B981]/10 rounded-2xl flex items-center justify-center text-[#10B981] border border-[#10B981]/20 shadow-sm shadow-[#10B981]/10"><CheckCircle className="w-5 h-5" strokeWidth={3} /></div>
-                        : <div className="h-9 w-9 shrink-0 bg-[#F0F3FA] rounded-2xl flex items-center justify-center text-[#395886]/20 border border-[#D5DEEF]"><BookOpen className="w-4 h-4" /></div>
-                    ) : (
-                      <div className="h-9 w-9 shrink-0 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 border border-gray-200"><Lock className="w-4 h-4" /></div>
-                    )}
-                  </div>
-
-                  <p className="text-[#395886]/65 text-sm leading-relaxed mb-5 font-medium">{lesson.description}</p>
-
-                  {unlocked && (
-                    <div className="mb-5 p-4 bg-gradient-to-br from-[#F8FAFD] to-[#EEF3FB] rounded-2xl border border-[#D5DEEF]">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-[10px] font-bold text-[#395886]/50 uppercase tracking-widest">Progres Modul</span>
-                        <span className={`text-sm font-extrabold ${fullyCompleted ? 'text-[#10B981]' : 'text-[#628ECB]'}`}>
-                          {progressPercentage}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-[#D5DEEF] rounded-full h-2 overflow-hidden shadow-inner">
-                        <div
-                          className={`h-full rounded-full transition-all duration-700 ease-out ${fullyCompleted ? 'bg-[#10B981]' : 'bg-gradient-to-r from-[#395886] to-[#628ECB]'}`}
-                          style={{ width: `${progressPercentage}%` }}
-                        />
-                      </div>
-                      <div className="mt-3 flex items-center gap-1.5 flex-wrap">
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full border ${pretestCompleted ? 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20' : 'bg-gray-50 text-gray-400 border-gray-200'}`}>
-                          {pretestCompleted && <CheckCircle className="w-3 h-3" />} Pre-Test
-                        </span>
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full border ${completedStages === totalStages ? 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20' : completedStages > 0 ? 'bg-[#628ECB]/10 text-[#628ECB] border-[#628ECB]/20' : 'bg-gray-50 text-gray-400 border-gray-200'}`}>
-                          {completedStages === totalStages && <CheckCircle className="w-3 h-3" />} CTL {completedStages}/{totalStages}
-                        </span>
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full border ${posttestCompleted ? 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20' : 'bg-gray-50 text-gray-400 border-gray-200'}`}>
-                          {posttestCompleted && <CheckCircle className="w-3 h-3" />} Post-Test
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {unlocked ? (
-                    <Link
-                      to={
-                        fullyCompleted
-                          ? `/review/${lesson.id}`
-                          : completedSteps === 0
-                          ? `/lesson-intro/${lesson.id}`
-                          : !pretestCompleted
-                          ? `/lesson-intro/${lesson.id}`
-                          : completedStages === totalStages
-                          ? `/evaluation/${lesson.id}`
-                          : `/lesson/${lesson.id}`
-                      }
-                      className={`flex items-center justify-center gap-2 w-full text-white text-sm font-bold py-3.5 rounded-2xl transition-all active:scale-95 shadow-md ${
-                        fullyCompleted
-                          ? 'bg-[#395886] hover:bg-[#2E4A75] shadow-[#395886]/20'
-                          : 'bg-gradient-to-r from-[#395886] to-[#628ECB] hover:from-[#2E4A75] hover:to-[#4A79BA] shadow-[#628ECB]/20'
-                      }`}
-                    >
-                      {completedSteps === 0 ? 'Mulai Belajar' : fullyCompleted ? 'Review Materi' : 'Lanjutkan Progress'}
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  ) : (
-                    <div className="flex items-center justify-center gap-2 w-full bg-gray-100 text-gray-400 text-sm font-bold py-3.5 rounded-2xl cursor-not-allowed border border-gray-200">
-                      <Lock className="w-4 h-4" />
-                      {globalTestProgress.globalPretestCompleted ? 'Selesaikan modul sebelumnya' : 'Selesaikan Pre-Test Umum'}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-            {/* Compact Post-Test Umum strip */}
-            <div className={`flex items-center justify-between gap-4 rounded-2xl border border-[#FCD34D]/50 bg-gradient-to-r from-[#FFFBEB] to-[#FEF3C7] px-5 py-4 ${!globalPosttestUnlocked ? 'opacity-50' : ''}`}>
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F59E0B]/15 text-[#D97706]">
-                  <Trophy className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-[#92400E]">Post-Test Umum</p>
-                  <p className="text-xs text-[#92400E]/55 font-medium">
-                    {globalTestProgress.globalPosttestCompleted
-                      ? 'Sudah dikerjakan'
-                      : globalPosttestUnlocked
-                      ? 'Siap dikerjakan — selesaikan evaluasi akhir Anda'
-                      : 'Selesaikan semua pertemuan terlebih dahulu'}
-                  </p>
-                </div>
-              </div>
-              {globalPosttestUnlocked ? (
-                <Link
-                  to="/global-posttest"
-                  className="shrink-0 rounded-xl bg-[#F59E0B] px-5 py-2 text-xs font-bold text-white shadow-md transition-all hover:bg-[#D97706] active:scale-95"
-                >
-                  {globalTestProgress.globalPosttestCompleted ? 'Tinjau' : 'Mulai Post-Test'}
-                </Link>
-              ) : (
-                <div className="shrink-0 rounded-xl bg-gray-200 px-5 py-2 text-xs font-bold text-gray-400 cursor-not-allowed">
-                  Terkunci
-                </div>
-              )}
-            </div>
-          </>
-        )}
-
-        {/* ── TAB: HASIL BELAJAR ────────────────────────────────────────────── */}
-        {mainTab === 'hasil' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-[2rem] border border-[#D5DEEF] shadow-sm p-6 sm:p-8">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="h-12 w-12 rounded-2xl bg-[#628ECB]/10 flex items-center justify-center text-[#628ECB]">
-                  <ClipboardList className="w-6 h-6" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-black text-[#395886] tracking-tight">Ringkasan Hasil Belajar</h2>
-                  <p className="text-sm font-medium text-[#395886]/50">Pantau seluruh pencapaian evaluasi dan aktivitas CTL kamu.</p>
-                </div>
-              </div>
-
-              <div className="grid gap-4">
-                {/* 1. Evaluasi Umum (Pre & Post) */}
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {/* Global Pretest */}
-                  {(() => {
-                    const done = globalTestProgress.globalPretestCompleted;
-                    const score = globalTestProgress.globalPretestScore ?? 0;
-                    const total = globalPretest.questions.length;
-                    return (
-                      <div className={`group relative p-6 rounded-[2rem] border-2 transition-all duration-300 ${
-                        done 
-                          ? 'border-[#8B5CF6]/20 bg-gradient-to-br from-[#8B5CF6]/5 to-[#F5F3FF] shadow-sm hover:shadow-md' 
-                          : 'border-[#D5DEEF] bg-gray-50/50'
-                      }`}>
-                        <div className="flex items-center justify-between mb-4">
-                          <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${done ? 'bg-[#8B5CF6] text-white shadow-lg shadow-[#8B5CF6]/25' : 'bg-[#D5DEEF] text-[#395886]/30'}`}>
-                            <Trophy className="w-5 h-5" />
-                          </div>
-                          {done && (
-                            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#8B5CF6]/10 text-[#8B5CF6] text-[10px] font-black uppercase tracking-wider border border-[#8B5CF6]/20">
-                              <CheckCircle className="w-3 h-3" /> Selesai
-                            </span>
-                          )}
-                        </div>
-                        
-                        <div className="space-y-1 mb-6">
-                          <h3 className="font-black text-[#395886] tracking-tight">Pre-Test Umum</h3>
-                          <p className="text-xs font-bold text-[#395886]/40 uppercase tracking-widest">Evaluasi Awal</p>
-                        </div>
-
-                        <div className="flex items-end justify-between gap-4">
-                          {done ? (
-                            <>
-                              <div className="relative">
-                                <div className="absolute -inset-4 bg-[#8B5CF6]/10 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <p className="relative text-4xl font-black text-[#395886] leading-none">
-                                  {Math.round((score/total)*100)}<span className="text-lg opacity-40">%</span>
-                                </p>
-                                <p className="text-[10px] font-black text-[#8B5CF6] mt-1.5 uppercase tracking-widest">{score}/{total} BENAR</p>
-                              </div>
-                              <button 
-                                onClick={() => openReview('Pre-Test Umum', globalPretest.questions, globalTestProgress.globalPretestAnswers ?? [], score)} 
-                                className="relative z-10 px-5 py-2.5 bg-white border-2 border-[#D5DEEF] rounded-2xl text-xs font-black text-[#395886] hover:border-[#8B5CF6] hover:text-[#8B5CF6] transition-all shadow-sm active:scale-95"
-                              >
-                                Review
-                              </button>
-                            </>
-                          ) : (
-                            <Link to="/global-pretest" className="w-full text-center py-3 bg-[#395886] text-white rounded-2xl text-xs font-black hover:bg-[#628ECB] transition-all shadow-lg shadow-[#395886]/10">Mulai Sekarang</Link>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Global Posttest */}
-                  {(() => {
-                    const done = globalTestProgress.globalPosttestCompleted;
-                    const score = globalTestProgress.globalPosttestScore ?? 0;
-                    const total = globalPosttest.questions.length;
-                    const unlocked = globalPosttestUnlocked;
-                    return (
-                      <div className={`group relative p-6 rounded-[2rem] border-2 transition-all duration-300 ${
-                        done 
-                          ? 'border-[#F59E0B]/20 bg-gradient-to-br from-[#F59E0B]/5 to-[#FFFBEB] shadow-sm hover:shadow-md' 
-                          : 'border-[#D5DEEF] bg-gray-50/50'
-                      } ${!unlocked && !done ? 'opacity-60' : ''}`}>
-                        <div className="flex items-center justify-between mb-4">
-                          <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${done ? 'bg-[#F59E0B] text-white shadow-lg shadow-[#F59E0B]/25' : 'bg-[#D5DEEF] text-[#395886]/30'}`}>
-                            <Award className="w-5 h-5" />
-                          </div>
-                          {done && (
-                            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F59E0B]/10 text-[#F59E0B] text-[10px] font-black uppercase tracking-wider border border-[#F59E0B]/20">
-                              <CheckCircle className="w-3 h-3" /> Selesai
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="space-y-1 mb-6">
-                          <h3 className="font-black text-[#395886] tracking-tight">Post-Test Umum</h3>
-                          <p className="text-xs font-bold text-[#395886]/40 uppercase tracking-widest">Evaluasi Akhir</p>
-                        </div>
-
-                        <div className="flex items-end justify-between gap-4">
-                          {done ? (
-                            <>
-                              <div className="relative">
-                                <div className="absolute -inset-4 bg-[#F59E0B]/10 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <p className="relative text-4xl font-black text-[#395886] leading-none">
-                                  {Math.round((score/total)*100)}<span className="text-lg opacity-40">%</span>
-                                </p>
-                                <p className="text-[10px] font-black text-[#F59E0B] mt-1.5 uppercase tracking-widest">{score}/{total} BENAR</p>
-                              </div>
-                              <button 
-                                onClick={() => openReview('Post-Test Umum', globalPosttest.questions, globalTestProgress.globalPosttestAnswers ?? [], score)} 
-                                className="relative z-10 px-5 py-2.5 bg-white border-2 border-[#D5DEEF] rounded-2xl text-xs font-black text-[#395886] hover:border-[#F59E0B] hover:text-[#F59E0B] transition-all shadow-sm active:scale-95"
-                              >
-                                Review
-                              </button>
-                            </>
-                          ) : unlocked ? (
-                            <Link to="/global-posttest" className="w-full text-center py-3 bg-[#F59E0B] text-white rounded-2xl text-xs font-black hover:bg-[#D97706] transition-all shadow-lg shadow-[#F59E0B]/10">Ikuti Tes</Link>
-                          ) : (
-                            <div className="w-full text-center py-3 bg-gray-200 text-gray-400 rounded-2xl text-xs font-black flex items-center justify-center gap-2 cursor-not-allowed border-2 border-gray-200/50"><Lock className="w-3.5 h-3.5" /> Terkunci</div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-
-                {/* 2. Hasil Per Pertemuan (CTL & Tes) */}
-                <div className="mt-4 space-y-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#628ECB] px-2">Detail Per Pertemuan</p>
-                  {Object.values(lessons).map((lesson) => {
-                    const lp = progress.find((p) => p.lessonId === lesson.id);
-                    const ctlDone = (lp?.completedStages.length ?? 0) === lesson.stages.length;
-                    const preDone = lp?.pretestCompleted ?? false;
-                    const postDone = lp?.posttestCompleted ?? false;
-                    const unlocked = lessonUnlockMap[lesson.id] ?? false;
-                    
-                    if (!unlocked && !lp) return null;
-
-                    return (
-                      <div key={lesson.id} className="group bg-[#F8FAFD] rounded-[2rem] border border-[#D5DEEF] p-6 hover:border-[#628ECB]/30 hover:shadow-md transition-all">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                          <div className="flex items-center gap-4 min-w-0">
-                            <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#395886] text-white flex items-center justify-center font-black text-sm shadow-md shadow-[#395886]/10">P{lesson.id}</div>
-                            <div className="min-w-0">
-                              <h4 className="font-bold text-[#395886] truncate">{lesson.title}</h4>
-                              <p className="text-xs text-[#395886]/50 font-medium truncate">{lesson.topic}</p>
+                      return (
+                        <tr key={lesson.id} className="hover:bg-[#F8FAFD] transition-colors group">
+                          <td className="px-6 py-5">
+                            <p className="text-xs font-black text-[#395886] group-hover:text-[#628ECB] transition-colors">{lesson.title}</p>
+                            <p className="text-[10px] font-bold text-[#395886]/40 mt-0.5">{lesson.topic}</p>
+                          </td>
+                          <td className="px-6 py-5 text-center">
+                            <div className="flex flex-col items-center">
+                              <span className={`text-xs font-black ${preDone ? 'text-[#628ECB]' : 'text-gray-300'}`}>{preDone ? `${lp?.pretestScore}/${lesson.pretest.questions.length}` : '-'}</span>
+                              <span className="text-[8px] font-bold uppercase text-[#395886]/30">Benar</span>
                             </div>
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-3">
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#D5DEEF] shadow-sm">
-                              <span className="text-[10px] font-bold text-[#395886]/40 uppercase">Pre</span>
-                              <span className={`text-xs font-black ${preDone ? 'text-[#628ECB]' : 'text-gray-300'}`}>{preDone ? `${lp?.pretestScore}/${lesson.pretest.questions.length}` : '—'}</span>
+                          </td>
+                          <td className="px-6 py-5 text-center">
+                            <div className="flex flex-col items-center">
+                              <span className={`text-xs font-black ${ctlDoneCount === ctlTotal ? 'text-[#10B981]' : 'text-[#395886]/70'}`}>{ctlDoneCount}/{ctlTotal}</span>
+                              <span className="text-[8px] font-bold uppercase text-[#395886]/30">Selesai</span>
                             </div>
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#D5DEEF] shadow-sm">
-                              <span className="text-[10px] font-bold text-[#395886]/40 uppercase">CTL</span>
-                              <span className={`text-xs font-black ${ctlDone ? 'text-[#10B981]' : lp?.completedStages.length ? 'text-[#F59E0B]' : 'text-gray-300'}`}>
-                                {lp?.completedStages.length ?? 0}/{lesson.stages.length}
-                              </span>
+                          </td>
+                          <td className="px-6 py-5 text-center">
+                            <div className="flex flex-col items-center">
+                              <span className={`text-xs font-black ${postDone ? 'text-[#628ECB]' : 'text-gray-300'}`}>{postDone ? `${lp?.posttestScore}/${lesson.posttest.questions.length}` : '-'}</span>
+                              <span className="text-[8px] font-bold uppercase text-[#395886]/30">Benar</span>
                             </div>
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#D5DEEF] shadow-sm">
-                              <span className="text-[10px] font-bold text-[#395886]/40 uppercase">Post</span>
-                              <span className={`text-xs font-black ${postDone ? 'text-[#628ECB]' : 'text-gray-300'}`}>{postDone ? `${lp?.posttestScore}/${lesson.posttest.questions.length}` : '—'}</span>
-                            </div>
-                            <Link to={`/review/${lesson.id}`} className="ml-2 flex items-center gap-2 px-5 py-2.5 bg-[#395886] text-white rounded-2xl text-xs font-bold hover:bg-[#628ECB] shadow-md shadow-[#395886]/10 transition-all active:scale-95">
-                              Review Lengkap <ArrowRight className="w-3.5 h-3.5" />
+                          </td>
+                          <td className="px-6 py-5 text-right">
+                            <Link to={`/review/${lesson.id}`} className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase text-[#628ECB] hover:text-[#395886] transition-colors">
+                              <Eye className="w-3 h-3" />
+                              Detail
                             </Link>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
         )}
       </main>
 
-      {/* ── REVIEW JAWABAN MODAL ───────────────────────────────────────────── */}
-      <Dialog open={!!reviewModal} onOpenChange={(open) => !open && setReviewModal(null)}>
-        <DialogContent className="border-[#D5DEEF] sm:max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-[2.5rem] shadow-2xl">
-          <DialogHeader className="p-8 pb-6 border-b border-[#D5DEEF] bg-[#F8FAFD]">
-            <div className="flex items-center justify-between">
+      {/* REVIEW JAWABAN MODAL --------------------------------------------------- */}
+      <Dialog open={!!reviewModal} onOpenChange={() => setReviewModal(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col rounded-[2.5rem] border-none shadow-2xl p-0">
+          <DialogHeader className="p-8 border-b border-[#D5DEEF] bg-[#F8FAFD] shrink-0">
+            <div className="flex items-center justify-between gap-4">
               <div>
                 <DialogTitle className="text-[#395886] text-2xl font-black tracking-tight">{reviewModal?.title}</DialogTitle>
-                <DialogDescription className="hidden">
-                  Tinjauan hasil pengerjaan tes dan jawaban benar.
-                </DialogDescription>
                 {reviewModal && (
-                  <div className="mt-2 flex items-center gap-3">
-                    <div className="bg-[#628ECB]/10 px-3 py-1 rounded-full border border-[#628ECB]/20">
-                      <p className="text-sm font-bold text-[#395886]">
-                        Skor: <span className="text-[#628ECB]">{reviewModal.score}/{reviewModal.questions.length}</span>
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <div className="bg-white px-4 py-2 rounded-2xl border-2 border-[#D5DEEF] flex items-center gap-3 shadow-sm">
+                      <p className="text-[10px] font-black text-[#395886]/40 uppercase tracking-widest">Nilai Akhir</p>
+                      <p className="text-xl font-black text-[#395886] tabular-nums">
+                        {Math.round((reviewModal.score / (reviewModal.questions.length || 30)) * 100)}
                       </p>
                     </div>
-                    <div className={`px-3 py-1 rounded-full border ${Math.round((reviewModal.score / reviewModal.questions.length) * 100) >= 70 ? 'bg-[#10B981]/10 border-[#10B981]/20 text-[#10B981]' : 'bg-[#F59E0B]/10 border-[#F59E0B]/20 text-[#F59E0B]'}`}>
-                      <p className="text-sm font-black">
-                        {Math.round((reviewModal.score / reviewModal.questions.length) * 100)}%
+                    <div className={`px-4 py-2 rounded-2xl border-2 flex items-center gap-2 shadow-sm ${
+                      Math.round((reviewModal.score / (reviewModal.questions.length || 30)) * 100) >= 86 ? 'bg-[#10B981]/10 border-[#10B981]/20 text-[#10B981]' :
+                      Math.round((reviewModal.score / (reviewModal.questions.length || 30)) * 100) >= 71 ? 'bg-[#628ECB]/10 border-[#628ECB]/20 text-[#628ECB]' :
+                      Math.round((reviewModal.score / (reviewModal.questions.length || 30)) * 100) >= 60 ? 'bg-[#F59E0B]/10 border-[#F59E0B]/20 text-[#F59E0B]' :
+                      'bg-red-50 border-red-100 text-red-600'
+                    }`}>
+                      <p className="text-[10px] font-black uppercase tracking-widest">
+                        {
+                          Math.round((reviewModal.score / (reviewModal.questions.length || 30)) * 100) >= 86 ? 'Sangat Baik' :
+                          Math.round((reviewModal.score / (reviewModal.questions.length || 30)) * 100) >= 71 ? 'Baik' :
+                          Math.round((reviewModal.score / (reviewModal.questions.length || 30)) * 100) >= 60 ? 'Cukup' :
+                          'Perlu Latihan'
+                        }
+                      </p>
+                    </div>
+                    <div className="px-4 py-2 rounded-2xl border-2 border-[#D5DEEF] bg-white flex items-center gap-2 shadow-sm">
+                      <p className="text-[10px] font-black text-[#395886]/40 uppercase tracking-widest">Akurasi</p>
+                      <p className="text-xs font-black text-[#395886]/60 uppercase tracking-tighter">
+                        {reviewModal.score}/{(reviewModal.questions.length || 30)} Benar
                       </p>
                     </div>
                   </div>
                 )}
               </div>
+              <button onClick={() => setReviewModal(null)} className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-gray-200 transition-colors">
+                <X className="w-5 h-5 text-[#395886]" />
+              </button>
             </div>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-thin scrollbar-thumb-[#D5DEEF]">
-            {reviewModal?.questions.map((q, i) => {
-              const studentAnswer = reviewModal.studentAnswers[i];
-              const isCorrect = studentAnswer === q.correctAnswer;
-              return (
-                <div key={i} className={`rounded-[1.5rem] border-2 p-6 transition-all ${isCorrect ? 'border-[#10B981]/20 bg-[#10B981]/[0.02]' : 'border-red-100 bg-red-50/[0.02]'}`}>
-                  <div className="mb-5 flex gap-4">
-                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-sm font-black shadow-sm ${isCorrect ? 'bg-[#10B981] text-white' : 'bg-red-500 text-white'}`}>
-                      {i + 1}
-                    </span>
-                    <p className="font-bold text-[#395886] leading-relaxed text-base">{q.question}</p>
-                  </div>
-                  <div className="ml-12 grid gap-2.5">
-                    {q.options.map((opt, j) => {
-                      const isStudentChoice = studentAnswer === j;
-                      const isCorrectChoice = q.correctAnswer === j;
-                      let cls = 'flex items-start gap-3 rounded-xl border-2 p-4 text-sm font-medium transition-all ';
-                      if (isCorrectChoice) {
-                        cls += 'border-[#10B981] bg-[#10B981]/10 text-[#0F8A66] shadow-sm';
-                      } else if (isStudentChoice && !isCorrect) {
-                        cls += 'border-red-400 bg-red-50 text-red-700 shadow-sm';
-                      } else {
-                        cls += 'border-[#D5DEEF] bg-white text-[#395886]/50';
-                      }
-                      return (
-                        <div key={j} className={cls}>
-                          <span className={`shrink-0 font-black w-5 ${isCorrectChoice ? 'text-[#0F8A66]' : isStudentChoice ? 'text-red-700' : 'text-[#395886]/30'}`}>{OPTION_LABELS[j]}.</span>
-                          <span className="flex-1 leading-relaxed">{opt}</span>
-                          {isCorrectChoice && <CheckCircle className="ml-auto h-5 w-5 shrink-0 text-[#10B981]" />}
-                          {isStudentChoice && !isCorrect && <X className="ml-auto h-5 w-5 shrink-0 text-red-500" />}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {!isCorrect && typeof studentAnswer === 'number' && (
-                    <div className="ml-12 mt-4 flex flex-wrap items-center gap-3">
-                      <div className="flex items-center gap-2 rounded-xl bg-red-50 border border-red-100 px-4 py-2 font-bold text-red-600 text-xs shadow-sm">
-                        <X className="h-3.5 w-3.5" /> Jawaban kamu: <span className="bg-red-200/50 px-1.5 rounded ml-1">{OPTION_LABELS[studentAnswer]}</span>
-                      </div>
-                      <div className="flex items-center gap-2 rounded-xl bg-[#10B981]/5 border border-[#10B981]/20 px-4 py-2 font-bold text-[#10B981] text-xs shadow-sm">
-                        <CheckCircle className="h-3.5 w-3.5" /> Benar: <span className="bg-[#10B981]/20 px-1.5 rounded ml-1">{OPTION_LABELS[q.correctAnswer]}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="border-t border-[#D5DEEF] p-6 flex justify-end bg-[#F8FAFD]">
-            <button
-              onClick={() => setReviewModal(null)}
-              className="px-10 py-3.5 bg-[#628ECB] text-white text-sm font-bold rounded-2xl hover:bg-[#395886] transition-all shadow-lg active:scale-95 shadow-[#628ECB]/20"
-            >
-              Tutup Review
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <ProfileModal
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-        user={user!}
-        onUpdate={() => {}}
-      />
-
-      <GuideModal
-        isOpen={isGuideOpen}
-        onClose={() => setIsGuideOpen(false)}
-      />
-
-      <Dialog open={isGroupOpen} onOpenChange={setIsGroupOpen}>
-        <DialogContent className="border-[#D5DEEF] sm:max-w-3xl max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-[2rem]">
-          <DialogHeader className="p-8 pb-6 bg-gradient-to-br from-[#395886] to-[#628ECB] border-b border-[#3A6CB5]/30">
-            <DialogTitle className="text-white flex items-center gap-3 text-2xl font-bold">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 border border-white/30">
-                <Users className="w-5 h-5 text-white" />
-              </div>
-              Kelompok Belajar
-            </DialogTitle>
-            <DialogDescription className="text-white/65 font-medium mt-2">
-              Kolaborasi dengan rekan sejawat adalah bagian penting dari metode CTL. Pilih kelompok Anda.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex-1 overflow-y-auto p-8 scrollbar-thin scrollbar-thumb-[#D5DEEF]">
-            <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
-              <div className="space-y-5">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#628ECB]">Tersedia</p>
-                <div className="grid gap-3">
-                  {availableGroups.map((groupName) => {
-                    const count = allStudents.filter(s => groupAssignments[s.id] === groupName).length;
-                    const isFull = count >= 5 && selectedGroup !== groupName;
-                    return (
-                      <button
-                        key={groupName}
-                        disabled={isFull}
-                        onClick={() => saveGroupSelection(groupName)}
-                        className={`group relative overflow-hidden rounded-2xl border-2 px-5 py-4 text-left transition-all ${
-                          selectedGroup === groupName
-                            ? 'border-[#628ECB] bg-[#628ECB]/5 text-[#395886]'
-                            : isFull
-                            ? 'border-[#D5DEEF] bg-[#F8FAFD] text-[#395886]/20 cursor-not-allowed opacity-60'
-                            : 'border-[#D5DEEF] bg-white text-[#395886]/60 hover:border-[#628ECB]/50 hover:bg-[#F8FAFD]'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex flex-col">
-                            <span className="font-bold">{groupName}</span>
-                            <span className="text-[10px] font-bold opacity-60">
-                              {count}/5 Anggota {isFull ? '(Penuh)' : ''}
-                            </span>
-                          </div>
-                          {selectedGroup === groupName && (
-                            <div className="h-2.5 w-2.5 rounded-full bg-[#628ECB] shadow-[0_0_10px_rgba(98,142,203,0.5)]" />
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="space-y-5">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#628ECB]">Anggota Aktif</p>
-                <div className="rounded-[2rem] border-2 border-[#D5DEEF] bg-[#F8FAFD] p-2 overflow-hidden shadow-inner">
-                  {selectedGroup ? (
-                    <div className="space-y-2">
-                      <div className="bg-[#628ECB] px-6 py-3 text-sm font-bold text-white flex justify-between items-center rounded-[1.5rem] shadow-md">
-                        <span>{selectedGroup}</span>
-                        <span className="bg-white/20 px-3 py-1 rounded-lg text-xs font-bold">{studentsInSelectedGroup.length} Anggota</span>
-                      </div>
-                      <div className="p-3 space-y-2 max-h-[350px] overflow-y-auto scrollbar-hide">
-                        {studentsInSelectedGroup.length > 0 ? (
-                          studentsInSelectedGroup.map((student) => (
-                            <div key={student.id} className="flex items-center gap-4 rounded-2xl border border-[#D5DEEF] bg-white p-4 shadow-sm transition-transform hover:scale-[1.02]">
-                              <div className="h-10 w-10 rounded-xl bg-[#F0F3FA] flex items-center justify-center text-[#628ECB]">
-                                <User className="w-5 h-5" />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="font-bold text-[#395886] truncate">{student.name}</p>
-                                <p className="text-[10px] text-[#395886]/50 font-bold uppercase tracking-widest">{student.class}</p>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="py-12 text-center">
-                            <Users className="w-12 h-12 text-[#D5DEEF] mx-auto mb-4 opacity-50" />
-                            <p className="text-sm font-bold text-[#395886]/40 italic">Jadilah anggota pertama di kelompok ini.</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="py-24 text-center">
-                      <div className="relative inline-block mb-6">
-                        <Users className="w-16 h-16 text-[#D5DEEF] mx-auto opacity-30" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#F8FAFD] to-transparent" />
-                      </div>
-                      <p className="text-sm font-bold text-[#395886]/40 max-w-[240px] mx-auto leading-relaxed">
-                        Silakan pilih salah satu kelompok di samping untuk melihat rekan belajar Anda.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+          <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-white">
+             <div className="flex flex-col items-center justify-center py-12 text-center">
+                <FileSearch className="w-16 h-16 text-[#D5DEEF] mb-4 opacity-40" />
+                <p className="text-sm font-bold text-[#395886]/40 max-w-xs">Data detail jawaban belum tersedia untuk ditampilkan di modal ini. Silakan cek detail pertemuan.</p>
+             </div>
           </div>
           
-          <div className="p-6 bg-gradient-to-r from-[#EEF3FB] to-[#F0F5FF] border-t border-[#C4D7F5] flex justify-end">
-            <button
-              onClick={() => setIsGroupOpen(false)}
-              className="px-8 py-3 bg-[#628ECB] text-white text-sm font-bold rounded-2xl hover:bg-[#395886] transition-all shadow-lg active:scale-95"
-            >
-              Simpan & Tutup
-            </button>
+          <div className="p-6 border-t border-[#D5DEEF] bg-[#F8FAFD] flex justify-end">
+             <button onClick={() => setReviewModal(null)} className="px-8 py-3 rounded-2xl bg-[#395886] text-white font-black text-sm hover:bg-[#2A4468] transition-all">Tutup Review</button>
           </div>
         </DialogContent>
       </Dialog>
 
+      {/* FOOTER --------------------------------------------------------------- */}
+      <footer className="bg-white border-t border-[#D5DEEF] mt-12 py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-2 grayscale opacity-50">
+              <Logo size="sm" />
+            </div>
+            <p className="text-xs font-bold text-[#395886]/40 uppercase tracking-widest">
+              &copy; 2026 CONNETIC Module. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
+
+      {/* LOGOUT CONFIRMATION */}
       <AlertDialog open={isLogoutOpen} onOpenChange={setIsLogoutOpen}>
-        <AlertDialogContent className="border-[#D5DEEF] rounded-[2rem]">
+        <AlertDialogContent className="rounded-[2.5rem] border-none shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-[#395886] text-xl font-bold">Konfirmasi Keluar</AlertDialogTitle>
-            <AlertDialogDescription className="text-[#395886]/60 font-medium">
-              Apakah Anda yakin ingin mengakhiri sesi belajar kali ini? Pastikan progress terakhir Anda telah tersimpan.
+            <AlertDialogTitle className="text-xl font-black text-[#395886]">Sudah Selesai Belajar?</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm font-medium text-[#395886]/60">
+              Sesi Anda akan berakhir, tapi progres belajar akan tetap tersimpan aman di sistem kami.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="gap-3">
-            <AlertDialogCancel className="border-[#D5DEEF] text-[#395886] hover:bg-[#F0F3FA] rounded-xl font-bold">
-              Batal
-            </AlertDialogCancel>
-            <AlertDialogAction className="bg-red-500 text-white hover:bg-red-600 rounded-xl font-bold shadow-lg shadow-red-200" onClick={handleLogout}>
+          <AlertDialogFooter className="mt-6 gap-3">
+            <AlertDialogCancel className="rounded-xl font-bold border-2 border-[#D5DEEF]">Batal</AlertDialogCancel>
+            <AlertDialogAction className="bg-red-500 hover:bg-red-600 rounded-xl font-bold shadow-lg shadow-red-200" onClick={handleLogout}>
               Ya, Logout
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+function FileSearch(props: any) {
+  return (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><circle cx="11.5" cy="15.5" r="2.5"/><path d="M16 20l-2-2"/>
+    </svg>
   );
 }

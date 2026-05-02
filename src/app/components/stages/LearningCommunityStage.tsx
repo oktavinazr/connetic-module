@@ -1,1183 +1,394 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   ChevronRight, CheckCircle, XCircle, Users, Link as LinkIcon, FileSearch,
   MessageSquare, Info, RotateCcw, AlertCircle, ThumbsUp, ArrowUpDown, GripVertical,
-  ArrowDown, ArrowUp, Activity, Award, Eye,
+  Zap, Database, Cpu, Cable, Network, ShieldCheck, PlayCircle, Eye, ArrowRight,
+  Vote, Award, Sparkles, Monitor
 } from 'lucide-react';
-import { DndProvider, useDrag, useDrop } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
 import { getCurrentUser } from '../../utils/auth';
 import { getLessonProgress, saveStageAttempt } from '../../utils/progress';
-import { TcpIpInteractive } from '../ui/TcpIpInteractive';
+import { supabase } from '../../utils/supabase';
 
-// ── Types ──────────────────────────────────────────────────────────────────────
+// -- Types ----------------------------------------------------------------------
 
-interface MatchingPair { left: string; right: string }
-interface CaseOption { id: string; text: string; isCorrect: boolean; feedback: string }
-interface CaseScenario { title: string; description: string; question: string; options?: CaseOption[] }
-interface PeerAnswer { name: string; role: string; answer: string; score?: number }
-interface PeerVotingMethod { id: string; title: string; description: string; votes?: number; pros: string; cons: string }
-interface PeerVotingScenario { context: string; question: string; methods: PeerVotingMethod[]; correctMethodId: string }
-interface PeerComment { name: string; avatar: string; comment: string; votedFor: string }
-interface CaseComparisonProcess { id: string; step: string; correctOrder: number }
-interface CaseComparisonData { title: string; process: CaseComparisonProcess[]; peerAnalyses: Array<{ name: string; analysis: string; isCorrect: boolean }> }
-interface EncapsulationCaseData { title: string; process: CaseComparisonProcess[]; groupAnswers: Array<{ name: string; analysis: string; isCorrect: boolean }> }
+interface GroupDiscussion {
+  id: string;
+  lesson_id: string;
+  module_id: string;
+  group_name: string;
+  user_id: string;
+  user_name: string;
+  argument: string;
+  choice_id?: string;
+  choice_text?: string;
+  votes: string[]; // array of user IDs
+  created_at: string;
+}
+
+interface CaseStudy {
+  id: string;
+  title: string;
+  description: string;
+  options: { id: string; text: string; isCorrect: boolean }[];
+  correctFeedback: string;
+}
 
 interface LearningCommunityStageProps {
-  matchingPairs?: MatchingPair[];
-  caseScenario?: CaseScenario;
-  peerAnswers?: PeerAnswer[];
-  peerVotingScenario?: PeerVotingScenario;
-  peerComments?: PeerComment[];
-  caseComparisonData?: CaseComparisonData;
-  encapsulationCaseData?: EncapsulationCaseData;
   lessonId: string;
   stageIndex: number;
-  isCompleted?: boolean;
+  moduleId: string; // e.g., 'X.TCP.6'
+  groupName?: string;
   onComplete: (answer: any) => void;
+  isCompleted?: boolean;
 }
 
-// ── Sortable Step Card (DnD) ──────────────────────────────────────────────────
+// -- Animation variants ---------------------------------------------------------
+const anim = {
+  fadeIn: 'animate-in fade-in duration-500',
+  fadeUp: 'animate-in fade-in slide-in-from-bottom-4 duration-500',
+  zoomIn: 'animate-in fade-in zoom-in-95 duration-500',
+};
 
-const DRAG_CASE = 'CASE_STEP';
+// -- Module Phase 1: Concept ----------------------------------------------------
 
-function SortableStepCard({
-  step, index, moveItem, validated,
+function ConceptPhase({
+  title, concept, layers, isEncapsulation, onNext,
 }: {
-  step: CaseComparisonProcess;
-  index: number;
-  moveItem: (from: number, to: number) => void;
-  validated: boolean;
+  title: string; concept: string; layers: any[]; isEncapsulation: boolean; onNext: () => void;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const isCorrect = validated && step.correctOrder === index + 1;
-  const isWrong = validated && step.correctOrder !== index + 1;
-
-  const [{ isDragging }, drag] = useDrag({
-    type: DRAG_CASE,
-    item: () => ({ index }),
-    canDrag: !validated,
-    collect: (m) => ({ isDragging: m.isDragging() }),
-  });
-
-  const [{ isOver }, drop] = useDrop({
-    accept: DRAG_CASE,
-    hover: (dragged: { index: number }) => {
-      if (dragged.index === index) return;
-      moveItem(dragged.index, index);
-      dragged.index = index;
-    },
-    collect: (m) => ({ isOver: m.isOver() }),
-  });
-
-  drag(drop(ref));
-
-  let cardCls = 'border-[#D5DEEF] bg-white';
-  if (isOver && !validated) cardCls = 'border-[#F59E0B]/60 bg-[#F59E0B]/5 shadow-md';
-  if (isCorrect) cardCls = 'border-[#10B981] bg-[#10B981]/8';
-  if (isWrong) cardCls = 'border-red-400 bg-red-50';
-
   return (
-    <div
-      ref={ref}
-      className={`flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all select-none ${cardCls} ${isDragging ? 'opacity-30 scale-[0.98]' : ''} ${!validated ? 'cursor-grab active:cursor-grabbing' : ''}`}
-    >
-      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black ${isCorrect ? 'bg-[#10B981] text-white' : isWrong ? 'bg-red-400 text-white' : 'bg-[#D5DEEF] text-[#395886]/60'}`}>
-        {index + 1}
-      </div>
-      {!validated && <GripVertical className="w-4 h-4 text-[#395886]/25 shrink-0" />}
-      <p className="flex-1 text-sm text-[#395886] leading-relaxed">{step.step}</p>
-      {isCorrect && <CheckCircle className="w-5 h-5 text-[#10B981] shrink-0" />}
-      {isWrong && <XCircle className="w-5 h-5 text-red-400 shrink-0" />}
-    </div>
-  );
-}
-
-// ── Group Answer Panel ─────────────────────────────────────────────────────────
-
-function GroupAnswerPanel({
-  groupAnswers, studentCorrect, onDone, nextLabel,
-}: {
-  groupAnswers: Array<{ name: string; analysis: string; isCorrect: boolean }>;
-  studentCorrect: boolean;
-  onDone: () => void;
-  nextLabel: string;
-}) {
-  const rankingData = [
-    ...groupAnswers.filter(g => g.isCorrect).map((g, i) => ({ ...g, rank: i + (studentCorrect ? 2 : 1) })),
-    ...groupAnswers.filter(g => !g.isCorrect).map((g, i) => ({ ...g, rank: groupAnswers.filter(x => x.isCorrect).length + (studentCorrect ? 2 : 1) + i })),
-  ];
-  if (studentCorrect) rankingData.unshift({ name: 'Kamu', analysis: 'Jawaban kamu benar!', isCorrect: true, rank: 1 });
-
-  return (
-    <div className="bg-white rounded-2xl border-2 border-[#F59E0B]/20 shadow-sm p-5 space-y-5">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#F59E0B]/10">
-          <Users className="w-5 h-5 text-[#F59E0B]" />
-        </div>
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">Group Answer Panel</p>
-          <h3 className="text-sm font-bold text-[#395886]">Perbandingan Jawaban Kelompok</h3>
-        </div>
+    <div className={`space-y-5 ${anim.fadeUp}`}>
+      <div className="relative overflow-hidden rounded-2xl border-2 border-[#628ECB]/20 bg-white p-5 shadow-sm">
+        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#628ECB] mb-1.5">Konsep Dasar</p>
+        <h3 className="text-base font-bold text-[#395886] mb-2">{title}</h3>
+        <p className="text-sm leading-relaxed text-[#395886]/75 relative z-10">{concept}</p>
       </div>
 
-      {/* Info */}
-      <div className="bg-[#F0FDF4] border border-[#10B981]/20 p-3 rounded-xl flex items-start gap-2">
-        <Info className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" />
-        <p className="text-xs font-bold text-[#065F46]">
-          Kamu dapat melihat jawaban anggota kelompok, tetapi tidak dapat mengubahnya. Gunakan perbandingan ini untuk memahami perbedaan pendekatan dan memperkuat pemahamanmu.
-        </p>
-      </div>
-
-      {/* Student's own answer */}
-      <div className={`p-4 rounded-xl border-2 ${studentCorrect ? 'border-[#628ECB] bg-[#628ECB]/5' : 'border-amber-300 bg-amber-50'}`}>
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-7 h-7 rounded-full bg-[#628ECB] flex items-center justify-center text-[10px] font-black text-white">KM</div>
-          <p className="text-xs font-black text-[#628ECB]">Jawaban Kamu</p>
-          <span className={`ml-auto text-[9px] font-black px-2 py-0.5 rounded-full ${studentCorrect ? 'bg-[#10B981] text-white' : 'bg-amber-400 text-white'}`}>
-            {studentCorrect ? '✓ BENAR' : 'PERLU DITINJAU'}
-          </span>
-        </div>
-        <p className="text-xs text-[#628ECB]/70 mt-1">{studentCorrect ? 'Urutan yang kamu susun sudah sesuai dengan alur yang benar.' : 'Lihat urutan yang benar dari teman kelompok yang mendapat ✓.'}</p>
-      </div>
-
-      {/* Group members */}
-      <div className="space-y-3">
-        {groupAnswers.map((member, i) => (
-          <div key={i} className={`p-4 rounded-xl border-2 ${member.isCorrect ? 'border-[#10B981]/30 bg-[#10B981]/5' : 'border-red-200 bg-red-50/50'}`}>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#628ECB] to-[#395886] flex items-center justify-center text-[10px] font-black text-white">
-                {member.name.substring(0, 2).toUpperCase()}
+      <div className="bg-white rounded-[2rem] border-2 border-[#D5DEEF] p-8 shadow-sm">
+        <div className="flex flex-col items-center gap-6">
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/40">Visualisasi Alur Data</p>
+          <div className="flex flex-col gap-2 w-full max-w-sm">
+            {layers.map((layer, idx) => (
+              <div key={idx} className={`flex items-center gap-3 p-4 rounded-2xl border-2 border-[#D5DEEF] bg-[#F8FAFD] transition-all`}>
+                <div className="h-8 w-8 rounded-lg bg-[#395886] text-white flex items-center justify-center font-black text-xs">{isEncapsulation ? idx + 1 : layers.length - idx}</div>
+                <span className="text-sm font-bold text-[#395886]">{layer}</span>
               </div>
-              <p className="text-xs font-black text-[#395886]">{member.name}</p>
-              <span className={`ml-auto text-[9px] font-black px-2 py-0.5 rounded-full ${member.isCorrect ? 'bg-[#10B981] text-white' : 'bg-red-400 text-white'}`}>
-                {member.isCorrect ? '✓ BENAR' : '✗ PERLU KOREKSI'}
-              </span>
-            </div>
-            <p className="text-xs text-[#395886]/80 leading-relaxed italic">"{member.analysis}"</p>
+            ))}
           </div>
-        ))}
-      </div>
-
-      {/* Argument Ranking Board */}
-      <div className="bg-[#F8FAFF] rounded-xl border border-[#D5DEEF] p-4 space-y-3">
-        <div className="flex items-center gap-2 mb-1">
-          <Award className="w-4 h-4 text-[#628ECB]" />
-          <p className="text-xs font-black text-[#395886]">Ranking Argumen — Berdasarkan Ketepatan</p>
-        </div>
-        <div className="space-y-2">
-          {rankingData.slice(0, 5).map(item => (
-            <div key={item.rank} className="flex items-center gap-3 p-2.5 rounded-lg bg-white border border-[#D5DEEF]">
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white shrink-0 ${item.rank <= 2 ? 'bg-[#10B981]' : item.rank <= 4 ? 'bg-amber-400' : 'bg-red-400'}`}>
-                {item.rank}
-              </span>
-              <span className="text-xs font-bold text-[#395886]">{item.name}</span>
-              <span className="text-[10px] text-[#395886]/50 hidden sm:block truncate">{item.analysis.slice(0, 50)}...</span>
-              <span className={`ml-auto text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 ${item.isCorrect ? 'bg-[#10B981]/10 text-[#10B981]' : 'bg-red-100 text-red-600'}`}>
-                {item.isCorrect ? '✓' : '✗'}
-              </span>
-            </div>
-          ))}
+          <div className="mt-4 flex flex-col items-center gap-2">
+            <div className={`h-12 w-1 w-1 bg-gradient-to-b ${isEncapsulation ? 'from-[#395886] to-[#10B981]' : 'from-[#10B981] to-[#395886]'} rounded-full`} />
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#10B981]">{isEncapsulation ? 'Proses Membungkus' : 'Proses Membuka'}</span>
+          </div>
         </div>
       </div>
 
-      <button onClick={onDone} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm transition-all active:scale-95">
-        {nextLabel} <ChevronRight className="w-4 h-4" />
+      <button onClick={onNext} className="w-full py-4 rounded-2xl bg-[#395886] text-white font-black text-sm hover:bg-[#2A4468] transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2">
+        Pahami Studi Kasus <ChevronRight className="w-4 h-4" />
       </button>
     </div>
   );
 }
 
-// ── TCP/IP Visual Phase ────────────────────────────────────────────────────────
+// -- Module Phase 2: Case Study -------------------------------------------------
 
-function TcpIpVisualPhase({ onComplete }: { onComplete: () => void }) {
-  const [understood, setUnderstood] = useState(false);
-
+function CasePhase({ study, onNext }: { study: CaseStudy; onNext: (choiceId: string, choiceText: string) => void }) {
+  const [selected, setSelected] = useState<string | null>(null);
   return (
-    <div className="max-w-5xl mx-auto space-y-5">
-      <div className="bg-white rounded-2xl border-2 border-[#F59E0B]/20 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-5 py-3 bg-[#F59E0B]/8 border-b border-[#F59E0B]/20">
-          <Activity className="w-4 h-4 text-[#F59E0B]" />
+    <div className={`space-y-6 ${anim.zoomIn}`}>
+      <div className="bg-white rounded-[2rem] border-2 border-[#F59E0B]/20 p-8 shadow-sm">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="h-10 w-10 rounded-xl bg-[#F59E0B]/10 flex items-center justify-center text-[#F59E0B]"><FileSearch className="w-6 h-6" /></div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">Pengantar — Simulasi Interaktif</p>
-            <h3 className="text-sm font-bold text-[#395886]">Visualisasi Proses TCP/IP U-Shape</h3>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">Studi Kasus Kelompok</p>
+            <h3 className="text-base font-bold text-[#395886]">{study.title}</h3>
           </div>
         </div>
-        <div className="p-5 bg-gradient-to-br from-[#F59E0B]/5 to-transparent">
-          <p className="text-sm text-[#395886]/80 leading-relaxed">
-            Sebelum mengerjakan studi kasus, simak terlebih dahulu bagaimana proses <strong>encapsulation</strong> (pembungkusan data dari lapisan atas ke bawah) dan <strong>decapsulation</strong> (pembukaan data dari lapisan bawah ke atas) bekerja secara nyata. Klik <em>Mulai Simulasi</em> dan ikuti setiap langkahnya.
-          </p>
+        <p className="text-sm text-[#395886]/80 leading-relaxed font-medium mb-8 bg-[#FFFBEB] p-5 rounded-2xl border border-[#F59E0B]/10 italic">"{study.description}"</p>
+        <div className="grid gap-3">
+          {study.options.map(opt => (
+            <button key={opt.id} onClick={() => setSelected(opt.id)} className={`p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3 ${selected === opt.id ? 'border-[#F59E0B] bg-[#FFFBEB] shadow-md' : 'border-[#D5DEEF] bg-white hover:border-[#F59E0B]/30'}`}>
+              <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${selected === opt.id ? 'border-[#F59E0B]' : 'border-[#D5DEEF]'}`}>{selected === opt.id && <div className="h-2 w-2 rounded-full bg-[#F59E0B]" />}</div>
+              <span className={`text-xs font-bold ${selected === opt.id ? 'text-[#395886]' : 'text-[#395886]/60'}`}>{opt.text}</span>
+            </button>
+          ))}
         </div>
       </div>
-
-      <TcpIpInteractive />
-
-      <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-5 space-y-4">
-        <label className="flex items-center gap-3 cursor-pointer group">
-          <div
-            className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all shrink-0 ${understood ? 'bg-[#F59E0B] border-[#F59E0B]' : 'border-[#D5DEEF] group-hover:border-[#F59E0B]/50'}`}
-            onClick={() => setUnderstood(!understood)}
-          >
-            {understood && <CheckCircle className="w-3 h-3 text-white" strokeWidth={3} />}
-          </div>
-          <span className="text-sm font-medium text-[#395886] select-none" onClick={() => setUnderstood(!understood)}>
-            Saya telah memahami visualisasi TCP/IP di atas dan siap mengerjakan studi kasus encapsulation.
-          </span>
-        </label>
-
-        <button
-          onClick={onComplete}
-          disabled={!understood}
-          className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all ${understood ? 'bg-[#F59E0B] text-white hover:bg-[#D97706] shadow-sm active:scale-95' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
-        >
-          Lanjut ke Aktivitas X.TCP.6 — Studi Kasus Encapsulation <ChevronRight className="w-4 h-4" />
-        </button>
-      </div>
+      <button onClick={() => selected && onNext(selected, study.options.find(o => o.id === selected)!.text)} disabled={!selected} className="w-full py-4 rounded-2xl bg-[#F59E0B] text-white font-black text-sm shadow-xl disabled:bg-[#D5DEEF] disabled:shadow-none transition-all active:scale-95">Masuk ke Ruang Diskusi</button>
     </div>
   );
 }
 
-// ── Encapsulation Case Phase (X.TCP.6) ────────────────────────────────────────
+// -- Module Phase 3: Discussion -------------------------------------------------
 
-function EncapsulationCasePhase({
-  data, lessonId, stageIndex, onComplete,
-}: { data: EncapsulationCaseData; lessonId: string; stageIndex: number; onComplete: (answer: any) => void }) {
+function DiscussionPhase({
+  lessonId, moduleId, groupName, initialChoice, onNext,
+}: {
+  lessonId: string; moduleId: string; groupName: string; initialChoice: { id: string; text: string }; onNext: () => void;
+}) {
   const user = getCurrentUser();
-  const [ordered, setOrdered] = useState<CaseComparisonProcess[]>(() => {
-    const arr = [...data.process];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  });
-  const [validated, setValidated] = useState(false);
-  const [attempts, setAttempts] = useState(0);
-  const [showGroupPanel, setShowGroupPanel] = useState(false);
+  const [argument, setArgument] = useState('');
+  const [discussions, setDiscussions] = useState<GroupDiscussion[]>([]);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   useEffect(() => {
-    getLessonProgress(user!.id, lessonId).then((p) => setAttempts(p.stageAttempts[`stage_${stageIndex}_encap`] || 0));
-  }, []);
+    fetchDiscussions();
+    const channel = supabase.channel(`discussion-${groupName}-${moduleId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'group_discussions', filter: `group_name=eq.${groupName}` }, () => fetchDiscussions())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [groupName, moduleId]);
 
-  const isCorrectOrder = ordered.every((p, i) => p.correctOrder === i + 1);
-
-  const moveItem = (from: number, to: number) => {
-    if (validated) return;
-    const arr = [...ordered];
-    const [moved] = arr.splice(from, 1);
-    arr.splice(to, 0, moved);
-    setOrdered(arr);
-  };
-
-  const handleValidate = async () => {
-    const newA = await saveStageAttempt(user!.id, lessonId, stageIndex, isCorrectOrder, `stage_${stageIndex}_encap`);
-    setAttempts(newA);
-    setValidated(true);
-    if (isCorrectOrder || newA >= 3) setTimeout(() => setShowGroupPanel(true), 800);
-  };
-
-  const handleRetry = () => {
-    setValidated(false);
-    const arr = [...ordered];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
+  const fetchDiscussions = async () => {
+    const { data } = await supabase.from('group_discussions').select('*').eq('lesson_id', lessonId).eq('module_id', moduleId).eq('group_name', groupName).order('created_at', { ascending: true });
+    if (data) {
+      setDiscussions(data);
+      if (data.some(d => d.user_id === user!.id)) setHasSubmitted(true);
     }
-    setOrdered(arr);
+  };
+
+  const submitArgument = async () => {
+    if (argument.trim().length < 10) return;
+    const { error } = await supabase.from('group_discussions').insert({
+      lesson_id: lessonId, module_id: moduleId, group_name: groupName, user_id: user!.id, user_name: user!.name, argument: argument.trim(), choice_id: initialChoice.id, choice_text: initialChoice.text, votes: []
+    });
+    if (!error) { setArgument(''); setHasSubmitted(true); fetchDiscussions(); }
+  };
+
+  const handleVote = async (discId: string) => {
+    const disc = discussions.find(d => d.id === discId);
+    if (!disc) return;
+    const newVotes = disc.votes.includes(user!.id) ? disc.votes.filter(id => id !== user!.id) : [...disc.votes, user!.id];
+    await supabase.from('group_discussions').update({ votes: newVotes }).eq('id', discId);
   };
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="max-w-5xl mx-auto space-y-5">
-        <div className="bg-white rounded-2xl border-2 border-[#F59E0B]/20 shadow-sm overflow-hidden">
-          <div className="flex items-center gap-3 px-5 py-3 bg-[#F59E0B]/8 border-b border-[#F59E0B]/20">
-            <ArrowDown className="w-4 h-4 text-[#F59E0B]" />
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">Aktivitas 1 — Studi Kasus Encapsulation (X.TCP.6)</p>
-              <h3 className="text-sm font-bold text-[#395886]">{data.title}</h3>
-            </div>
-            <div className="ml-auto flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#F59E0B]/20">
-              <AlertCircle className="w-3.5 h-3.5 text-[#F59E0B]" />
-              <span className="text-[10px] font-bold text-[#F59E0B]">{attempts < 3 ? `${3 - attempts} percobaan` : 'Habis'}</span>
-            </div>
-          </div>
-          <div className="px-5 py-4 bg-gradient-to-br from-[#F59E0B]/5 to-transparent space-y-3">
-            <p className="text-sm text-[#395886]/80 leading-relaxed">
-              <strong>Skenario:</strong> Alya akan mengirim email berisi lampiran tugas kepada temannya melalui internet. Susun urutan proses <strong>Encapsulation</strong> TCP/IP yang benar — dari lapisan atas (Application) ke lapisan bawah (Network Access). Seret kartu menggunakan ikon ≡.
-            </p>
+    <div className={`space-y-6 ${anim.fadeUp}`}>
+      <div className="bg-white rounded-[2rem] border-2 border-[#10B981]/20 p-8 shadow-sm">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="h-10 w-10 rounded-xl bg-[#10B981]/10 flex items-center justify-center text-[#10B981]"><MessageSquare className="w-6 h-6" /></div>
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#10B981]">Ruang Diskusi - {groupName}</p>
+            <h3 className="text-sm font-bold text-[#395886]">Berbagi Argumen dan Voting</h3>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-5">
-          <div className="space-y-2 mb-5">
-            {ordered.map((step, idx) => (
-              <SortableStepCard key={step.id} step={step} index={idx} moveItem={moveItem} validated={validated} />
-            ))}
+        {!hasSubmitted ? (
+          <div className="space-y-4 mb-10 bg-[#F0FDF4] p-6 rounded-[1.5rem] border border-[#10B981]/10">
+            <p className="text-xs font-bold text-[#065F46]">Tulis argumenmu mengapa memilih jawaban tersebut:</p>
+            <textarea value={argument} onChange={e => setArgument(e.target.value)} rows={3} className="w-full p-4 rounded-xl border-2 border-[#D5DEEF] text-sm focus:border-[#10B981] outline-none" placeholder="Contoh: Saya memilih ini karena pada layer..." />
+            <button onClick={submitArgument} disabled={argument.trim().length < 10} className="w-full py-3 rounded-xl bg-[#10B981] text-white font-black text-sm shadow-md disabled:bg-[#D5DEEF]">Kirim Argumen Saya</button>
           </div>
-
-          {validated && (
-            <div className={`mb-5 p-4 rounded-xl border-2 ${isCorrectOrder ? 'bg-[#10B981]/8 border-[#10B981]/40' : attempts < 3 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'}`}>
-              <div className="flex items-start gap-3">
-                {isCorrectOrder
-                  ? <CheckCircle className="w-5 h-5 text-[#10B981] shrink-0 mt-0.5" />
-                  : attempts < 3
-                    ? <XCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                    : <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />}
-                <div>
-                  <p className={`text-sm font-bold ${isCorrectOrder ? 'text-[#10B981]' : attempts < 3 ? 'text-red-800' : 'text-amber-800'}`}>
-                    {isCorrectOrder
-                      ? 'Urutan encapsulation benar! Kamu memahami alur pembungkusan data dari Application ke Network Access.'
-                      : attempts < 3
-                        ? `Belum tepat. Punya ${3 - attempts} kesempatan lagi!`
-                        : 'Urutan benar: Application → Transport → Internet → Network Access'}
-                  </p>
-                  {!isCorrectOrder && attempts < 3 && (
-                    <button onClick={handleRetry} className="mt-2 flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-700">
-                      <RotateCcw className="w-3.5 h-3.5" /> Susun Ulang
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {!validated ? (
-            <button onClick={handleValidate} className="w-full py-2.5 rounded-xl bg-[#F59E0B] text-white font-bold text-sm hover:bg-[#D97706] shadow-sm transition-all active:scale-95">
-              Periksa Urutan
-            </button>
-          ) : (isCorrectOrder || attempts >= 3) && !showGroupPanel ? (
-            <button onClick={() => setShowGroupPanel(true)} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm transition-all active:scale-95">
-              <Users className="w-4 h-4" /> Lihat Jawaban Kelompok <ChevronRight className="w-4 h-4" />
-            </button>
-          ) : null}
-        </div>
-
-        {showGroupPanel && (
-          <GroupAnswerPanel
-            groupAnswers={data.groupAnswers}
-            studentCorrect={isCorrectOrder}
-            onDone={() => onComplete({ orderedIds: ordered.map(s => s.id), correct: isCorrectOrder, groupSeen: true })}
-            nextLabel="Lanjut ke Aktivitas X.TCP.7 — Studi Kasus Decapsulation"
-          />
-        )}
-      </div>
-    </DndProvider>
-  );
-}
-
-// ── Decapsulation Case Phase (X.TCP.7) ────────────────────────────────────────
-
-function DecapsulationCasePhase({
-  data, lessonId, stageIndex, onComplete,
-}: { data: CaseComparisonData; lessonId: string; stageIndex: number; onComplete: (answer: any) => void }) {
-  const user = getCurrentUser();
-  const [ordered, setOrdered] = useState<CaseComparisonProcess[]>(() => {
-    const arr = [...data.process];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  });
-  const [validated, setValidated] = useState(false);
-  const [attempts, setAttempts] = useState(0);
-  const [showAnalyses, setShowAnalyses] = useState(false);
-
-  useEffect(() => {
-    getLessonProgress(user!.id, lessonId).then((p) => setAttempts(p.stageAttempts[`stage_${stageIndex}_case`] || 0));
-  }, []);
-
-  const isCorrectOrder = ordered.every((p, i) => p.correctOrder === i + 1);
-
-  const moveItem = (from: number, to: number) => {
-    if (validated) return;
-    const arr = [...ordered];
-    const [moved] = arr.splice(from, 1);
-    arr.splice(to, 0, moved);
-    setOrdered(arr);
-  };
-
-  const handleValidate = async () => {
-    const newA = await saveStageAttempt(user!.id, lessonId, stageIndex, isCorrectOrder, `stage_${stageIndex}_case`);
-    setAttempts(newA);
-    setValidated(true);
-    if (isCorrectOrder || newA >= 3) setTimeout(() => setShowAnalyses(true), 800);
-  };
-
-  const handleRetry = () => {
-    setValidated(false);
-    const arr = [...ordered];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    setOrdered(arr);
-  };
-
-  return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="max-w-5xl mx-auto space-y-5">
-        <div className="bg-white rounded-2xl border-2 border-[#F59E0B]/20 shadow-sm overflow-hidden">
-          <div className="flex items-center gap-3 px-5 py-3 bg-[#F59E0B]/8 border-b border-[#F59E0B]/20">
-            <ArrowUp className="w-4 h-4 text-[#F59E0B]" />
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">Aktivitas 2 — Studi Kasus Decapsulation (X.TCP.7)</p>
-              <h3 className="text-sm font-bold text-[#395886]">{data.title}</h3>
-            </div>
-            <div className="ml-auto flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#F59E0B]/20">
-              <AlertCircle className="w-3.5 h-3.5 text-[#F59E0B]" />
-              <span className="text-[10px] font-bold text-[#F59E0B]">{attempts < 3 ? `${3 - attempts} percobaan` : 'Habis'}</span>
-            </div>
-          </div>
-          <div className="px-5 py-4 bg-gradient-to-br from-[#F59E0B]/5 to-transparent">
-            <p className="text-sm text-[#395886]/80 leading-relaxed">
-              <strong>Skenario:</strong> PC B menerima sinyal dari jaringan. Susun urutan proses <strong>Decapsulation</strong> TCP/IP yang benar — dari lapisan bawah (Network Access) ke lapisan atas (Application). Seret kartu menggunakan ikon ≡.
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-5">
-          <div className="space-y-2 mb-5">
-            {ordered.map((step, idx) => (
-              <SortableStepCard key={step.id} step={step} index={idx} moveItem={moveItem} validated={validated} />
-            ))}
-          </div>
-
-          {validated && (
-            <div className={`mb-5 p-4 rounded-xl border-2 ${isCorrectOrder ? 'bg-[#10B981]/8 border-[#10B981]/40' : attempts < 3 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'}`}>
-              <div className="flex items-start gap-3">
-                {isCorrectOrder
-                  ? <CheckCircle className="w-5 h-5 text-[#10B981] shrink-0 mt-0.5" />
-                  : attempts < 3
-                    ? <XCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                    : <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />}
-                <div>
-                  <p className={`text-sm font-bold ${isCorrectOrder ? 'text-[#10B981]' : attempts < 3 ? 'text-red-800' : 'text-amber-800'}`}>
-                    {isCorrectOrder
-                      ? 'Urutan decapsulation benar! Kamu memahami alur TCP/IP dengan baik.'
-                      : attempts < 3
-                        ? `Belum tepat. Punya ${3 - attempts} kesempatan lagi!`
-                        : 'Urutan benar: Network Access → Internet → Transport → Application'}
-                  </p>
-                  {!isCorrectOrder && attempts < 3 && (
-                    <button onClick={handleRetry} className="mt-2 flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-700">
-                      <RotateCcw className="w-3.5 h-3.5" /> Susun Ulang
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {!validated ? (
-            <button onClick={handleValidate} className="w-full py-2.5 rounded-xl bg-[#F59E0B] text-white font-bold text-sm hover:bg-[#D97706] shadow-sm transition-all active:scale-95">
-              Periksa Urutan
-            </button>
-          ) : (isCorrectOrder || attempts >= 3) && !showAnalyses ? (
-            <button onClick={() => setShowAnalyses(true)} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm transition-all active:scale-95">
-              <Users className="w-4 h-4" /> Validasi Logika Teman <ChevronRight className="w-4 h-4" />
-            </button>
-          ) : null}
-        </div>
-
-        {showAnalyses && (
-          <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-5 space-y-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Eye className="w-4 h-4 text-[#F59E0B]" />
-              <h3 className="text-sm font-bold text-[#395886]">Validasi Logika — Analisis Teman Kelompok</h3>
-            </div>
-            <div className="bg-[#F0FDF4] p-3 rounded-xl border border-[#10B981]/20 flex items-start gap-2">
-              <Info className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" />
-              <p className="text-xs font-bold text-[#065F46]">Identifikasi mana analisis yang BENAR dan mana yang mengandung kesalahan logika. Ini membantu kamu memvalidasi pemahaman dari berbagai sudut pandang.</p>
-            </div>
-            <div className="space-y-3">
-              {data.peerAnalyses.map((analysis, i) => (
-                <div key={i} className={`p-4 rounded-xl border-2 ${analysis.isCorrect ? 'border-[#10B981]/30 bg-[#10B981]/5' : 'border-red-300 bg-red-50'}`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#628ECB] to-[#395886] flex items-center justify-center text-[10px] font-black text-white">
-                      {analysis.name.substring(0, 2).toUpperCase()}
+        ) : (
+          <div className="space-y-4 mb-8">
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/40 px-2">Daftar Argumen Anggota</p>
+            <div className="grid gap-4">
+              {discussions.map(disc => (
+                <div key={disc.id} className={`p-5 rounded-2xl border-2 transition-all ${disc.user_id === user!.id ? 'border-[#10B981] bg-[#F0FDF4]' : 'border-[#D5DEEF] bg-[#F8FAFF]'}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                       <div className="w-8 h-8 rounded-lg bg-[#395886] text-white flex items-center justify-center text-[10px] font-black">{disc.user_name.substring(0,2).toUpperCase()}</div>
+                       <span className="text-xs font-black text-[#395886]">{disc.user_name} {disc.user_id === user!.id && '(Kamu)'}</span>
                     </div>
-                    <p className="text-xs font-black text-[#395886]">{analysis.name}</p>
-                    <span className={`ml-auto text-[9px] font-black px-2 py-0.5 rounded-full ${analysis.isCorrect ? 'bg-[#10B981] text-white' : 'bg-red-500 text-white'}`}>
-                      {analysis.isCorrect ? '✓ LOGIKA BENAR' : '✗ ADA KESALAHAN'}
-                    </span>
+                    <button onClick={() => handleVote(disc.id)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 transition-all ${disc.votes.includes(user!.id) ? 'bg-[#10B981] text-white border-[#10B981]' : 'bg-white text-[#395886]/40 border-[#D5DEEF] hover:border-[#10B981]'}`}>
+                       <ThumbsUp className="w-3.5 h-3.5" /> <span className="text-[10px] font-black">{disc.votes.length} Vote</span>
+                    </button>
                   </div>
-                  <p className="text-xs text-[#395886]/80 leading-relaxed italic">"{analysis.analysis}"</p>
-                  {!analysis.isCorrect && (
-                    <p className="mt-2 text-[11px] font-bold text-red-700">
-                      💡 Kesalahan: Decapsulation berlangsung dari lapisan bawah ke atas (Network Access → Internet → Transport), bukan dari lapisan atas ke bawah.
-                    </p>
-                  )}
+                  <p className="text-xs font-bold text-[#395886]/70 leading-relaxed italic">"{disc.argument}"</p>
                 </div>
               ))}
             </div>
-            <button onClick={() => onComplete({ orderedIds: ordered.map(s => s.id), correct: isCorrectOrder, analysesSeen: true })} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm transition-all active:scale-95">
-              Selesaikan Tahap Learning Community <ChevronRight className="w-4 h-4" />
-            </button>
           </div>
         )}
       </div>
-    </DndProvider>
+      {hasSubmitted && <button onClick={onNext} className="w-full py-4 rounded-2xl bg-[#395886] text-white font-black text-sm shadow-xl active:scale-95">Lihat Hasil Voting Kelompok</button>}
+    </div>
   );
 }
 
-// ── Lesson 1 Learning Community ────────────────────────────────────────────────
+// -- Module Phase 4: Result -----------------------------------------------------
 
-function Lesson1LearningCommunity({
-  encapsulationCaseData, caseComparisonData, lessonId, stageIndex, onComplete,
-}: {
-  encapsulationCaseData?: EncapsulationCaseData;
-  caseComparisonData?: CaseComparisonData;
-  lessonId: string;
-  stageIndex: number;
-  onComplete: (answer: any) => void;
-}) {
-  const [phase, setPhase] = useState<'tcp-visual' | 'encapsulation' | 'decapsulation'>('tcp-visual');
-  const [encapsulationAnswer, setEncapsulationAnswer] = useState<any>(null);
-
-  if (phase === 'tcp-visual') {
-    return (
-      <TcpIpVisualPhase
-        onComplete={() => { setPhase('encapsulation'); window.scrollTo(0, 0); }}
-      />
-    );
-  }
-
-  if (phase === 'encapsulation' && encapsulationCaseData) {
-    return (
-      <EncapsulationCasePhase
-        data={encapsulationCaseData}
-        lessonId={lessonId}
-        stageIndex={stageIndex}
-        onComplete={(answer) => {
-          setEncapsulationAnswer(answer);
-          setPhase('decapsulation');
-          window.scrollTo(0, 0);
-        }}
-      />
-    );
-  }
-
-  if (phase === 'decapsulation' && caseComparisonData) {
-    return (
-      <DecapsulationCasePhase
-        data={caseComparisonData}
-        lessonId={lessonId}
-        stageIndex={stageIndex}
-        onComplete={(decapAnswer) => {
-          onComplete({
-            simulationViewed: true,
-            encapsulation: encapsulationAnswer,
-            decapsulation: decapAnswer,
-          });
-        }}
-      />
-    );
-  }
-
-  return null;
-}
-
-// ── Peer Voting Phase (for non-lesson-1) ──────────────────────────────────────
-
-function PeerVotingPhase({
-  scenario, peerComments, lessonId, stageIndex, onComplete,
-}: { scenario: PeerVotingScenario; peerComments?: PeerComment[]; lessonId: string; stageIndex: number; onComplete: () => void }) {
-  const user = getCurrentUser();
-  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
-  const [voted, setVoted] = useState(false);
-  const [comment, setComment] = useState('');
-  const [commentSubmitted, setCommentSubmitted] = useState(false);
-  const [showPeers, setShowPeers] = useState(false);
-
-  const isCorrect = selectedMethod === scenario.correctMethodId;
-
-  const handleVote = async () => {
-    if (!selectedMethod) return;
-    await saveStageAttempt(user!.id, lessonId, stageIndex, isCorrect);
-    setVoted(true);
-  };
-
+function ResultPhase({ discussions, onDone }: { discussions: GroupDiscussion[]; onDone: () => void }) {
+  const bestArgument = discussions[0];
+  if (!bestArgument) return null;
   return (
-    <div className="max-w-5xl mx-auto space-y-5">
-      <div className="bg-white rounded-2xl border-2 border-[#F59E0B]/20 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-5 py-3 bg-[#F59E0B]/8 border-b border-[#F59E0B]/20">
-          <Users className="w-4 h-4 text-[#F59E0B]" />
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">Aktivitas 1 — Peer Voting</p>
-            <h3 className="text-sm font-bold text-[#395886]">Pilih Metode Komunikasi Terbaik</h3>
+    <div className={`space-y-6 ${anim.zoomIn}`}>
+      <div className="bg-white rounded-[2.5rem] border-2 border-[#D5DEEF] shadow-xl overflow-hidden">
+        <div className="px-8 py-6 bg-gradient-to-br from-[#395886] to-[#628ECB] text-white">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md shadow-lg ring-1 ring-white/30">
+              <Award className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60 mb-1">Hasil Voting Kelompok</p>
+              <h3 className="text-xl font-black tracking-tight">Konsensus Jawaban Terbaik</h3>
+            </div>
           </div>
         </div>
-        <div className="p-5 bg-gradient-to-br from-[#F59E0B]/5 to-transparent">
-          <p className="text-sm text-[#395886]/80 leading-relaxed">{scenario.context}</p>
-        </div>
-      </div>
 
-      <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-5">
-        <p className="text-sm font-bold text-[#395886] mb-4 leading-relaxed">{scenario.question}</p>
-        <div className="space-y-3 mb-5">
-          {scenario.methods.map(method => {
-            const isSelected = selectedMethod === method.id;
-            const isThisCorrect = method.id === scenario.correctMethodId;
-            let cls = 'border-[#D5DEEF] bg-white hover:border-[#F59E0B]/40';
-            if (voted && isThisCorrect) cls = 'border-[#10B981] bg-[#10B981]/8';
-            else if (voted && isSelected && !isThisCorrect) cls = 'border-red-400 bg-red-50';
-            else if (isSelected) cls = 'border-[#F59E0B] bg-[#F59E0B]/8';
-            return (
-              <div key={method.id} onClick={() => !voted && setSelectedMethod(method.id)} className={`rounded-xl border-2 p-4 cursor-pointer transition-all ${cls} ${voted ? 'cursor-default' : ''}`}>
-                <div className="flex items-start gap-3">
-                  <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all ${isSelected ? 'border-[#F59E0B] bg-[#F59E0B]' : 'border-[#D5DEEF] bg-white'}`}>
-                    {isSelected && <div className="w-2 h-2 bg-white rounded-full" />}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <p className="text-sm font-bold text-[#395886]">{method.title}</p>
-                      {method.votes && <span className="text-[10px] font-black text-[#395886]/40 bg-gray-100 px-2 py-0.5 rounded-full">{method.votes} votes</span>}
+        <div className="p-8 space-y-4">
+          <p className="text-sm font-medium text-[#395886]/60 leading-relaxed mb-4">
+            Berdasarkan hasil voting, berikut adalah urutan argumen anggota kelompok dari yang paling relevan secara teknis.
+          </p>
+
+          <div className="space-y-4">
+            {discussions.map((disc, idx) => (
+              <div
+                key={disc.id}
+                className={`p-5 rounded-[1.5rem] border-2 transition-all duration-300 ${
+                  idx === 0
+                    ? 'border-[#F59E0B] bg-[#FFFBEB] shadow-md scale-[1.01]'
+                    : 'border-[#D5DEEF] bg-[#F8FAFF]'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black text-white shadow-md ${idx === 0 ? 'bg-[#F59E0B]' : 'bg-[#628ECB]'}`}>
+                      {disc.user_name.substring(0, 2).toUpperCase()}
                     </div>
-                    <p className="text-xs text-[#395886]/70 leading-relaxed mb-2">{method.description}</p>
-                    {voted && (
-                      <div className="grid grid-cols-2 gap-2 mt-2">
-                        <div className="p-2 rounded-lg bg-[#10B981]/8 border border-[#10B981]/20">
-                          <p className="text-[10px] font-black text-[#10B981] mb-1">✅ Kelebihan</p>
-                          <p className="text-[11px] text-[#065F46]">{method.pros}</p>
-                        </div>
-                        <div className="p-2 rounded-lg bg-red-50 border border-red-200">
-                          <p className="text-[10px] font-black text-red-600 mb-1">⚠️ Kekurangan</p>
-                          <p className="text-[11px] text-red-700">{method.cons}</p>
-                        </div>
+                    <div>
+                      <p className="text-sm font-black text-[#395886]">{disc.user_name}</p>
+                      <div className="flex items-center gap-1.5">
+                        <Vote className={`w-3.5 h-3.5 ${idx === 0 ? 'text-[#F59E0B]' : 'text-[#628ECB]'}`} />
+                        <span className={`text-[10px] font-black uppercase ${idx === 0 ? 'text-[#F59E0B]' : 'text-[#628ECB]'}`}>{disc.votes.length} Suara</span>
                       </div>
-                    )}
+                    </div>
                   </div>
-                  {voted && isThisCorrect && <CheckCircle className="w-5 h-5 text-[#10B981] shrink-0 mt-0.5" />}
-                  {voted && isSelected && !isThisCorrect && <XCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />}
+                  {idx === 0 && (
+                    <div className="flex items-center gap-1.5 bg-[#F59E0B] text-white px-3 py-1 rounded-full shadow-sm">
+                      <Sparkles className="w-3 h-3" />
+                      <span className="text-[9px] font-black uppercase tracking-widest">Pilihan Utama</span>
+                    </div>
+                  )}
+                </div>
+                <div className="bg-white/60 p-4 rounded-xl border border-current/5 italic text-sm text-[#395886] leading-relaxed font-medium">
+                  "{disc.argument}"
                 </div>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
 
-        {voted && (
-          <div className={`mb-4 p-4 rounded-xl border-2 ${isCorrect ? 'bg-[#10B981]/8 border-[#10B981]/40' : 'bg-amber-50 border-amber-200'}`}>
-            <div className="flex items-start gap-3">
-              {isCorrect ? <CheckCircle className="w-5 h-5 text-[#10B981] shrink-0 mt-0.5" /> : <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />}
-              <p className={`text-sm font-bold ${isCorrect ? 'text-[#065F46]' : 'text-amber-800'}`}>
-                {isCorrect ? 'Pilihan tepat! Full-Duplex dengan Managed Switch mengeliminasi collision domain per port.' : 'Pilihan kurang optimal. Lihat hijau (✅) untuk pilihan terbaik dan bandingkan kelebihan/kekurangannya.'}
+          <div className="mt-6 p-5 rounded-2xl bg-[#F0FDF4] border-2 border-[#10B981]/20 flex items-start gap-4">
+            <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
+              <CheckCircle className="w-6 h-6 text-[#10B981]" />
+            </div>
+            <div>
+              <p className="text-xs font-black text-[#065F46] uppercase tracking-widest mb-1">Panduan Belajar</p>
+              <p className="text-[13px] font-bold text-[#065F46]/80 leading-relaxed">
+                Pelajari argumen <span className="text-[#F59E0B]">Pilihan Utama</span> sebagai referensi pemahaman kelompokmu. Kamu bisa berdiskusi lebih lanjut secara luring untuk memperdalam konsep ini.
               </p>
             </div>
           </div>
-        )}
-
-        {!voted ? (
-          <button onClick={handleVote} disabled={!selectedMethod} className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all ${selectedMethod ? 'bg-[#F59E0B] text-white hover:bg-[#D97706] shadow-sm' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}>
-            <ThumbsUp className="w-4 h-4" /> Kirim Vote
-          </button>
-        ) : !showPeers ? (
-          <button onClick={() => setShowPeers(true)} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm transition-all">
-            Lihat Pendapat Komunitas <ChevronRight className="w-4 h-4" />
-          </button>
-        ) : null}
+        </div>
       </div>
 
-      {showPeers && (
-        <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-5 space-y-5">
-          <div className="flex items-center gap-3">
-            <MessageSquare className="w-4 h-4 text-[#F59E0B]" />
-            <h3 className="text-sm font-bold text-[#395886]">Pendapat Komunitas</h3>
-          </div>
-          <div className="space-y-3">
-            {peerComments?.map((pc, i) => {
-              const votedMethod = scenario.methods.find(m => m.id === pc.votedFor);
-              return (
-                <div key={i} className="flex items-start gap-3 p-3.5 bg-[#F8FAFF] rounded-xl border border-[#D5DEEF]">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#628ECB] to-[#395886] flex items-center justify-center text-[10px] font-black text-white shrink-0">{pc.avatar}</div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="text-xs font-black text-[#395886]">{pc.name}</p>
-                      <span className="text-[9px] font-bold text-[#628ECB] bg-[#628ECB]/10 px-2 py-0.5 rounded-full">Pilih: {votedMethod?.title.split(' ')[0]}</span>
-                    </div>
-                    <p className="text-xs text-[#395886]/70 leading-relaxed italic">"{pc.comment}"</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-[#395886] mb-2">Berikan komentarmu atau penguatan terhadap pendapat di atas:</label>
-            <textarea value={comment} onChange={(e) => setComment(e.target.value)} disabled={commentSubmitted} rows={3} className="w-full p-3 rounded-xl border-2 border-[#D5DEEF] focus:border-[#F59E0B] outline-none text-sm transition-all disabled:bg-[#F0F3FA] resize-none" placeholder="Tuliskan argumen atau penguatan terhadap salah satu pendapat di atas..." />
-            <p className={`text-[11px] mt-1 ${comment.length >= 15 ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>{comment.length} karakter (minimal 15)</p>
-          </div>
-          {!commentSubmitted ? (
-            <button onClick={() => setCommentSubmitted(true)} disabled={comment.length < 15} className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all ${comment.length >= 15 ? 'bg-[#F59E0B] text-white hover:bg-[#D97706] shadow-sm' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}>
-              Kirim Komentar
-            </button>
-          ) : (
-            <button onClick={onComplete} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm transition-all">
-              Lanjut ke Aktivitas 2 <ChevronRight className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      )}
+      <button
+        onClick={onDone}
+        className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-[#395886] text-white font-black text-sm hover:bg-[#2A4468] shadow-xl shadow-[#395886]/20 transition-all active:scale-95 group"
+      >
+        Lanjutkan Aktivitas Berikutnya
+        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+      </button>
     </div>
   );
 }
 
-// ── Case Comparison Phase (original path) ────────────────────────────────────
+// -- Module Overall Result ------------------------------------------------------
 
-function CaseComparisonPhase({
-  data, lessonId, stageIndex, onComplete,
-}: { data: CaseComparisonData; lessonId: string; stageIndex: number; onComplete: () => void }) {
+function OverallResult({ lessonId, groupName, onComplete }: { lessonId: string; groupName: string; onComplete: (essay: string) => void }) {
+  const [essay, setEssay] = useState('');
+  return (
+    <div className={`space-y-8 ${anim.fadeUp}`}>
+      <div className="bg-white rounded-[2rem] border-2 border-[#D5DEEF] p-8 shadow-sm text-center">
+         <div className="w-20 h-20 rounded-full bg-[#10B981]/10 flex items-center justify-center text-[#10B981] mx-auto mb-6"><Award className="w-10 h-10" /></div>
+         <h3 className="text-2xl font-black text-[#395886] mb-2 uppercase tracking-tight">Hasil Keseluruhan Kelompok</h3>
+         <p className="text-sm font-bold text-[#395886]/40 leading-relaxed mb-10">Berikut adalah rangkuman perjalanan kelompok <span className="text-[#628ECB]">{groupName}</span> dalam menganalisis alur data TCP/IP.</p>
+         
+         <div className="grid sm:grid-cols-2 gap-4 text-left mb-10">
+            <div className="p-5 rounded-2xl bg-[#F0FDF4] border border-[#10B981]/20">
+               <p className="text-[10px] font-black text-[#10B981] uppercase mb-1">Misi Enkapsulasi</p>
+               <p className="text-xs font-bold text-[#065F46]/80">Berhasil memetakan pembungkusan data dari layer atas ke bawah.</p>
+            </div>
+            <div className="p-5 rounded-2xl bg-[#EEF2FF] border border-[#628ECB]/20">
+               <p className="text-[10px] font-black text-[#628ECB] uppercase mb-1">Misi Dekapsulasi</p>
+               <p className="text-xs font-bold text-[#395886]/80">Berhasil memetakan pembukaan data di sisi penerima secara logis.</p>
+            </div>
+         </div>
+
+         <div className="space-y-4 text-left">
+            <label className="flex items-center gap-2 text-xs font-black text-[#628ECB] uppercase tracking-widest ml-1"><PenLine className="w-4 h-4" /> Kesimpulan Akhir Individu</label>
+            <textarea value={essay} onChange={e => setEssay(e.target.value)} rows={4} className="w-full p-5 rounded-[1.5rem] border-2 border-[#D5DEEF] text-sm focus:border-[#628ECB] outline-none bg-[#F8FAFD]" placeholder="Tuliskan kesimpulan pribadimu tentang kolaborasi hari ini..." />
+         </div>
+         
+         <button onClick={() => onComplete(essay)} disabled={essay.length < 30} className="w-full mt-8 py-4 rounded-2xl bg-[#10B981] text-white font-black text-sm shadow-xl disabled:bg-[#D5DEEF] transition-all">Selesaikan Tahap Learning Community</button>
+      </div>
+    </div>
+  );
+}
+
+// -- Generic Module Flow Component ----------------------------------------------
+
+function ModuleFlow({ 
+  lessonId, moduleId, groupName, title, concept, layers, study, isEncapsulation, onModuleDone 
+}: { 
+  lessonId: string; moduleId: string; groupName: string; title: string; concept: string; layers: string[]; study: CaseStudy; isEncapsulation: boolean; onModuleDone: (data: any) => void 
+}) {
+  const [phase, setPhase] = useState<'concept' | 'case' | 'discussion' | 'result'>('concept');
+  const [initialChoice, setInitialChoice] = useState<{ id: string; text: string } | null>(null);
+  const [discussions, setDiscussions] = useState<GroupDiscussion[]>([]);
+
+  const fetchResults = async () => {
+    const { data } = await supabase.from('group_discussions').select('*').eq('lesson_id', lessonId).eq('module_id', moduleId).eq('group_name', groupName).order('votes', { ascending: false });
+    if (data) setDiscussions(data);
+  };
+
+  if (phase === 'concept') return <ConceptPhase title={title} concept={concept} layers={layers} isEncapsulation={isEncapsulation} onNext={() => setPhase('case')} />;
+  if (phase === 'case') return <CasePhase study={study} onNext={(id, text) => { setInitialChoice({ id, text }); setPhase('discussion'); }} />;
+  if (phase === 'discussion') return <DiscussionPhase lessonId={lessonId} moduleId={moduleId} groupName={groupName} initialChoice={initialChoice!} onNext={() => { fetchResults(); setPhase('result'); }} />;
+  if (phase === 'result') return <ResultPhase discussions={discussions} onDone={() => onModuleDone({ discussions, choice: initialChoice })} />;
+  return null;
+}
+
+// -- Main LearningCommunityStage ------------------------------------------------
+
+export function LearningCommunityStage({ lessonId, stageIndex, moduleId, groupName, onComplete, isCompleted }: LearningCommunityStageProps) {
   const user = getCurrentUser();
-  const [ordered, setOrdered] = useState<CaseComparisonProcess[]>(() => {
-    const arr = [...data.process];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  });
-  const [validated, setValidated] = useState(false);
-  const [attempts, setAttempts] = useState(0);
-  const [showAnalyses, setShowAnalyses] = useState(false);
+  const [subStage, setSubPhase] = useState<'init' | 'module1' | 'module2' | 'summary'>(isCompleted ? 'summary' : 'init');
+  const [module1Data, setModule1Data] = useState<any>(null);
+  const [module2Data, setModule2Data] = useState<any>(null);
+  const [understood, setUnderstood] = useState(false);
 
-  useEffect(() => {
-    getLessonProgress(user!.id, lessonId).then((p) => setAttempts(p.stageAttempts[`stage_${stageIndex}_case`] || 0));
-  }, []);
+  // Lesson 1 Case Data
+  const encapStudy: CaseStudy = { id: 'cs1', title: 'Misi Pengiriman Pesan', description: 'Kamu sedang berada di PC A dan ingin mengirim pesan "Halo Dunia". Langkah manakah yang harus kamu ambil terlebih dahulu menurut aturan Enkapsulasi?', options: [{ id: 'o1', text: 'Menempelkan IP Address PC B', isCorrect: false }, { id: 'o2', text: 'Membungkus data dengan TCP Header', isCorrect: true }, { id: 'o3', text: 'Mengirimkan bit melalui kabel', isCorrect: false }], correctFeedback: 'TCP Header (Transport) adalah langkah pertama setelah data dibuat di Application.' };
+  const decapStudy: CaseStudy = { id: 'cs2', title: 'Misi Penerimaan Pesan', description: 'Data telah sampai di PC B. Sebagai protokol penerima, langkah manakah yang harus dilakukan paling akhir sebelum pesan dibaca?', options: [{ id: 'o1', text: 'Membuka bungkusan MAC Frame', isCorrect: false }, { id: 'o2', text: 'Memverifikasi IP Address', isCorrect: false }, { id: 'o3', text: 'Membuka tumpukan TCP Header', isCorrect: true }], correctFeedback: 'TCP Header adalah lapisan terakhir yang dibuka sebelum data kembali ke Application.' };
 
-  const isCorrectOrder = ordered.every((p, i) => p.correctOrder === i + 1);
-
-  const moveItem = (from: number, to: number) => {
-    if (validated) return;
-    const arr = [...ordered];
-    const [moved] = arr.splice(from, 1);
-    arr.splice(to, 0, moved);
-    setOrdered(arr);
-  };
-
-  const handleValidate = async () => {
-    const newA = await saveStageAttempt(user!.id, lessonId, stageIndex, isCorrectOrder, `stage_${stageIndex}_case`);
-    setAttempts(newA);
-    setValidated(true);
-    if (isCorrectOrder) setTimeout(() => setShowAnalyses(true), 800);
-  };
-
-  const handleRetry = () => {
-    setValidated(false);
-    const arr = [...ordered];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    setOrdered(arr);
-  };
-
-  return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="max-w-5xl mx-auto space-y-5">
-        <div className="bg-white rounded-2xl border-2 border-[#F59E0B]/20 shadow-sm overflow-hidden">
-          <div className="flex items-center gap-3 px-5 py-3 bg-[#F59E0B]/8 border-b border-[#F59E0B]/20">
-            <ArrowUpDown className="w-4 h-4 text-[#F59E0B]" />
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">Aktivitas 2 — Case Comparison</p>
-              <h3 className="text-sm font-bold text-[#395886]">{data.title}</h3>
-            </div>
-            <div className="ml-auto flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#F59E0B]/20">
-              <AlertCircle className="w-3.5 h-3.5 text-[#F59E0B]" />
-              <span className="text-[10px] font-bold text-[#F59E0B]">{attempts < 3 ? `${3 - attempts} percobaan` : 'Habis'}</span>
-            </div>
-          </div>
-          <div className="px-5 py-4 bg-gradient-to-br from-[#F59E0B]/5 to-transparent">
-            <p className="text-sm text-[#395886]/80">Susun urutan proses Decapsulation TCP/IP yang benar! Seret kartu ke posisi yang tepat menggunakan ikon ≡.</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-5">
-          <div className="space-y-2 mb-5">
-            {ordered.map((step, idx) => (
-              <SortableStepCard key={step.id} step={step} index={idx} moveItem={moveItem} validated={validated} />
-            ))}
-          </div>
-
-          {validated && (
-            <div className={`mb-5 p-4 rounded-xl border-2 ${isCorrectOrder ? 'bg-[#10B981]/8 border-[#10B981]/40' : attempts < 3 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'}`}>
-              <div className="flex items-start gap-3">
-                {isCorrectOrder ? <CheckCircle className="w-5 h-5 text-[#10B981] shrink-0 mt-0.5" /> : attempts < 3 ? <XCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" /> : <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />}
-                <div>
-                  <p className={`text-sm font-bold ${isCorrectOrder ? 'text-[#10B981]' : attempts < 3 ? 'text-red-800' : 'text-amber-800'}`}>
-                    {isCorrectOrder ? 'Urutan decapsulation benar! Kamu memahami alur TCP/IP dengan baik.' : attempts < 3 ? `Belum tepat. Punya ${3 - attempts} kesempatan lagi!` : 'Urutan benar: Network Access → Internet → Transport → Application'}
-                  </p>
-                  {!isCorrectOrder && attempts < 3 && (
-                    <button onClick={handleRetry} className="mt-2 flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-700">
-                      <RotateCcw className="w-3.5 h-3.5" /> Susun Ulang
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {!validated ? (
-            <button onClick={handleValidate} className="w-full py-2.5 rounded-xl bg-[#F59E0B] text-white font-bold text-sm hover:bg-[#D97706] shadow-sm transition-all">
-              Periksa Urutan
-            </button>
-          ) : (isCorrectOrder || attempts >= 3) && !showAnalyses ? (
-            <button onClick={() => setShowAnalyses(true)} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm transition-all">
-              Bandingkan Analisis Teman <ChevronRight className="w-4 h-4" />
-            </button>
-          ) : null}
-        </div>
-
-        {showAnalyses && (
-          <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-5 space-y-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="w-4 h-4 text-[#F59E0B]" />
-              <h3 className="text-sm font-bold text-[#395886]">Validasi Logika — Analisis Teman</h3>
-            </div>
-            <div className="bg-[#F0FDF4] p-3 rounded-xl border border-[#10B981]/20 flex items-start gap-2">
-              <Info className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" />
-              <p className="text-xs font-bold text-[#065F46]">Identifikasi mana analisis yang BENAR dan mana yang mengandung kesalahan logika.</p>
-            </div>
-            <div className="space-y-3">
-              {data.peerAnalyses.map((analysis, i) => (
-                <div key={i} className={`p-4 rounded-xl border-2 ${analysis.isCorrect ? 'border-[#10B981]/30 bg-[#10B981]/5' : 'border-red-300 bg-red-50'}`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#628ECB] to-[#395886] flex items-center justify-center text-[10px] font-black text-white">{analysis.name.substring(0, 2).toUpperCase()}</div>
-                    <p className="text-xs font-black text-[#395886]">{analysis.name}</p>
-                    <span className={`ml-auto text-[9px] font-black px-2 py-0.5 rounded-full ${analysis.isCorrect ? 'bg-[#10B981] text-white' : 'bg-red-500 text-white'}`}>{analysis.isCorrect ? '✓ LOGIKA BENAR' : '✗ ADA KESALAHAN'}</span>
-                  </div>
-                  <p className="text-xs text-[#395886]/80 leading-relaxed italic">"{analysis.analysis}"</p>
-                  {!analysis.isCorrect && (
-                    <p className="mt-2 text-[11px] font-bold text-red-700">💡 Kesalahan: Decapsulation berlangsung dari lapisan bawah ke atas, bukan dari lapisan atas ke bawah.</p>
-                  )}
-                </div>
-              ))}
-            </div>
-            <button onClick={onComplete} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm transition-all">
-              Selesaikan Tahap Ini <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-      </div>
-    </DndProvider>
-  );
-}
-
-// ── Matching Ropes (original) ──────────────────────────────────────────────────
-
-function MatchingRopes({ pairs, lessonId, stageIndex, onDone }: { pairs: MatchingPair[]; lessonId: string; stageIndex: number; onDone: (matches: Record<string, string>) => void }) {
-  const user = getCurrentUser();
-  const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
-  const [matches, setMatches] = useState<Record<string, string>>({});
-  const [validated, setValidated] = useState(false);
-  const [attempts, setAttempts] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const leftRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const rightRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const [, forceUpdate] = useState({});
-
-  useEffect(() => {
-    getLessonProgress(user!.id, lessonId).then((p) => setAttempts(p.stageAttempts[`stage_${stageIndex}`] || 0));
-  }, []);
-
-  useEffect(() => {
-    const handler = () => forceUpdate({});
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-
-  const handleLeftClick = (left: string) => {
-    if (validated || attempts >= 3) return;
-    setSelectedLeft(prev => prev === left ? null : left);
-  };
-
-  const handleRightClick = (right: string) => {
-    if (validated || !selectedLeft || attempts >= 3) return;
-    setMatches(prev => {
-      const next = { ...prev };
-      const oldLeft = Object.keys(next).find(k => next[k] === right);
-      if (oldLeft) delete next[oldLeft];
-      next[selectedLeft] = right;
-      return next;
-    });
-    setSelectedLeft(null);
-  };
-
-  const handleValidate = async () => {
-    const ok = pairs.every(p => matches[p.left] === p.right);
-    const newA = await saveStageAttempt(user!.id, lessonId, stageIndex, ok);
-    setAttempts(newA);
-    setValidated(true);
-  };
-
-  const handleRetry = () => { setValidated(false); setMatches({}); setSelectedLeft(null); };
-
-  const correctCount = pairs.filter(p => matches[p.left] === p.right).length;
-  const allCorrect = validated && correctCount === pairs.length;
-  const showExpl = validated && (allCorrect || attempts >= 3);
-
-  const renderLines = () => {
-    if (!containerRef.current) return null;
-    const rect = containerRef.current.getBoundingClientRect();
-    const lines = showExpl
-      ? pairs.map(p => ({ left: p.left, right: p.right, ok: true }))
-      : Object.entries(matches).map(([left, right]) => ({ left, right, ok: validated ? pairs.find(p => p.left === left)?.right === right : undefined }));
-
-    return lines.map(({ left, right, ok }) => {
-      const lEl = leftRefs.current[left];
-      const rEl = rightRefs.current[right];
-      if (!lEl || !rEl) return null;
-      const lR = lEl.getBoundingClientRect(), rR = rEl.getBoundingClientRect();
-      const x1 = lR.right - rect.left, y1 = lR.top + lR.height / 2 - rect.top;
-      const x2 = rR.left - rect.left, y2 = rR.top + rR.height / 2 - rect.top;
-      const color = showExpl ? '#10B981' : (ok === false ? '#EF4444' : '#628ECB');
-      return <line key={`${left}-${right}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth="3" strokeDasharray={validated ? '' : '5,5'} className="transition-all duration-500" />;
-    });
-  };
-
-  const allMatched = Object.keys(matches).length === pairs.length;
-
-  return (
-    <div className="relative" ref={containerRef}>
-      <div className="flex items-center justify-between mb-6">
-        <p className="text-xs font-bold text-[#395886]/60 uppercase tracking-widest">Aktivitas Matching</p>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F59E0B]/5 border border-[#F59E0B]/20">
-          <AlertCircle className="w-3.5 h-3.5 text-[#F59E0B]" />
-          <span className="text-[10px] font-bold text-[#F59E0B]">{attempts < 3 ? `${3 - attempts} Percobaan Tersisa` : 'Habis'}</span>
-        </div>
-      </div>
-
-      <svg className="absolute inset-0 pointer-events-none z-0" style={{ width: '100%', height: '100%' }}>{renderLines()}</svg>
-
-      <div className="grid grid-cols-2 gap-16 relative z-10">
-        <div className="space-y-3">
-          {pairs.map(p => (
-            <button key={p.left} ref={el => { leftRefs.current[p.left] = el; }} onClick={() => handleLeftClick(p.left)} disabled={validated && attempts < 3} className={`w-full text-left p-3 rounded-xl border-2 text-xs font-bold transition-all ${selectedLeft === p.left ? 'border-[#F59E0B] bg-[#F59E0B]/10 shadow-md scale-105' : !!matches[p.left] || showExpl ? 'border-[#628ECB] bg-white' : 'border-[#D5DEEF] bg-white hover:border-[#628ECB]/50'}`}>{p.left}</button>
-          ))}
-        </div>
-        <div className="space-y-3">
-          {pairs.map((p, idx) => (
-            <button key={idx} ref={el => { rightRefs.current[p.right] = el; }} onClick={() => handleRightClick(p.right)} disabled={validated && attempts < 3} className={`w-full text-left p-3 rounded-xl border-2 text-xs font-bold transition-all ${Object.values(matches).includes(p.right) || showExpl ? 'border-[#628ECB] bg-white' : 'border-[#D5DEEF] bg-white hover:border-[#628ECB]/50'}`}>{p.right}</button>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-8 flex flex-col gap-4">
-        {validated && (
-          <div className={`p-4 rounded-xl border-2 ${allCorrect ? 'bg-[#10B981]/10 border-[#10B981]/20' : attempts < 3 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'}`}>
-            <div className="flex items-start gap-3">
-              {allCorrect ? <CheckCircle className="w-5 h-5 text-[#10B981] shrink-0 mt-0.5" /> : attempts < 3 ? <XCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" /> : <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />}
-              <div>
-                <p className={`text-sm font-bold mb-1 ${allCorrect ? 'text-[#065F46]' : attempts < 3 ? 'text-red-800' : 'text-amber-800'}`}>
-                  {allCorrect ? 'Semua pasangan tepat!' : attempts < 3 ? `Ada ${pairs.length - correctCount} pasangan belum tepat. Punya ${3 - attempts} kesempatan.` : 'Pelajari kunci jawaban (garis hijau).'}
-                </p>
-                {!allCorrect && attempts < 3 && (
-                  <button onClick={handleRetry} className="mt-2 flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-700"><RotateCcw className="w-3.5 h-3.5" /> Coba Lagi</button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {!validated || (!allCorrect && attempts < 3) ? (
-          <button onClick={handleValidate} disabled={!allMatched} className={`py-3 rounded-xl font-bold text-sm transition-all ${allMatched ? 'bg-[#F59E0B] text-white hover:bg-[#D97706] shadow-md' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}>
-            Hubungkan Konsep
-          </button>
-        ) : (
-          <button onClick={() => onDone(matches)} className="py-3 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-md transition-all flex items-center justify-center gap-2">
-            Lanjut ke Analisis Kasus <ChevronRight className="w-4 h-4" />
-          </button>
-        )}
-      </div>
+  if (!groupName) return (
+    <div className="max-w-4xl mx-auto p-12 text-center bg-white rounded-[2rem] border-2 border-dashed border-[#D5DEEF]">
+       <Users className="w-12 h-12 text-[#D5DEEF] mx-auto mb-4" />
+       <p className="text-sm font-bold text-[#395886]/40 italic">Silakan pilih kelompok terlebih dahulu di Dashboard untuk memulai aktivitas ini.</p>
     </div>
   );
-}
 
-// ── Main LearningCommunityStage ────────────────────────────────────────────────
+  if (subStage === 'init') return (
+    <div className={`max-w-4xl mx-auto space-y-6 ${anim.fadeUp}`}>
+       <div className="bg-white rounded-[2rem] border-2 border-[#F59E0B]/20 p-10 shadow-sm text-center">
+          <div className="h-16 w-16 rounded-2xl bg-[#F59E0B]/10 flex items-center justify-center text-[#F59E0B] mx-auto mb-6"><PlayCircle className="w-8 h-8" /></div>
+          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#F59E0B]">Tahap Awal - Simulasi</p>
+          <h3 className="text-2xl font-black text-[#395886] mb-4">Mari Berkolaborasi!</h3>
+          <p className="text-sm font-medium text-[#395886]/60 leading-relaxed mb-8 max-w-md mx-auto">Dalam tahap ini, kamu akan bekerja sama dengan rekan kelompok <span className="text-[#F59E0B] font-black">{groupName}</span> untuk memecahkan studi kasus alur data.</p>
+          
+          <div className="bg-[#F8FAFD] p-6 rounded-2xl border-2 border-[#D5DEEF] mb-8 flex items-center gap-4 text-left">
+             <input type="checkbox" id="understand" checked={understood} onChange={e => setUnderstood(e.target.checked)} className="h-5 w-5 accent-[#10B981]" />
+             <label htmlFor="understand" className="text-xs font-bold text-[#395886] cursor-pointer">Saya telah memahami instruksi dan siap berdiskusi secara real-time dengan kelompok.</label>
+          </div>
 
-export function LearningCommunityStage({
-  matchingPairs, caseScenario, peerAnswers, peerVotingScenario, peerComments,
-  caseComparisonData, encapsulationCaseData, lessonId, stageIndex, isCompleted, onComplete,
-}: LearningCommunityStageProps) {
-  // For lesson 1: use the new TCP/IP flow (TcpIpInteractive + Encapsulation + Decapsulation)
-  if (lessonId === '1') {
-    return (
-      <Lesson1LearningCommunity
-        encapsulationCaseData={encapsulationCaseData}
-        caseComparisonData={caseComparisonData}
-        lessonId={lessonId}
-        stageIndex={stageIndex}
-        onComplete={onComplete}
-      />
-    );
-  }
-
-  // For other lessons: use original flow
-  const hasVoting = !!peerVotingScenario;
-  const hasComparison = !!caseComparisonData;
-
-  const [phase, setPhase] = useState<'voting' | 'comparison' | 'matching' | 'case' | 'peer'>(() => {
-    if (hasVoting) return 'voting';
-    return 'matching';
-  });
-  const [matches, setMatches] = useState<Record<string, string>>({});
-  const [caseAnswer, setCaseAnswer] = useState('');
-  const [caseSubmitted, setCaseSubmitted] = useState(false);
-  const [caseOption, setCaseOption] = useState<string | null>(null);
-
-  const handleComplete = () => onComplete({ matches, caseAnswer });
-
-  if (phase === 'voting' && hasVoting) {
-    return (
-      <PeerVotingPhase
-        scenario={peerVotingScenario!}
-        peerComments={peerComments}
-        lessonId={lessonId}
-        stageIndex={stageIndex}
-        onComplete={() => setPhase(hasComparison ? 'comparison' : 'peer')}
-      />
-    );
-  }
-
-  if (phase === 'comparison' && hasComparison) {
-    return (
-      <CaseComparisonPhase
-        data={caseComparisonData!}
-        lessonId={lessonId}
-        stageIndex={stageIndex}
-        onComplete={handleComplete}
-      />
-    );
-  }
-
-  return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex bg-white rounded-2xl border border-[#D5DEEF] p-1.5 shadow-sm">
-        {[
-          { id: 'matching', label: 'Hubungkan', icon: LinkIcon },
-          { id: 'case', label: 'Analisis Kasus', icon: FileSearch },
-          { id: 'peer', label: 'Diskusi Komunitas', icon: Users },
-        ].map((p, i) => {
-          const isActive = phase === p.id;
-          const isDone = (phase === 'case' && i === 0) || (phase === 'peer' && i < 2);
-          return (
-            <div key={p.id} className="flex-1 flex items-center">
-              <div className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl transition-all ${isActive ? 'bg-[#F59E0B] text-white shadow-sm' : isDone ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
-                <p.icon className="w-4 h-4" />
-                <span className="text-[11px] font-black uppercase tracking-tight hidden sm:inline">{p.label}</span>
-                {isDone && <CheckCircle className="w-3 h-3" strokeWidth={3} />}
-              </div>
-              {i < 2 && <div className="w-px h-4 bg-[#D5DEEF] mx-1" />}
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="bg-white rounded-3xl border-2 border-[#D5DEEF] shadow-sm p-6 sm:p-8">
-        {phase === 'matching' && (
-          <>
-            <div className="flex items-center gap-3 mb-8">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#F59E0B]/10"><LinkIcon className="w-5 h-5 text-[#F59E0B]" /></div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F59E0B] mb-0.5">Fase 1: Koneksi Konsep</p>
-                <h3 className="text-lg font-bold text-[#395886]">Hubungkan item kiri dengan penjelasan di kanan</h3>
-              </div>
-            </div>
-            <MatchingRopes pairs={matchingPairs ?? []} lessonId={lessonId} stageIndex={stageIndex} onDone={(m) => { setMatches(m); setPhase('case'); }} />
-          </>
-        )}
-
-        {phase === 'case' && (
-          <>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#F59E0B]/10"><FileSearch className="w-5 h-5 text-[#F59E0B]" /></div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F59E0B] mb-0.5">Fase 2: Studi Kasus</p>
-                <h3 className="text-lg font-bold text-[#395886]">{caseScenario?.title}</h3>
-              </div>
-            </div>
-            <div className="bg-[#F8FAFF] rounded-2xl p-5 border border-[#D5DEEF] mb-6">
-              <p className="text-sm text-[#395886]/80 leading-relaxed font-medium">{caseScenario?.description}</p>
-            </div>
-
-            {caseScenario?.options ? (
-              <div className="mb-6">
-                <label className="block text-sm font-bold text-[#395886] mb-3">{caseScenario.question}</label>
-                <div className="space-y-2">
-                  {caseScenario.options.map(opt => {
-                    const isS = caseOption === opt.id;
-                    const isC = caseSubmitted && opt.isCorrect;
-                    const isW = caseSubmitted && isS && !opt.isCorrect;
-                    let cls = 'border-[#D5DEEF] bg-white hover:border-[#F59E0B]/40';
-                    if (isC) cls = 'border-[#10B981] bg-[#10B981]/8';
-                    else if (isW) cls = 'border-red-400 bg-red-50';
-                    else if (isS) cls = 'border-[#F59E0B] bg-[#F59E0B]/8';
-                    return (
-                      <label key={opt.id} className={`flex items-start gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all ${cls}`}>
-                        <input type="radio" name="case" value={opt.id} checked={isS} onChange={() => !caseSubmitted && setCaseOption(opt.id)} disabled={caseSubmitted} className="mt-0.5 accent-[#F59E0B]" />
-                        <span className="text-sm text-[#395886]">{opt.text}</span>
-                        {isC && <CheckCircle className="w-5 h-5 text-[#10B981] shrink-0 mt-0.5" />}
-                      </label>
-                    );
-                  })}
-                </div>
-                {caseSubmitted && caseScenario.options.find(o => o.id === caseOption) && (
-                  <div className={`mt-3 p-3 rounded-xl border-2 ${caseScenario.options.find(o => o.id === caseOption)?.isCorrect ? 'bg-[#10B981]/8 border-[#10B981]/40' : 'bg-red-50 border-red-200'}`}>
-                    <p className="text-sm font-bold text-[#395886]">{caseScenario.options.find(o => o.id === caseOption)?.feedback}</p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="mb-6">
-                <label className="block text-sm font-bold text-[#395886] mb-3">{caseScenario?.question}</label>
-                <textarea value={caseAnswer} onChange={(e) => setCaseAnswer(e.target.value)} disabled={caseSubmitted} rows={4} className="w-full p-4 rounded-2xl border-2 border-[#D5DEEF] focus:border-[#F59E0B] focus:ring-4 focus:ring-[#F59E0B]/10 transition-all outline-none text-sm font-medium" placeholder="Tuliskan analisis jawabanmu di sini..." />
-              </div>
-            )}
-
-            {!caseSubmitted ? (
-              <button onClick={() => setCaseSubmitted(true)} disabled={caseScenario?.options ? !caseOption : caseAnswer.length < 20} className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${(caseScenario?.options ? !!caseOption : caseAnswer.length >= 20) ? 'bg-[#F59E0B] text-white hover:bg-[#D97706] shadow-md' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}>
-                Kirim Analisis
-              </button>
-            ) : (
-              <button onClick={() => setPhase('peer')} className="w-full py-3 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-md transition-all flex items-center justify-center gap-2">
-                Bandingkan Jawaban Komunitas <ChevronRight className="w-4 h-4" />
-              </button>
-            )}
-          </>
-        )}
-
-        {phase === 'peer' && (
-          <>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#F59E0B]/10"><Users className="w-5 h-5 text-[#F59E0B]" /></div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F59E0B] mb-0.5">Fase 3: Refleksi Sosial</p>
-                <h3 className="text-lg font-bold text-[#395886]">Jawaban Anggota Komunitas</h3>
-              </div>
-            </div>
-            <div className="bg-[#F0FDF4] border border-[#10B981]/20 p-4 rounded-2xl mb-8 flex items-start gap-3">
-              <Info className="w-5 h-5 text-[#10B981] shrink-0 mt-0.5" />
-              <p className="text-xs font-bold text-[#065F46] leading-relaxed">Jawaban diurutkan berdasarkan tingkat ketepatan analisis teknis. Gunakan untuk memperkaya pemahamanmu.</p>
-            </div>
-            <div className="space-y-4 mb-8">
-              {[...(peerAnswers ?? [])].sort((a, b) => (b.score || 0) - (a.score || 0)).map((peer, i) => (
-                <div key={i} className="bg-white border-2 border-[#D5DEEF] rounded-2xl p-5 shadow-sm hover:border-[#628ECB]/30 transition-all">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-black text-[#395886]">{peer.name.substring(0, 2).toUpperCase()}</div>
-                      <div><p className="text-xs font-black text-[#395886]">{peer.name}</p><p className="text-[10px] font-bold text-[#628ECB]">{peer.role}</p></div>
-                    </div>
-                    {i === 0 && <div className="bg-[#10B981] text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm">ANALISIS TERBAIK</div>}
-                  </div>
-                  <p className="text-sm text-[#395886]/80 leading-relaxed italic">&ldquo;{peer.answer}&rdquo;</p>
-                </div>
-              ))}
-            </div>
-            <button onClick={handleComplete} className="w-full py-4 rounded-2xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-lg shadow-[#628ECB]/20 transition-all flex items-center justify-center gap-2">
-              Selesaikan Tahap Ini <ChevronRight className="w-4 h-4" />
-            </button>
-          </>
-        )}
-      </div>
+          <button onClick={() => setSubPhase('module1')} disabled={!understood} className="w-full py-4 rounded-2xl bg-[#395886] text-white font-black text-sm shadow-xl disabled:bg-[#D5DEEF] active:scale-95 transition-all">Mulai Aktivitas X.TCP.6</button>
+       </div>
     </div>
   );
+
+  if (subStage === 'module1') return <ModuleFlow lessonId={lessonId} moduleId="X.TCP.6" groupName={groupName} title="Proses Enkapsulasi" concept="Enkapsulasi adalah proses pembungkusan data dengan informasi kontrol (header) dari lapisan atas ke bawah." layers={['Application Data', 'TCP Segment', 'IP Packet', 'MAC Frame']} study={encapStudy} isEncapsulation={true} onModuleDone={d => { setModule1Data(d); setSubPhase('module2'); }} />;
+  if (subStage === 'module2') return <ModuleFlow lessonId={lessonId} moduleId="X.TCP.7" groupName={groupName} title="Proses Dekapsulasi" concept="Dekapsulasi adalah kebalikan dari enkapsulasi, di mana header dilepas satu per satu dari lapisan bawah ke atas." layers={['MAC Frame', 'IP Packet', 'TCP Segment', 'Application Data']} study={decapStudy} isEncapsulation={false} onModuleDone={d => { setModule2Data(d); setSubPhase('summary'); }} />;
+  if (subStage === 'summary') return <OverallResult lessonId={lessonId} groupName={groupName} onComplete={essay => onComplete({ module1Data, module2Data, finalConclusion: essay })} />;
+
+  return null;
 }

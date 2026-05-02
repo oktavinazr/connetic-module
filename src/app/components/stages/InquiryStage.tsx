@@ -2,14 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   ChevronDown, ChevronRight, CheckCircle, XCircle, RotateCcw, BookOpen,
   GripVertical, Info, AlertCircle, Layers, Tag, ArrowRight, PenLine,
-  Link as LinkIcon, ArrowDown, GraduationCap, Lightbulb
+  Link as LinkIcon, GraduationCap, Lightbulb
 } from 'lucide-react';
 import { useDrag, useDrop } from 'react-dnd';
 import { getCurrentUser } from '../../utils/auth';
 import { getLessonProgress, saveStageAttempt } from '../../utils/progress';
 import { Ipv4Analyzer } from '../ui/Ipv4Analyzer';
 
-// ── Types ──────────────────────────────────────────────────────────────────────
+// -- Types ----------------------------------------------------------------------
 
 interface ExplorationSection { id: string; title: string; content: string; example?: string }
 interface Group { id: string; label: string; colorClass: 'blue' | 'green' | 'purple' | 'amber' | 'pink' | 'indigo' }
@@ -42,7 +42,7 @@ interface InquiryStageProps {
   isCompleted?: boolean;
 }
 
-// ── Color maps ─────────────────────────────────────────────────────────────────
+// -- Color maps -----------------------------------------------------------------
 
 const colorMap = {
   blue:   { border: 'border-[#628ECB]', bg: 'bg-[#628ECB]/8', badge: 'bg-[#628ECB] text-white', light: 'bg-[#628ECB]/15 text-[#395886]' },
@@ -62,7 +62,7 @@ const flowLayerColors: Record<string, { gradient: string; borderB: string }> = {
   pink:   { gradient: 'bg-gradient-to-r from-[#EC4899] to-[#DB2777]', borderB: 'border-b-[#9D174D]' },
 };
 
-// ── DnD Components ────────────────────────────────────────────────────────────
+// -- DnD Components ------------------------------------------------------------
 
 const DRAG_GROUP = 'GROUP_ITEM';
 function DraggableChip({ item, placed, validated, isCorrect }: { item: GroupItem; placed: boolean; validated: boolean; isCorrect?: boolean }) {
@@ -159,7 +159,7 @@ function FlowDropSlot({ position, placedItem, validated, isCorrect, onDrop }: {
           <div className={`flex items-center justify-center h-full text-[10px] font-black uppercase transition-colors py-3
             ${isOver ? 'text-[#628ECB]' : 'text-[#395886]/20'}`}
           >
-            {isOver ? '↓ Lepaskan!' : (posLabel ?? `Posisi ${position}`)}
+            {isOver ? '(drop)' : (posLabel ?? `Posisi ${position}`)}
           </div>
         )}
       </div>
@@ -167,7 +167,7 @@ function FlowDropSlot({ position, placedItem, validated, isCorrect, onDrop }: {
   );
 }
 
-// ── Shared UI Sub-components ──────────────────────────────────────────────────
+// -- Shared UI Sub-components --------------------------------------------------
 
 function DragDropLayerSorter({ flowItems, flowInstruction, lessonId, stageIndex, onComplete }: {
   flowItems: FlowItem[]; flowInstruction?: string; lessonId: string; stageIndex: number; onComplete: () => void;
@@ -203,8 +203,7 @@ function DragDropLayerSorter({ flowItems, flowInstruction, lessonId, stageIndex,
 
   const placedIds = new Set(Object.values(slots));
   const unplacedItems = shuffledPool.filter(it => !placedIds.has(it.id));
-  const placedCount = placedIds.size;
-  const allPlaced = placedCount === flowItems.length;
+  const allPlaced = placedIds.size === flowItems.length;
 
   const isCorrectOrder = allPlaced && flowItems.every(item => {
     const pos = Number(Object.keys(slots).find(k => slots[Number(k)] === item.id));
@@ -229,7 +228,7 @@ function DragDropLayerSorter({ flowItems, flowInstruction, lessonId, stageIndex,
             <Layers className="w-5 h-5 text-[#10B981]" />
           </div>
           <div className="flex-1">
-            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#10B981]">X.TCP.3 — The Layer Sorting</p>
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#10B981]">X.TCP.3 - The Layer Sorting</p>
             <h3 className="text-sm font-bold text-[#395886]">Susun Urutan Lapisan TCP/IP</h3>
           </div>
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold
@@ -301,7 +300,7 @@ function InlineReflectionBox({ prompt, label = 'Refleksi Pemahaman', onDone }: {
   );
 }
 
-// ── Matching Phase ───────────────────────────────────────────────────────────
+// -- Matching Phase -----------------------------------------------------------
 
 function MatchingPhase({ pairs, lessonId, stageIndex, onComplete, shuffleRight, completeLabel }: {
   pairs: MatchingPair[]; lessonId: string; stageIndex: number;
@@ -352,10 +351,13 @@ function MatchingPhase({ pairs, lessonId, stageIndex, onComplete, shuffleRight, 
     setSelectedLeft(null);
   };
 
+  const isAllCorrect = pairs.every(p => matches[p.left] === p.right);
+
   const handleValidate = async () => {
-    const ok = pairs.every(p => matches[p.left] === p.right);
+    const ok = isAllCorrect;
     const newA = await saveStageAttempt(user!.id, lessonId, stageIndex, ok, `stage_${stageIndex}_matching`);
-    setAttempts(newA); setValidated(true);
+    setAttempts(newA);
+    setValidated(true);
   };
 
   const handleRetry = () => { setValidated(false); setMatches({}); setSelectedLeft(null); };
@@ -372,46 +374,119 @@ function MatchingPhase({ pairs, lessonId, stageIndex, onComplete, shuffleRight, 
       const x1 = lR.right - rect.left, y1 = lR.top + lR.height / 2 - rect.top;
       const x2 = rR.left - rect.left, y2 = rR.top + rR.height / 2 - rect.top;
       const ok = validated ? pairs.find(p => p.left === left)?.right === right : undefined;
-      const color = ok === false ? '#EF4444' : '#628ECB';
+      const color = ok === false ? '#EF4444' : ok === true ? '#10B981' : '#628ECB';
       return <line key={`${left}-${right}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth="3" strokeDasharray={validated ? '' : '5,5'} className="transition-all" />;
     });
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm p-6 relative" ref={containerRef}>
-        <svg className="absolute inset-0 pointer-events-none z-0" style={{ width: '100%', height: '100%' }}>{renderLines()}</svg>
-        <div className="grid grid-cols-2 gap-20 relative z-10">
-          <div className="space-y-4">
-            {pairs.map(p => (
-              <button key={p.left} ref={el => { leftRefs.current[p.left] = el; }} onClick={() => handleLeftClick(p.left)} disabled={validated}
-                className={`w-full text-left p-4 rounded-xl border-2 text-[10px] font-black uppercase transition-all ${
-                  selectedLeft === p.left ? 'border-[#F59E0B] bg-amber-50' : !!matches[p.left] ? 'border-[#628ECB] bg-white' : 'border-[#D5DEEF] bg-white'}`}
-              >{p.left}</button>
-            ))}
+    <div className="max-w-5xl mx-auto space-y-6">
+      <div className="bg-white rounded-[2rem] border-2 border-[#628ECB]/20 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 px-6 py-4 bg-[#628ECB]/5 border-b-2 border-[#628ECB]/10">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#628ECB]/15">
+            <Tag className="w-5 h-5 text-[#628ECB]" />
           </div>
-          <div className="space-y-4">
-            {displayedRights.map((right, idx) => (
-              <button key={idx} ref={el => { rightRefs.current[right] = el; }} onClick={() => handleRightClick(right)} disabled={validated}
-                className={`w-full text-left p-4 rounded-xl border-2 text-[10px] font-black uppercase transition-all ${
-                  Object.values(matches).includes(right) ? 'border-[#628ECB] bg-white' : 'border-[#D5DEEF] bg-white'}`}
-              >{right}</button>
-            ))}
+          <div className="flex-1">
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Aktivitas X.TCP.4</p>
+            <h3 className="text-sm font-bold text-[#395886]">Cocokkan Fungsi pada Setiap Layer</h3>
+          </div>
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold
+            ${attempts >= 3 ? 'border-red-200 bg-red-50 text-red-500' : 'border-[#628ECB]/20 bg-white text-[#628ECB]'}`}>
+            <AlertCircle className="w-3 h-3" />
+            {attempts >= 3 ? 'Habis' : `${3 - attempts} percobaan`}
           </div>
         </div>
-        <div className="mt-8">
-           {!validated ? (
-             <button onClick={handleValidate} disabled={!allMatched} className="w-full py-3 rounded-xl bg-[#628ECB] text-white font-bold">Periksa Pasangan</button>
-           ) : (
-             <button onClick={() => onComplete(matches)} className="w-full py-3 rounded-xl bg-[#10B981] text-white font-bold">{completeLabel ?? 'Lanjut'}</button>
-           )}
+
+        <div className="p-8 relative" ref={containerRef}>
+          <svg className="absolute inset-0 pointer-events-none z-0" style={{ width: '100%', height: '100%' }}>{renderLines()}</svg>
+          <div className="grid grid-cols-2 gap-24 relative z-10">
+            <div className="space-y-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/40 mb-2 text-center">Lapisan (Layer)</p>
+              {pairs.map(p => (
+                <button
+                  key={p.left}
+                  ref={el => { leftRefs.current[p.left] = el; }}
+                  onClick={() => handleLeftClick(p.left)}
+                  disabled={validated}
+                  className={`w-full text-left p-5 rounded-2xl border-2 transition-all duration-300
+                    ${selectedLeft === p.left ? 'border-[#F59E0B] bg-[#FFFBEB] scale-[1.02] shadow-md' :
+                      matches[p.left] ? 'border-[#628ECB] bg-white shadow-sm' : 'border-[#D5DEEF] bg-white hover:border-[#628ECB]/40'}`}
+                >
+                  <span className="text-xs font-black uppercase tracking-tight text-[#395886]">{p.left}</span>
+                </button>
+              ))}
+            </div>
+            <div className="space-y-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/40 mb-2 text-center">Fungsi Utama</p>
+              {displayedRights.map((right, idx) => {
+                const isMatched = Object.values(matches).includes(right);
+                return (
+                  <button
+                    key={idx}
+                    ref={el => { rightRefs.current[right] = el; }}
+                    onClick={() => handleRightClick(right)}
+                    disabled={validated}
+                    className={`w-full text-left p-5 rounded-2xl border-2 transition-all duration-300
+                      ${isMatched ? 'border-[#628ECB] bg-white shadow-sm' : 'border-[#D5DEEF] bg-white hover:border-[#628ECB]/40'}`}
+                  >
+                    <span className="text-xs font-bold text-[#395886]/70 leading-relaxed">{right}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-12 space-y-4">
+            {!validated ? (
+              <button
+                onClick={handleValidate}
+                disabled={!allMatched}
+                className={`w-full py-4 rounded-2xl font-black text-sm transition-all shadow-lg
+                  ${allMatched ? 'bg-[#628ECB] text-white hover:bg-[#395886] shadow-blue-200' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed shadow-none'}`}
+              >
+                {allMatched ? 'Periksa Pasangan' : `Tentukan ${pairs.length - Object.keys(matches).length} pasangan lagi`}
+              </button>
+            ) : !isAllCorrect && attempts < 3 ? (
+              <button
+                onClick={handleRetry}
+                className="w-full py-4 rounded-2xl bg-red-50 text-red-600 font-black text-sm border-2 border-red-100 hover:bg-red-100 transition-all flex items-center justify-center gap-2"
+              >
+                <RotateCcw className="w-4 h-4" /> Coba Lagi ({3 - attempts} percobaan sisa)
+              </button>
+            ) : (
+              <button
+                onClick={() => onComplete(matches)}
+                className="w-full py-4 rounded-2xl bg-[#10B981] text-white font-black text-sm hover:bg-[#059669] shadow-lg shadow-green-200 transition-all"
+              >
+                {completeLabel ?? 'Lanjut'}
+              </button>
+            )}
+
+            {validated && !isAllCorrect && attempts >= 3 && (
+              <div className="mt-6 p-6 rounded-[2rem] bg-amber-50 border-2 border-amber-200 animate-in fade-in zoom-in-95">
+                <div className="flex items-center gap-3 mb-4">
+                  <Lightbulb className="w-5 h-5 text-amber-500" />
+                  <h4 className="text-sm font-black text-amber-900 uppercase tracking-widest">Kunci Jawaban Benar</h4>
+                </div>
+                <div className="space-y-2">
+                  {pairs.map((p, i) => (
+                    <div key={i} className="flex items-start gap-3 bg-white/60 p-3 rounded-xl border border-amber-100">
+                      <span className="text-[10px] font-black text-amber-700 uppercase min-w-[100px]">{p.left}</span>
+                      <ArrowRight className="w-3 h-3 text-amber-400 mt-1 shrink-0" />
+                      <span className="text-[11px] font-bold text-amber-800 leading-relaxed">{p.right}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-// ── Grouping Phase ───────────────────────────────────────────────────────────
+// -- Grouping Phase -----------------------------------------------------------
 
 function GroupingPhase({ groups, items, lessonId, stageIndex, onComplete }: {
   groups: Group[]; items: GroupItem[]; lessonId: string; stageIndex: number; onComplete: (answer: any) => void;
@@ -456,7 +531,7 @@ function GroupingPhase({ groups, items, lessonId, stageIndex, onComplete }: {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-       <div className="bg-white p-6 rounded-3xl border-2 border-[#D5DEEF] shadow-sm">
+       <div className="bg-white p-6 rounded-2xl border-2 border-[#D5DEEF] shadow-sm">
           {unplacedItems.length > 0 && (
             <div className="mb-8 p-4 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
                <p className="text-[10px] font-black uppercase text-gray-400 mb-4 flex items-center gap-2">
@@ -500,51 +575,129 @@ function GroupingPhase({ groups, items, lessonId, stageIndex, onComplete }: {
   );
 }
 
-// ── Explore Phase ────────────────────────────────────────────────────────────
+// -- Explore Phase ------------------------------------------------------------
 
 function ExplorePhase({ explorationSections, onNext }: { explorationSections: ExplorationSection[]; onNext: () => void }) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [openedIds, setOpenedIds] = useState<Set<string>>(new Set());
-  const handleToggle = (id: string) => { setActiveId(prev => prev === id ? null : id); setOpenedIds(prev => new Set(prev).add(id)); };
+  const handleToggle = (id: string) => {
+    setActiveId(prev => (prev === id ? null : id));
+    setOpenedIds(prev => new Set(prev).add(id));
+  };
   const allOpened = explorationSections.every(s => openedIds.has(s.id));
-  const layerColors = ['bg-[#8B5CF6]', 'bg-[#628ECB]', 'bg-[#10B981]', 'bg-[#F59E0B]', 'bg-[#EC4899]'];
+  const layerConfigs = [
+    { color: 'bg-[#8B5CF6]', hover: 'hover:bg-[#7C3AED]', border: 'border-[#8B5CF6]/20' },
+    { color: 'bg-[#628ECB]', hover: 'hover:bg-[#395886]', border: 'border-[#628ECB]/20' },
+    { color: 'bg-[#10B981]', hover: 'hover:bg-[#059669]', border: 'border-[#10B981]/20' },
+    { color: 'bg-[#F59E0B]', hover: 'hover:bg-[#D97706]', border: 'border-[#F59E0B]/20' },
+    { color: 'bg-[#EC4899]', hover: 'hover:bg-[#DB2777]', border: 'border-[#EC4899]/20' },
+  ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
-      <div className="bg-white rounded-[2rem] border-2 border-[#D5DEEF] shadow-sm p-8">
-        <h3 className="text-lg font-black text-[#395886] mb-8 uppercase tracking-widest flex items-center gap-3">
-          <BookOpen className="w-6 h-6 text-[#628ECB]" /> Eksplorasi Konsep
-        </h3>
-        <div className="space-y-3 mb-8">
-          {explorationSections.map((section, idx) => (
-            <div key={section.id}>
-              <button onClick={() => handleToggle(section.id)}
-                className={`w-full text-left rounded-2xl border-b-4 transition-all ${layerColors[idx % 5]} text-white px-6 py-4 flex items-center justify-between`}>
-                <span className="font-bold text-sm">{section.title}</span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${activeId === section.id ? 'rotate-180' : ''}`} />
-              </button>
-              {activeId === section.id && (
-                <div className="bg-white border-2 border-t-0 border-[#D5DEEF] rounded-b-2xl p-6">
-                  <p className="text-sm text-[#395886]/80 leading-relaxed font-medium mb-4">{section.content}</p>
-                  {section.example && <p className="text-[11px] text-[#628ECB] font-bold italic">Contoh: {section.example}</p>}
-                </div>
-              )}
-            </div>
-          ))}
+    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500">
+      <div className="bg-white rounded-[2rem] border-2 border-[#D5DEEF] shadow-sm p-6 sm:p-8">
+        <div className="flex items-center gap-4 mb-8">
+          <div className="h-12 w-12 rounded-2xl bg-[#628ECB]/10 flex items-center justify-center text-[#628ECB]">
+            <BookOpen className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-xl font-black text-[#395886] tracking-tight uppercase">Eksplorasi Konsep</h3>
+            <p className="text-xs font-bold text-[#395886]/40 uppercase tracking-widest mt-1">Klik setiap lapisan untuk mempelajari fungsinya</p>
+          </div>
         </div>
-        <button onClick={onNext} disabled={!allOpened} className="w-full py-4 rounded-2xl bg-[#10B981] text-white font-black shadow-lg">Lanjut ke Aktivitas <ChevronRight className="w-4 h-4 inline ml-1" /></button>
+
+        <div className="flex flex-col md:flex-row items-stretch gap-3 mb-10 overflow-x-auto pb-4 scrollbar-hide">
+          {explorationSections.map((section, idx) => {
+            const config = layerConfigs[idx % layerConfigs.length];
+            const isOpened = openedIds.has(section.id);
+            const isActive = activeId === section.id;
+            return (
+              <div key={section.id} className="flex-1 min-w-[200px] flex flex-col">
+                <button
+                  onClick={() => handleToggle(section.id)}
+                  className={`relative flex flex-col items-center justify-center p-6 rounded-2xl border-b-8 transition-all duration-300 group
+                    ${config.color} ${config.hover} text-white shadow-md
+                    ${isActive ? 'scale-[1.02] -translate-y-1' : ''}`}
+                >
+                  {isOpened && (
+                    <div className="absolute top-3 right-3">
+                      <CheckCircle className="w-4 h-4 text-white/60" />
+                    </div>
+                  )}
+                  <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <span className="text-lg font-black">{idx + 1}</span>
+                  </div>
+                  <span className="font-black text-xs uppercase tracking-widest text-center leading-tight">
+                    {section.title}
+                  </span>
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        {activeId && (
+          <div className="bg-[#F8FAFD] border-2 border-[#D5DEEF] rounded-[2rem] p-8 mb-8 animate-in zoom-in-95 duration-300">
+            {(() => {
+              const section = explorationSections.find(s => s.id === activeId);
+              const idx = explorationSections.findIndex(s => s.id === activeId);
+              const config = layerConfigs[idx % layerConfigs.length];
+              return (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={`h-8 w-8 rounded-lg ${config.color} flex items-center justify-center text-white text-xs font-black`}>
+                      {idx + 1}
+                    </div>
+                    <h4 className="text-lg font-black text-[#395886] uppercase tracking-tight">
+                      {section?.title}
+                    </h4>
+                  </div>
+                  <p className="text-sm text-[#395886]/80 leading-relaxed font-medium">
+                    {section?.content}
+                  </p>
+                  {section?.example && (
+                    <div className="mt-6 p-4 rounded-xl bg-white border border-[#D5DEEF] shadow-sm">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Lightbulb className="w-4 h-4 text-[#F59E0B]" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[#395886]/40">Contoh Implementasi</span>
+                      </div>
+                      <p className="text-xs font-bold text-[#628ECB] italic">
+                        {section.example}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        <div className="flex flex-col items-center gap-4">
+          <p className={`text-xs font-bold transition-all ${allOpened ? 'text-[#10B981]' : 'text-[#395886]/30'}`}>
+            {allOpened ? 'Semua materi telah dieksplorasi!' : `${openedIds.size}/${explorationSections.length} materi dibuka`}
+          </p>
+          <button
+            onClick={onNext}
+            disabled={!allOpened}
+            className={`w-full py-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg
+              ${allOpened ? 'bg-[#10B981] text-white hover:bg-[#059669] shadow-green-200' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed shadow-none'}`}
+          >
+            Lanjut ke Aktivitas
+            <ArrowRight className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-// ── Material Viewer ──────────────────────────────────────────────────────────
+// -- Material Viewer ----------------------------------------------------------
 
 function MaterialViewer({ material, onNext }: { material: InquiryStageProps['material'], onNext: () => void }) {
   if (!material) return null;
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
-      <div className="bg-white rounded-[2rem] border-2 border-[#10B981]/20 shadow-sm overflow-hidden p-8">
+      <div className="bg-white rounded-2xl border-2 border-[#10B981]/20 shadow-sm overflow-hidden p-8">
         <div className="flex items-center gap-4 mb-8">
           <div className="w-14 h-14 rounded-2xl bg-[#10B981]/10 flex items-center justify-center shrink-0">
             <GraduationCap className="w-8 h-8 text-[#10B981]" />
@@ -558,7 +711,7 @@ function MaterialViewer({ material, onNext }: { material: InquiryStageProps['mat
           {material.content.map((p, i) => <p key={i} className="text-[#395886]/80 text-sm leading-relaxed font-medium">{p}</p>)}
         </div>
         {material.examples && (
-          <div className="bg-[#F8FAFF] rounded-3xl p-6 border-2 border-[#10B981]/10 mb-8">
+          <div className="bg-[#F8FAFF] rounded-2xl p-6 border-2 border-[#10B981]/10 mb-8">
             <div className="grid sm:grid-cols-2 gap-3">
               {material.examples.map((ex, i) => <div key={i} className="flex items-center gap-3 bg-white p-3 rounded-xl border border-[#D5DEEF]"><div className="w-2 h-2 rounded-full bg-[#10B981]" /><span className="text-xs font-bold text-[#395886]">{ex}</span></div>)}
             </div>
@@ -570,44 +723,81 @@ function MaterialViewer({ material, onNext }: { material: InquiryStageProps['mat
   );
 }
 
-// ── Inquiry Lesson 1 Flow ─────────────────────────────────────────────────────
+// -- Inquiry Lesson 1 Flow -----------------------------------------------------
 
 function InquiryLesson1Page(props: InquiryStageProps) {
   const { material, explorationSections, flowItems, flowInstruction, matchingPairs, inquiryReflection1, inquiryReflection2, lessonId, stageIndex, onComplete, isCompleted } = props;
   const [phase, setPhase] = useState<'material' | 'explore' | 'activities'>('material');
-  const [sortingDone, setSortingDone] = useState(false);
+  const [activityStep, setActivityStep] = useState<number>(1); // 1: X.TCP.3, 2: Refleksi 1, 3: X.TCP.4, 4: Refleksi 2
+
   const [reflection1, setReflection1] = useState('');
-  const [reflection1Done, setReflection1Done] = useState(false);
   const [matchingAnswers, setMatchingAnswers] = useState<Record<string, string>>({});
-  const [matchingDone, setMatchingDone] = useState(false);
   const [reflection2, setReflection2] = useState('');
-  const [reflection2Done, setReflection2Done] = useState(false);
 
   if (isCompleted) return (
     <div className="flex justify-center py-8">
-      <button onClick={() => onComplete({})} className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-[#10B981] text-white font-black">Lanjut <ArrowRight className="w-5 h-5" /></button>
+      <button onClick={() => onComplete({})} className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-[#10B981] text-white font-black shadow-lg hover:scale-105 transition-all">
+        Lanjut ke Tahap Questioning <ArrowRight className="w-5 h-5" />
+      </button>
     </div>
   );
 
   if (phase === 'material') return <MaterialViewer material={material} onNext={() => setPhase('explore')} />;
   if (phase === 'explore') return <ExplorePhase explorationSections={explorationSections ?? []} onNext={() => setPhase('activities')} />;
 
+  // phase === 'activities'
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
-      <DragDropLayerSorter flowItems={flowItems ?? []} flowInstruction={flowInstruction} lessonId={lessonId} stageIndex={stageIndex} onComplete={() => setSortingDone(true)} />
-      {sortingDone && <InlineReflectionBox label="Refleksi Layer Sorting (X.TCP.3)" prompt={inquiryReflection1 ?? '...'} onDone={(text) => { setReflection1(text); setReflection1Done(true); }} />}
-      {reflection1Done && <MatchingPhase pairs={matchingPairs ?? []} lessonId={lessonId} stageIndex={stageIndex} shuffleRight completeLabel="Lanjut" onComplete={(m) => { setMatchingAnswers(m); setMatchingDone(true); }} />}
-      {matchingDone && <InlineReflectionBox label="Refleksi Fungsi Layer (X.TCP.4)" prompt={inquiryReflection2 ?? '...'} onDone={(text) => { setReflection2(text); setReflection2Done(true); }} />}
-      {reflection2Done && (
-        <div className="flex justify-center pt-10">
-           <button onClick={() => onComplete({ reflection1, reflection2, matchingAnswers, type: 'lesson1_format' })} className="px-10 py-4 rounded-2xl bg-[#10B981] text-white font-black shadow-xl">Selesaikan Tahap Inquiry <CheckCircle className="w-5 h-5 inline ml-1" /></button>
-        </div>
+      {activityStep === 1 && (
+        <DragDropLayerSorter
+          flowItems={flowItems ?? []}
+          flowInstruction={flowInstruction}
+          lessonId={lessonId}
+          stageIndex={stageIndex}
+          onComplete={() => setActivityStep(2)}
+        />
+      )}
+
+      {activityStep === 2 && (
+        <InlineReflectionBox
+          label="Esai Mandiri (X.TCP.3)"
+          prompt={inquiryReflection1 ?? '...'}
+          onDone={(text) => {
+            setReflection1(text);
+            setActivityStep(3);
+          }}
+        />
+      )}
+
+      {activityStep === 3 && (
+        <MatchingPhase
+          pairs={matchingPairs ?? []}
+          lessonId={lessonId}
+          stageIndex={stageIndex}
+          shuffleRight
+          completeLabel="Lanjut ke Refleksi"
+          onComplete={(m) => {
+            setMatchingAnswers(m);
+            setActivityStep(4);
+          }}
+        />
+      )}
+
+      {activityStep === 4 && (
+        <InlineReflectionBox
+          label="Esai Mandiri (X.TCP.4)"
+          prompt={inquiryReflection2 ?? '...'}
+          onDone={(text) => {
+            setReflection2(text);
+            onComplete({ reflection1, reflection2, matchingAnswers, type: 'lesson1_format' });
+          }}
+        />
       )}
     </div>
   );
 }
 
-// ── Main InquiryStage Router ──────────────────────────────────────────────────
+// -- Main InquiryStage Router --------------------------------------------------
 
 export function InquiryStage(props: InquiryStageProps) {
   if (props.lessonId === '1') return <InquiryLesson1Page {...props} />;

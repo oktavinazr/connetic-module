@@ -131,8 +131,8 @@ export function AuthenticAssessmentStage({
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex flex-col items-center gap-6 rounded-3xl border-2 border-[#8B5CF6]/20 bg-white p-6 shadow-sm md:flex-row">
-        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#8B5CF6] to-[#7C3AED] text-white shadow-lg ring-4 ring-[#8B5CF6]/10">
+      <div className="flex flex-col items-center gap-6 rounded-2xl border-2 border-[#8B5CF6]/20 bg-white p-6 shadow-sm md:flex-row">
+        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-[#8B5CF6] text-white shadow-md">
           <User className="h-10 w-10" strokeWidth={2.5} />
         </div>
         <div className="flex-1 text-center md:text-left">
@@ -147,7 +147,7 @@ export function AuthenticAssessmentStage({
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-6">
-          <div className="overflow-hidden rounded-[2rem] border-2 border-[#D5DEEF] bg-white shadow-sm">
+          <div className="overflow-hidden rounded-2xl border-2 border-[#D5DEEF] bg-white shadow-sm">
             <div className="flex items-center gap-3 border-b border-[#D5DEEF] bg-gray-50 px-6 py-4">
               <AlertCircle className="h-5 w-5 text-[#8B5CF6]" />
               <h3 className="text-sm font-bold text-[#395886]">Konteks Situasi</h3>
@@ -179,7 +179,7 @@ export function AuthenticAssessmentStage({
 
           {initialSubmitted && selectedBranch && (
             <div
-              className={`rounded-[2rem] border-2 p-6 ${
+              className={`rounded-2xl border-2 p-6 ${
                 selectedBranch.isOptimal
                   ? 'border-[#10B981]/20 bg-[#F0FDF4]'
                   : 'border-[#F59E0B]/20 bg-[#FFFBEB]'
@@ -217,7 +217,7 @@ export function AuthenticAssessmentStage({
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-[2rem] border-2 border-[#D5DEEF] bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border-2 border-[#D5DEEF] bg-white p-6 shadow-sm">
             <p className="mb-4 text-sm font-bold text-[#395886]">{scenario.initialQuestion}</p>
 
             <div className="space-y-3">
@@ -331,7 +331,7 @@ export function AuthenticAssessmentStage({
 
           {followUpSubmitted && selectedFollowUp && (
             <div
-              className={`rounded-[2rem] border-2 p-6 ${
+              className={`rounded-2xl border-2 p-6 ${
                 selectedFollowUp.isCorrect
                   ? 'border-[#10B981]/20 bg-[#F0FDF4]'
                   : 'border-[#F59E0B]/20 bg-[#FFFBEB]'
@@ -370,7 +370,7 @@ export function AuthenticAssessmentStage({
       </div>
 
       {showFinalSummary && (
-        <div className="rounded-[2rem] border-2 border-dashed border-[#D5DEEF] bg-white p-6 text-center shadow-sm">
+        <div className="rounded-2xl border-2 border-dashed border-[#D5DEEF] bg-white p-6 text-center shadow-sm">
           <Trophy className="mx-auto mb-3 h-10 w-10 text-[#F59E0B]" />
           <h4 className="mb-2 text-sm font-black uppercase tracking-widest text-[#395886]">
             Analisis Selesai
