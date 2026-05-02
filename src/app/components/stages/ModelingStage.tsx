@@ -731,9 +731,9 @@ export function ModelingStage({
           )}
         </AnimatePresence>
         {macStripped && (
-          <div className="flex items-center gap-2 p-2.5 rounded-xl border border-[#10B981]/30 bg-[#10B981]/5">
-            <CheckCircle className="w-4 h-4 text-[#10B981]" />
-            <span className="text-sm font-bold text-[#10B981]">MAC Frame dilepas ✓</span>
+          <div className="flex items-center gap-2 p-2.5 rounded-xl border border-[#0EA5E9]/30 bg-[#0EA5E9]/5">
+            <CheckCircle className="w-4 h-4 text-[#0EA5E9]" />
+            <span className="text-sm font-bold text-[#0EA5E9]">MAC Frame dilepas ✓</span>
           </div>
         )}
 
@@ -774,9 +774,9 @@ export function ModelingStage({
           )}
         </AnimatePresence>
         {ipStripped && (
-          <div className="flex items-center gap-2 p-2.5 rounded-xl border border-[#10B981]/30 bg-[#10B981]/5">
-            <CheckCircle className="w-4 h-4 text-[#10B981]" />
-            <span className="text-sm font-bold text-[#10B981]">Alamat Tujuan dilepas ✓</span>
+          <div className="flex items-center gap-2 p-2.5 rounded-xl border border-[#0EA5E9]/30 bg-[#0EA5E9]/5">
+            <CheckCircle className="w-4 h-4 text-[#0EA5E9]" />
+            <span className="text-sm font-bold text-[#0EA5E9]">Alamat Tujuan dilepas ✓</span>
           </div>
         )}
 
@@ -912,9 +912,9 @@ export function ModelingStage({
         const fillPct = (step / 8) * 100;
 
         return (
-          <div className={`bg-white rounded-2xl border-2 shadow-sm overflow-hidden transition-all duration-700 ${allDone ? 'border-[#10B981]/40' : 'border-[#D5DEEF]'}`}>
+          <div className={`bg-white rounded-2xl border-2 shadow-sm overflow-hidden transition-all duration-700 ${allDone ? 'border-[#10B981]/40' : 'border-[#D5DEEF]'} mt-6`}>
             {/* Header */}
-            <div className="flex items-center justify-between px-5 pt-4 pb-0">
+            <div className="flex items-center justify-between px-5 pt-6 pb-2">
               <div className="flex items-center gap-2.5">
                 <motion.div
                   animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
@@ -932,14 +932,14 @@ export function ModelingStage({
             </div>
 
             {/* Section labels */}
-            <div className="flex items-end px-5 pt-2.5 pb-0 text-[8px] font-black uppercase tracking-widest leading-none select-none">
+            <div className="flex items-end px-5 pt-3 pb-0 text-[8px] font-black uppercase tracking-widest leading-none select-none">
               <div className="flex-[4] text-center text-[#628ECB] opacity-70">◄ PC A · Enkapsulasi ►</div>
               <div className="flex-[2] text-center text-[#EC4899] opacity-70">· Fisik ·</div>
               <div className="flex-[3] text-center text-[#10B981] opacity-70">◄ PC B · Dekapsulasi ►</div>
             </div>
 
             {/* Scrollable track */}
-            <div className="overflow-x-auto scrollbar-hide px-3 pb-5 pt-1">
+            <div className="overflow-x-auto scrollbar-hide px-3 pb-6 pt-6">
               <div className="relative" style={{ minWidth: '500px', height: '90px' }}>
 
                 {/* Section background bands */}
