@@ -29,11 +29,15 @@ import {
   Lightbulb,
   LogOut,
   MonitorPlay,
+  Pencil,
+  Plus,
   Search,
   ShieldCheck,
+  Trash2,
   TrendingUp,
   Trophy,
   User,
+  UserPlus,
   Users,
   Video,
   XCircle,
@@ -59,7 +63,7 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type AdminSection = 'dashboard' | 'students' | 'edit-learning' | 'results';
+type AdminSection = 'dashboard' | 'students' | 'groups' | 'edit-learning' | 'results';
 
 const GROUP_STORAGE_KEY = 'student-groups';
 
@@ -506,6 +510,7 @@ function AdminSidebar({
   const navItems: { id: AdminSection; label: string; icon: React.ReactNode }[] = [
     { id: 'dashboard', label: 'Dashboard Admin', icon: <ShieldCheck className="w-4 h-4" /> },
     { id: 'students', label: 'Data Siswa', icon: <Users className="w-4 h-4" /> },
+    { id: 'groups', label: 'Manajemen Kelompok', icon: <UserPlus className="w-4 h-4" /> },
     { id: 'edit-learning', label: 'Manajemen Konten', icon: <BookOpen className="w-4 h-4" /> },
     { id: 'results', label: 'Hasil Belajar', icon: <BarChart2 className="w-4 h-4" /> },
   ];
@@ -592,7 +597,7 @@ export function AdminPage() {
 
   const initialSection = (searchParams.get('section') as AdminSection) || 'dashboard';
   const [section, setSection] = useState<AdminSection>(
-    ['dashboard', 'students', 'edit-learning', 'results'].includes(initialSection) ? initialSection : 'dashboard'
+    ['dashboard', 'students', 'groups', 'edit-learning', 'results'].includes(initialSection) ? initialSection : 'dashboard'
   );
   const [selectedStudent, setSelectedStudent] = useState<StudentActivitySummary | null>(null);
   const [accountStudent, setAccountStudent] = useState<StudentActivitySummary | null>(null);
@@ -601,6 +606,13 @@ export function AdminPage() {
   const [students, setStudents] = useState<Awaited<ReturnType<typeof getAllStudents>>>([]);
   const [studentActivities, setStudentActivities] = useState<StudentActivitySummary[]>([]);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+
+  // ── Group Management State ──────────────────────────────────────────────────
+  const [groupAssignmentsAdmin, setGroupAssignmentsAdmin] = useState<Record<string, string>>({});
+  const [customGroupNames, setCustomGroupNames] = useState<string[]>([]);
+  const [newGroupInput, setNewGroupInput] = useState('');
+  const [renamingGroup, setRenamingGroup] = useState<string | null>(null);
+  const [renameInput, setRenameInput] = useState('');
 
   // Results section filters
   const [filterClass, setFilterClass] = useState('all');
@@ -637,7 +649,7 @@ export function AdminPage() {
 
   useEffect(() => {
     const nextSection = (searchParams.get('section') as AdminSection) || 'dashboard';
-    if (nextSection !== section && ['dashboard', 'students', 'edit-learning', 'results'].includes(nextSection)) {
+    if (nextSection !== section && ['dashboard', 'students', 'groups', 'edit-learning', 'results'].includes(nextSection)) {
       setSection(nextSection);
     }
   }, [searchParams]);
@@ -655,6 +667,65 @@ export function AdminPage() {
     const lcStage = firstLesson?.stages.find(s => s.type === 'learning-community');
     return lcStage?.groupActivity?.groupNames ?? ['Kelompok 1', 'Kelompok 2', 'Kelompok 3', 'Kelompok 4', 'Kelompok 5', 'Kelompok 6', 'Kelompok 7', 'Kelompok 8'];
   }, []);
+
+  const allGroupNames = useMemo(() => {
+    const custom = customGroupNames.filter(n => !availableGroups.includes(n));
+    return [...availableGroups, ...custom];
+  }, [availableGroups, customGroupNames]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(GROUP_STORAGE_KEY);
+      setGroupAssignmentsAdmin(raw ? JSON.parse(raw) : {});
+    } catch { setGroupAssignmentsAdmin({}); }
+    try {
+      const raw = localStorage.getItem('admin-group-names');
+      setCustomGroupNames(raw ? JSON.parse(raw) : []);
+    } catch { setCustomGroupNames([]); }
+  }, [section]);
+
+  const saveGroupAssignmentsAdmin = (next: Record<string, string>) => {
+    localStorage.setItem(GROUP_STORAGE_KEY, JSON.stringify(next));
+    setGroupAssignmentsAdmin(next);
+  };
+
+  const assignStudentToGroup = (studentId: string, groupName: string) => {
+    const next = { ...groupAssignmentsAdmin };
+    if (!groupName) delete next[studentId];
+    else next[studentId] = groupName;
+    saveGroupAssignmentsAdmin(next);
+  };
+
+  const addGroup = () => {
+    const trimmed = newGroupInput.trim();
+    if (!trimmed || allGroupNames.includes(trimmed)) return;
+    const next = [...customGroupNames, trimmed];
+    localStorage.setItem('admin-group-names', JSON.stringify(next));
+    setCustomGroupNames(next);
+    setNewGroupInput('');
+  };
+
+  const deleteGroup = (groupName: string) => {
+    if (!window.confirm(`Hapus kelompok "${groupName}"? Semua anggota akan dipindah ke "Belum Bergabung".`)) return;
+    const next = { ...groupAssignmentsAdmin };
+    Object.keys(next).forEach(id => { if (next[id] === groupName) delete next[id]; });
+    saveGroupAssignmentsAdmin(next);
+    const nextCustom = customGroupNames.filter(n => n !== groupName);
+    localStorage.setItem('admin-group-names', JSON.stringify(nextCustom));
+    setCustomGroupNames(nextCustom);
+  };
+
+  const confirmRenameGroup = (oldName: string) => {
+    const trimmed = renameInput.trim();
+    if (!trimmed || (trimmed !== oldName && allGroupNames.includes(trimmed))) return;
+    const next = { ...groupAssignmentsAdmin };
+    Object.keys(next).forEach(id => { if (next[id] === oldName) next[id] = trimmed; });
+    saveGroupAssignmentsAdmin(next);
+    const nextCustom = customGroupNames.map(n => n === oldName ? trimmed : n);
+    localStorage.setItem('admin-group-names', JSON.stringify(nextCustom));
+    setCustomGroupNames(nextCustom);
+    setRenamingGroup(null);
+  };
 
   useEffect(() => {
     if (students.length === 0) return;
@@ -925,6 +996,7 @@ export function AdminPage() {
   const mobileNavItems = [
     { label: 'Dashboard Admin', onClick: () => setSection('dashboard'), icon: <ShieldCheck className="h-4 w-4" /> },
     { label: 'Data Siswa', onClick: () => setSection('students'), icon: <Users className="h-4 w-4" /> },
+    { label: 'Manajemen Kelompok', onClick: () => setSection('groups'), icon: <UserPlus className="h-4 w-4" /> },
     { label: 'Manajemen Konten Pembelajaran', onClick: () => setSection('edit-learning'), icon: <BookOpen className="h-4 w-4" /> },
     { label: 'Hasil Belajar', onClick: () => setSection('results'), icon: <BarChart2 className="h-4 w-4" /> },
     { label: 'Logout', onClick: confirmLogout, icon: <LogOut className="h-4 w-4" />, danger: true },
@@ -933,6 +1005,7 @@ export function AdminPage() {
   const sectionLabel: Record<AdminSection, string> = {
     dashboard: 'Dashboard Admin',
     students: 'Data Siswa',
+    groups: 'Manajemen Kelompok',
     'edit-learning': 'Manajemen Konten Pembelajaran',
     results: 'Hasil Belajar',
   };
@@ -1440,6 +1513,166 @@ export function AdminPage() {
                 )}
               </div>
             )}
+
+            {/* ── Manajemen Kelompok ── */}
+            {section === 'groups' && (() => {
+              const groupedStudents = allGroupNames.map(groupName => ({
+                groupName,
+                members: students.filter(s => groupAssignmentsAdmin[s.id] === groupName),
+              }));
+              const unassigned = students.filter(s => !groupAssignmentsAdmin[s.id]);
+              const totalAssigned = students.length - unassigned.length;
+
+              return (
+                <div className="space-y-7">
+                  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#628ECB] mb-2">Pengelolaan</p>
+                      <h1 className="text-3xl font-bold text-[#395886] tracking-tight mb-1">Manajemen Kelompok</h1>
+                      <p className="text-sm text-[#395886]/60">Atur pembagian kelompok siswa untuk aktivitas Learning Community.</p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="bg-white border border-[#D5DEEF] rounded-2xl px-5 py-3 text-center shadow-sm">
+                        <p className="text-2xl font-bold text-[#395886]">{totalAssigned}<span className="text-sm text-[#395886]/40">/{students.length}</span></p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#628ECB]">Sudah Bergabung</p>
+                      </div>
+                      <div className="bg-white border border-[#D5DEEF] rounded-2xl px-5 py-3 text-center shadow-sm">
+                        <p className="text-2xl font-bold text-[#F59E0B]">{unassigned.length}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#F59E0B]/70">Belum Bergabung</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tambah kelompok baru */}
+                  <div className="bg-white rounded-2xl border border-[#D5DEEF] shadow-sm p-5">
+                    <p className="text-xs font-bold uppercase tracking-widest text-[#628ECB] mb-3">Tambah Kelompok Baru</p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newGroupInput}
+                        onChange={e => setNewGroupInput(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && addGroup()}
+                        placeholder="Nama kelompok baru..."
+                        className="flex-1 border border-[#D5DEEF] rounded-xl px-4 py-2.5 text-sm font-medium text-[#395886] focus:outline-none focus:border-[#628ECB] focus:ring-2 focus:ring-[#628ECB]/10"
+                      />
+                      <button
+                        onClick={addGroup}
+                        disabled={!newGroupInput.trim() || allGroupNames.includes(newGroupInput.trim())}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-[#395886] text-white text-sm font-bold rounded-xl hover:bg-[#628ECB] transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                      >
+                        <Plus className="w-4 h-4" /> Tambah
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Daftar kelompok */}
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    {groupedStudents.map(({ groupName, members }, gi) => (
+                      <div key={groupName} className="bg-white rounded-2xl border border-[#D5DEEF] shadow-sm overflow-hidden flex flex-col">
+                        {/* Header kelompok */}
+                        <div className="px-5 py-4 bg-gradient-to-r from-[#395886] to-[#628ECB] flex items-center justify-between gap-2">
+                          {renamingGroup === groupName ? (
+                            <div className="flex items-center gap-2 flex-1">
+                              <input
+                                autoFocus
+                                value={renameInput}
+                                onChange={e => setRenameInput(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') confirmRenameGroup(groupName); if (e.key === 'Escape') setRenamingGroup(null); }}
+                                className="flex-1 bg-white/20 border border-white/40 rounded-lg px-3 py-1.5 text-sm font-bold text-white placeholder-white/50 focus:outline-none focus:border-white/70 min-w-0"
+                              />
+                              <button onClick={() => confirmRenameGroup(groupName)} className="text-white/80 hover:text-white text-xs font-bold px-2 py-1 bg-white/20 rounded-lg shrink-0">Simpan</button>
+                              <button onClick={() => setRenamingGroup(null)} className="text-white/60 hover:text-white/90 shrink-0"><X className="w-4 h-4" /></button>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-white font-black text-xs shrink-0">{gi + 1}</div>
+                                <h3 className="font-bold text-white truncate">{groupName}</h3>
+                                <span className="shrink-0 text-xs bg-white/20 text-white px-2 py-0.5 rounded-full font-bold">{members.length}</span>
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <button onClick={() => { setRenamingGroup(groupName); setRenameInput(groupName); }} className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/20 transition-colors" title="Ganti nama">
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button onClick={() => deleteGroup(groupName)} className="p-1.5 rounded-lg text-white/70 hover:text-red-200 hover:bg-red-500/30 transition-colors" title="Hapus kelompok">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Anggota */}
+                        <div className="flex-1 divide-y divide-[#F0F3FA]">
+                          {members.length === 0 ? (
+                            <div className="py-8 text-center">
+                              <Users className="w-8 h-8 text-[#D5DEEF] mx-auto mb-2" />
+                              <p className="text-xs text-[#395886]/35 italic">Belum ada anggota</p>
+                            </div>
+                          ) : (
+                            members.map(s => (
+                              <div key={s.id} className="px-4 py-3 flex items-center gap-3 hover:bg-[#F8FAFD] transition-colors">
+                                <div className="w-8 h-8 rounded-full bg-[#628ECB]/10 flex items-center justify-center shrink-0">
+                                  <User className="w-4 h-4 text-[#628ECB]" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-bold text-[#395886] truncate">{s.name}</p>
+                                  <p className="text-[10px] text-[#395886]/50">{s.class}</p>
+                                </div>
+                                <select
+                                  value={groupAssignmentsAdmin[s.id] ?? ''}
+                                  onChange={e => assignStudentToGroup(s.id, e.target.value)}
+                                  className="text-xs font-semibold border border-[#D5DEEF] rounded-lg px-2 py-1.5 text-[#395886] bg-white focus:outline-none focus:border-[#628ECB] cursor-pointer max-w-[110px]"
+                                >
+                                  <option value="">— Lepas —</option>
+                                  {allGroupNames.map(g => <option key={g} value={g}>{g}</option>)}
+                                </select>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Siswa belum bergabung */}
+                  {unassigned.length > 0 && (
+                    <div className="bg-white rounded-2xl border border-[#F59E0B]/30 shadow-sm overflow-hidden">
+                      <div className="px-5 py-4 bg-[#FFFBEB] border-b border-[#F59E0B]/20 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-[#F59E0B]/10 flex items-center justify-center">
+                          <Users className="w-4 h-4 text-[#F59E0B]" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-[#92400E] text-sm">Siswa Belum Bergabung</h3>
+                          <p className="text-xs text-[#92400E]/60">{unassigned.length} siswa belum memiliki kelompok</p>
+                        </div>
+                      </div>
+                      <div className="divide-y divide-[#F0F3FA]">
+                        {unassigned.map(s => (
+                          <div key={s.id} className="px-5 py-3 flex items-center gap-3 hover:bg-[#FFFBEB]/40 transition-colors">
+                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                              <User className="w-4 h-4 text-gray-400" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-[#395886] truncate">{s.name}</p>
+                              <p className="text-[10px] text-[#395886]/50">{s.class} · {s.nis}</p>
+                            </div>
+                            <select
+                              value=""
+                              onChange={e => { if (e.target.value) assignStudentToGroup(s.id, e.target.value); }}
+                              className="text-xs font-semibold border border-[#F59E0B]/40 rounded-lg px-2 py-1.5 text-[#92400E] bg-[#FFFBEB] focus:outline-none focus:border-[#F59E0B] cursor-pointer max-w-[130px]"
+                            >
+                              <option value="">Pilih kelompok...</option>
+                              {allGroupNames.map(g => <option key={g} value={g}>{g}</option>)}
+                            </select>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* ── Edit Pembelajaran ── */}
             {section === 'edit-learning' && <EditLearningSection />}

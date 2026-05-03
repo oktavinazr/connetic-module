@@ -94,12 +94,6 @@ export function DashboardPage() {
     score: number,
   ) => setReviewModal({ title, questions, studentAnswers, score });
 
-  const availableGroups = useMemo(() => {
-    const firstLesson = Object.values(lessons)[0];
-    const learningCommunityStage = firstLesson?.stages.find((stage) => stage.type === 'learning-community');
-    return learningCommunityStage?.groupActivity?.groupNames ?? ['Kelompok 1', 'Kelompok 2', 'Kelompok 3', 'Kelompok 4', 'Kelompok 5'];
-  }, []);
-
   const groupAssignments = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem(GROUP_STORAGE_KEY) || '{}') as Record<string, string>;
@@ -121,16 +115,6 @@ export function DashboardPage() {
     if (!selectedGroup) return [];
     return allStudents.filter((student) => groupAssignments[student.id] === selectedGroup);
   }, [allStudents, groupAssignments, selectedGroup]);
-
-  const saveGroupSelection = (groupName: string) => {
-    if (!user) return;
-    const nextAssignments = {
-      ...groupAssignments,
-      [user.id]: groupName,
-    };
-    localStorage.setItem(GROUP_STORAGE_KEY, JSON.stringify(nextAssignments));
-    setGroupVersion((value) => value + 1);
-  };
 
   const handleLogout = () => {
     logout();
@@ -700,97 +684,82 @@ export function DashboardPage() {
       />
 
       <Dialog open={isGroupOpen} onOpenChange={setIsGroupOpen}>
-        <DialogContent className="border-[#D5DEEF] sm:max-w-3xl max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-[2rem]">
-          <DialogHeader className="p-8 pb-6 bg-gradient-to-br from-[#395886] to-[#628ECB] border-b border-[#3A6CB5]/30">
-            <DialogTitle className="text-white flex items-center gap-3 text-2xl font-bold">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 border border-white/30">
-                <Users className="w-5 h-5 text-white" />
+        <DialogContent className="border-[#D5DEEF] sm:max-w-lg max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-[2rem]">
+          <DialogHeader className="p-7 pb-5 bg-gradient-to-br from-[#395886] to-[#628ECB]">
+            <DialogTitle className="text-white flex items-center gap-3 text-xl font-bold">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 border border-white/30">
+                <Users className="w-4 h-4 text-white" />
               </div>
-              Kelompok Belajar
+              Informasi Kelompok Saya
             </DialogTitle>
-            <DialogDescription className="text-white/65 font-medium mt-2">
-              Kolaborasi dengan rekan sejawat adalah bagian penting dari metode CTL. Pilih kelompok Anda.
+            <DialogDescription className="text-white/65 font-medium mt-1.5 text-sm">
+              Kelompok belajar untuk aktivitas Learning Community.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto p-8 scrollbar-thin scrollbar-thumb-[#D5DEEF]">
-            <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
-              <div className="space-y-5">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#628ECB]">Tersedia</p>
-                <div className="grid gap-3">
-                  {availableGroups.map((groupName) => (
-                    <button
-                      key={groupName}
-                      onClick={() => saveGroupSelection(groupName)}
-                      className={`group relative overflow-hidden rounded-2xl border-2 px-5 py-4 text-left transition-all ${
-                        selectedGroup === groupName
-                          ? 'border-[#628ECB] bg-[#628ECB]/5 text-[#395886]'
-                          : 'border-[#D5DEEF] bg-white text-[#395886]/60 hover:border-[#628ECB]/50 hover:bg-[#F8FAFD]'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold">{groupName}</span>
-                        {selectedGroup === groupName && (
-                          <div className="h-2.5 w-2.5 rounded-full bg-[#628ECB] shadow-[0_0_10px_rgba(98,142,203,0.5)]" />
-                        )}
-                      </div>
-                    </button>
-                  ))}
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            {/* Info kelompok */}
+            {selectedGroup ? (
+              <>
+                <div className="rounded-2xl bg-[#EEF3FB] border border-[#628ECB]/20 p-5 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-[#395886] flex items-center justify-center shrink-0 shadow-md">
+                    <Users className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#628ECB] mb-0.5">Kelompok Anda</p>
+                    <p className="text-xl font-black text-[#395886] truncate">{selectedGroup}</p>
+                    <p className="text-xs text-[#395886]/50 font-medium mt-0.5">{studentsInSelectedGroup.length} anggota · Peran: Anggota</p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-5">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#628ECB]">Anggota Aktif</p>
-                <div className="rounded-[2rem] border-2 border-[#D5DEEF] bg-[#F8FAFD] p-2 overflow-hidden shadow-inner">
-                  {selectedGroup ? (
-                    <div className="space-y-2">
-                      <div className="bg-[#628ECB] px-6 py-3 text-sm font-bold text-white flex justify-between items-center rounded-[1.5rem] shadow-md">
-                        <span>{selectedGroup}</span>
-                        <span className="bg-white/20 px-3 py-1 rounded-lg text-xs font-bold">{studentsInSelectedGroup.length} Anggota</span>
-                      </div>
-                      <div className="p-3 space-y-2 max-h-[350px] overflow-y-auto scrollbar-hide">
-                        {studentsInSelectedGroup.length > 0 ? (
-                          studentsInSelectedGroup.map((student) => (
-                            <div key={student.id} className="flex items-center gap-4 rounded-2xl border border-[#D5DEEF] bg-white p-4 shadow-sm transition-transform hover:scale-[1.02]">
-                              <div className="h-10 w-10 rounded-xl bg-[#F0F3FA] flex items-center justify-center text-[#628ECB]">
-                                <User className="w-5 h-5" />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="font-bold text-[#395886] truncate">{student.name}</p>
-                                <p className="text-[10px] text-[#395886]/50 font-bold uppercase tracking-widest">{student.class}</p>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="py-12 text-center">
-                            <Users className="w-12 h-12 text-[#D5DEEF] mx-auto mb-4 opacity-50" />
-                            <p className="text-sm font-bold text-[#395886]/40 italic">Jadilah anggota pertama di kelompok ini.</p>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#628ECB] mb-3 px-1">Daftar Anggota</p>
+                  <div className="space-y-2">
+                    {studentsInSelectedGroup.length > 0 ? (
+                      studentsInSelectedGroup.map((student) => (
+                        <div key={student.id} className="flex items-center gap-3 rounded-2xl border border-[#D5DEEF] bg-white p-3.5 shadow-sm">
+                          <div className="h-9 w-9 rounded-xl bg-[#628ECB]/10 flex items-center justify-center text-[#628ECB] shrink-0">
+                            <User className="w-4 h-4" />
                           </div>
-                        )}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-bold text-[#395886] truncate text-sm">{student.name}</p>
+                            <p className="text-[10px] text-[#395886]/50 font-medium">{student.class}</p>
+                          </div>
+                          <span className="text-[10px] font-bold text-[#628ECB] bg-[#628ECB]/10 px-2.5 py-1 rounded-full shrink-0">Anggota</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="py-8 text-center rounded-2xl border border-dashed border-[#D5DEEF]">
+                        <Users className="w-10 h-10 text-[#D5DEEF] mx-auto mb-2 opacity-50" />
+                        <p className="text-sm text-[#395886]/40">Belum ada anggota lain di kelompok ini.</p>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="py-24 text-center">
-                      <div className="relative inline-block mb-6">
-                        <Users className="w-16 h-16 text-[#D5DEEF] mx-auto opacity-30" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#F8FAFD] to-transparent" />
-                      </div>
-                      <p className="text-sm font-bold text-[#395886]/40 max-w-[240px] mx-auto leading-relaxed">
-                        Silakan pilih salah satu kelompok di samping untuk melihat rekan belajar Anda.
-                      </p>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
+              </>
+            ) : (
+              <div className="py-10 text-center rounded-2xl border border-dashed border-[#D5DEEF]">
+                <Users className="w-14 h-14 text-[#D5DEEF] mx-auto mb-3 opacity-40" />
+                <p className="font-bold text-[#395886]/50 text-sm">Anda belum memiliki kelompok</p>
+                <p className="text-xs text-[#395886]/35 mt-1">Hubungi guru untuk mendapatkan kelompok.</p>
               </div>
+            )}
+
+            {/* Keterangan */}
+            <div className="flex items-start gap-3 rounded-2xl bg-[#F0F3FA] border border-[#D5DEEF] p-4">
+              <HelpCircle className="w-4 h-4 text-[#628ECB] mt-0.5 shrink-0" />
+              <p className="text-xs text-[#395886]/70 font-medium leading-relaxed">
+                <span className="font-bold text-[#395886]">Kelompok ditentukan oleh guru.</span> Pengaturan kelompok hanya dapat dilakukan oleh guru/administrator. Hubungi guru jika ada pertanyaan terkait kelompok Anda.
+              </p>
             </div>
           </div>
-          
-          <div className="p-6 bg-gradient-to-r from-[#EEF3FB] to-[#F0F5FF] border-t border-[#C4D7F5] flex justify-end">
+
+          <div className="p-5 bg-[#F8FAFD] border-t border-[#D5DEEF] flex justify-end">
             <button
               onClick={() => setIsGroupOpen(false)}
-              className="px-8 py-3 bg-[#628ECB] text-white text-sm font-bold rounded-2xl hover:bg-[#395886] transition-all shadow-lg active:scale-95"
+              className="px-7 py-2.5 bg-[#628ECB] text-white text-sm font-bold rounded-2xl hover:bg-[#395886] transition-all shadow-md active:scale-95"
             >
-              Simpan & Tutup
+              Tutup
             </button>
           </div>
         </DialogContent>
