@@ -670,7 +670,7 @@ export function AdminPage() {
   useEffect(() => {
     if (!user) { navigate('/login'); return; }
     getAllStudents().then(setStudents);
-  }, [user, navigate]);
+  }, [user?.id, navigate]);
 
   useEffect(() => {
     const nextSection = (searchParams.get('section') as AdminSection) || 'dashboard';
@@ -732,6 +732,95 @@ export function AdminPage() {
     });
     await deleteAdminGroupName(groupName);
     setCustomGroupNames(await getAdminGroupNames());
+  };
+
+  // ─── FITUR PEMBAGIAN KELOMPOK OTOMATIS (DINAMIS) ────────────────────────────
+  const handleAutoDistributeGroups = async () => {
+    // 1. Ambil semua siswa yang belum punya kelompok
+    const unassignedStudents = studentActivities.filter(s => !groupAssignmentsAdmin[s.student.id]);
+
+    if (unassignedStudents.length === 0) {
+      alert("Semua siswa sudah memiliki kelompok!");
+      return;
+    }
+
+    // 2. Tanya ke guru mau dibagi jadi berapa kelompok
+    const inputCount = window.prompt(
+      `Ada ${unassignedStudents.length} siswa yang belum bergabung.\n\nBerapa jumlah kelompok yang ingin dibentuk? (Misal ketik 2 atau 3)`, 
+      "2" // 2 adalah saran defaultnya kalau murid sedikit
+    );
+
+    // Kalau guru klik "Cancel" di prompt
+    if (!inputCount) return; 
+
+    const numGroups = parseInt(inputCount, 10);
+    
+    // Validasi input
+    if (isNaN(numGroups) || numGroups <= 0) {
+      alert("Masukkan angka yang valid!");
+      return;
+    }
+    if (numGroups > unassignedStudents.length) {
+      alert("Jumlah kelompok tidak boleh lebih banyak dari jumlah siswa!");
+      return;
+    }
+
+    // 3. Siapkan nama-nama kelompok sesuai jumlah yang diminta
+    const targetGroups: string[] = [];
+    for (let i = 0; i < numGroups; i++) {
+      if (allGroupNames[i]) {
+        targetGroups.push(allGroupNames[i]);
+      } else {
+        targetGroups.push(`Kelompok ${i + 1}`);
+      }
+    }
+
+    // 4. Urutkan siswa berdasarkan nilai Pre-Test Umum (Tertinggi ke Terendah)
+    const sortedStudents = [...unassignedStudents].sort((a, b) => {
+      const scoreA = a.globalPretest ?? 0; 
+      const scoreB = b.globalPretest ?? 0;
+      return scoreB - scoreA;
+    });
+
+    // 5. Distribusi algoritma Ular (Snake Draft) biar adil
+    const assignments: { studentId: string, groupName: string }[] = [];
+
+    sortedStudents.forEach((student, index) => {
+      const round = Math.floor(index / numGroups);
+      const positionInRound = index % numGroups;
+
+      // Putaran genap maju (A->Z), putaran ganjil mundur (Z->A)
+      const groupIndex = round % 2 === 0 
+        ? positionInRound 
+        : (numGroups - 1) - positionInRound;
+
+      assignments.push({
+        studentId: student.student.id,
+        groupName: targetGroups[groupIndex]
+      });
+    });
+
+    // 6. Eksekusi ke Database
+    try {
+      // Simpan nama kelompok baru ke DB (jika ter-generate otomatis)
+      const newGroupsToSave = targetGroups.filter(g => !allGroupNames.includes(g));
+      for (const newGroup of newGroupsToSave) {
+        await addAdminGroupName(newGroup); 
+      }
+
+      // Assign siswa ke kelompok masing-masing
+      await Promise.all(assignments.map(a => assignStudentToGroup(a.studentId, a.groupName)));
+      
+      // Update UI
+      if (newGroupsToSave.length > 0) {
+        setCustomGroupNames(await getAdminGroupNames());
+      }
+
+      alert(`Berhasil membagi ${unassignedStudents.length} siswa ke dalam ${numGroups} kelompok secara adil!`);
+    } catch (error) {
+      console.error("Gagal membagi kelompok:", error);
+      alert("Terjadi kesalahan saat memproses pembagian kelompok.");
+    }
   };
 
   const confirmRenameGroup = async (oldName: string) => {
@@ -1706,14 +1795,26 @@ export function AdminPage() {
                   {/* Siswa belum bergabung */}
                   {unassigned.length > 0 && (
                     <div className="bg-white rounded-2xl border border-[#F59E0B]/30 shadow-sm overflow-hidden">
-                      <div className="px-5 py-4 bg-[#FFFBEB] border-b border-[#F59E0B]/20 flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-[#F59E0B]/10 flex items-center justify-center">
-                          <Users className="w-4 h-4 text-[#F59E0B]" />
+                      {/* HEADER BARU DENGAN TOMBOL */}
+                      <div className="px-5 py-4 bg-[#FFFBEB] border-b border-[#F59E0B]/20 flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-[#F59E0B]/10 flex items-center justify-center">
+                            <Users className="w-4 h-4 text-[#F59E0B]" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-[#92400E] text-sm">Siswa Belum Bergabung</h3>
+                            <p className="text-xs text-[#92400E]/60">{unassigned.length} siswa belum memiliki kelompok</p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-bold text-[#92400E] text-sm">Siswa Belum Bergabung</h3>
-                          <p className="text-xs text-[#92400E]/60">{unassigned.length} siswa belum memiliki kelompok</p>
-                        </div>
+                        
+                        {/* TOMBOL BAGI OTOMATIS */}
+                        <button
+                          onClick={handleAutoDistributeGroups}
+                          className="flex items-center gap-2 bg-[#F59E0B] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#D97706] shadow-sm transition-all active:scale-95"
+                        >
+                          <Lightbulb className="w-4 h-4" />
+                          Bagi Kelompok Otomatis
+                        </button>
                       </div>
                       <div className="divide-y divide-[#F0F3FA]">
                         {unassigned.map(s => (

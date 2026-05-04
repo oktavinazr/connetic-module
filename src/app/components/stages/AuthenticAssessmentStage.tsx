@@ -80,6 +80,9 @@ export function AuthenticAssessmentStage({
     [followUpChoice, selectedBranch],
   );
 
+  const showFinalSummary =
+    initialSubmitted && (!selectedBranch?.followUpQuestion || followUpSubmitted);
+
   if (!scenario) return null;
 
   useEffect(() => {
@@ -176,9 +179,6 @@ export function AuthenticAssessmentStage({
     });
     onComplete(finalAnswer);
   };
-
-  const showFinalSummary =
-    initialSubmitted && (!selectedBranch?.followUpQuestion || followUpSubmitted);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">

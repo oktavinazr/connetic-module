@@ -15,40 +15,50 @@ export interface GroupDiscussion {
   updated_at?: string;
 }
 
+// 1. UBAH: Ambil data dari tabel 'users', gunakan 'id' bukan 'user_id'
 export async function getAllGroupAssignments(): Promise<Record<string, string>> {
   const { data, error } = await supabase
-    .from('student_groups')
-    .select('user_id, group_name');
+    .from('users')
+    .select('id, group_name')
+    .not('group_name', 'is', null);
+    
   if (error || !data) return {};
+  
   const result: Record<string, string> = {};
-  data.forEach((row) => { result[row.user_id] = row.group_name; });
+  data.forEach((row) => { 
+    if (row.group_name) result[row.id] = row.group_name; 
+  });
   return result;
 }
 
+// 2. UBAH: Cukup update tabel 'users', tidak perlu upsert ke 'student_groups'
 export async function assignGroup(userId: string, groupName: string): Promise<void> {
-  await supabase
-    .from('student_groups')
-    .upsert(
-      { user_id: userId, group_name: groupName, updated_at: new Date().toISOString() },
-      { onConflict: 'user_id' },
-    );
-  await supabase
+  const { error } = await supabase
     .from('users')
     .update({ group_name: groupName })
     .eq('id', userId);
+    
+  if (error) console.error('[assignGroup]', error.message);
 }
 
+// 3. UBAH: Cukup set group_name jadi null di tabel 'users'
 export async function removeGroup(userId: string): Promise<void> {
-  await supabase.from('student_groups').delete().eq('user_id', userId);
-  await supabase.from('users').update({ group_name: null }).eq('id', userId);
+  const { error } = await supabase
+    .from('users')
+    .update({ group_name: null })
+    .eq('id', userId);
+    
+  if (error) console.error('[removeGroup]', error.message);
 }
 
+// 4. UBAH: Ambil group_name langsung dari tabel 'users'
 export async function getStudentGroup(userId: string): Promise<string | null> {
   const { data, error } = await supabase
-    .from('student_groups')
+    .from('users')
     .select('group_name')
-    .eq('user_id', userId)
+    .eq('id', userId)
     .maybeSingle();
+    
   if (error || !data) return null;
   return data.group_name;
 }
@@ -88,10 +98,11 @@ export async function deleteAdminGroupName(groupName: string): Promise<void> {
   if (error) console.error('[deleteAdminGroupName]', error.message);
 }
 
+// 5. UBAH: Cari anggota sekelompok langsung dari tabel 'users'
 export async function getGroupMembers(groupName: string): Promise<{ user_id: string; user_name: string }[]> {
   const { data, error } = await supabase
-    .from('student_groups')
-    .select('user_id, users(name)')
+    .from('users')
+    .select('id, name')
     .eq('group_name', groupName);
 
   if (error || !data) {
@@ -99,12 +110,14 @@ export async function getGroupMembers(groupName: string): Promise<{ user_id: str
     return [];
   }
 
-  return data.map((row: any) => ({
-    user_id: row.user_id,
-    user_name: row.users?.name || 'Siswa',
+  // Format ulang kembaliannya agar cocok dengan UI LearningCommunity
+  return data.map((row) => ({
+    user_id: row.id,
+    user_name: row.name,
   }));
 }
 
+// Fitur Diskusi tidak perlu diubah karena menembak tabel 'group_discussions'
 export async function getGroupDiscussions(lessonId: string, moduleId: string, groupName: string): Promise<GroupDiscussion[]> {
   const { data, error } = await supabase
     .from('group_discussions')
