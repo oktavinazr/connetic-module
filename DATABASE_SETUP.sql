@@ -122,7 +122,25 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.ctl_activity_sessions;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.ctl_activity_events;
 
 
--- 4. CATATAN PENTING UNTUK ADMIN:
+-- 4. MENYIAPKAN TABEL ADMIN GROUP NAMES (Custom Nama Kelompok)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.admin_group_names (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    group_name TEXT UNIQUE NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Matikan RLS agar admin bisa manage nama kelompok
+ALTER TABLE public.admin_group_names DISABLE ROW LEVEL SECURITY;
+
+-- Izinkan akses penuh
+GRANT ALL ON TABLE public.admin_group_names TO anon;
+GRANT ALL ON TABLE public.admin_group_names TO authenticated;
+GRANT ALL ON TABLE public.admin_group_names TO service_role;
+
+
+-- 5. CATATAN PENTING UNTUK ADMIN:
 -- ==============================================================================
 -- Jika Anda baru saja menjalankan script ini, pastikan untuk:
 -- 1. Logout dari aplikasi.
