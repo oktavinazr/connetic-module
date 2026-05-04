@@ -1533,8 +1533,8 @@ export function AdminPage() {
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#628ECB] mb-1">Manajemen</p>
-                    <h1 className="text-2xl font-bold text-[#395886]">Data Siswa</h1>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#628ECB] mb-2">Manajemen</p>
+                    <h1 className="text-3xl font-bold text-[#395886] tracking-tight mb-1">Data Siswa</h1>
                     <p className="text-sm text-[#395886]/60 mt-1">Kelola data seluruh siswa, pantau progres, dan akses akun secara langsung.</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -1989,8 +1989,8 @@ export function AdminPage() {
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#628ECB] mb-1">Analitik</p>
-                    <h1 className="text-2xl font-bold text-[#395886]">Hasil Belajar & Monitoring CTL</h1>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#628ECB] mb-2">Analitik</p>
+                    <h1 className="text-3xl font-bold text-[#395886] tracking-tight mb-1">Hasil Belajar & Monitoring CTL</h1>
                     <p className="text-sm text-[#395886]/60 mt-1">Rekap evaluasi tes dan aktivitas CTL siswa dalam mode read-only untuk analisis guru.</p>
                   </div>
                   <div className="flex gap-2">
