@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+﻿import React, { useMemo, useState, useEffect } from 'react';
 import {
   BarChart,
   Bar,
@@ -51,8 +51,8 @@ import { getAllStudents, logout, getCurrentUser, resetStudentPassword } from '..
 import { getAllProgress, getGlobalTestProgress, getLessonProgress } from '../utils/progress';
 import { getLessonActivitySessions, getStudentActivityFeed, type CTLActivityEvent, type CTLActivitySession } from '../utils/activityTracking';
 import { Header } from '../components/layout/Header';
-import { EditLearningSection } from '../components/admin/EditLearningSection';
-import { StageAnswerDetail, getStageAnswerSummary, CTL_META } from '../components/admin/StageDetail';
+import { QuestionManagementSection } from '../components/admin/QuestionManagementSection';
+import { StageAnswerDetail, CTL_META } from '../components/admin/StageDetail';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,9 +64,9 @@ import {
   AlertDialogTitle,
 } from '../components/ui/alert-dialog';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-type AdminSection = 'dashboard' | 'students' | 'groups' | 'edit-learning' | 'results';
+type AdminSection = 'dashboard' | 'students' | 'groups' | 'question-management' | 'results';
 
 const CHART_COLORS = ['#628ECB', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1', '#14B8A6'];
 
@@ -107,7 +107,66 @@ interface StudentActivitySummary {
   lessons: LessonSummary[];
 }
 
-// ─── Test Answer Section ──────────────────────────────────────────────────────
+const ADMIN_SECTIONS: AdminSection[] = ['dashboard', 'students', 'groups', 'question-management', 'results'];
+
+function normalizeAdminSection(value: string | null): AdminSection {
+  if (value === 'edit-learning') return 'question-management';
+  return ADMIN_SECTIONS.includes(value as AdminSection) ? (value as AdminSection) : 'dashboard';
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) return 'â€”';
+  return new Date(value).toLocaleString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function formatDuration(totalSec: number) {
+  if (!totalSec) return 'â€”';
+  const hours = Math.floor(totalSec / 3600);
+  const minutes = Math.floor((totalSec % 3600) / 60);
+  const seconds = totalSec % 60;
+  if (hours > 0) return `${hours}j ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${seconds}d`;
+  return `${seconds}d`;
+}
+
+function getLessonCtlMetrics(lesson: LessonSummary) {
+  return Object.values(lesson.stageTracking).reduce(
+    (acc, session) => {
+      acc.attempts += session.totalAttempts;
+      acc.errors += session.totalErrors;
+      acc.correct += session.correctCount;
+      acc.wrong += session.wrongCount;
+      acc.duration += session.totalDurationSec;
+      return acc;
+    },
+    { attempts: 0, errors: 0, correct: 0, wrong: 0, duration: 0 },
+  );
+}
+
+function getStudentCtlMetrics(activity: StudentActivitySummary) {
+  return activity.lessons.reduce(
+    (acc, lesson) => {
+      const lessonMetrics = getLessonCtlMetrics(lesson);
+      acc.completedStages += lesson.completedStages.length;
+      acc.totalStages += lesson.totalStages;
+      acc.attempts += lessonMetrics.attempts;
+      acc.errors += lessonMetrics.errors;
+      acc.correct += lessonMetrics.correct;
+      acc.wrong += lessonMetrics.wrong;
+      acc.duration += lessonMetrics.duration;
+      return acc;
+    },
+    { completedStages: 0, totalStages: 0, attempts: 0, errors: 0, correct: 0, wrong: 0, duration: 0 },
+  );
+}
+
+// â”€â”€â”€ Test Answer Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function TestAnswerSection({
   title, score, totalQ, completed, questions, answers,
@@ -128,7 +187,7 @@ function TestAnswerSection({
           <p className="font-bold text-[#395886] text-sm">{title}</p>
           <p className="text-xs text-[#395886]/50 mt-0.5">Belum dikerjakan</p>
         </div>
-        <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-400">—</span>
+        <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-400">â€”</span>
       </div>
     );
   }
@@ -237,7 +296,7 @@ function TestAnswerSection({
   );
 }
 
-// ─── Student Detail Modal ─────────────────────────────────────────────────────
+// â”€â”€â”€ Student Detail Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function StudentDetailModal({ activity, onClose }: { activity: StudentActivitySummary; onClose: () => void }) {
   const [tab, setTab] = useState<'summary' | 'tests' | 'ctl'>('summary');
@@ -246,35 +305,49 @@ function StudentDetailModal({ activity, onClose }: { activity: StudentActivitySu
     { id: 'tests' as const, label: 'Riwayat Tes' },
     { id: 'ctl' as const, label: 'Monitoring CTL' },
   ];
+  const studentCtlMetrics = getStudentCtlMetrics(activity);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-[2rem] border border-[#D5DEEF] bg-white shadow-2xl">
+      <div className="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-[2rem] border border-[#D5DEEF] bg-white shadow-2xl">
         <div className="shrink-0 bg-gradient-to-r from-[#628ECB] to-[#395886] px-8 py-6 text-white">
           <div className="flex items-start justify-between gap-4">
             <div>
               {activity.group && (
-                <span className="text-xs font-bold bg-white/20 px-2.5 py-1 rounded-full tracking-wide mb-2 inline-block">
+                <span className="mb-2 inline-block rounded-full bg-white/20 px-2.5 py-1 text-xs font-bold tracking-wide">
                   {activity.group}
                 </span>
               )}
               <h2 className="text-2xl font-bold">{activity.student.name}</h2>
-              <p className="text-white/75 text-sm mt-1">
+              <p className="mt-1 text-sm text-white/75">
                 {activity.student.nis} · {activity.student.class} · {activity.student.gender}
               </p>
             </div>
             <div className="text-right">
               <p className="text-4xl font-bold">{activity.overallProgress}%</p>
-              <p className="text-white/70 text-xs mt-1 uppercase tracking-wider">Progress Keseluruhan</p>
+              <p className="mt-1 text-xs uppercase tracking-wider text-white/70">Progress Keseluruhan</p>
             </div>
           </div>
-          <div className="mt-5 flex gap-1 bg-white/10 rounded-xl p-1">
+          <div className="mt-4 grid gap-3 sm:grid-cols-4">
+            {[
+              { label: 'Tahap CTL Selesai', value: `${studentCtlMetrics.completedStages}/${studentCtlMetrics.totalStages}` },
+              { label: 'Total Percobaan', value: studentCtlMetrics.attempts },
+              { label: 'Total Kesalahan', value: studentCtlMetrics.errors },
+              { label: 'Durasi Aktif', value: formatDuration(studentCtlMetrics.duration) },
+            ].map((item) => (
+              <div key={item.label} className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/60">{item.label}</p>
+                <p className="mt-2 text-xl font-black text-white">{item.value}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-5 flex gap-1 rounded-xl bg-white/10 p-1">
             {tabItems.map(t => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${
+                className={`flex-1 rounded-lg py-2 text-sm font-bold transition-all ${
                   tab === t.id ? 'bg-white text-[#395886] shadow-sm' : 'text-white/70 hover:text-white'
                 }`}
               >
@@ -286,72 +359,90 @@ function StudentDetailModal({ activity, onClose }: { activity: StudentActivitySu
 
         <div className="flex-1 overflow-y-auto">
           {tab === 'summary' && (
-            <div className="p-6 space-y-6">
+            <div className="space-y-6 p-6">
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="rounded-2xl border border-[#D5DEEF] bg-[#F8FAFD] p-4">
-                  <p className="text-xs font-bold text-[#395886]/50 uppercase tracking-wide mb-3">Info Siswa</p>
+                  <p className="mb-3 text-xs font-bold uppercase tracking-wide text-[#395886]/50">Info Siswa</p>
                   <div className="space-y-1.5 text-sm">
                     <p className="text-[#395886]"><span className="text-[#395886]/60">Email:</span> {activity.student.email}</p>
                     <p className="text-[#395886]"><span className="text-[#395886]/60">NIS:</span> {activity.student.nis}</p>
                     <p className="text-[#395886]"><span className="text-[#395886]/60">Kelompok:</span> {activity.group ?? <span className="italic text-[#395886]/40">Belum memilih</span>}</p>
                   </div>
                 </div>
-                <div className="rounded-2xl border border-[#D5DEEF] bg-[#F8FAFD] p-4 text-center flex flex-col justify-center">
-                  <p className="text-[10px] font-black text-[#395886]/50 uppercase tracking-widest mb-2">Pre-Test Umum</p>
+                <div className="flex flex-col justify-center rounded-2xl border border-[#D5DEEF] bg-[#F8FAFD] p-4 text-center">
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-[#395886]/50">Pre-Test Umum</p>
                   {activity.globalPretestCompleted ? (
                     <>
                       <div className="flex items-center justify-center gap-1.5">
                         <span className="text-2xl font-black text-[#628ECB]">{activity.globalPretest}</span>
                         <span className="text-sm font-bold text-[#628ECB]/30">/ {globalPretest.questions.length}</span>
                       </div>
-                      <p className="text-[10px] font-black text-[#628ECB]/50 mt-1 uppercase tracking-tighter">Nilai: {Math.round(((activity.globalPretest ?? 0) / globalPretest.questions.length) * 100)}</p>
+                      <p className="mt-1 text-[10px] font-black uppercase tracking-tighter text-[#628ECB]/50">
+                        Nilai: {Math.round(((activity.globalPretest ?? 0) / globalPretest.questions.length) * 100)}
+                      </p>
                     </>
-                  ) : <p className="text-2xl font-bold text-gray-200 mt-1">—</p>}
+                  ) : <p className="mt-1 text-2xl font-bold text-gray-200">—</p>}
                 </div>
-                <div className="rounded-2xl border border-[#D5DEEF] bg-[#F8FAFD] p-4 text-center flex flex-col justify-center">
-                  <p className="text-[10px] font-black text-[#395886]/50 uppercase tracking-widest mb-2">Post-Test Umum</p>
+                <div className="flex flex-col justify-center rounded-2xl border border-[#D5DEEF] bg-[#F8FAFD] p-4 text-center">
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-[#395886]/50">Post-Test Umum</p>
                   {activity.globalPosttestCompleted ? (
                     <>
                       <div className="flex items-center justify-center gap-1.5">
                         <span className="text-2xl font-black text-[#F59E0B]">{activity.globalPosttest}</span>
                         <span className="text-sm font-bold text-[#F59E0B]/30">/ {globalPosttest.questions.length}</span>
                       </div>
-                      <p className="text-[10px] font-black text-[#F59E0B]/50 mt-1 uppercase tracking-tighter">Nilai: {Math.round(((activity.globalPosttest ?? 0) / globalPosttest.questions.length) * 100)}</p>
+                      <p className="mt-1 text-[10px] font-black uppercase tracking-tighter text-[#F59E0B]/50">
+                        Nilai: {Math.round(((activity.globalPosttest ?? 0) / globalPosttest.questions.length) * 100)}
+                      </p>
                     </>
-                  ) : <p className="text-2xl font-bold text-gray-200 mt-1">—</p>}
+                  ) : <p className="mt-1 text-2xl font-bold text-gray-200">—</p>}
                 </div>
               </div>
+
               <div>
-                <h3 className="text-[#395886] font-bold text-base mb-3">Progress Setiap Pertemuan</h3>
+                <h3 className="mb-3 text-base font-bold text-[#395886]">Progress Setiap Pertemuan</h3>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {activity.lessons.map(lesson => {
+                  {activity.lessons.map((lesson) => {
                     const ld = lessons[lesson.lessonId];
+                    const lessonMetrics = getLessonCtlMetrics(lesson);
                     const pct = Math.round(
                       (((lesson.pretestCompleted ? 1 : 0) + lesson.completedStages.length + (lesson.posttestCompleted ? 1 : 0)) /
-                        (1 + lesson.totalStages + 1)) * 100
+                        (1 + lesson.totalStages + 1)) * 100,
                     );
                     return (
-                      <div key={lesson.lessonId} className="rounded-2xl border border-[#D5DEEF] p-4 bg-[#F8FAFD]">
-                        <div className="flex items-start justify-between mb-3">
+                      <div key={lesson.lessonId} className="rounded-2xl border border-[#D5DEEF] bg-[#F8FAFD] p-4">
+                        <div className="mb-3 flex items-start justify-between">
                           <div>
-                            <p className="font-bold text-[#395886] text-sm">{lesson.lessonTitle}</p>
+                            <p className="text-sm font-bold text-[#395886]">{lesson.lessonTitle}</p>
                             <p className="text-xs text-[#628ECB]">{lesson.topic}</p>
                           </div>
                           <span className="text-sm font-bold text-[#628ECB]">{pct}%</span>
                         </div>
-                        <div className="w-full bg-[#D5DEEF] rounded-full h-1.5 mb-3 overflow-hidden">
-                          <div className="bg-[#628ECB] h-full rounded-full transition-all" style={{ width: `${pct}%` }} />
+                        <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-[#D5DEEF]">
+                          <div className="h-full rounded-full bg-[#628ECB] transition-all" style={{ width: `${pct}%` }} />
                         </div>
-                        <div className="flex gap-1.5 flex-wrap">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${lesson.pretestCompleted ? 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20' : 'bg-gray-100 text-gray-400 border-gray-200'}`}>
+                        <div className="mb-3 flex flex-wrap gap-1.5">
+                          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${lesson.pretestCompleted ? 'border-[#10B981]/20 bg-[#10B981]/10 text-[#10B981]' : 'border-gray-200 bg-gray-100 text-gray-400'}`}>
                             Pre-Test {lesson.pretestCompleted ? `✓ ${lesson.pretest}/${ld?.pretest.questions.length ?? '?'}` : '—'}
                           </span>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${lesson.completedStages.length > 0 ? 'bg-[#628ECB]/10 text-[#628ECB] border-[#628ECB]/20' : 'bg-gray-100 text-gray-400 border-gray-200'}`}>
+                          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${lesson.completedStages.length > 0 ? 'border-[#628ECB]/20 bg-[#628ECB]/10 text-[#628ECB]' : 'border-gray-200 bg-gray-100 text-gray-400'}`}>
                             CTL {lesson.completedStages.length}/{lesson.totalStages}
                           </span>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${lesson.posttestCompleted ? 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20' : 'bg-gray-100 text-gray-400 border-gray-200'}`}>
+                          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${lesson.posttestCompleted ? 'border-[#10B981]/20 bg-[#10B981]/10 text-[#10B981]' : 'border-gray-200 bg-gray-100 text-gray-400'}`}>
                             Post-Test {lesson.posttestCompleted ? `✓ ${lesson.posttest}/${ld?.posttest.questions.length ?? '?'}` : '—'}
                           </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            { label: 'Percobaan', value: lessonMetrics.attempts },
+                            { label: 'Kesalahan', value: lessonMetrics.errors },
+                            { label: 'Durasi', value: formatDuration(lessonMetrics.duration) },
+                          ].map((item) => (
+                            <div key={item.label} className="rounded-xl border border-[#D5DEEF] bg-white px-3 py-2">
+                              <p className="text-[10px] font-black uppercase tracking-wide text-[#395886]/40">{item.label}</p>
+                              <p className="mt-1 text-sm font-bold text-[#395886]">{item.value}</p>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     );
@@ -362,7 +453,7 @@ function StudentDetailModal({ activity, onClose }: { activity: StudentActivitySu
           )}
 
           {tab === 'tests' && (
-            <div className="p-6 space-y-3">
+            <div className="space-y-3 p-6">
               <TestAnswerSection
                 title="Pre-Test Umum"
                 score={activity.globalPretest}
@@ -371,12 +462,12 @@ function StudentDetailModal({ activity, onClose }: { activity: StudentActivitySu
                 questions={globalPretest.questions}
                 answers={activity.globalPretestAnswers}
               />
-              {activity.lessons.map(lesson => {
+              {activity.lessons.map((lesson) => {
                 const ld = lessons[lesson.lessonId];
                 if (!ld) return null;
                 return (
                   <div key={lesson.lessonId} className="space-y-2">
-                    <p className="text-xs font-bold text-[#395886]/50 uppercase tracking-widest px-1">
+                    <p className="px-1 text-xs font-bold uppercase tracking-widest text-[#395886]/50">
                       {lesson.lessonTitle} — {lesson.topic}
                     </p>
                     <TestAnswerSection
@@ -410,93 +501,142 @@ function StudentDetailModal({ activity, onClose }: { activity: StudentActivitySu
           )}
 
           {tab === 'ctl' && (
-            <div className="p-6 space-y-6">
-              {activity.lessons.map(lesson => {
+            <div className="space-y-6 p-6">
+              {activity.lessons.map((lesson) => {
                 const ld = lessons[lesson.lessonId];
                 if (!ld) return null;
+                const lessonMetrics = getLessonCtlMetrics(lesson);
                 return (
                   <div key={lesson.lessonId}>
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="mb-3 flex items-center justify-between">
                       <div>
                         <h3 className="font-bold text-[#395886]">{lesson.lessonTitle}</h3>
                         <p className="text-xs text-[#628ECB]">{lesson.topic}</p>
                       </div>
-                      <span className="text-xs font-bold text-[#628ECB] bg-[#628ECB]/10 px-3 py-1 rounded-full">
+                      <span className="rounded-full bg-[#628ECB]/10 px-3 py-1 text-xs font-bold text-[#628ECB]">
                         {lesson.completedStages.length}/{lesson.totalStages} Selesai
                       </span>
                     </div>
-                    <div className="rounded-2xl border border-[#D5DEEF] overflow-hidden">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="bg-[#F0F3FA]">
-                            <th className="px-4 py-3 text-left text-xs font-bold text-[#395886]/50 uppercase tracking-wide w-8">#</th>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-[#395886]/50 uppercase tracking-wide">Tahap CTL</th>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-[#395886]/50 uppercase tracking-wide w-24">Status</th>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-[#395886]/50 uppercase tracking-wide">Ringkasan Jawaban</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#D5DEEF]">
-                          {ld.stages.map((stage, si) => {
-                            const done = lesson.completedStages.includes(si);
-                            const stageAnswer = lesson.stageAnswers[`stage_${si}`] ?? lesson.stageAnswers[si];
-                            const tracking = lesson.stageTracking[`stage_${si}`];
-                            const meta = CTL_META[stage.type] ?? CTL_META.constructivism;
-                            const displayAnswer = stageAnswer || tracking?.latestSnapshot;
-                            const hasStarted = !!tracking;
 
-                            return (
-                              <tr key={si} className={done ? 'bg-white' : 'bg-[#F8FAFD]'}>
-                                <td className="px-4 py-3 text-xs font-bold text-[#395886]/40">{si + 1}</td>
-                                <td className="px-4 py-3">
-                                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-bold ${meta.bg} ${meta.text} ${meta.border}`}>
+                    <div className="mb-4 grid gap-3 sm:grid-cols-4">
+                      {[
+                        { label: 'Percobaan', value: lessonMetrics.attempts, accent: 'text-[#628ECB]' },
+                        { label: 'Kesalahan', value: lessonMetrics.errors, accent: lessonMetrics.errors > 0 ? 'text-red-500' : 'text-[#10B981]' },
+                        { label: 'Jawaban Benar', value: lessonMetrics.correct, accent: 'text-[#10B981]' },
+                        { label: 'Durasi Aktif', value: formatDuration(lessonMetrics.duration), accent: 'text-[#395886]' },
+                      ].map((item) => (
+                        <div key={item.label} className="rounded-2xl border border-[#D5DEEF] bg-[#F8FAFD] p-4">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/40">{item.label}</p>
+                          <p className={`mt-2 text-xl font-black ${item.accent}`}>{item.value}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="space-y-3">
+                      {ld.stages.map((stage, si) => {
+                        const done = lesson.completedStages.includes(si);
+                        const stageAnswer = lesson.stageAnswers[`stage_${si}`] ?? lesson.stageAnswers[si];
+                        const tracking = lesson.stageTracking[`stage_${si}`];
+                        const meta = CTL_META[stage.type] ?? CTL_META.constructivism;
+                        const displayAnswer = stageAnswer || tracking?.finalAnswer || tracking?.latestSnapshot;
+                        const hasStarted = !!tracking;
+
+                        return (
+                          <div key={si} className="rounded-2xl border border-[#D5DEEF] bg-white p-4 shadow-sm">
+                            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                              <div className="space-y-2">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#F0F3FA] text-xs font-black text-[#395886]">
+                                    {si + 1}
+                                  </span>
+                                  <div className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-bold ${meta.bg} ${meta.text} ${meta.border}`}>
                                     {meta.icon}
                                     {meta.label}
                                   </div>
-                                </td>
-                                <td className="px-4 py-3">
                                   {done ? (
-                                    <span className="inline-flex items-center gap-1 text-xs font-bold text-[#10B981]">
-                                      <CheckCircle className="w-3.5 h-3.5" /> Selesai
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-[#10B981]/10 px-3 py-1 text-[11px] font-bold text-[#10B981]">
+                                      <CheckCircle className="h-3.5 w-3.5" /> Selesai
                                     </span>
                                   ) : hasStarted ? (
-                                    <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-500">
-                                      <RefreshCw className="w-3 h-3 animate-spin" /> Sedang Berjalan
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-[11px] font-bold text-amber-600">
+                                      <RefreshCw className="h-3.5 w-3.5" /> Sedang berjalan
                                     </span>
                                   ) : (
-                                    <span className="text-xs font-bold text-[#395886]/30">Belum</span>
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-[11px] font-bold text-gray-500">
+                                      Belum dimulai
+                                    </span>
                                   )}
-                                </td>
-                                <td className="px-4 py-3">
-                                  {displayAnswer ? (
-                                    <div className="space-y-2">
-                                      <div className="max-h-24 overflow-hidden text-xs text-[#395886]/70 leading-relaxed">
-                                        <StageAnswerDetail stage={stage} answer={displayAnswer} />
-                                      </div>
-                                      {tracking && (
-                                        <div className="flex flex-wrap gap-2">
-                                          <span className="rounded-full bg-[#F0F3FA] px-2 py-1 text-[10px] font-bold text-[#395886]">
-                                            Progres {tracking.progressPercent}%
-                                          </span>
-                                          <span className="rounded-full bg-[#F0F3FA] px-2 py-1 text-[10px] font-bold text-[#395886]">
-                                            {tracking.totalAttempts} Percobaan
-                                          </span>
-                                          {tracking.totalErrors > 0 && (
-                                            <span className="rounded-full bg-red-50 px-2 py-1 text-[10px] font-bold text-red-500">
-                                              {tracking.totalErrors} Salah
-                                            </span>
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <span className="text-xs text-[#395886]/30 italic">—</span>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-bold text-[#395886]">{stage.title}</p>
+                                  {stage.description && (
+                                    <p className="mt-1 text-xs leading-relaxed text-[#395886]/60">{stage.description}</p>
                                   )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:min-w-[360px]">
+                                {[
+                                  { label: 'Progres', value: `${tracking?.progressPercent ?? 0}%` },
+                                  { label: 'Percobaan', value: tracking?.totalAttempts ?? 0 },
+                                  { label: 'Kesalahan', value: tracking?.totalErrors ?? 0 },
+                                  { label: 'Benar', value: tracking?.correctCount ?? 0 },
+                                  { label: 'Salah', value: tracking?.wrongCount ?? 0 },
+                                  { label: 'Durasi', value: formatDuration(tracking?.totalDurationSec ?? 0) },
+                                ].map((item) => (
+                                  <div key={item.label} className="rounded-xl border border-[#D5DEEF] bg-[#F8FAFD] px-3 py-2">
+                                    <p className="text-[10px] font-black uppercase tracking-wide text-[#395886]/40">{item.label}</p>
+                                    <p className="mt-1 text-sm font-bold text-[#395886]">{item.value}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="mt-4 grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
+                              <div className="rounded-2xl border border-[#D5DEEF] bg-[#F8FAFD] p-4">
+                                <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#395886]/40">
+                                  Jawaban Interaktif / Refleksi
+                                </p>
+                                {displayAnswer ? (
+                                  <div className="text-sm text-[#395886]">
+                                    <StageAnswerDetail stage={stage} answer={displayAnswer} />
+                                  </div>
+                                ) : (
+                                  <p className="text-xs italic text-[#395886]/35">Belum ada jawaban yang tersimpan.</p>
+                                )}
+                              </div>
+
+                              <div className="rounded-2xl border border-[#D5DEEF] bg-[#F8FAFD] p-4">
+                                <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-[#395886]/40">
+                                  Rekam Jejak Tahap
+                                </p>
+                                <div className="space-y-3 text-xs text-[#395886]/70">
+                                  <div>
+                                    <p className="font-bold text-[#395886]/45">Mulai</p>
+                                    <p className="mt-1 font-semibold text-[#395886]">{formatDateTime(tracking?.startedAt)}</p>
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-[#395886]/45">Aktivitas Terakhir</p>
+                                    <p className="mt-1 font-semibold text-[#395886]">{formatDateTime(tracking?.lastActivityAt)}</p>
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-[#395886]/45">Selesai</p>
+                                    <p className="mt-1 font-semibold text-[#395886]">{formatDateTime(tracking?.completedAt)}</p>
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-[#395886]/45">Snapshot Tersimpan</p>
+                                    <p className="mt-1 leading-relaxed text-[#395886]/60">
+                                      {tracking?.latestSnapshot && Object.keys(tracking.latestSnapshot).length > 0
+                                        ? `${Object.keys(tracking.latestSnapshot).length} field aktivitas tercatat`
+                                        : 'Belum ada snapshot aktivitas'}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
@@ -518,7 +658,7 @@ function StudentDetailModal({ activity, onClose }: { activity: StudentActivitySu
   );
 }
 
-// ─── Admin Sidebar ────────────────────────────────────────────────────────────
+// Admin Sidebar
 
 function AdminSidebar({
   section,
@@ -535,7 +675,7 @@ function AdminSidebar({
     { id: 'dashboard', label: 'Dashboard Admin', icon: <ShieldCheck className="w-4 h-4" /> },
     { id: 'students', label: 'Data Siswa', icon: <Users className="w-4 h-4" /> },
     { id: 'groups', label: 'Manajemen Kelompok', icon: <UserPlus className="w-4 h-4" /> },
-    { id: 'edit-learning', label: 'Manajemen Konten', icon: <BookOpen className="w-4 h-4" /> },
+    { id: 'question-management', label: 'Manajemen Soal', icon: <BookOpen className="w-4 h-4" /> },
     { id: 'results', label: 'Hasil Belajar', icon: <BarChart2 className="w-4 h-4" /> },
   ];
   return (
@@ -594,10 +734,10 @@ function AdminSidebar({
   );
 }
 
-// ─── Score Badge ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Score Badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ScoreBadge({ score, total, completed }: { score: number | null; total: number; completed: boolean }) {
-  if (!completed) return <span className="text-xs text-[#395886]/30 font-medium">—</span>;
+  if (!completed) return <span className="text-xs text-[#395886]/30 font-medium">â€”</span>;
   const pct = Math.round(((score ?? 0) / total) * 100);
   return (
     <div className={`inline-flex flex-col items-center px-2 py-1 rounded-lg border ${
@@ -612,17 +752,15 @@ function ScoreBadge({ score, total, completed }: { score: number | null; total: 
   );
 }
 
-// ─── Admin Page ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Admin Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function AdminPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const user = getCurrentUser();
 
-  const initialSection = (searchParams.get('section') as AdminSection) || 'dashboard';
-  const [section, setSection] = useState<AdminSection>(
-    ['dashboard', 'students', 'groups', 'edit-learning', 'results'].includes(initialSection) ? initialSection : 'dashboard'
-  );
+  const initialSection = normalizeAdminSection(searchParams.get('section'));
+  const [section, setSection] = useState<AdminSection>(initialSection);
   const [selectedStudent, setSelectedStudent] = useState<StudentActivitySummary | null>(null);
   const [accountStudent, setAccountStudent] = useState<StudentActivitySummary | null>(null);
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
@@ -632,7 +770,7 @@ export function AdminPage() {
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [activityFeed, setActivityFeed] = useState<CTLActivityEvent[]>([]);
 
-  // ── Group Management State ──────────────────────────────────────────────────
+  // â”€â”€ Group Management State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [groupAssignmentsAdmin, setGroupAssignmentsAdmin] = useState<Record<string, string>>({});
   const [customGroupNames, setCustomGroupNames] = useState<string[]>([]);
   const [newGroupInput, setNewGroupInput] = useState('');
@@ -673,8 +811,8 @@ export function AdminPage() {
   }, [user?.id, navigate]);
 
   useEffect(() => {
-    const nextSection = (searchParams.get('section') as AdminSection) || 'dashboard';
-    if (nextSection !== section && ['dashboard', 'students', 'groups', 'edit-learning', 'results'].includes(nextSection)) {
+    const nextSection = normalizeAdminSection(searchParams.get('section'));
+    if (nextSection !== section) {
       setSection(nextSection);
     }
   }, [searchParams]);
@@ -734,7 +872,7 @@ export function AdminPage() {
     setCustomGroupNames(await getAdminGroupNames());
   };
 
-  // ─── FITUR PEMBAGIAN KELOMPOK OTOMATIS (DINAMIS) ────────────────────────────
+  // â”€â”€â”€ FITUR PEMBAGIAN KELOMPOK OTOMATIS (DINAMIS) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleAutoDistributeGroups = async () => {
     // 1. Ambil semua siswa yang belum punya kelompok
     const unassignedStudents = studentActivities.filter(s => !groupAssignmentsAdmin[s.student.id]);
@@ -963,7 +1101,7 @@ export function AdminPage() {
 
   const lessonList = Object.values(lessons);
 
-  // ── Student table state ──────────────────────────────────────────────────
+  // â”€â”€ Student table state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [sortCol, setSortCol] = useState<'name' | 'group' | 'progress'>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [filterGroupStudents, setFilterGroupStudents] = useState('all');
@@ -999,7 +1137,7 @@ export function AdminPage() {
     return list;
   }, [studentActivities, searchQuery, filterGroupStudents, sortCol, sortDir]);
 
-  // ── Chart data ───────────────────────────────────────────────────────────
+  // â”€â”€ Chart data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const pretestPosttestData = useMemo(() => {
     const pctOf = (score: number | null, total: number) =>
       total > 0 && score !== null ? Math.round((score / total) * 100) : 0;
@@ -1103,7 +1241,7 @@ export function AdminPage() {
       ]),
     ]);
     const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['ï»¿' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -1119,7 +1257,7 @@ export function AdminPage() {
     { label: 'Dashboard Admin', onClick: () => setSection('dashboard'), icon: <ShieldCheck className="h-4 w-4" /> },
     { label: 'Data Siswa', onClick: () => setSection('students'), icon: <Users className="h-4 w-4" /> },
     { label: 'Manajemen Kelompok', onClick: () => setSection('groups'), icon: <UserPlus className="h-4 w-4" /> },
-    { label: 'Manajemen Konten Pembelajaran', onClick: () => setSection('edit-learning'), icon: <BookOpen className="h-4 w-4" /> },
+    { label: 'Manajemen Soal Pretest & Posttest', onClick: () => setSection('question-management'), icon: <BookOpen className="h-4 w-4" /> },
     { label: 'Hasil Belajar', onClick: () => setSection('results'), icon: <BarChart2 className="h-4 w-4" /> },
     { label: 'Logout', onClick: confirmLogout, icon: <LogOut className="h-4 w-4" />, danger: true },
   ];
@@ -1128,7 +1266,7 @@ export function AdminPage() {
     dashboard: 'Dashboard Admin',
     students: 'Data Siswa',
     groups: 'Manajemen Kelompok',
-    'edit-learning': 'Manajemen Konten Pembelajaran',
+    'question-management': 'Manajemen Soal Pretest & Posttest',
     results: 'Hasil Belajar',
   };
 
@@ -1143,7 +1281,7 @@ export function AdminPage() {
         role="admin"
       />
 
-      {/* ── Body ── */}
+      {/* â”€â”€ Body â”€â”€ */}
       <div className="flex">
         {/* Desktop sidebar */}
         <AdminSidebar
@@ -1157,13 +1295,13 @@ export function AdminPage() {
         <main className="flex-1 min-w-0">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-            {/* ── Dashboard ── */}
+            {/* â”€â”€ Dashboard â”€â”€ */}
             {section === 'dashboard' && (
               <div className="space-y-7">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#628ECB] mb-2">Monitoring Panel</p>
-                  <h1 className="text-3xl font-bold text-[#395886] tracking-tight mb-1">Dashboard Admin</h1>
-                  <p className="text-sm text-[#395886]/60">Pantau aktivitas siswa dan progres pembelajaran CTL secara menyeluruh.</p>
+                  <h1 className="text-3xl font-bold text-[#395886] tracking-tight mb-1">Dashboard Monitoring Guru</h1>
+                  <p className="text-sm text-[#395886]/60">Pantau hasil belajar, progres tiap tahap CTL, dan aktivitas evaluasi siswa secara read-only.</p>
                 </div>
 
                 {/* Stat cards */}
@@ -1332,7 +1470,7 @@ export function AdminPage() {
                           </span>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-sm text-[#395886] truncate">{s.student.name}</p>
-                            <p className="text-xs text-[#395886]/50">{s.student.class}{s.group ? ` · ${s.group}` : ''}</p>
+                            <p className="text-xs text-[#395886]/50">{s.student.class}{s.group ? ` Â· ${s.group}` : ''}</p>
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
                             <div className="text-right">
@@ -1372,13 +1510,13 @@ export function AdminPage() {
                       <div key={event.id} className="px-6 py-3.5 flex items-center justify-between gap-4 hover:bg-[#F8FAFD] transition-colors">
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-[#395886] truncate">
-                            Siswa `{event.userId.slice(0, 8)}` • Pertemuan {event.lessonId} • Tahap {event.stageIndex + 1}
+                            Siswa `{event.userId.slice(0, 8)}` â€¢ Pertemuan {event.lessonId} â€¢ Tahap {event.stageIndex + 1}
                           </p>
-                          <p className="text-xs text-[#395886]/50">{event.stageType} • {event.eventType}</p>
+                          <p className="text-xs text-[#395886]/50">{event.stageType} â€¢ {event.eventType}</p>
                         </div>
                         <div className="shrink-0 text-right">
                           <p className="text-xs font-bold text-[#628ECB]">{event.progressPercent ?? 0}%</p>
-                          <p className="text-[10px] text-[#395886]/40">{event.createdAt ? new Date(event.createdAt).toLocaleString('id-ID') : '—'}</p>
+                          <p className="text-[10px] text-[#395886]/40">{event.createdAt ? new Date(event.createdAt).toLocaleString('id-ID') : 'â€”'}</p>
                         </div>
                       </div>
                     ))}
@@ -1390,7 +1528,7 @@ export function AdminPage() {
               </div>
             )}
 
-            {/* ── Data Siswa ── */}
+            {/* â”€â”€ Data Siswa â”€â”€ */}
             {section === 'students' && (
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -1480,7 +1618,7 @@ export function AdminPage() {
                                 </div>
                                 <div className="min-w-0">
                                   <p className="font-bold text-[#395886] text-sm truncate">{activity.student.name}</p>
-                                  <p className="text-[11px] font-bold text-[#628ECB] mt-0.5">{activity.student.nis} · {activity.student.class}</p>
+                                  <p className="text-[11px] font-bold text-[#628ECB] mt-0.5">{activity.student.nis} Â· {activity.student.class}</p>
                                 </div>
                               </div>
                             </td>
@@ -1558,7 +1696,7 @@ export function AdminPage() {
               </div>
             )}
 
-            {/* ── Kelompok ── */}
+            {/* â”€â”€ Kelompok â”€â”€ */}
             {false && (
               <div className="space-y-6">
                 <div>
@@ -1657,7 +1795,7 @@ export function AdminPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-bold text-[#395886] text-sm truncate">{m.student.name}</p>
-                            <p className="text-xs text-[#395886]/50">{m.student.class} · {m.student.nis}</p>
+                            <p className="text-xs text-[#395886]/50">{m.student.class} Â· {m.student.nis}</p>
                           </div>
                           <span className="text-xs font-bold text-[#395886]/50">{m.overallProgress}%</span>
                           <button onClick={() => setSelectedStudent(m)} className="shrink-0 text-[#395886]/30 hover:text-[#628ECB] transition-colors">
@@ -1671,7 +1809,7 @@ export function AdminPage() {
               </div>
             )}
 
-            {/* ── Manajemen Kelompok ── */}
+            {/* â”€â”€ Manajemen Kelompok â”€â”€ */}
             {section === 'groups' && (() => {
               const groupedStudents = allGroupNames.map(groupName => ({
                 groupName,
@@ -1781,7 +1919,7 @@ export function AdminPage() {
                                   onChange={e => assignStudentToGroup(s.id, e.target.value)}
                                   className="text-xs font-semibold border border-[#D5DEEF] rounded-lg px-2 py-1.5 text-[#395886] bg-white focus:outline-none focus:border-[#628ECB] cursor-pointer max-w-[110px]"
                                 >
-                                  <option value="">— Lepas —</option>
+                                  <option value="">â€” Lepas â€”</option>
                                   {allGroupNames.map(g => <option key={g} value={g}>{g}</option>)}
                                 </select>
                               </div>
@@ -1824,7 +1962,7 @@ export function AdminPage() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-bold text-[#395886] truncate">{s.name}</p>
-                              <p className="text-[10px] text-[#395886]/50">{s.class} · {s.nis}</p>
+                              <p className="text-[10px] text-[#395886]/50">{s.class} Â· {s.nis}</p>
                             </div>
                             <select
                               value=""
@@ -1843,17 +1981,17 @@ export function AdminPage() {
               );
             })()}
 
-            {/* ── Edit Pembelajaran ── */}
-            {section === 'edit-learning' && <EditLearningSection />}
+            {/* â”€â”€ Edit Pembelajaran â”€â”€ */}
+            {section === 'question-management' && <QuestionManagementSection />}
 
-            {/* ── Hasil Belajar ── */}
+            {/* â”€â”€ Hasil Belajar â”€â”€ */}
             {section === 'results' && (
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#628ECB] mb-1">Analitik</p>
-                    <h1 className="text-2xl font-bold text-[#395886]">Hasil Belajar</h1>
-                    <p className="text-sm text-[#395886]/60 mt-1">Rekap nilai pre-test dan post-test seluruh siswa.</p>
+                    <h1 className="text-2xl font-bold text-[#395886]">Hasil Belajar & Monitoring CTL</h1>
+                    <p className="text-sm text-[#395886]/60 mt-1">Rekap evaluasi tes dan aktivitas CTL siswa dalam mode read-only untuk analisis guru.</p>
                   </div>
                   <div className="flex gap-2">
                     <div className="relative group">
@@ -1897,16 +2035,17 @@ export function AdminPage() {
                 </div>
 
                 {/* Summaries */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                   {[
                     { label: 'Avg Pre-Umum', val: pretestPosttestData[0].pretest, color: 'text-[#628ECB]' },
                     { label: 'Avg Post-Umum', val: pretestPosttestData[0].posttest, color: 'text-[#F59E0B]' },
                     { label: 'Siswa Tuntas', val: completedStudents, color: 'text-[#10B981]' },
                     { label: 'Siswa Berjalan', val: activeStudents - completedStudents, color: 'text-blue-500' },
+                    { label: 'Rata-rata CTL', val: ctlCompletionData.length > 0 ? Math.round(ctlCompletionData.reduce((sum, item) => sum + item.pct, 0) / ctlCompletionData.length) : 0, color: 'text-[#395886]' },
                   ].map((s, i) => (
                     <div key={i} className="bg-white p-5 rounded-2xl border border-[#D5DEEF] shadow-sm">
                       <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/40 mb-1">{s.label}</p>
-                      <p className={`text-2xl font-black ${s.color}`}>{typeof s.val === 'number' && s.val <= 100 && i < 2 ? `${s.val}%` : s.val}</p>
+                      <p className={`text-2xl font-black ${s.color}`}>{typeof s.val === 'number' && s.val <= 100 && (i < 2 || i === 4) ? `${s.val}%` : s.val}</p>
                     </div>
                   ))}
                 </div>
@@ -1945,7 +2084,7 @@ export function AdminPage() {
                 {/* Results table */}
                 <div className="bg-white rounded-2xl border border-[#D5DEEF] shadow-sm overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="w-full border-collapse" style={{ minWidth: `${600 + lessonList.length * 140}px` }}>
+                    <table className="w-full border-collapse" style={{ minWidth: `${860 + lessonList.length * 140}px` }}>
                       <thead>
                         <tr className="bg-[#F0F3FA]">
                           <th className="px-4 py-3 text-left text-xs font-bold text-[#395886]/55 uppercase tracking-wide sticky left-0 bg-[#F0F3FA] z-10 min-w-[160px]">Siswa</th>
@@ -1958,6 +2097,8 @@ export function AdminPage() {
                               {l.title}
                             </th>
                           ))}
+                          <th className="px-4 py-3 text-center text-xs font-bold text-[#395886]/55 uppercase tracking-wide border-l border-[#D5DEEF]">CTL</th>
+                          <th className="px-4 py-3 text-center text-xs font-bold text-[#395886]/55 uppercase tracking-wide">Interaksi</th>
                           <th className="px-4 py-3 text-center text-xs font-bold text-[#395886]/55 uppercase tracking-wide">Progress</th>
                         </tr>
                         <tr className="bg-[#F8FAFD] border-b border-[#D5DEEF]">
@@ -1972,18 +2113,22 @@ export function AdminPage() {
                               <th key={`${l.id}-post`} className="px-3 py-2 text-center text-[10px] font-bold text-[#F59E0B]/70">Post</th>
                             </>
                           ))}
+                          <th className="px-3 py-2 text-center text-[10px] font-bold text-[#628ECB]/70 border-l border-[#D5DEEF]">Tahap</th>
+                          <th className="px-3 py-2 text-center text-[10px] font-bold text-[#395886]/70">Attempt/Error</th>
                           <th />
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#D5DEEF]">
                         {filteredResults.length === 0 ? (
                           <tr>
-                            <td colSpan={5 + lessonList.length * 2 + 1} className="px-6 py-10 text-center">
+                            <td colSpan={7 + lessonList.length * 2 + 1} className="px-6 py-10 text-center">
                               <p className="text-sm text-[#395886]/40">Tidak ada data yang sesuai filter.</p>
                             </td>
                           </tr>
                         ) : (
-                          filteredResults.map(s => (
+                          filteredResults.map(s => {
+                            const ctlMetrics = getStudentCtlMetrics(s);
+                            return (
                             <tr key={s.student.id} className="hover:bg-[#F8FAFD] transition-colors">
                               <td className="px-4 py-3 sticky left-0 bg-white group-hover:bg-[#F8FAFD] z-10 border-r border-[#D5DEEF]/50">
                                 <div className="flex items-center gap-2">
@@ -2004,7 +2149,7 @@ export function AdminPage() {
                               <td className="px-4 py-3 whitespace-nowrap">
                                 {s.group ? (
                                   <span className="text-xs font-bold bg-[#628ECB]/10 text-[#628ECB] px-3 py-1 rounded-full">{s.group}</span>
-                                ) : <span className="text-xs text-[#395886]/30">—</span>}
+                                ) : <span className="text-xs text-[#395886]/30">â€”</span>}
                               </td>
                               <td className="px-4 py-3 text-center bg-[#628ECB]/3">
                                 <ScoreBadge score={s.globalPretest} total={globalPretest.questions.length} completed={s.globalPretestCompleted} />
@@ -2025,6 +2170,18 @@ export function AdminPage() {
                                   </React.Fragment>
                                 );
                               })}
+                              <td className="px-3 py-3 text-center border-l border-[#D5DEEF]/50">
+                                <div className="inline-flex min-w-[66px] flex-col items-center rounded-lg border border-[#628ECB]/20 bg-[#628ECB]/8 px-2 py-1">
+                                  <span className="text-[11px] font-black text-[#628ECB]">{ctlMetrics.completedStages}/{ctlMetrics.totalStages}</span>
+                                  <span className="text-[8px] font-bold uppercase tracking-wide text-[#628ECB]/60">Tahap</span>
+                                </div>
+                              </td>
+                              <td className="px-3 py-3 text-center">
+                                <div className="inline-flex min-w-[84px] flex-col items-center rounded-lg border border-[#D5DEEF] bg-[#F8FAFD] px-2 py-1">
+                                  <span className="text-[11px] font-black text-[#395886]">{ctlMetrics.attempts}/{ctlMetrics.errors}</span>
+                                  <span className="text-[8px] font-bold uppercase tracking-wide text-[#395886]/50">Attempt/Error</span>
+                                </div>
+                              </td>
                               <td className="px-4 py-3 text-center">
                                 <div className="flex flex-col items-center gap-1">
                                   <div className="w-12 bg-[#D5DEEF] rounded-full h-1 overflow-hidden">
@@ -2037,7 +2194,7 @@ export function AdminPage() {
                                 </div>
                               </td>
                             </tr>
-                          ))
+                          )})
                         )}
                       </tbody>
                     </table>
@@ -2058,7 +2215,7 @@ export function AdminPage() {
         </main>
       </div>
 
-      {/* ── Modals ── */}
+      {/* â”€â”€ Modals â”€â”€ */}
       {selectedStudent && (
         <StudentDetailModal activity={selectedStudent} onClose={() => setSelectedStudent(null)} />
       )}
@@ -2076,7 +2233,7 @@ export function AdminPage() {
                 <div className="min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-0.5">Info Akun Siswa</p>
                   <h2 className="text-xl font-black leading-tight truncate">{accountStudent.student.name}</h2>
-                  <p className="text-white/70 text-sm mt-0.5">{accountStudent.student.nis} · {accountStudent.student.class}</p>
+                  <p className="text-white/70 text-sm mt-0.5">{accountStudent.student.nis} Â· {accountStudent.student.class}</p>
                 </div>
               </div>
             </div>
@@ -2176,3 +2333,4 @@ export function AdminPage() {
     </div>
   );
 }
+

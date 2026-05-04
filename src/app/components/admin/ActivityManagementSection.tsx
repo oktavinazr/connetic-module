@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   ChevronDown,
   CheckCircle,
@@ -758,10 +758,10 @@ export function ActivityManagementSection() {
         {lessonList.map(lesson => {
           const isOpen = expandedLesson === lesson.id;
           const modCount = lesson.stages.filter((_, si) => hasStageOverride(lesson.id, si)).length;
-          
+
           const preKey = `lesson_${lesson.id}_pretest`;
           const postKey = `lesson_${lesson.id}_posttest`;
-          
+
           const preOverride = overrideMap[preKey] || false;
           const postOverride = overrideMap[postKey] || false;
           const totalMod = modCount + (preOverride ? 1 : 0) + (postOverride ? 1 : 0);

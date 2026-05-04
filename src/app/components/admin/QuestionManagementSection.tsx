@@ -168,12 +168,12 @@ export function QuestionManagementSection() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       {/* Page header */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#628ECB] mb-1">Konten Pembelajaran</p>
-        <h1 className="text-2xl font-bold text-[#395886]">Manajemen Soal</h1>
-        <p className="text-sm text-[#395886]/60 mt-1">Tambah, edit, dan hapus soal pre-test serta post-test untuk semua pertemuan.</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#628ECB] mb-1">Evaluasi</p>
+        <h1 className="text-2xl font-bold text-[#395886] tracking-tight">Manajemen Soal Pretest & Posttest</h1>
+        <p className="text-sm text-[#395886]/60 mt-1">Kelola soal pilihan ganda pretest dan posttest secara terpisah dari aktivitas CTL yang bersifat read-only.</p>
       </div>
 
       {/* Test type tabs */}
