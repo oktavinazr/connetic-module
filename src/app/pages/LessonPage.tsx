@@ -462,6 +462,8 @@ export function LessonPage() {
           <ReflectionStage
             {...commonProps}
             moduleId={currentStage.moduleId || ''}
+            conceptMapNodes={currentStage.conceptMapNodes}
+            conceptMapConnections={currentStage.conceptMapConnections}
           />
         );
       case 'authentic-assessment':

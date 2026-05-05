@@ -11,6 +11,7 @@ import {
   FileSearch,
   XCircle,
   ChevronRight,
+  Award,
 } from 'lucide-react';
 import { type Stage } from '../../data/lessons';
 
@@ -238,40 +239,54 @@ export function StageAnswerDetail({ stage, answer }: { stage: Stage; answer: any
           return (
             <div className="space-y-4 text-left">
               {[
-                { data: a.module1Data, label: 'Aktivitas Enkapsulasi' },
-                { data: a.module2Data, label: 'Aktivitas Dekapsulasi' }
+                { data: a.module1Data, label: 'X.TCP.6 — Enkapsulasi (Sender Side)', color: 'border-l-[#10B981]', iconBg: 'bg-[#10B981]/10', iconText: 'text-[#10B981]' },
+                { data: a.module2Data, label: 'X.TCP.7 — Dekapsulasi (Receiver Side)', color: 'border-l-[#628ECB]', iconBg: 'bg-[#628ECB]/10', iconText: 'text-[#628ECB]' }
               ].map((mod, mi) => (
                 mod.data && (
-                  <div key={mi} className="bg-[#F0F3FA] rounded-xl p-3 border border-[#D5DEEF]/50">
-                    <p className="text-[10px] font-black text-[#628ECB] mb-2 uppercase tracking-widest flex items-center gap-1.5">
-                      <Users className="w-3 h-3" /> {mod.label}
+                  <div key={mi} className={`bg-[#F8FAFD] rounded-lg p-3 border border-[#D5DEEF] border-l-4 ${mod.color}`}>
+                    <p className={`text-[10px] font-black mb-2 uppercase tracking-widest ${mod.iconText}`}>
+                      {mod.label}
                     </p>
-                    <div className="space-y-2">
-                       {mod.data.discussions?.map((d: any, di: number) => (
-                         <div key={di} className="bg-white/60 p-2.5 rounded-lg border border-white shadow-sm">
-                           <div className="flex justify-between items-start mb-1.5">
-                             <div>
-                               <p className="text-[10px] font-black text-[#395886] leading-none">{d.user_name}</p>
-                               <p className="text-[9px] text-[#395886]/50 mt-1 font-bold">Opsi: {d.choice_text}</p>
-                             </div>
-                             <div className="flex items-center gap-1 bg-[#10B981]/10 text-[#10B981] px-1.5 py-0.5 rounded-md border border-[#10B981]/20">
-                               <CheckCircle className="w-2.5 h-2.5" />
-                               <span className="text-[9px] font-black">{d.votes?.length || 0} Vote</span>
-                             </div>
-                           </div>
-                           <p className="text-[#395886] italic text-[11px] leading-relaxed border-t border-[#D5DEEF]/30 pt-1.5 mt-1.5">"{d.argument}"</p>
-                         </div>
-                       ))}
-                       {(!mod.data.discussions || mod.data.discussions.length === 0) && (
-                         <p className="text-[10px] text-[#395886]/40 italic py-1">Belum ada diskusi tercatat.</p>
-                       )}
-                    </div>
+                    {/* Best Argument (highest votes) */}
+                    {(() => {
+                      const sorted = [...(mod.data.discussions || [])].sort((a: any, b: any) => (b.votes?.length || 0) - (a.votes?.length || 0));
+                      const best = sorted[0];
+                      if (!best) return <p className="text-[10px] text-[#395886]/40 italic py-1">Belum ada argumen tercatat.</p>;
+                      return (
+                        <div className="space-y-2">
+                          <div className={`p-2.5 rounded-lg border shadow-sm ${mod.iconBg} border-current/10`}>
+                            <div className="flex justify-between items-start mb-1">
+                              <div className="flex items-center gap-1.5">
+                                <Award className={`w-3.5 h-3.5 ${mod.iconText}`} />
+                                <p className="text-[10px] font-black text-[#395886]">{best.user_name}</p>
+                                <span className="text-[8px] font-bold text-[#F59E0B] bg-[#F59E0B]/10 px-1.5 py-0.5 rounded">Argumen Terbaik</span>
+                              </div>
+                              <span className="flex items-center gap-1 text-[9px] font-black text-[#10B981]">
+                                <CheckCircle className="w-2.5 h-2.5" /> {best.votes?.length || 0} Vote
+                              </span>
+                            </div>
+                            <p className="text-[#395886] text-[10px] leading-relaxed italic">"{best.argument}"</p>
+                            <p className="text-[9px] text-[#395886]/40 mt-1 font-bold">Memilih opsi: {best.choice_text}</p>
+                          </div>
+                          {/* All other arguments */}
+                          {sorted.slice(1).map((d: any, di: number) => (
+                            <div key={di} className="bg-white/80 p-2 rounded-lg border border-[#D5DEEF]/30">
+                              <div className="flex justify-between items-start mb-1">
+                                <p className="text-[9px] font-black text-[#395886]">{d.user_name} <span className="font-normal text-[#395886]/40">· {d.choice_text}</span></p>
+                                <span className="text-[8px] font-bold text-[#395886]/40">{d.votes?.length || 0} suara</span>
+                              </div>
+                              <p className="text-[#395886]/80 text-[10px] italic">"{d.argument}"</p>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 )
               ))}
               {a.finalConclusion && (
-                 <div className="bg-[#10B981]/5 rounded-xl p-3 border border-[#10B981]/10">
-                    <p className="text-[10px] font-black text-[#10B981] mb-1 uppercase tracking-widest">Kesimpulan Individu</p>
+                 <div className="bg-[#395886]/5 rounded-lg p-3 border border-[#395886]/10 border-l-4 border-l-[#395886]">
+                    <p className="text-[10px] font-black text-[#395886] mb-1 uppercase tracking-widest">Kesimpulan Individu</p>
                     <p className="text-[#395886] font-bold text-xs leading-relaxed italic">"{a.finalConclusion}"</p>
                  </div>
               )}

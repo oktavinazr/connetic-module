@@ -94,7 +94,7 @@ function EssayBox({
         <button
           onClick={() => { if (ready) { setSubmitted(true); onSubmit(text.trim()); } }}
           disabled={!ready}
-          className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-sm transition-all shadow-xl active:scale-95 ${ready ? 'bg-[#10B981] text-white hover:bg-[#059669] shadow-green-200' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
+          className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg font-black text-sm transition-all shadow-md active:scale-95 ${ready ? 'bg-[#10B981] text-white hover:bg-[#059669] shadow-green-200' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
         >
           {submitLabel}
           <ArrowRight className="w-5 h-5" />

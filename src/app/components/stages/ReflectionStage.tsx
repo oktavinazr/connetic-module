@@ -1,216 +1,305 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
-  PenLine, 
-  CheckCircle, 
-  ChevronRight, 
-  Lightbulb, 
-  RotateCcw, 
-  Plus, 
+  CheckCircle,
+  ChevronRight,
+  Lightbulb,
+  RotateCcw,
   ArrowRight,
-  Target,
-  Users,
   Brain,
-  MessageSquare,
   AlertCircle,
-  XCircle,
-  GripVertical
+  GripVertical,
+  Zap,
 } from 'lucide-react';
 import { getCurrentUser } from '../../utils/auth';
-import { getLessonProgress, saveStageAttempt } from '../../utils/progress';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
 
 // -- Types ----------------------------------------------------------------------
 
-interface ConceptNode { id: string; text: string; x: number; y: number }
-interface Connection { from: string; to: string; label: string }
+interface ConceptMapNode {
+  id: string;
+  label: string;
+  description?: string;
+  colorClass?: string;
+}
+
+interface ConceptMapConnection {
+  from: string;
+  to: string;
+  label: string;
+  options: string[];
+}
 
 interface ReflectionStageProps {
   lessonId: string;
   stageIndex: number;
-  moduleId: string; // e.g., 'X.TCP.8'
+  moduleId: string;
   onComplete: (answer: any) => void;
   isCompleted?: boolean;
-  essayReflection?: {
-    materialSummaryPrompt: string;
-    easyPartPrompt: string;
-    hardPartPrompt: string;
-  };
-  selfEvaluationCriteria?: Array<{ id: string; text: string }>;
+  conceptMapNodes?: ConceptMapNode[];
+  conceptMapConnections?: ConceptMapConnection[];
 }
 
-const CONNECTION_LABELS = ['Berhubungan dengan', 'Menghasilkan', 'Membutuhkan', 'Bagian dari', 'Mengontrol'];
+// -- Color map ------------------------------------------------------------------
 
-// -- Shared UI Components (Constructivism Theme) -------------------------------
+const COLOR_MAP: Record<string, { bg: string; border: string; text: string; dot: string; line: string }> = {
+  blue:    { bg: 'bg-[#EEF4FF]', border: 'border-[#628ECB]', text: 'text-[#395886]', dot: 'bg-[#628ECB]', line: '#628ECB' },
+  green:   { bg: 'bg-[#ECFDF5]', border: 'border-[#10B981]', text: 'text-[#065F46]', dot: 'bg-[#10B981]', line: '#10B981' },
+  purple:  { bg: 'bg-[#EDE9FE]', border: 'border-[#8B5CF6]', text: 'text-[#5B21B6]', dot: 'bg-[#8B5CF6]', line: '#8B5CF6' },
+  amber:   { bg: 'bg-[#FFFBEB]', border: 'border-[#F59E0B]', text: 'text-[#78350F]', dot: 'bg-[#F59E0B]', line: '#F59E0B' },
+  pink:    { bg: 'bg-[#FDF2F8]', border: 'border-[#EC4899]', text: 'text-[#831843]', dot: 'bg-[#EC4899]', line: '#EC4899' },
+  indigo:  { bg: 'bg-[#EEF2FF]', border: 'border-[#6366F1]', text: 'text-[#3730A3]', dot: 'bg-[#6366F1]', line: '#6366F1' },
+};
 
-function R_EssayBox({
-  prompt, objectiveLabel, submitLabel, onSubmit, minWords = 15,
-}: {
-  prompt: string; objectiveLabel: string; submitLabel: string; onSubmit: (text: string) => void; minWords?: number;
-}) {
-  const [text, setText] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
-  const ready = wordCount >= minWords;
-
-  return (
-    <div className="mt-5 p-6 rounded-[2rem] bg-gradient-to-br from-[#628ECB]/5 to-[#395886]/5 border-2 border-[#628ECB]/20 shadow-inner text-left">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="p-2 rounded-xl bg-[#628ECB]/10 text-[#628ECB]">
-          <PenLine className="w-4 h-4" />
-        </div>
-        <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60">Refleksi Mandiri — {objectiveLabel}</p>
-      </div>
-      <p className="text-sm font-bold text-[#395886] leading-relaxed mb-4">{prompt}</p>
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        disabled={submitted}
-        rows={4}
-        className="w-full px-5 py-4 border-2 border-[#D5DEEF] rounded-2xl text-sm text-[#395886] focus:outline-none focus:ring-4 focus:ring-[#628ECB]/10 focus:border-[#628ECB] transition-all bg-white/80 backdrop-blur-sm resize-none disabled:bg-[#F0F3FA]/50"
-        placeholder="Tuliskan refleksimu di sini..."
-      />
-      <div className="flex items-center justify-between mt-3 mb-4 px-1">
-        <div className="flex items-center gap-2">
-          <div className={`h-1.5 w-24 rounded-full bg-[#D5DEEF] overflow-hidden`}>
-             <div className={`h-full transition-all duration-500 ${ready ? 'bg-[#10B981]' : 'bg-[#628ECB]'}`} style={{ width: `${Math.min(100, (wordCount / minWords) * 100)}%` }} />
-          </div>
-          <p className={`text-[11px] font-black uppercase tracking-tighter ${ready ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
-            {wordCount} / {minWords} Kata
-          </p>
-        </div>
-        {submitted && (
-          <span className="flex items-center gap-1.5 text-xs font-black text-[#10B981] uppercase tracking-widest">
-            <CheckCircle className="w-4 h-4" /> Tersimpan
-          </span>
-        )}
-      </div>
-      {!submitted && (
-        <button
-          onClick={() => { if (ready) { setSubmitted(true); onSubmit(text.trim()); } }}
-          disabled={!ready}
-          className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-sm transition-all shadow-xl active:scale-95 ${ready ? 'bg-[#10B981] text-white hover:bg-[#059669] shadow-green-200' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
-        >
-          {submitLabel}
-          <ArrowRight className="w-5 h-5" />
-        </button>
-      )}
-    </div>
-  );
-}
+const DEFAULT_COLOR = COLOR_MAP.blue;
 
 // -- Concept Map Builder --------------------------------------------------------
 
-function ConceptMapBuilder({ lessonId, stageIndex, onNext, initialData }: { lessonId: string; stageIndex: number; onNext: (data: any) => void; initialData?: any }) {
-  const tracker = useActivityTracker({
-    lessonId,
-    stageIndex,
-    stageType: 'reflection',
-  });
-  const [nodes, setNodes] = useState<ConceptNode[]>(initialData?.nodes || []);
-  const [connections, setConnections] = useState<Connection[]>(initialData?.connections || []);
-  const [selectedFrom, setSelectedFrom] = useState<string | null>(initialData?.selectedFrom || null);
+function ConceptMapBuilder({
+  lessonId, stageIndex, onComplete, nodes: rawNodes, connections: rawConnections, initialData,
+}: {
+  lessonId: string; stageIndex: number; onComplete: (data: any) => void;
+  nodes: ConceptMapNode[];
+  connections: ConceptMapConnection[];
+  initialData?: any;
+}) {
+  const tracker = useActivityTracker({ lessonId, stageIndex, stageType: 'reflection' });
 
-  useEffect(() => {
-    if (initialData?.nodes) setNodes(initialData.nodes);
-    if (initialData?.connections) setConnections(initialData.connections);
-    if (initialData?.selectedFrom) setSelectedFrom(initialData.selectedFrom);
-  }, [initialData]);
+  // Restore / init
+  const [answers, setAnswers] = useState<Record<string, string>>(initialData?.answers || {});
+  const [validated, setValidated] = useState(initialData?.validated || false);
+
+  const connections = rawConnections || [];
+  const nodes = rawNodes || [];
+
+  const allAnswered = connections.length > 0 && connections.every(c => answers[`${c.from}->${c.to}`] !== undefined);
+  const correctCount = connections.filter(c => {
+    const chosen = answers[`${c.from}->${c.to}`];
+    return chosen === c.label;
+  }).length;
 
   useEffect(() => {
     void tracker.saveSnapshot(
-      { phase: 'map', nodes, connections, selectedFrom },
-      { progressPercent: nodes.length === 0 ? 5 : Math.min(60, 10 + nodes.length * 10 + connections.length * 8) },
+      { answers, validated },
+      { progressPercent: validated ? 95 : connections.length > 0 ? Math.min(80, 10 + Object.keys(answers).length * (70 / connections.length)) : 5 },
     );
-  }, [connections, nodes, selectedFrom, tracker]);
+  }, [answers, validated, connections.length, tracker]);
 
-  const addNode = (text: string) => {
-    const newNode: ConceptNode = { id: Math.random().toString(36).substr(2, 9), text, x: 50 + Math.random() * 200, y: 50 + Math.random() * 200 };
-    setNodes([...nodes, newNode]);
-    void tracker.trackEvent('concept_node_added', { text });
+  const handleComplete = () => {
+    setValidated(true);
+    const finalAnswer = { answers, correctCount, totalConnections: connections.length, nodes, connections };
+    void tracker.complete(finalAnswer, { answers, validated: true, finalAnswer });
+    onComplete(finalAnswer);
   };
 
-  const onNodeClick = (id: string) => {
-    if (!selectedFrom) {
-      setSelectedFrom(id);
-    } else {
-      if (selectedFrom !== id) {
-        setConnections([...connections, { from: selectedFrom, to: id, label: CONNECTION_LABELS[0] }]);
-        void tracker.trackEvent('concept_connection_added', { from: selectedFrom, to: id });
-      }
-      setSelectedFrom(null);
-    }
-  };
+  // Predefined positions for nodes (top-to-bottom layout)
+  const nodePositions = useMemo(() => {
+    const pos: Record<string, { x: number; y: number }> = {};
+    const cols = [1, 2, 3, 1, 2, 3, 1, 2]; // zig-zag layout
+    nodes.forEach((n, i) => {
+      const col = cols[i % cols.length];
+      const row = Math.floor(i / 3);
+      pos[n.id] = { x: col * 110 - 55, y: row * 120 + 30 };
+    });
+    return pos;
+  }, [nodes]);
 
-  return (
-    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-700">
-      <div className="bg-white rounded-[2rem] border-2 border-[#D5DEEF] p-8 shadow-sm text-center">
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="h-12 w-12 rounded-2xl bg-[#628ECB]/10 flex items-center justify-center text-[#628ECB] shadow-inner"><Brain className="w-7 h-7" /></div>
-          <div className="text-left">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#628ECB]">Aktivitas X.TCP.8</p>
-            <h3 className="text-2xl font-black text-[#395886] tracking-tight">Peta Konsep Akhir</h3>
-          </div>
-        </div>
-        <p className="text-sm font-bold text-[#395886]/50 mb-8 max-w-md mx-auto italic">"Hubungkan konsep-konsep kunci yang telah kamu pelajari hari ini (TCP, IP, Layer, Enkapsulasi, dll) untuk menunjukkan pemahamanmu."</p>
-        
-        <div className="bg-[#F8FAFD] rounded-[2rem] border-2 border-dashed border-[#D5DEEF] p-8 min-h-[400px] relative overflow-hidden shadow-inner mb-8">
-           {nodes.map(n => (
-             <div key={n.id} onClick={() => onNodeClick(n.id)} className={`absolute px-5 py-3 rounded-2xl border-2 font-black text-xs cursor-pointer transition-all ${selectedFrom === n.id ? 'bg-[#10B981] border-[#10B981] text-white shadow-lg scale-110' : 'bg-white border-[#628ECB] text-[#395886] hover:shadow-md'}`} style={{ left: n.x, top: n.y }}>{n.text}</div>
-           ))}
-           {connections.map((c, i) => {
-              const f = nodes.find(n => n.id === c.from), t = nodes.find(n => n.id === c.to);
-              if (!f || !t) return null;
-              return <svg key={i} className="absolute inset-0 w-full h-full pointer-events-none"><line x1={f.x + 40} y1={f.y + 20} x2={t.x + 40} y2={t.y + 20} stroke="#628ECB" strokeWidth="2" strokeDasharray="4" /></svg>
-           })}
-           {nodes.length === 0 && <div className="absolute inset-0 flex items-center justify-center text-[#395886]/20 font-black uppercase tracking-widest">Klik tombol di bawah untuk menambah konsep</div>}
-        </div>
-
-        <div className="flex gap-2 justify-center mb-8">
-           <button onClick={() => addNode(prompt('Masukkan Konsep:') || '')} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#628ECB] text-white font-black text-sm shadow-lg active:scale-95 transition-all"><Plus className="w-5 h-5" /> Tambah Konsep</button>
-        </div>
-
-        <button onClick={() => onNext({ nodes, connections })} disabled={nodes.length < 3} className="w-full py-4 rounded-[1.5rem] bg-[#395886] text-white font-black text-sm shadow-xl active:scale-95 transition-all disabled:bg-[#D5DEEF]">Selesaikan Peta & Lanjut <ChevronRight className="w-4 h-4 inline ml-1" /></button>
+  if (!nodes.length || !connections.length) {
+    return (
+      <div className="py-16 text-center text-[#395886]/30 font-black uppercase tracking-widest text-sm">
+        Data peta konsep belum tersedia untuk pertemuan ini.
       </div>
-    </div>
-  );
-}
-
-// -- Essay Phase ---------------------------------------------------------------
-
-function EssayPhase({ lessonId, stageIndex, mapData, onDone, initialData }: { lessonId: string; stageIndex: number; mapData: any; onDone: (data: any) => void; initialData?: any }) {
-  const [confidence, setConfidence] = useState(initialData?.confidence || 3);
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-in zoom-in-95 duration-500 text-center">
-      <div className="bg-white rounded-[2.5rem] border-2 border-[#D5DEEF] p-8 md:p-10 shadow-sm">
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="h-12 w-12 rounded-2xl bg-[#628ECB]/10 flex items-center justify-center text-[#628ECB] shadow-inner"><PenLine className="w-7 h-7" /></div>
-          <div className="text-left">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#628ECB]">Refleksi Akhir</p>
-            <h3 className="text-2xl font-black text-[#395886] tracking-tight">Kesimpulan Belajar Hari Ini</h3>
+    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500">
+      {/* Header — CTL style */}
+      <div className="bg-white rounded-lg border-2 border-[#D5DEEF] shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 px-5 py-3 bg-[#6366F1]/5 border-b-2 border-[#6366F1]/10">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#6366F1]/10">
+            <Brain className="w-5 h-5 text-[#6366F1]" />
           </div>
-        </div>
-        
-        <div className="space-y-6 mb-10 text-left">
-           <p className="text-xs font-black uppercase tracking-widest text-[#395886]/40 ml-1">Tingkat Keyakinan Pemahaman</p>
-           <div className="flex items-center justify-between gap-2">
-              {[1,2,3,4,5].map(v => (
-                <button key={v} onClick={() => setConfidence(v)} className={`flex-1 py-4 rounded-2xl border-2 font-black text-sm transition-all ${confidence === v ? 'bg-[#10B981] border-[#10B981] text-white shadow-lg shadow-[#10B981]/20' : 'bg-white border-[#D5DEEF] text-[#395886]/30 hover:border-[#628ECB]/30'}`}>{v}</button>
-              ))}
-           </div>
-           <div className="flex justify-between px-1 text-[10px] font-black text-[#395886]/30 uppercase tracking-tighter">
-              <span>Kurang Yakin</span>
-              <span>Sangat Yakin</span>
-           </div>
+          <div className="flex-1">
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#6366F1]">Reflection — Concept Map</p>
+            <h3 className="text-sm font-bold text-[#395886]">Hubungkan Antar Konsep TCP/IP</h3>
+          </div>
+          {validated && (
+            <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#10B981] bg-[#10B981]/10 px-2.5 py-1 rounded-full">
+              <CheckCircle className="w-3 h-3" /> Selesai
+            </span>
+          )}
         </div>
 
-        <R_EssayBox 
-           objectiveLabel="Kesimpulan Unit"
-           prompt="Setelah melewati seluruh tahapan belajar hari ini, bagaimana kamu menyimpulkan peran protokol TCP/IP dalam menjaga keutuhan data di internet?"
-           submitLabel="Selesaikan Seluruh Pertemuan"
-           minWords={40}
-           onSubmit={(essay) => onDone({ essay, confidence })}
-        />
+        <div className="p-6">
+          <p className="text-sm font-bold text-[#395886]/60 mb-6 max-w-xl italic">
+            Pilih label penghubung yang tepat untuk setiap garis antara dua konsep di bawah ini.
+          </p>
+
+          {/* Concept Map Canvas */}
+          <div className="relative bg-[#F8FAFD] rounded-lg border-2 border-dashed border-[#D5DEEF] p-6 min-h-[420px] overflow-hidden mb-6">
+            {/* SVG Lines */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none">
+              {connections.map((conn, i) => {
+                const fp = nodePositions[conn.from];
+                const tp = nodePositions[conn.to];
+                if (!fp || !tp) return null;
+                const chosen = answers[`${conn.from}->${conn.to}`];
+                const isCorrect = validated && chosen === conn.label;
+                const isWrong = validated && chosen !== conn.label;
+                const fromNode = nodes.find(n => n.id === conn.from);
+                const color = COLOR_MAP[fromNode?.colorClass || 'blue'];
+                const strokeColor = validated
+                  ? (isCorrect ? '#10B981' : isWrong ? '#EF4444' : color.line)
+                  : color.line;
+                return (
+                  <g key={i}>
+                    <line
+                      x1={fp.x + 56} y1={fp.y + 24}
+                      x2={tp.x + 56} y2={tp.y + 24}
+                      stroke={strokeColor}
+                      strokeWidth="2"
+                      strokeDasharray={validated && isCorrect ? '0' : '4 3'}
+                      className="transition-all duration-700"
+                    />
+                    {chosen && (
+                      <rect
+                        x={(fp.x + tp.x) / 2 + 56 - 40}
+                        y={(fp.y + tp.y) / 2 - 10}
+                        width="80" height="20" rx="6"
+                        fill={isCorrect ? '#ECFDF5' : isWrong ? '#FEF2F2' : '#F8FAFD'}
+                        stroke={isCorrect ? '#10B981' : isWrong ? '#EF4444' : '#D5DEEF'}
+                        strokeWidth="1"
+                      />
+                    )}
+                    {chosen && (
+                      <text
+                        x={(fp.x + tp.x) / 2 + 56}
+                        y={(fp.y + tp.y) / 2 + 4}
+                        textAnchor="middle"
+                        className={`text-[9px] font-black ${isCorrect ? 'fill-[#10B981]' : isWrong ? 'fill-[#EF4444]' : 'fill-[#395886]'}`}
+                      >
+                        {chosen}
+                      </text>
+                    )}
+                  </g>
+                );
+              })}
+            </svg>
+
+            {/* Nodes */}
+            {nodes.map(node => {
+              const pos = nodePositions[node.id];
+              if (!pos) return null;
+              const color = COLOR_MAP[node.colorClass || 'blue'];
+              return (
+                <div
+                  key={node.id}
+                  className={`absolute flex flex-col items-center justify-center px-3 py-2.5 rounded-lg border-2 shadow-sm transition-all duration-300 ${color.bg} ${color.border} hover:shadow-md`}
+                  style={{ left: pos.x, top: pos.y, width: 112, minHeight: 48 }}
+                  title={node.description}
+                >
+                  <span className={`text-[10px] font-black leading-tight text-center ${color.text}`}>
+                    {node.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Connection Selectors */}
+          <div className="grid gap-3">
+            {connections.map((conn, i) => {
+              const fromNode = nodes.find(n => n.id === conn.from);
+              const toNode = nodes.find(n => n.id === conn.to);
+              const key = `${conn.from}->${conn.to}`;
+              const chosen = answers[key];
+              const isCorrect = validated && chosen === conn.label;
+              const isWrong = validated && chosen && chosen !== conn.label;
+              const color = COLOR_MAP[fromNode?.colorClass || 'blue'];
+
+              return (
+                <div
+                  key={i}
+                  className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
+                    validated
+                      ? isCorrect ? 'border-[#10B981]/30 bg-[#ECFDF5]' : isWrong ? 'border-red-200 bg-red-50' : 'border-[#D5DEEF] bg-white'
+                      : 'border-[#D5DEEF] bg-white hover:border-[#6366F1]/20'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 shrink-0 min-w-0">
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${color.bg} ${color.text} border ${color.border} truncate`}>
+                      {fromNode?.label || conn.from}
+                    </span>
+                    <ArrowRight className="w-3 h-3 text-[#395886]/30 shrink-0" />
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${COLOR_MAP[toNode?.colorClass || 'blue'].bg} ${COLOR_MAP[toNode?.colorClass || 'blue'].text} border ${COLOR_MAP[toNode?.colorClass || 'blue'].border} truncate`}>
+                      {toNode?.label || conn.to}
+                    </span>
+                  </div>
+                  <div className="h-px flex-1 bg-[#D5DEEF] min-w-[12px]" />
+                  <div className="flex gap-1.5 flex-wrap justify-end">
+                    {conn.options.map(opt => (
+                      <button
+                        key={opt}
+                        disabled={validated}
+                        onClick={() => setAnswers(prev => ({ ...prev, [key]: opt }))}
+                        className={`px-2.5 py-1 rounded-md text-[10px] font-bold border-2 transition-all active:scale-95 whitespace-nowrap ${
+                          chosen === opt
+                            ? validated
+                              ? (isCorrect ? 'bg-[#10B981] border-[#10B981] text-white' : 'bg-red-500 border-red-500 text-white')
+                              : `bg-[#6366F1] border-[#6366F1] text-white`
+                            : 'bg-white border-[#D5DEEF] text-[#395886]/50 hover:border-[#6366F1]/30'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                  {validated && (
+                    <span className="shrink-0">
+                      {isCorrect ? <CheckCircle className="w-4 h-4 text-[#10B981]" /> : <AlertCircle className="w-4 h-4 text-red-500" />}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="bg-white rounded-lg border-2 border-[#D5DEEF] p-5 shadow-sm">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="h-8 w-8 rounded-lg bg-[#6366F1]/10 flex items-center justify-center">
+            <Lightbulb className="w-4 h-4 text-[#6366F1]" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#6366F1]">Refleksi Konsep</p>
+            <p className="text-xs font-bold text-[#395886]/70">
+              {validated
+                ? `Kamu menjawab ${correctCount}/${connections.length} koneksi dengan tepat.`
+                : `Hubungkan ${connections.length} pasangan konsep untuk menyelesaikan refleksi.`}
+            </p>
+          </div>
+        </div>
+
+        {!validated ? (
+          <button
+            onClick={handleComplete}
+            disabled={!allAnswered}
+            className={`w-full py-3.5 rounded-lg font-black text-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${
+              allAnswered
+                ? 'bg-[#395886] text-white hover:bg-[#2A4468] shadow-lg'
+                : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'
+            }`}
+          >
+            {allAnswered ? 'Selesaikan Refleksi' : `Pilih ${connections.filter(c => answers[`${c.from}->${c.to}`] === undefined).length} label lagi`}
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        ) : (
+          <div className="flex items-center justify-center gap-2 py-3 rounded-lg bg-[#10B981]/10 border border-[#10B981]/20 text-sm font-black text-[#065F46]">
+            <CheckCircle className="w-4 h-4" /> Refleksi berhasil diselesaikan
+          </div>
+        )}
       </div>
     </div>
   );
@@ -218,38 +307,47 @@ function EssayPhase({ lessonId, stageIndex, mapData, onDone, initialData }: { le
 
 // -- Root component ------------------------------------------------------------
 
-export function ReflectionStage({ lessonId, stageIndex, onComplete, isCompleted }: ReflectionStageProps) {
-  const tracker = useActivityTracker({
-    lessonId,
-    stageIndex,
-    stageType: 'reflection',
-  });
-  const [phase, setPhase] = useState<'map' | 'essay'>(isCompleted ? 'essay' : 'map');
+export function ReflectionStage({
+  lessonId, stageIndex, onComplete, isCompleted,
+  conceptMapNodes, conceptMapConnections,
+}: ReflectionStageProps) {
+  const tracker = useActivityTracker({ lessonId, stageIndex, stageType: 'reflection' });
   const [mapData, setMapData] = useState<any>(null);
-  const [essayData, setEssayData] = useState<any>(null);
   const [isRestored, setIsRestored] = useState(false);
 
   useEffect(() => {
     if (!tracker.isLoading && tracker.session?.latestSnapshot && !isRestored) {
       const snap = tracker.session.latestSnapshot;
-      if (snap.phase) setPhase(snap.phase);
-      if (snap.mapData) setMapData(snap.mapData);
-      if (snap.nodes) setMapData({ nodes: snap.nodes, connections: snap.connections });
-      if (snap.essay || snap.confidence) setEssayData({ essay: snap.essay, confidence: snap.confidence });
+      if (snap.answers) setMapData({ answers: snap.answers, validated: snap.validated });
       setIsRestored(true);
     } else if (!tracker.isLoading) {
       setIsRestored(true);
     }
   }, [tracker.isLoading, tracker.session, isRestored]);
 
-  if (tracker.isLoading || !isRestored) return (
-    <div className="flex flex-col items-center justify-center py-20 space-y-4">
-      <div className="w-12 h-12 border-4 border-[#F59E0B] border-t-transparent rounded-full animate-spin" />
-      <p className="text-sm font-bold text-[#395886]">Memuat progres...</p>
-    </div>
-  );
+  if (tracker.isLoading || !isRestored) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 space-y-4">
+        <div className="w-10 h-10 border-3 border-[#6366F1] border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm font-bold text-[#395886]">Memuat progres...</p>
+      </div>
+    );
+  }
 
-  if (phase === 'map') return <ConceptMapBuilder lessonId={lessonId} stageIndex={stageIndex} initialData={mapData} onNext={(data) => { setMapData(data); void tracker.trackEvent('reflection_map_completed', { nodeCount: data?.nodes?.length ?? 0, connectionCount: data?.connections?.length ?? 0 }, { progressPercent: 70 }); setPhase('essay'); }} />;
-  if (phase === 'essay') return <EssayPhase lessonId={lessonId} stageIndex={stageIndex} mapData={mapData} initialData={essayData} onDone={(data) => { const finalAnswer = { ...data, mapData, summary: data.essay }; void tracker.complete(finalAnswer, { phase: 'completed', finalAnswer }); onComplete(finalAnswer); }} />;
-  return null;
+  const nodes = conceptMapNodes || [];
+  const connections = conceptMapConnections || [];
+
+  return (
+    <ConceptMapBuilder
+      lessonId={lessonId}
+      stageIndex={stageIndex}
+      onComplete={(data) => {
+        void tracker.trackEvent('reflection_map_completed', { correctCount: data.correctCount }, { progressPercent: 95 });
+        onComplete(data);
+      }}
+      nodes={nodes}
+      connections={connections}
+      initialData={mapData}
+    />
+  );
 }

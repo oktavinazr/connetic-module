@@ -114,7 +114,7 @@ function ConceptPhase({
         </div>
       </ActivityCard>
 
-      <button onClick={onNext} className="w-full py-5 rounded-2xl bg-[#395886] text-white font-black text-sm hover:bg-[#2A4468] transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 group">
+      <button onClick={onNext} className="w-full py-3.5 rounded-lg bg-[#395886] text-white font-black text-sm hover:bg-[#2A4468] transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 group">
         Mulai Analisis Skenario <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
       </button>
     </div>
@@ -387,7 +387,7 @@ function DiscussionPhase({
                     <button 
                       onClick={() => handleVote(disc.id)} 
                       disabled={!allSubmitted}
-                      className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border-2 transition-all active:scale-90 ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border-2 transition-all active:scale-90 ${
                         disc.votes.includes(user!.id) 
                           ? 'bg-[#10B981] text-white border-[#10B981] shadow-md shadow-[#10B981]/20' 
                           : 'bg-white text-[#395886]/40 border-[#D5DEEF] hover:border-[#10B981]/50'
@@ -397,7 +397,7 @@ function DiscussionPhase({
                        <span className="text-[10px] font-black">{disc.votes.length} Vote</span>
                     </button>
                   </div>
-                  <p className="text-sm font-medium text-[#395886]/80 leading-relaxed italic bg-white/60 p-3.5 rounded-xl border border-current/5">
+                  <p className="text-sm font-medium text-[#395886]/80 leading-relaxed italic bg-white/60 p-3 rounded-lg border border-current/5">
                     "{disc.argument}"
                   </p>
                 </div>
@@ -444,10 +444,10 @@ function ResultPhase({ moduleId, discussions, onDone }: { moduleId: string; disc
             Berdasarkan voting internal, argumen berikut dianggap paling tepat oleh kelompokmu.
           </InstructionBox>
 
-          <div className="p-6 rounded-[2rem] border-2 border-[#F59E0B] bg-[#FFFBEB] shadow-sm relative overflow-hidden group">
+          <div className="p-5 rounded-lg border-2 border-[#F59E0B] bg-[#FFFBEB] shadow-sm relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><Award className="w-20 h-20 text-[#F59E0B]" /></div>
             <div className="flex items-center gap-3 mb-4 relative z-10">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-black text-white shadow-md bg-[#F59E0B]">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[9px] font-black text-white shadow-md bg-[#F59E0B]">
                 {bestArgument.user_name.substring(0, 2).toUpperCase()}
               </div>
               <div>
@@ -474,7 +474,7 @@ function ResultPhase({ moduleId, discussions, onDone }: { moduleId: string; disc
 
       <button
         onClick={onDone}
-        className="w-full flex items-center justify-center gap-3 py-5 rounded-2xl bg-[#395886] text-white font-black text-sm hover:bg-[#2A4468] shadow-xl transition-all active:scale-95 group"
+        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg bg-[#395886] text-white font-black text-sm hover:bg-[#2A4468] shadow-md transition-all active:scale-95 group"
       >
         Lanjutkan Aktivitas <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
       </button>
@@ -586,7 +586,7 @@ function OverallGroupResult({ module1Data, module2Data, groupName, onNext }: { m
             </div>
           </div>
 
-          <button onClick={onNext} className="w-full py-5 rounded-2xl bg-[#395886] text-white font-black text-sm shadow-xl active:scale-95 transition-all hover:bg-[#2A4468] flex items-center justify-center gap-2 group">
+          <button onClick={onNext} className="w-full py-3.5 rounded-lg bg-[#395886] text-white font-black text-sm shadow-md active:scale-95 transition-all hover:bg-[#2A4468] flex items-center justify-center gap-2 group">
             Lanjut ke Kesimpulan Individu <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
@@ -628,7 +628,7 @@ export function LearningCommunityStage({
   }, [subStage, understood, module1Data, module2Data, tracker]);
 
   if (!groupName) return (
-    <div className="w-full p-16 text-center bg-white rounded-[2.5rem] border-2 border-dashed border-[#D5DEEF] shadow-inner">
+    <div className="w-full py-12 text-center bg-white rounded-lg border-2 border-dashed border-[#D5DEEF] shadow-inner">
        <div className="h-16 w-16 mx-auto mb-6 text-[#D5DEEF]"><Users className="w-full h-full" /></div>
        <h4 className="text-xl font-black text-[#395886] mb-2 uppercase tracking-tight">Kelompok Belum Terdeteksi</h4>
        <p className="text-sm font-bold text-[#395886]/40 italic max-w-sm mx-auto leading-relaxed">
@@ -638,8 +638,8 @@ export function LearningCommunityStage({
   );
 
   if (subStage === 'simulasi') return (
-    <div className={`w-full space-y-8 ${anim.fadeUp}`}>
-       <div className="bg-white rounded-[2rem] border-2 border-[#628ECB]/20 p-8 shadow-sm overflow-hidden">
+    <div className={`w-full space-y-6 ${anim.fadeUp}`}>
+       <div className="bg-white rounded-lg border-2 border-[#628ECB]/20 p-5 shadow-sm overflow-hidden">
           <div className="flex items-center gap-4 mb-8 text-left border-b border-[#D5DEEF]/60 pb-5">
              <div className="h-12 w-12 rounded-xl bg-[#628ECB]/10 text-[#628ECB] flex items-center justify-center shadow-sm"><Monitor className="w-6 h-6" /></div>
              <div>
@@ -650,7 +650,7 @@ export function LearningCommunityStage({
           
           <TcpIpInteractive />
 
-          <div className={`mt-10 p-6 rounded-2xl border-2 transition-all text-left flex items-start gap-4 ${understood ? 'border-[#10B981] bg-[#F0FDF4]/50' : 'border-[#D5DEEF] bg-[#F8FAFD]'}`}>
+          <div className={`mt-8 p-4 rounded-lg border-2 transition-all text-left flex items-start gap-3 ${understood ? 'border-[#10B981] bg-[#F0FDF4]/50' : 'border-[#D5DEEF] bg-[#F8FAFD]'}`}>
              <button onClick={() => setUnderstood(!understood)} className={`mt-1 h-6 w-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all ${understood ? 'bg-[#10B981] border-[#10B981]' : 'bg-white border-[#D5DEEF]'}`}>
                 {understood && <CheckCircle className="w-4 h-4 text-white" />}
              </button>
@@ -662,7 +662,7 @@ export function LearningCommunityStage({
           <button 
             onClick={() => setSubPhase('x_tcp_6')} 
             disabled={!understood} 
-            className={`w-full mt-8 py-5 rounded-2xl font-black text-sm shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3
+            className={`w-full mt-6 py-3.5 rounded-lg font-black text-sm shadow-md transition-all active:scale-95 flex items-center justify-center gap-2
               ${understood ? 'bg-[#395886] text-white hover:bg-[#2A4468]' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
           >
              Mulai Aktivitas Kelompok <ChevronRight className="w-5 h-5" />

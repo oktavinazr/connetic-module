@@ -84,7 +84,7 @@ export function ProgressBar({
 // ── StepTracker ───────────────────────────────────────────────────────────────
 export function StepTracker({ steps, current }: { steps: string[]; current: number }) {
   return (
-    <div className="flex items-center gap-1 p-3 rounded-2xl bg-white/70 backdrop-blur-sm border border-[#D5DEEF]/80 shadow-sm mb-6">
+    <div className="flex items-center gap-1 p-2.5 rounded-lg bg-white/70 backdrop-blur-sm border border-[#D5DEEF]/80 shadow-sm mb-5">
       {steps.map((label, idx) => {
         const done = idx < current; const active = idx === current;
         return (
@@ -120,9 +120,9 @@ export function ActivityCard({
   children: React.ReactNode; bodyClass?: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm overflow-hidden">
-      <div className={`flex items-center gap-3 px-5 py-3.5 border-b border-[#D5DEEF]/60 ${headerBg}`}>
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
+    <div className="bg-white rounded-lg border-2 border-[#D5DEEF] shadow-sm overflow-hidden">
+      <div className={`flex items-center gap-3 px-4 py-3 border-b border-[#D5DEEF]/60 ${headerBg}`}>
+        <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
           {icon}
         </div>
         <div className="flex-1 min-w-0">
@@ -163,9 +163,9 @@ export function EssayBox({
   const [submitted, setSubmitted] = useState(false);
   const ready = text.trim().length >= minChars;
   return (
-    <div className="rounded-2xl border-2 border-[#628ECB]/20 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center gap-3 px-5 py-3.5 bg-[#628ECB]/8 border-b border-[#628ECB]/10">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#628ECB]/15">
+    <div className="rounded-lg border-2 border-[#628ECB]/20 overflow-hidden">
+      <div className="flex items-center gap-3 px-4 py-3 bg-[#628ECB]/8 border-b border-[#628ECB]/10">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#628ECB]/15">
           <PenLine className="w-4 h-4 text-[#628ECB]" />
         </div>
         <div className="flex-1">

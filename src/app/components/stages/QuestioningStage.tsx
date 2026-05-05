@@ -156,11 +156,11 @@ function DisruptionDropZone({ disruption, droppedLayerName, validated, isCorrect
   return (
     <div
       ref={drop as unknown as React.Ref<HTMLDivElement>}
-      className={`rounded-[2rem] border-2 p-6 transition-all duration-300 bg-white border-[#D5DEEF]
+      className={`rounded-lg border-2 p-5 transition-all duration-300 bg-white border-[#D5DEEF]
         ${isOver && !validated ? 'ring-2 ring-offset-4 ring-[#8B5CF6]/30 scale-[1.02] shadow-xl border-[#8B5CF6]' : ''}`}
     >
       <div className="flex items-start gap-4 mb-5">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#395886] text-white text-sm font-black shadow-md">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#395886] text-white text-sm font-black shadow-md">
           {disruption.letter}
         </div>
         <div className="flex-1">
@@ -171,7 +171,7 @@ function DisruptionDropZone({ disruption, droppedLayerName, validated, isCorrect
 
       <p className="text-xs text-[#395886]/60 leading-relaxed mb-6 font-medium">{disruption.detail}</p>
 
-      <div className={`rounded-2xl border-2 border-dashed p-4 min-h-[64px] flex items-center justify-center transition-all duration-300
+      <div className={`rounded-lg border-2 border-dashed p-4 min-h-[56px] flex items-center justify-center transition-all duration-300
         ${isOver && !validated ? 'bg-[#8B5CF6]/5 border-[#8B5CF6] shadow-inner' : droppedLayer ? 'border-transparent' : 'border-[#D5DEEF] bg-[#F8FAFF]'}`}
       >
         {droppedLayer && DroppedIcon ? (
@@ -225,21 +225,21 @@ function PizzaLayerMap() {
   const [expanded, setExpanded] = useState<number | null>(null);
 
   return (
-    <div className="bg-white rounded-[2rem] border-2 border-[#D5DEEF] shadow-sm overflow-hidden">
-      <div className="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100">
-        <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center">
+    <div className="bg-white rounded-lg border-2 border-[#D5DEEF] shadow-sm overflow-hidden">
+      <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100">
+        <div className="h-9 w-9 rounded-lg bg-white shadow-sm flex items-center justify-center">
           <MapPin className="w-5 h-5 text-amber-600" />
         </div>
         <div className="flex-1">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600">Peta Analogi Kontekstual</p>
           <h3 className="text-sm font-bold text-[#395886]">The Smart Pizza: 5 Lapisan TCP/IP</h3>
         </div>
-        <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-bold text-amber-600 bg-white border border-amber-200 px-3 py-1.5 rounded-full shadow-sm">
+        <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-bold text-amber-600 bg-white border border-amber-200 px-2.5 py-1 rounded-full shadow-sm">
           <Info className="w-3.5 h-3.5" /> Klik layer untuk detail
         </div>
       </div>
 
-      <div className="p-8">
+      <div className="p-5">
         <div className="flex items-center gap-2 overflow-x-auto pb-6 scrollbar-hide">
           <div className="flex flex-col items-center gap-2 shrink-0">
             <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-[#395886] shadow-inner">
@@ -256,7 +256,7 @@ function PizzaLayerMap() {
               <React.Fragment key={layer.num}>
                 <button
                   onClick={() => setExpanded(isExpanded ? null : layer.num)}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-[1.5rem] border-b-8 shrink-0 w-[110px] text-center transition-all duration-300
+                  className={`flex flex-col items-center gap-2 p-3 rounded-lg border-b-4 shrink-0 w-[100px] text-center transition-all duration-300
                     bg-gradient-to-br ${layer.gradient} ${layer.border} text-white shadow-md
                     ${isExpanded ? 'scale-110 shadow-xl -translate-y-2 ring-4 ring-white/20' : 'hover:scale-105 hover:-translate-y-1 hover:shadow-lg'}`}
                 >
@@ -286,9 +286,9 @@ function PizzaLayerMap() {
           const layer = PIZZA_LAYERS.find(l => l.num === expanded)!;
           const Icon = layer.icon;
           return (
-            <div className={`mt-4 p-6 rounded-[1.5rem] border-2 animate-in slide-in-from-top-2 duration-300 ${layer.light} ${layer.border} shadow-inner`}>
+            <div className={`mt-4 p-5 rounded-lg border-2 animate-in slide-in-from-top-2 duration-300 ${layer.light} ${layer.border} shadow-inner`}>
               <div className="flex items-start gap-4">
-                <div className={`h-12 w-12 rounded-2xl ${layer.badge} flex items-center justify-center text-white shadow-md`}>
+                <div className={`h-10 w-10 rounded-lg ${layer.badge} flex items-center justify-center text-white shadow-md`}>
                   <Icon className="w-6 h-6" />
                 </div>
                 <div>
@@ -306,7 +306,7 @@ function PizzaLayerMap() {
         })()}
       </div>
 
-      <div className="flex items-center justify-center gap-2 px-6 pb-6 flex-wrap">
+      <div className="flex items-center justify-center gap-2 px-5 pb-5 flex-wrap">
         {PIZZA_LAYERS.map(l => (
           <span key={l.num} className={`text-[10px] font-black px-3 py-1 rounded-lg text-white shadow-sm flex items-center gap-1.5 ${l.badge}`}>
             <l.icon className="w-3 h-3" />
@@ -367,9 +367,9 @@ function DisruptionSimulation({ lessonId, stageIndex, onComplete }: {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-[2rem] border-2 border-[#8B5CF6]/20 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-6 py-4 bg-[#8B5CF6]/5 border-b-2 border-[#8B5CF6]/10">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#8B5CF6]/15">
+      <div className="bg-white rounded-lg border-2 border-[#8B5CF6]/20 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 px-5 py-3 bg-[#8B5CF6]/5 border-b-2 border-[#8B5CF6]/10">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#8B5CF6]/15">
             <Zap className="w-5 h-5 text-[#8B5CF6]" />
           </div>
           <div className="flex-1">
@@ -384,7 +384,7 @@ function DisruptionSimulation({ lessonId, stageIndex, onComplete }: {
         </div>
       </div>
 
-      <div className={`p-6 rounded-[2.5rem] border-2 border-dashed transition-all duration-300 min-h-[100px] border-[#D5DEEF] bg-[#F8FAFF]`}>
+      <div className={`p-5 rounded-lg border-2 border-dashed transition-all duration-300 min-h-[80px] border-[#D5DEEF] bg-[#F8FAFF]`}>
         <div className="flex items-center justify-between mb-4 px-2">
           <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/40 flex items-center gap-2">
             <GripVertical className="w-3 h-3" /> Kartu Layer ({unplacedLayers.length} tersisa) - Seret ke gangguan yang sesuai
@@ -400,7 +400,7 @@ function DisruptionSimulation({ lessonId, stageIndex, onComplete }: {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-5">
+      <div className="grid md:grid-cols-3 gap-4">
         {DISRUPTIONS.map(d => (
           <DisruptionDropZone
             key={d.id}
@@ -413,12 +413,12 @@ function DisruptionSimulation({ lessonId, stageIndex, onComplete }: {
         ))}
       </div>
 
-      <div className="flex flex-col gap-4 mt-8">
+      <div className="flex flex-col gap-3 mt-6">
         {!validated ? (
           <button
             onClick={handleValidate}
             disabled={!allPlaced}
-            className={`w-full py-4 rounded-2xl font-black text-sm transition-all shadow-lg
+            className={`w-full py-3.5 rounded-lg font-black text-sm transition-all shadow-lg
               ${allPlaced ? 'bg-[#8B5CF6] text-white hover:bg-[#7C3AED] shadow-purple-200' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed shadow-none'}`}
           >
             {allPlaced ? 'Verifikasi Analisis' : `Tempatkan ${DISRUPTIONS.length - Object.keys(placements).length} kartu lagi`}
@@ -443,87 +443,55 @@ function DisruptionSimulation({ lessonId, stageIndex, onComplete }: {
   );
 }
 
-// -- Argumentative Reflection ----------------------------------------------------
+// -- Inline Essay (tanpa container berat) --------------------------------------
 
-// -- Shared UI Components (Constructivism Theme) -------------------------------
-
-function Q_EssayBox({
-  prompt, objectiveLabel, submitLabel, onSubmit, minWords = 15,
-}: {
-  prompt: string; objectiveLabel: string; submitLabel: string; onSubmit: (text: string) => void; minWords?: number;
-}) {
+function InlineEssay({ onDone }: { onDone: (essay: string) => void }) {
   const [text, setText] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+  const minWords = 20;
   const ready = wordCount >= minWords;
 
   return (
-    <div className="mt-5 p-6 rounded-[2rem] bg-gradient-to-br from-[#628ECB]/5 to-[#395886]/5 border-2 border-[#628ECB]/20 shadow-inner text-left">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="p-2 rounded-xl bg-[#628ECB]/10 text-[#628ECB]">
-          <PenLine className="w-4 h-4" />
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="h-8 w-8 rounded-lg bg-[#628ECB]/10 flex items-center justify-center">
+          <PenLine className="w-4 h-4 text-[#628ECB]" />
         </div>
-        <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60">Refleksi Mandiri — {objectiveLabel}</p>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Refleksi Mandiri — X.TCP.5</p>
+          <p className="text-xs font-bold text-[#395886]/70">Mengapa proses pengiriman data di internet harus mengikuti urutan lapisan (layer) yang baku?</p>
+        </div>
       </div>
-      <p className="text-sm font-bold text-[#395886] leading-relaxed mb-4">{prompt}</p>
+
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
         disabled={submitted}
         rows={4}
-        className="w-full px-5 py-4 border-2 border-[#D5DEEF] rounded-2xl text-sm text-[#395886] focus:outline-none focus:ring-4 focus:ring-[#628ECB]/10 focus:border-[#628ECB] transition-all bg-white/80 backdrop-blur-sm resize-none disabled:bg-[#F0F3FA]/50"
-        placeholder="Tuliskan pemikiran logismu di sini..."
+        className="w-full p-4 border-2 border-[#D5DEEF] rounded-lg text-sm text-[#395886] focus:border-[#628ECB] focus:ring-2 focus:ring-[#628ECB]/10 outline-none transition-all bg-white resize-none disabled:bg-[#F8FAFD]"
+        placeholder="Tuliskan argumenmu berdasarkan analogi pizza yang telah dipelajari..."
       />
-      <div className="flex items-center justify-between mt-3 mb-4 px-1">
+
+      <div className="flex items-center justify-between mt-3">
         <div className="flex items-center gap-2">
-          <div className={`h-1.5 w-24 rounded-full bg-[#D5DEEF] overflow-hidden`}>
-             <div className={`h-full transition-all duration-500 ${ready ? 'bg-[#10B981]' : 'bg-[#628ECB]'}`} style={{ width: `${Math.min(100, (wordCount / minWords) * 100)}%` }} />
+          <div className="h-1.5 w-20 rounded-full bg-[#D5DEEF] overflow-hidden">
+            <div className={`h-full transition-all duration-500 ${ready ? 'bg-[#10B981]' : 'bg-[#628ECB]'}`} style={{ width: `${Math.min(100, (wordCount / minWords) * 100)}%` }} />
           </div>
-          <p className={`text-[11px] font-black uppercase tracking-tighter ${ready ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
-            {wordCount} / {minWords} Kata
-          </p>
+          <p className={`text-[10px] font-bold ${ready ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>{wordCount} / {minWords} kata</p>
         </div>
-        {submitted && (
-          <span className="flex items-center gap-1.5 text-xs font-black text-[#10B981] uppercase tracking-widest">
-            <CheckCircle className="w-4 h-4" /> Tersimpan
-          </span>
+        {!submitted ? (
+          <button
+            onClick={() => { if (ready) { setSubmitted(true); onDone(text.trim()); } }}
+            disabled={!ready}
+            className={`px-5 py-2 rounded-lg font-bold text-xs transition-all active:scale-95 ${ready ? 'bg-[#395886] text-white hover:bg-[#2A4468]' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
+          >
+            Selesaikan Tahap Questioning <ChevronRight className="w-3.5 h-3.5 inline ml-1" />
+          </button>
+        ) : (
+          <span className="flex items-center gap-1.5 text-xs font-black text-[#10B981]"><CheckCircle className="w-4 h-4" /> Tersimpan</span>
         )}
       </div>
-      {!submitted && (
-        <button
-          onClick={() => { if (ready) { setSubmitted(true); onSubmit(text.trim()); } }}
-          disabled={!ready}
-          className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-sm transition-all shadow-xl active:scale-95 ${ready ? 'bg-[#395886] text-white hover:bg-[#2A4468] shadow-[#395886]/20' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
-        >
-          {submitLabel}
-          <ArrowRight className="w-5 h-5" />
-        </button>
-      )}
-    </div>
-  );
-}
-
-// -- Disruption Scenarios -------------------------------------------------------
-function ArgumentativeReflection({ onDone }: { onDone: (essay: string) => void }) {
-  return (
-    <div className="bg-white rounded-[2.5rem] border-2 border-[#D5DEEF] shadow-xl overflow-hidden p-8 animate-in zoom-in-95 duration-500 text-center">
-      <div className="flex items-center justify-center gap-4 mb-8">
-        <div className="h-12 w-12 rounded-2xl bg-[#628ECB]/10 flex items-center justify-center text-[#628ECB] shadow-inner">
-          <PenLine className="w-7 h-7" />
-        </div>
-        <div className="text-left">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#628ECB]">Aktivitas X.TCP.5</p>
-          <h3 className="text-xl font-black text-[#395886]">Refleksi Pentingnya Lapisan</h3>
-        </div>
-      </div>
-      
-      <Q_EssayBox 
-        objectiveLabel="X.TCP.5"
-        prompt="Mengapa proses pengiriman data di internet harus mengikuti urutan lapisan (layer) yang baku? Berikan argumenmu berdasarkan analogi pizza yang telah kamu pelajari!"
-        submitLabel="Selesaikan Tahap Questioning"
-        onSubmit={onDone}
-        minWords={25}
-      />
     </div>
   );
 }
@@ -576,9 +544,9 @@ function QuestioningLesson1({ lessonId, stageIndex, onComplete }: QuestioningSta
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-12 pb-20">
-      <div className="flex flex-col md:flex-row items-center gap-8 rounded-[2.5rem] border-2 border-[#8B5CF6]/20 bg-white p-8 shadow-sm">
-        <div className="w-24 h-24 shrink-0 rounded-[2rem] bg-[#8B5CF6] flex items-center justify-center text-white shadow-xl">
+    <div className="max-w-5xl mx-auto space-y-8 pb-16">
+      <div className="flex flex-col md:flex-row items-center gap-6 rounded-lg border-2 border-[#8B5CF6]/20 bg-white p-6 shadow-sm">
+        <div className="w-20 h-20 shrink-0 rounded-lg bg-[#8B5CF6] flex items-center justify-center text-white shadow-md">
           <User className="w-12 h-12" strokeWidth={2.5} />
         </div>
         <div className="flex-1 text-center md:text-left">
@@ -595,10 +563,10 @@ function QuestioningLesson1({ lessonId, stageIndex, onComplete }: QuestioningSta
         </div>
       </div>
 
-      <div className="space-y-12">
+      <div className="space-y-8">
         <PizzaLayerMap />
         
-        <div className="pt-10 border-t-4 border-dashed border-[#D5DEEF]/30 animate-in fade-in slide-in-from-bottom-6 duration-1000">
+        <div className="pt-6 border-t-2 border-dashed border-[#D5DEEF]/30 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <DisruptionSimulation
             lessonId={lessonId}
             stageIndex={stageIndex}
@@ -611,8 +579,8 @@ function QuestioningLesson1({ lessonId, stageIndex, onComplete }: QuestioningSta
         </div>
 
         {subPhase === 'essay' && (
-          <div className="animate-in fade-in slide-in-from-bottom-6 duration-1000">
-            <ArgumentativeReflection onDone={(text) => {
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <InlineEssay onDone={(text) => {
               setEssay(text);
               const finalAnswer = { selectedId: 'disruption_simulation', isCorrect: true, askedQuestions: [], justification: text, summary: text };
               void tracker.complete(finalAnswer, { subPhase: 'essay', selections, essay: text, finalAnswer });
