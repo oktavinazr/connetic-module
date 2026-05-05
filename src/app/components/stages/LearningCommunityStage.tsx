@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
   ChevronRight, CheckCircle, XCircle, Users, Link as LinkIcon, FileSearch,
   MessageSquare, Info, RotateCcw, AlertCircle, ThumbsUp, ArrowUpDown, GripVertical,
   Zap, Database, Cpu, Cable, Network, ShieldCheck, PlayCircle, Eye, ArrowRight,
-  Vote, Award, Sparkles, Monitor, PenLine, BookOpen, GraduationCap, Lightbulb
+  Vote, Award, Sparkles, Monitor, PenLine, BookOpen, GraduationCap, Lightbulb,
+  Clock
 } from 'lucide-react';
 import { getCurrentUser } from '../../utils/auth';
 import { 
@@ -13,6 +14,7 @@ import {
   getGroupMembers, 
   type GroupDiscussion 
 } from '../../utils/groups';
+import { supabase } from '../../utils/supabase';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
 import { TcpIpInteractive } from '../ui/TcpIpInteractive';
 import { StepTracker, ActivityCard, InstructionBox, EssayBox, anim, SectionDivider } from './StageKit';
@@ -121,7 +123,7 @@ function ConceptPhase({
 
 // -- Phase 2: Case Study + Argument Input --------------------------------------
 
-function CasePhase({ study, isSubmitted, onNext }: { study: CaseStudy; isSubmitted?: boolean; onNext: (choiceId: string, choiceText: string, argument: string) => void }) {
+function CasePhase({ study, isSubmitted, submitError, onNext }: { study: CaseStudy; isSubmitted?: boolean; submitError?: string | null; onNext: (choiceId: string, choiceText: string, argument: string) => void }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [argument, setArgument] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -188,6 +190,17 @@ function CasePhase({ study, isSubmitted, onNext }: { study: CaseStudy; isSubmitt
               </div>
             </div>
           )}
+
+          {/* Error Banner */}
+          {submitError && (
+            <div className={`p-4 rounded-xl border-2 border-red-200 bg-red-50 flex items-start gap-3 ${anim.fadeUp}`}>
+              <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-red-800 leading-relaxed">{submitError}</p>
+                <p className="text-[10px] font-medium text-red-600/60 mt-1">Silakan coba kembali atau hubungi guru jika masalah berlanjut.</p>
+              </div>
+            </div>
+          )}
         </div>
       </ActivityCard>
 
@@ -236,25 +249,52 @@ function DiscussionPhase({
   );
   const allSubmitted = members.length > 0 && missingMembers.length === 0;
 
+  // Fungsi fetch yang dipakai baik oleh subscription maupun polling
+  const fetchData = useCallback(async () => {
+    const [d, m] = await Promise.all([
+      getGroupDiscussions(lessonId, moduleId, groupName),
+      getGroupMembers(groupName)
+    ]);
+    setDiscussions(d);
+    setMembers(m);
+  }, [lessonId, moduleId, groupName]);
+
+  // 1. Supabase REAL-TIME subscription (langsung refresh saat ada insert/update/delete)
   useEffect(() => {
-    const fetch = async () => {
-      const [d, m] = await Promise.all([
-        getGroupDiscussions(lessonId, moduleId, groupName),
-        getGroupMembers(groupName)
-      ]);
-      setDiscussions(d);
-      setMembers(m);
+    void fetchData();
+
+    const channel = supabase
+      .channel(`discussion-${lessonId}-${moduleId}-${groupName}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'group_discussions',
+          filter: `lesson_id=eq.${lessonId}&module_id=eq.${moduleId}&group_name=eq.${groupName}`,
+        },
+        () => {
+          // Re-fetch seluruh diskusi saat ada perubahan
+          void fetchData();
+        }
+      )
+      .subscribe();
+
+    // 2. Polling fallback setiap 5 detik (jika real-time terblokir)
+    const interval = setInterval(() => {
+      void fetchData();
+    }, 5000);
+
+    return () => {
+      void supabase.removeChannel(channel);
+      clearInterval(interval);
     };
-    void fetch();
-    const interval = setInterval(fetch, 4000);
-    return () => clearInterval(interval);
-  }, [groupName, lessonId, moduleId]);
+  }, [lessonId, moduleId, groupName, fetchData]);
 
   const handleVote = async (discId: string) => {
     if (!allSubmitted) return;
     await toggleGroupDiscussionVote(discId, user!.id);
-    const updated = await getGroupDiscussions(lessonId, moduleId, groupName);
-    setDiscussions(updated);
+    await fetchData();
   };
 
   return (
@@ -262,17 +302,41 @@ function DiscussionPhase({
       <ActivityCard
         icon={<MessageSquare className="w-5 h-5 text-[#10B981]" />}
         label="Kolaborasi Kelompok"
-        title={`Konsensus Argumen — ${groupName}`}
+        title={`Papan Diskusi — ${groupName}`}
         headerBg="bg-[#10B981]/5"
         headerBorder="border-[#10B981]/20"
         iconBg="bg-[#10B981]/10"
         labelCls="text-[#10B981]"
       >
         <div className="space-y-6">
+          {/* Status Bar Anggota */}
           <GroupMembersList members={members} submissions={submissions} />
 
-          <SectionDivider label="Papan Diskusi" icon={<ArrowUpDown className="w-3 h-3" />} />
+          {/* Indikator Menunggu per Anggota */}
+          {!allSubmitted && members.length > 0 && (
+            <div className="grid gap-2">
+              {members.map(m => {
+                const hasSubmitted = submissions.includes(m.user_id);
+                if (hasSubmitted) return null;
+                const isOwn = m.user_id === user!.id;
+                return (
+                  <div key={m.user_id} className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed transition-all ${
+                    isOwn ? 'border-[#F59E0B]/40 bg-[#FFFBEB]' : 'border-[#D5DEEF] bg-[#F8FAFD]'
+                  }`}>
+                    <Clock className={`w-4 h-4 ${isOwn ? 'text-[#F59E0B]' : 'text-[#395886]/30'} animate-pulse`} />
+                    <span className={`text-xs font-bold ${isOwn ? 'text-[#F59E0B]' : 'text-[#395886]/40'}`}>
+                      Menunggu <span className="font-black">{m.user_name}</span>...
+                      {isOwn && <span className="ml-1 text-[10px] font-bold text-[#F59E0B]/60">(kamu belum submit)</span>}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
+          <SectionDivider label="Papan Diskusi" icon={<MessageSquare className="w-3 h-3" />} />
+
+          {/* Status Header */}
           <div className="flex items-center justify-center mb-4">
              {!allSubmitted ? (
                <div className="px-5 py-2.5 rounded-2xl bg-amber-50 text-amber-600 text-[10px] font-black uppercase border border-amber-100 flex flex-col items-center gap-2 text-center">
@@ -281,40 +345,64 @@ function DiscussionPhase({
                     <span>Menunggu Argumen Anggota...</span>
                  </div>
                  <p className="text-[9px] lowercase font-bold text-amber-500/80">
-                   Belum mengirim: {missingMembers.length > 0 ? missingMembers.join(', ') : '...'}
+                   {missingMembers.length > 0 
+                     ? `Belum mengirim: ${missingMembers.join(', ')}` 
+                     : 'Memuat data anggota...'}
                  </p>
                </div>
              ) : (
                <div className="px-4 py-1.5 rounded-full bg-[#10B981]/10 text-[#10B981] text-[10px] font-black uppercase border border-[#10B981]/20 flex items-center gap-2">
-                 <CheckCircle className="w-3.5 h-3.5" /> Voting Dibuka
+                 <CheckCircle className="w-3.5 h-3.5" /> Semua Anggota Sudah Submit — Voting Dibuka
                </div>
              )}
           </div>
           
+          {/* Papan Argumen — Card per anggota */}
           <div className="grid gap-4">
-            {discussions.map(disc => (
-              <div key={disc.id} className={`p-5 rounded-2xl border-2 transition-all duration-500 ${disc.user_id === user!.id ? 'border-[#10B981]/40 bg-[#F0FDF4]/50 shadow-sm' : 'border-[#D5DEEF] bg-white hover:border-[#10B981]/20'}`}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                     <div className={`w-9 h-9 rounded-xl ${disc.user_id === user!.id ? 'bg-[#10B981]' : 'bg-[#395886]'} text-white flex items-center justify-center text-[10px] font-black shadow-sm`}>{disc.user_name.substring(0,2).toUpperCase()}</div>
-                     <div>
-                        <p className="text-xs font-black text-[#395886]">{disc.user_name} {disc.user_id === user!.id && <span className="text-[9px] font-black bg-[#10B981] text-white px-2 py-0.5 rounded-full ml-1 uppercase">Kamu</span>}</p>
-                        <p className="text-[10px] font-bold text-[#395886]/40 uppercase tracking-tight">Memilih: {disc.choice_text}</p>
-                     </div>
+            {discussions.map(disc => {
+              const isOwn = disc.user_id === user!.id;
+              return (
+                <div key={disc.id} className={`p-5 rounded-2xl border-2 transition-all duration-500 ${
+                  isOwn 
+                    ? 'border-[#10B981]/60 bg-[#F0FDF4] shadow-md shadow-[#10B981]/5' 
+                    : 'border-[#D5DEEF] bg-white hover:border-[#10B981]/20'
+                }`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                       <div className={`w-9 h-9 rounded-xl ${
+                         isOwn ? 'bg-[#10B981]' : 'bg-[#395886]'
+                       } text-white flex items-center justify-center text-[10px] font-black shadow-sm`}>
+                         {disc.user_name.substring(0, 2).toUpperCase()}
+                       </div>
+                       <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs font-black text-[#395886]">{disc.user_name}</p>
+                            {isOwn && (
+                              <span className="text-[9px] font-black bg-[#10B981] text-white px-2 py-0.5 rounded-full uppercase">Anda</span>
+                            )}
+                          </div>
+                          <p className="text-[10px] font-bold text-[#395886]/40 uppercase tracking-tight">Memilih: {disc.choice_text}</p>
+                       </div>
+                    </div>
+                    <button 
+                      onClick={() => handleVote(disc.id)} 
+                      disabled={!allSubmitted}
+                      className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border-2 transition-all active:scale-90 ${
+                        disc.votes.includes(user!.id) 
+                          ? 'bg-[#10B981] text-white border-[#10B981] shadow-md shadow-[#10B981]/20' 
+                          : 'bg-white text-[#395886]/40 border-[#D5DEEF] hover:border-[#10B981]/50'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                       <ThumbsUp className={`w-3.5 h-3.5 ${disc.votes.includes(user!.id) ? 'fill-current' : ''}`} />
+                       <span className="text-[10px] font-black">{disc.votes.length} Vote</span>
+                    </button>
                   </div>
-                  <button 
-                    onClick={() => handleVote(disc.id)} 
-                    disabled={!allSubmitted}
-                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border-2 transition-all active:scale-90 ${disc.votes.includes(user!.id) ? 'bg-[#10B981] text-white border-[#10B981] shadow-md shadow-[#10B981]/20' : 'bg-white text-[#395886]/40 border-[#D5DEEF] hover:border-[#10B981]/50'} disabled:opacity-50 disabled:cursor-not-allowed`}
-                  >
-                     <ThumbsUp className={`w-3.5 h-3.5 ${disc.votes.includes(user!.id) ? 'fill-current' : ''}`} /> <span className="text-[10px] font-black">{disc.votes.length} Vote</span>
-                  </button>
+                  <p className="text-sm font-medium text-[#395886]/80 leading-relaxed italic bg-white/60 p-3.5 rounded-xl border border-current/5">
+                    "{disc.argument}"
+                  </p>
                 </div>
-                <p className="text-sm font-medium text-[#395886]/80 leading-relaxed italic bg-white/60 p-3.5 rounded-xl border border-current/5">
-                  "{disc.argument}"
-                </p>
-              </div>
-            ))}
+              );
+            })}
             {discussions.length === 0 && (
               <div className="py-16 text-center bg-[#F8FAFD] rounded-2xl border-2 border-dashed border-[#D5DEEF] text-[10px] font-black text-[#395886]/30 uppercase tracking-widest">
                 Belum ada argumen masuk...
@@ -325,7 +413,7 @@ function DiscussionPhase({
       </ActivityCard>
       
       {allSubmitted && (
-        <button onClick={onNext} className="w-full py-5 rounded-2xl bg-[#395886] text-white font-black text-sm shadow-xl active:scale-95 transition-all hover:bg-[#2A4468] flex items-center justify-center gap-2 group">
+        <button onClick={onNext} className={`w-full py-5 rounded-2xl font-black text-sm shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 group ${anim.zoomIn} bg-[#395886] text-white hover:bg-[#2A4468]`}>
           Lihat Hasil Keputusan <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </button>
       )}
@@ -406,7 +494,10 @@ function ModuleFlow({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const user = getCurrentUser();
 
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const handleCaseSubmit = async (choiceId: string, choiceText: string, argument: string) => {
+    setSubmitError(null);
     try {
       await createGroupDiscussion({
         lesson_id: lessonId,
@@ -423,7 +514,9 @@ function ModuleFlow({
       setTimeout(() => {
         setPhase('discussion');
       }, 2000);
-    } catch (err) {
+    } catch (err: any) {
+      const msg = err?.message || 'Gagal menyimpan argumen. Silakan coba lagi.';
+      setSubmitError(msg);
       console.error('Failed to submit argument:', err);
     }
   };
@@ -446,7 +539,7 @@ function ModuleFlow({
     <div className="w-full space-y-6">
       <StepTracker steps={steps} current={currentStep} />
       {phase === 'concept' && <ConceptPhase title={title} concept={concept} layers={layers} isEncapsulation={isEncapsulation} onNext={() => setPhase('case')} />}
-      {phase === 'case' && <CasePhase study={study} isSubmitted={isSubmitted} onNext={handleCaseSubmit} />}
+      {phase === 'case' && <CasePhase study={study} isSubmitted={isSubmitted} submitError={submitError} onNext={handleCaseSubmit} />}
       {phase === 'discussion' && <DiscussionPhase lessonId={lessonId} moduleId={moduleId} groupName={groupName} onNext={finalizeModule} />}
       {phase === 'result' && <ResultPhase moduleId={moduleId} discussions={discussions} onDone={handleResultDone} />}
     </div>

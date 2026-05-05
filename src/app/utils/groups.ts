@@ -140,17 +140,30 @@ export async function getGroupDiscussions(lessonId: string, moduleId: string, gr
 
 export async function createGroupDiscussion(
   payload: Omit<GroupDiscussion, 'id' | 'created_at' | 'updated_at' | 'votes'> & { votes?: string[] },
-): Promise<void> {
-  const { error } = await supabase
+): Promise<GroupDiscussion> {
+  const { data, error } = await supabase
     .from('group_discussions')
     .insert({
       ...payload,
       votes: payload.votes ?? [],
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    });
+    })
+    .select('*')
+    .single();
 
-  if (error) console.error('[createGroupDiscussion]', error.message);
+  if (error) {
+    console.error('[createGroupDiscussion]', error.message);
+    throw new Error(`Gagal menyimpan argumen: ${error.message}`);
+  }
+  if (!data) {
+    throw new Error('Gagal menyimpan argumen: tidak ada data yang dikembalikan');
+  }
+
+  return {
+    ...data,
+    votes: Array.isArray(data.votes) ? data.votes : [],
+  } as GroupDiscussion;
 }
 
 export async function toggleGroupDiscussionVote(discussionId: string, userId: string): Promise<void> {
