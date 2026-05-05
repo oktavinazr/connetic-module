@@ -115,7 +115,7 @@ function normalizeAdminSection(value: string | null): AdminSection {
 }
 
 function formatDateTime(value?: string | null) {
-  if (!value) return 'â€”';
+  if (!value) return '—';
   return new Date(value).toLocaleString('id-ID', {
     day: '2-digit',
     month: 'short',
@@ -126,7 +126,7 @@ function formatDateTime(value?: string | null) {
 }
 
 function formatDuration(totalSec: number) {
-  if (!totalSec) return 'â€”';
+  if (!totalSec) return '—';
   const hours = Math.floor(totalSec / 3600);
   const minutes = Math.floor((totalSec % 3600) / 60);
   const seconds = totalSec % 60;
@@ -187,7 +187,7 @@ function TestAnswerSection({
           <p className="font-bold text-[#395886] text-sm">{title}</p>
           <p className="text-xs text-[#395886]/50 mt-0.5">Belum dikerjakan</p>
         </div>
-        <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-400">â€”</span>
+        <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-400">—</span>
       </div>
     );
   }
@@ -737,7 +737,7 @@ function AdminSidebar({
 // â”€â”€â”€ Score Badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ScoreBadge({ score, total, completed }: { score: number | null; total: number; completed: boolean }) {
-  if (!completed) return <span className="text-xs text-[#395886]/30 font-medium">â€”</span>;
+  if (!completed) return <span className="text-xs text-[#395886]/30 font-medium">—</span>;
   const pct = Math.round(((score ?? 0) / total) * 100);
   return (
     <div className={`inline-flex flex-col items-center px-2 py-1 rounded-lg border ${
@@ -1510,13 +1510,13 @@ export function AdminPage() {
                       <div key={event.id} className="px-6 py-3.5 flex items-center justify-between gap-4 hover:bg-[#F8FAFD] transition-colors">
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-[#395886] truncate">
-                            Siswa `{event.userId.slice(0, 8)}` â€¢ Pertemuan {event.lessonId} â€¢ Tahap {event.stageIndex + 1}
+                            Siswa `{event.userId.slice(0, 8)}` • Pertemuan {event.lessonId} • Tahap {event.stageIndex + 1}
                           </p>
-                          <p className="text-xs text-[#395886]/50">{event.stageType} â€¢ {event.eventType}</p>
+                          <p className="text-xs text-[#395886]/50">{event.stageType} • {event.eventType}</p>
                         </div>
                         <div className="shrink-0 text-right">
                           <p className="text-xs font-bold text-[#628ECB]">{event.progressPercent ?? 0}%</p>
-                          <p className="text-[10px] text-[#395886]/40">{event.createdAt ? new Date(event.createdAt).toLocaleString('id-ID') : 'â€”'}</p>
+                          <p className="text-[10px] text-[#395886]/40">{event.createdAt ? new Date(event.createdAt).toLocaleString('id-ID') : '—'}</p>
                         </div>
                       </div>
                     ))}
@@ -1533,8 +1533,8 @@ export function AdminPage() {
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#628ECB] mb-2">Manajemen</p>
-                    <h1 className="text-3xl font-bold text-[#395886] tracking-tight mb-1">Data Siswa</h1>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#628ECB] mb-1">Manajemen</p>
+                    <h1 className="text-2xl font-bold text-[#395886]">Data Siswa</h1>
                     <p className="text-sm text-[#395886]/60 mt-1">Kelola data seluruh siswa, pantau progres, dan akses akun secara langsung.</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -1919,7 +1919,7 @@ export function AdminPage() {
                                   onChange={e => assignStudentToGroup(s.id, e.target.value)}
                                   className="text-xs font-semibold border border-[#D5DEEF] rounded-lg px-2 py-1.5 text-[#395886] bg-white focus:outline-none focus:border-[#628ECB] cursor-pointer max-w-[110px]"
                                 >
-                                  <option value="">â€” Lepas â€”</option>
+                                  <option value="">— Lepas —</option>
                                   {allGroupNames.map(g => <option key={g} value={g}>{g}</option>)}
                                 </select>
                               </div>
@@ -1989,8 +1989,8 @@ export function AdminPage() {
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#628ECB] mb-2">Analitik</p>
-                    <h1 className="text-3xl font-bold text-[#395886] tracking-tight mb-1">Hasil Belajar & Monitoring CTL</h1>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#628ECB] mb-1">Analitik</p>
+                    <h1 className="text-2xl font-bold text-[#395886]">Hasil Belajar & Monitoring CTL</h1>
                     <p className="text-sm text-[#395886]/60 mt-1">Rekap evaluasi tes dan aktivitas CTL siswa dalam mode read-only untuk analisis guru.</p>
                   </div>
                   <div className="flex gap-2">
@@ -2149,7 +2149,7 @@ export function AdminPage() {
                               <td className="px-4 py-3 whitespace-nowrap">
                                 {s.group ? (
                                   <span className="text-xs font-bold bg-[#628ECB]/10 text-[#628ECB] px-3 py-1 rounded-full">{s.group}</span>
-                                ) : <span className="text-xs text-[#395886]/30">â€”</span>}
+                                ) : <span className="text-xs text-[#395886]/30">—</span>}
                               </td>
                               <td className="px-4 py-3 text-center bg-[#628ECB]/3">
                                 <ScoreBadge score={s.globalPretest} total={globalPretest.questions.length} completed={s.globalPretestCompleted} />

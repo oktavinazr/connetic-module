@@ -50,13 +50,15 @@ CREATE TABLE IF NOT EXISTS public.group_discussions (
 -- Matikan RLS untuk kemudahan kolaborasi real-time antar siswa.
 ALTER TABLE public.group_discussions DISABLE ROW LEVEL SECURITY;
 
--- Izinkan akses penuh
-GRANT ALL ON TABLE public.group_discussions TO anon;
-GRANT ALL ON TABLE public.group_discussions TO authenticated;
-GRANT ALL ON TABLE public.group_discussions TO service_role;
-
 -- AKTIFKAN FITUR REAL-TIME (Agar pesan diskusi muncul otomatis tanpa refresh)
-ALTER PUBLICATION supabase_realtime ADD TABLE public.group_discussions;
+-- Gunakan DO block untuk menghindari error jika tabel sudah ditambahkan
+DO $$
+BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.group_discussions;
+EXCEPTION WHEN OTHERS THEN
+    -- Tabel sudah ditambahkan sebelumnya, abaikan error
+    RAISE NOTICE 'Tabel group_discussions sudah ada di publication supabase_realtime';
+END $$;
 
 
 -- 3. MENYIAPKAN TABEL LEARNING ACTIVITY TRACKING SYSTEM (CTL)
@@ -118,8 +120,20 @@ GRANT ALL ON TABLE public.ctl_activity_events TO anon;
 GRANT ALL ON TABLE public.ctl_activity_events TO authenticated;
 GRANT ALL ON TABLE public.ctl_activity_events TO service_role;
 
-ALTER PUBLICATION supabase_realtime ADD TABLE public.ctl_activity_sessions;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.ctl_activity_events;
+-- AKTIFKAN REAL-TIME UNTUK CTL TABLES
+DO $$
+BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.ctl_activity_sessions;
+EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'Tabel ctl_activity_sessions sudah ada di publication supabase_realtime';
+END $$;
+
+DO $$
+BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.ctl_activity_events;
+EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'Tabel ctl_activity_events sudah ada di publication supabase_realtime';
+END $$;
 
 
 -- 4. MENYIAPKAN TABEL ADMIN GROUP NAMES (Custom Nama Kelompok)
@@ -140,7 +154,105 @@ GRANT ALL ON TABLE public.admin_group_names TO authenticated;
 GRANT ALL ON TABLE public.admin_group_names TO service_role;
 
 
--- 5. CATATAN PENTING UNTUK ADMIN:
+-- 5. MENYIAPKAN TABEL LESSON PROGRESS (Progress Belajar per Siswa)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.lesson_progress (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID NOT NULL,
+    lesson_id TEXT NOT NULL,
+    pretest_completed BOOLEAN DEFAULT false,
+    pretest_score INTEGER,
+    completed_stages INTEGER[] DEFAULT '{}',
+    posttest_completed BOOLEAN DEFAULT false,
+    posttest_score INTEGER,
+    answers JSONB DEFAULT '{}'::jsonb,
+    stage_attempts JSONB DEFAULT '{}'::jsonb,
+    stage_success JSONB DEFAULT '{}'::jsonb,
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(user_id, lesson_id)
+);
+
+ALTER TABLE public.lesson_progress DISABLE ROW LEVEL SECURITY;
+
+GRANT ALL ON TABLE public.lesson_progress TO anon;
+GRANT ALL ON TABLE public.lesson_progress TO authenticated;
+GRANT ALL ON TABLE public.lesson_progress TO service_role;
+
+
+-- 6. MENYIAPKAN TABEL GLOBAL TEST PROGRESS (Pretest/Posttest Global)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.global_test_progress (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID UNIQUE NOT NULL,
+    global_pretest_completed BOOLEAN DEFAULT false,
+    global_pretest_score INTEGER,
+    global_pretest_answers INTEGER[] DEFAULT '{}',
+    global_posttest_completed BOOLEAN DEFAULT false,
+    global_posttest_score INTEGER,
+    global_posttest_answers INTEGER[] DEFAULT '{}',
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.global_test_progress DISABLE ROW LEVEL SECURITY;
+
+GRANT ALL ON TABLE public.global_test_progress TO anon;
+GRANT ALL ON TABLE public.global_test_progress TO authenticated;
+GRANT ALL ON TABLE public.global_test_progress TO service_role;
+
+
+-- 7. MENYIAPKAN TABEL ASSESSMENT DRAFTS (Simpan Jawaban Sementara)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.assessment_drafts (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID NOT NULL,
+    draft_key TEXT NOT NULL,
+    answers INTEGER[] DEFAULT '{}',
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(user_id, draft_key)
+);
+
+ALTER TABLE public.assessment_drafts DISABLE ROW LEVEL SECURITY;
+
+GRANT ALL ON TABLE public.assessment_drafts TO anon;
+GRANT ALL ON TABLE public.assessment_drafts TO authenticated;
+GRANT ALL ON TABLE public.assessment_drafts TO service_role;
+
+
+-- 8. MENYIAPKAN TABEL ADMIN QUESTIONS (Edit Soal oleh Admin)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.admin_questions (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    test_key TEXT UNIQUE NOT NULL,
+    questions JSONB NOT NULL DEFAULT '[]'::jsonb,
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.admin_questions DISABLE ROW LEVEL SECURITY;
+
+GRANT ALL ON TABLE public.admin_questions TO anon;
+GRANT ALL ON TABLE public.admin_questions TO authenticated;
+GRANT ALL ON TABLE public.admin_questions TO service_role;
+
+
+-- 9. MENYIAPKAN TABEL ADMIN STAGE OVERRIDES (Custom Stage oleh Admin)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.admin_stage_overrides (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    lesson_id TEXT NOT NULL,
+    stage_index INTEGER NOT NULL,
+    override_data JSONB NOT NULL DEFAULT '{}'::jsonb,
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(lesson_id, stage_index)
+);
+
+ALTER TABLE public.admin_stage_overrides DISABLE ROW LEVEL SECURITY;
+
+GRANT ALL ON TABLE public.admin_stage_overrides TO anon;
+GRANT ALL ON TABLE public.admin_stage_overrides TO authenticated;
+GRANT ALL ON TABLE public.admin_stage_overrides TO service_role;
+
+
+-- 10. CATATAN PENTING UNTUK ADMIN:
 -- ==============================================================================
 -- Jika Anda baru saja menjalankan script ini, pastikan untuk:
 -- 1. Logout dari aplikasi.
