@@ -157,7 +157,7 @@ export function LessonIntroPage() {
             {/* Pendahuluan Banner */}
             <div className="relative overflow-hidden bg-gradient-to-br from-[#395886] to-[#628ECB] rounded-[2rem] px-8 py-7 text-white shadow-xl shadow-[#628ECB]/20">
               <div className="relative z-10">
-                <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center gap-4 mb-5">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md shadow-lg ring-1 ring-white/30">
                     <BookMarked className="h-6 w-6 text-white" />
                   </div>
@@ -166,8 +166,9 @@ export function LessonIntroPage() {
                     <h2 className="text-xl font-black tracking-tight">Pendahuluan — {lesson.topic}</h2>
                   </div>
                 </div>
-                <p className="text-sm font-medium text-white/80 leading-relaxed max-w-2xl">
-                  Selamat datang di pertemuan ini! Di bawah ini adalah ringkasan materi yang akan Anda eksplorasi. Pastikan untuk meninjau kompetensi awal sebelum memulai Pre-Test untuk hasil maksimal.
+                <p className="text-sm font-medium text-white/80 leading-[1.7] w-full">
+                  Selamat datang di pertemuan ini! Di bawah ini adalah ringkasan materi yang akan Anda eksplorasi.<br />
+                  Pastikan untuk meninjau kompetensi awal sebelum memulai Pre-Test untuk hasil maksimal.
                 </p>
               </div>
             </div>

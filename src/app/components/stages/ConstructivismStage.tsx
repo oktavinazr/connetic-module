@@ -7,6 +7,7 @@ import { useDrag, useDrop } from 'react-dnd';
 import { getCurrentUser } from '../../utils/auth';
 import { getLessonProgress, saveStageAttempt } from '../../utils/progress';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
+import { CourierDefinition } from './CourierDefinition';
 
 // -- Types ----------------------------------------------------------------------
 
@@ -1198,6 +1199,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
   const [analogyData, setAnalogyData] = useState<any>(null);
   const [mcqData, setMcqData] = useState<any>(null);
   const [isRestored, setIsRestored] = useState(false);
+  const [courierCompleted, setCourierCompleted] = useState(false);
 
   const hasEssayFlow = !!(constructivismEssay1 || constructivismEssay2);
 
@@ -1260,6 +1262,13 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
   }
 
   if (phase === 'scramble' && storyScramble) {
+    if (lessonId === '1' && !courierCompleted) {
+      return (
+        <div className="space-y-4">
+          <CourierDefinition onComplete={() => setCourierCompleted(true)} />
+        </div>
+      );
+    }
     return (
       <div className="space-y-4">
         <StoryScramblePhase
