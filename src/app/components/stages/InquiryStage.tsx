@@ -130,7 +130,7 @@ function DraggableFlowCard({ item }: { item: FlowItem }) {
       ref={drag as unknown as React.Ref<HTMLDivElement>}
       className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border-b-4 text-white font-bold text-sm select-none transition-all
         ${colors.gradient} ${colors.borderB}
-        ${isDragging ? 'opacity-30 scale-90 cursor-grabbing' : 'cursor-grab hover:scale-105 hover:-translate-y-0.5 shadow-md hover:shadow-lg'}`}
+        ${isDragging ? 'opacity-40 scale-90 cursor-grabbing shadow-2xl' : 'cursor-grab hover:scale-105 hover:-translate-y-1 shadow-md hover:shadow-xl'}`}
     >
       <GripVertical className="w-4 h-4 opacity-60 shrink-0" />
       <span className="tracking-tight">{item.text}</span>
@@ -159,8 +159,8 @@ function FlowDropSlot({ position, placedItem, validated, isCorrect, onDrop }: {
         {position}
       </div>
       <div className={`flex-1 rounded-2xl border-2 transition-all duration-300 min-h-[52px]
-        ${isOver ? 'border-[#628ECB] bg-[#628ECB]/8 shadow-md scale-[1.01]' :
-          placedItem ? 'border-transparent' : 'border-dashed border-[#D5DEEF] bg-[#F8FAFF]'}`}
+        ${isOver ? 'border-[#628ECB] bg-[#628ECB]/12 shadow-[0_0_28px_rgba(98,142,203,0.35)] scale-[1.015] ring-2 ring-[#628ECB]/25' :
+          placedItem ? 'border-transparent' : 'border-dashed border-[#D5DEEF] bg-[#F8FAFF] dnd-empty-indicator'}`}
       >
         {placedItem && colors ? (
           <div className={`flex items-center gap-3 px-4 py-3 rounded-xl h-full ${colors.gradient} text-white border-b-4 ${colors.borderB} shadow-sm`}>
@@ -737,7 +737,7 @@ function InquiryLesson1Page(props: InquiryStageProps) {
           stageIndex={stageIndex}
           initialData={flowData}
           onComplete={(slots) => setFlowData({ slots })}
-          onNext={() => { setFlowData(prev => ({ ...prev, validated: true })); setActivityStep(2); }}
+          onNext={() => { setFlowData((prev: any) => ({ ...prev, validated: true })); setActivityStep(2); }}
         />
 
         {activityStep >= 2 && (

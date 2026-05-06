@@ -106,8 +106,8 @@ function TcpDraggable({ isDropped }: { isDropped: boolean }) {
     <motion.div
       ref={divRef}
       animate={{ opacity: isDragging ? 0.35 : 1, scale: isDragging ? 1.06 : 1 }}
-      whileHover={{ scale: 1.04, boxShadow: '0 0 20px rgba(139,92,246,0.35)' }}
-      className="flex items-center gap-2.5 cursor-grab active:cursor-grabbing px-5 py-3.5 rounded-xl bg-[#8B5CF6]/10 border-2 border-dashed border-[#8B5CF6]/50 text-[#8B5CF6] font-bold text-sm select-none"
+      whileHover={{ scale: 1.04, boxShadow: '0 8px 30px rgba(139,92,246,0.35)' }}
+      className="flex items-center gap-2.5 cursor-grab active:cursor-grabbing px-5 py-3.5 rounded-xl bg-[#8B5CF6]/10 border-2 border-dashed border-[#8B5CF6]/50 text-[#8B5CF6] font-bold text-sm select-none shadow-md"
     >
       <GripVertical className="w-4 h-4 opacity-60" />
       TCP Header
@@ -129,13 +129,14 @@ function DataDropZone({ onDrop, isDropped, message }: { onDrop: () => void; isDr
       ref={divRef}
       animate={{
         boxShadow: isOver
-          ? '0 0 28px rgba(139,92,246,0.5)'
+          ? '0 0 36px rgba(139,92,246,0.55)'
           : isDropped
-          ? '0 0 16px rgba(139,92,246,0.2)'
+          ? '0 0 20px rgba(139,92,246,0.25)'
           : '0 0 0px transparent',
         borderColor: isOver || isDropped ? '#8B5CF6' : '#628ECB',
+        scale: isOver ? 1.02 : 1,
       }}
-      className="w-full rounded-xl border-2 p-5 bg-[#628ECB]/5 transition-all"
+      className={`w-full rounded-xl border-2 p-5 bg-[#628ECB]/5 transition-all ${isOver ? 'ring-2 ring-[#8B5CF6]/30' : ''}`}
     >
       <div className="text-xs font-black uppercase tracking-widest text-[#628ECB] mb-2">DATA</div>
       <div className="text-sm font-semibold text-[#395886]">"{message}"</div>

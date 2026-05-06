@@ -128,7 +128,7 @@ function DraggableLayerTag({ name, layer, disabled }: {
       ref={drag as unknown as React.Ref<HTMLDivElement>}
       className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-b-4 text-white text-xs font-black select-none transition-all
         bg-gradient-to-r ${layer.gradient} ${layer.border}
-        ${disabled ? 'cursor-default opacity-60' : isDragging ? 'opacity-30 scale-90 cursor-grabbing' : 'cursor-grab hover:scale-105 hover:-translate-y-0.5 shadow-md hover:shadow-lg'}`}
+        ${disabled ? 'cursor-default opacity-60' : isDragging ? 'opacity-35 scale-90 cursor-grabbing shadow-2xl' : 'cursor-grab hover:scale-105 hover:-translate-y-1 shadow-md hover:shadow-xl'}`}
     >
       <GripVertical className="w-3.5 h-3.5 opacity-60 shrink-0" />
       <Icon className="w-4 h-4" />
@@ -157,7 +157,7 @@ function DisruptionDropZone({ disruption, droppedLayerName, validated, isCorrect
     <div
       ref={drop as unknown as React.Ref<HTMLDivElement>}
       className={`rounded-lg border-2 p-5 transition-all duration-300 bg-white border-[#D5DEEF]
-        ${isOver && !validated ? 'ring-2 ring-offset-4 ring-[#8B5CF6]/30 scale-[1.02] shadow-xl border-[#8B5CF6]' : ''}`}
+        ${isOver && !validated ? 'ring-4 ring-offset-2 ring-[#8B5CF6]/35 scale-[1.02] shadow-[0_0_32px_rgba(139,92,246,0.3)] border-[#8B5CF6]' : ''}`}
     >
       <div className="flex items-start gap-4 mb-5">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#395886] text-white text-sm font-black shadow-md">

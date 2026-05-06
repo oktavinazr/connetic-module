@@ -39,6 +39,7 @@ import { getStudentGroup } from '../utils/groups';
 import { StageAnswerDetail } from '../components/admin/StageDetail';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { DragAutoScroll } from '../components/DragAutoScroll';
 
 type StageType =
   | 'constructivism'
@@ -744,6 +745,7 @@ export function LessonPage() {
           ) : (
             <div className="w-full">
               <DndProvider backend={HTML5Backend}>
+                <DragAutoScroll />
                 {renderStage()}
               </DndProvider>
               {pendingReflection !== null && (

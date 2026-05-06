@@ -119,8 +119,8 @@ function DraggableStoryCard({ fragment, disabled }: { fragment: StoryFragment; d
     <div
       ref={drag as unknown as React.Ref<HTMLDivElement>}
       className={`flex items-start gap-2 p-3 rounded-xl border-2 text-xs text-[#395886] leading-relaxed transition-all select-none
-        border-[#D5DEEF] bg-white hover:border-[#628ECB]/50 hover:shadow-sm
-        ${disabled ? 'cursor-default opacity-60' : isDragging ? 'opacity-30 cursor-grabbing' : 'cursor-grab'}`}
+        border-[#D5DEEF] bg-white hover:border-[#628ECB]/50 hover:shadow-md hover:-translate-y-0.5
+        ${disabled ? 'cursor-default opacity-60' : isDragging ? 'opacity-40 scale-95 cursor-grabbing shadow-2xl' : 'cursor-grab'}`}
     >
       {!disabled && <GripVertical className="w-3.5 h-3.5 text-[#395886]/30 shrink-0 mt-0.5" />}
       <p className="flex-1">{fragment.text}</p>
@@ -153,7 +153,7 @@ function StoryDropSlot({ slotNum, fragment, validated, onDrop, onReturn }: {
       <div
         ref={drop as unknown as React.Ref<HTMLDivElement>}
         className={`flex-1 min-h-[52px] rounded-xl border-2 transition-all p-2.5
-          ${isOver && !validated ? 'border-[#628ECB] bg-[#628ECB]/8 shadow-md' : ''}
+          ${isOver && !validated ? 'border-[#628ECB] bg-[#628ECB]/12 shadow-[0_0_24px_rgba(98,142,203,0.3)] scale-[1.02] ring-2 ring-[#628ECB]/25' : ''}
           ${!fragment && !isOver ? 'border-dashed border-[#D5DEEF] bg-[#F8FAFF]' : ''}
           ${isCorrect ? 'border-[#10B981] bg-[#10B981]/8' : ''}
           ${isWrong ? 'border-red-300 bg-red-50' : ''}
@@ -489,7 +489,7 @@ function BoxDraggableCard({ item }: { item: BoxItem }) {
         ${isCourier
           ? 'border-[#628ECB]/30 bg-[#EEF4FF] text-[#395886] hover:border-[#628ECB]/60'
           : 'border-[#10B981]/30 bg-[#ECFDF5] text-[#395886] hover:border-[#10B981]/60'}
-        ${isDragging ? 'opacity-30 scale-95' : 'hover:shadow-sm hover:-translate-y-px'}`}
+        ${isDragging ? 'opacity-40 scale-95 shadow-2xl' : 'hover:shadow-md hover:-translate-y-0.5'}`}
     >
       <GripVertical className="w-3.5 h-3.5 text-[#395886]/30 shrink-0 mt-0.5" />
       <span className="flex-1">{item.text}</span>
@@ -522,7 +522,7 @@ function BoxDropSlot({ slotNum, placedItem, validated, isCorrect, onDrop, onRetu
       <div
         ref={drop as unknown as React.Ref<HTMLDivElement>}
         className={`flex-1 min-h-[52px] rounded-xl border-2 transition-all p-2.5
-          ${isActive ? (isCourier ? 'border-[#628ECB] bg-[#628ECB]/8 shadow-md' : 'border-[#10B981] bg-[#10B981]/8 shadow-md') : ''}
+          ${isActive ? (isCourier ? 'border-[#628ECB] bg-[#628ECB]/12 shadow-[0_0_24px_rgba(98,142,203,0.3)] scale-[1.02] ring-2 ring-[#628ECB]/25' : 'border-[#10B981] bg-[#10B981]/12 shadow-[0_0_24px_rgba(16,185,129,0.3)] scale-[1.02] ring-2 ring-[#10B981]/25') : ''}
           ${!placedItem && !isActive ? 'border-dashed border-[#D5DEEF] bg-[#F8FAFF]' : ''}
           ${placedItem && !validated && !isActive ? (isCourier ? 'border-[#628ECB]/40 bg-[#EEF4FF]' : 'border-[#10B981]/40 bg-[#ECFDF5]') : ''}
           ${validated && isCorrect ? 'border-[#10B981] bg-[#10B981]/8' : ''}
@@ -812,7 +812,7 @@ function AnalogyChip({ item, placed, validated, isCorrect }: { item: AnalogyItem
     canDrag: !placed || !validated,
     collect: (m) => ({ isDragging: m.isDragging() }),
   });
-  let cls = 'bg-white border-[#D5DEEF] cursor-move hover:border-[#628ECB]/60 hover:shadow-sm';
+  let cls = 'bg-white border-[#D5DEEF] cursor-move hover:border-[#628ECB]/60 hover:shadow-md hover:-translate-y-0.5';
   if (placed && validated) {
     cls = isCorrect ? 'bg-[#10B981]/10 border-[#10B981] cursor-default' : 'bg-red-50 border-red-400 cursor-move';
   } else if (placed) {
@@ -838,7 +838,7 @@ function AnalogyBucket({ group, items, validated, onDrop }: { group: AnalogyGrou
     collect: (m) => ({ isOver: m.isOver() }),
   });
   return (
-    <div ref={drop as unknown as React.Ref<HTMLDivElement>} className={`rounded-2xl border-2 p-4 min-h-[140px] transition-all ${isOver ? `${colors.border} ${colors.bg} shadow-md` : 'border-[#D5DEEF] bg-[#F8FAFF]'}`}>
+    <div ref={drop as unknown as React.Ref<HTMLDivElement>} className={`rounded-2xl border-2 p-4 min-h-[140px] transition-all ${isOver ? `${colors.border} ${colors.bg} shadow-[0_0_28px_rgba(98,142,203,0.3)] scale-[1.01] ring-2 ring-offset-1 ring-[#628ECB]/30` : 'border-[#D5DEEF] bg-[#F8FAFF]'}`}>
       <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold mb-3 ${colors.badge}`}>{group.label}</div>
       {items.length === 0
         ? <p className="text-xs text-[#395886]/40 italic text-center py-4">Seret item ke sini</p>
