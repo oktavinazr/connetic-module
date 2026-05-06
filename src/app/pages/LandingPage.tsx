@@ -425,8 +425,8 @@ export function LandingPage() {
               <div className="rounded-[1.5rem] border border-[#D5DEEF] bg-[#F8FAFD] p-6">
                 <p className="text-xs font-bold uppercase tracking-widest text-[#628ECB] mb-2">Judul Skripsi</p>
                 <p className="text-[#395886] font-semibold leading-relaxed">
-                  CONNETIC Module: Media Pembelajaran Interaktif dengan Penerapan Contextual Teaching and
-                  Learning (CTL) Untuk Meningkatkan Logical Thinking Siswa
+                  CONNETIC Module: Media Pembelajaran Interaktif Berbasis CTL untuk Meningkatkan Logical Thinking Siswa
+                  pada Materi TCP/IP
                 </p>
               </div>
 

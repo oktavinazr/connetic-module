@@ -43,6 +43,7 @@ import {
   XCircle,
   X,
   RefreshCw,
+  Clock,
 } from 'lucide-react';
 import { useNavigate, Link, useSearchParams } from 'react-router';
 import { addAdminGroupName, assignGroup, deleteAdminGroupName, getAdminGroupNames, getAllGroupAssignments, removeGroup, renameAdminGroupName } from '../utils/groups';
@@ -50,6 +51,7 @@ import { lessons, globalPretest, globalPosttest, type Stage } from '../data/less
 import { getAllStudents, logout, getCurrentUser, resetStudentPassword } from '../utils/auth';
 import { getAllProgress, getGlobalTestProgress, getLessonProgress } from '../utils/progress';
 import { getLessonActivitySessions, getStudentActivityFeed, type CTLActivityEvent, type CTLActivitySession } from '../utils/activityTracking';
+import { getStageTimers, setStageTimer, deleteStageTimer, type StageTimer } from '../utils/stageTimer';
 import { Header } from '../components/layout/Header';
 import { QuestionManagementSection } from '../components/admin/QuestionManagementSection';
 import { StageAnswerDetail, CTL_META } from '../components/admin/StageDetail';
@@ -66,7 +68,9 @@ import {
 
 // â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-type AdminSection = 'dashboard' | 'students' | 'groups' | 'question-management' | 'results';
+type AdminSection = 'dashboard' | 'students' | 'groups' | 'question-management' | 'results' | 'timers';
+
+const ADMIN_SECTIONS: AdminSection[] = ['dashboard', 'students', 'groups', 'question-management', 'results', 'timers'];
 
 const CHART_COLORS = ['#628ECB', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1', '#14B8A6'];
 
@@ -107,10 +111,10 @@ interface StudentActivitySummary {
   lessons: LessonSummary[];
 }
 
-const ADMIN_SECTIONS: AdminSection[] = ['dashboard', 'students', 'groups', 'question-management', 'results'];
 
 function normalizeAdminSection(value: string | null): AdminSection {
   if (value === 'edit-learning') return 'question-management';
+  if (value === 'timer' || value === 'timer-management') return 'timers';
   return ADMIN_SECTIONS.includes(value as AdminSection) ? (value as AdminSection) : 'dashboard';
 }
 
@@ -676,6 +680,7 @@ function AdminSidebar({
     { id: 'students', label: 'Data Siswa', icon: <Users className="w-4 h-4" /> },
     { id: 'groups', label: 'Manajemen Kelompok', icon: <UserPlus className="w-4 h-4" /> },
     { id: 'question-management', label: 'Manajemen Soal', icon: <BookOpen className="w-4 h-4" /> },
+    { id: 'timers', label: 'Pengatur Waktu Tahap', icon: <Clock className="w-4 h-4" /> },
     { id: 'results', label: 'Hasil Belajar', icon: <BarChart2 className="w-4 h-4" /> },
   ];
   return (
@@ -753,6 +758,87 @@ function ScoreBadge({ score, total, completed }: { score: number | null; total: 
 }
 
 // â”€â”€â”€ Admin Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+
+function TimerManagementSection() {
+  const [lessonId, setLessonId] = useState('1');
+  const [timers, setTimers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState({});
+
+  const lesson = lessons[lessonId];
+
+  useEffect(() => {
+    setLoading(true);
+    getStageTimers(lessonId).then(t => { setTimers(t); setLoading(false); });
+  }, [lessonId]);
+
+  const handleSetTimer = async (stageIndex, minutes) => {
+    setSaving(prev => ({ ...prev, [stageIndex]: true }));
+    await setStageTimer(lessonId, stageIndex, minutes);
+    setTimers(prev => {
+      const next = prev.filter(t => t.stage_index !== stageIndex);
+      if (minutes > 0) next.push({ lesson_id: lessonId, stage_index: stageIndex, duration_minutes: minutes });
+      return next;
+    });
+    setSaving(prev => ({ ...prev, [stageIndex]: false }));
+  };
+
+  const getTimerForStage = (idx) => timers.find(t => t.stage_index === idx);
+  const stageNames = ['Constructivism', 'Inquiry', 'Questioning', 'Learning Community', 'Modeling', 'Reflection', 'Authentic Assessment'];
+  const stageColors = ['#628ECB', '#10B981', '#8B5CF6', '#F59E0B', '#EC4899', '#F59E0B', '#8B5CF6'];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#628ECB] mb-2">Kontrol Waktu</p>
+          <h1 className="text-3xl font-bold text-[#395886] tracking-tight mb-1">Pengatur Waktu Tahap CTL</h1>
+          <p className="text-sm text-[#395886]/60 mt-1">Tentukan durasi maksimal per tahapan (menit). 0 = tanpa batas.</p>
+        </div>
+        <select value={lessonId} onChange={e => setLessonId(e.target.value)}
+          className="px-4 py-2 text-sm border border-[#D5DEEF] rounded-xl bg-white text-[#395886] font-semibold">
+          {Object.keys(lessons).map(id => (
+            <option key={id} value={id}>Pertemuan {id}: {lessons[id].topic}</option>
+          ))}
+        </select>
+      </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-16"><RefreshCw className="w-6 h-6 text-[#628ECB] animate-spin" /></div>
+      ) : (
+        <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm overflow-hidden">
+          <div className="p-5 space-y-3">
+            {lesson?.stages.map((stage, idx) => {
+              const timer = getTimerForStage(idx);
+              const currentMinutes = timer?.duration_minutes ?? 0;
+              const isSaving = saving[idx];
+              const color = stageColors[idx] || '#628ECB';
+              return (
+                <div key={idx} className="flex items-center gap-4 p-4 rounded-xl border-2 border-[#D5DEEF] bg-[#F8FAFD]">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white text-xs font-black shadow-sm" style={{ backgroundColor: color }}>{idx + 1}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-[#395886]">{stageNames[idx] || stage.type}</p>
+                    <p className="text-[10px] text-[#395886]/40 uppercase">{stage.title}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input type="number" min={0} max={120} defaultValue={currentMinutes || ''} placeholder="0"
+                      onBlur={e => { const v = parseInt(e.target.value,10); if (!isNaN(v) && v>=0 && v!==currentMinutes) handleSetTimer(idx,v); }}
+                      onKeyDown={e => { if (e.key==='Enter') { const v=parseInt(e.target.value,10); if (!isNaN(v)&&v>=0&&v!==currentMinutes) handleSetTimer(idx,v); }}}
+                      disabled={isSaving}
+                      className="w-20 px-3 py-2 text-sm border border-[#D5DEEF] rounded-lg text-center font-bold text-[#395886] disabled:opacity-50" />
+                    <span className="text-xs font-bold text-[#395886]/40">menit</span>
+                    {isSaving && <RefreshCw className="w-4 h-4 text-[#628ECB] animate-spin" />}
+                    {currentMinutes > 0 && !isSaving && <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-[#10B981]/10 text-[10px] font-bold text-[#10B981]"><CheckCircle className="w-3 h-3" /> Tersimpan</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function AdminPage() {
   const navigate = useNavigate();
@@ -1258,6 +1344,7 @@ export function AdminPage() {
     { label: 'Data Siswa', onClick: () => setSection('students'), icon: <Users className="h-4 w-4" /> },
     { label: 'Manajemen Kelompok', onClick: () => setSection('groups'), icon: <UserPlus className="h-4 w-4" /> },
     { label: 'Manajemen Soal Pretest & Posttest', onClick: () => setSection('question-management'), icon: <BookOpen className="h-4 w-4" /> },
+    { label: 'Pengatur Waktu Tahap', onClick: () => setSection('timers'), icon: <Clock className="h-4 w-4" /> },
     { label: 'Hasil Belajar', onClick: () => setSection('results'), icon: <BarChart2 className="h-4 w-4" /> },
     { label: 'Logout', onClick: confirmLogout, icon: <LogOut className="h-4 w-4" />, danger: true },
   ];
@@ -1267,6 +1354,7 @@ export function AdminPage() {
     students: 'Data Siswa',
     groups: 'Manajemen Kelompok',
     'question-management': 'Manajemen Soal Pretest & Posttest',
+    timers: 'Pengatur Waktu Tahap CTL',
     results: 'Hasil Belajar',
   };
 
@@ -1983,6 +2071,9 @@ export function AdminPage() {
 
             {/* â”€â”€ Edit Pembelajaran â”€â”€ */}
             {section === 'question-management' && <QuestionManagementSection />}
+
+            {/* â”€â”€ Pengatur Waktu Tahap CTL â”€â”€ */}
+            {section === 'timers' && <TimerManagementSection />}
 
             {/* â”€â”€ Hasil Belajar â”€â”€ */}
             {section === 'results' && (

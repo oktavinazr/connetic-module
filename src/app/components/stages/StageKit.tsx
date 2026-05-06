@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   AlertCircle, CheckCircle, Info, XCircle, RotateCcw, ChevronRight,
-  PenLine,
+  PenLine, Clock, LockKeyhole,
 } from 'lucide-react';
 
 // ── Animation class strings ───────────────────────────────────────────────────
@@ -152,61 +152,180 @@ export function InstructionBox({
   );
 }
 
-// ── EssayBox ──────────────────────────────────────────────────────────────────
+// ── UNIFIED EssayBox ──────────────────────────────────────────────────────────
+// Standard essay/reflection box used across ALL CTL stages
+// Supports: disabled (read-only completed), defaultValue (restore saved), locked mode
 export function EssayBox({
-  prompt, objectiveLabel, submitLabel, onSubmit, minChars = 30, accentColor = '#628ECB',
+  prompt, objectiveLabel, submitLabel, onSubmit, minChars = 30,
+  disabled = false, defaultValue = '', locked = false,
 }: {
   prompt: string; objectiveLabel: string; submitLabel: string;
-  onSubmit: (text: string) => void; minChars?: number; accentColor?: string;
+  onSubmit: (text: string) => void; minChars?: number;
+  disabled?: boolean; defaultValue?: string; locked?: boolean;
 }) {
-  const [text, setText] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [text, setText] = useState(defaultValue);
+  const [submitted, setSubmitted] = useState(!!defaultValue && disabled);
   const ready = text.trim().length >= minChars;
+  const isLocked = locked || (disabled && submitted);
+
   return (
-    <div className="rounded-lg border-2 border-[#628ECB]/20 overflow-hidden">
-      <div className="flex items-center gap-3 px-4 py-3 bg-[#628ECB]/8 border-b border-[#628ECB]/10">
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#628ECB]/15">
+    <div className="rounded-2xl border-2 border-[#628ECB]/20 shadow-sm overflow-hidden bg-white">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#628ECB]/8 to-transparent border-b border-[#628ECB]/10">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#628ECB]/10">
           <PenLine className="w-4 h-4 text-[#628ECB]" />
         </div>
-        <div className="flex-1">
-          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#628ECB]">
-            Esai Mandiri — {objectiveLabel}
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60">
+            Refleksi Mandiri — {objectiveLabel}
           </p>
           <p className="text-xs font-bold text-[#395886]">Tulis pemahamanmu dengan kata-katamu sendiri</p>
         </div>
-        {submitted && (
-          <span className="flex items-center gap-1 text-[10px] font-bold text-[#10B981] bg-[#10B981]/10 px-2.5 py-1 rounded-full">
+        {isLocked && (
+          <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#10B981] bg-[#10B981]/10 px-3 py-1.5 rounded-full border border-[#10B981]/20">
+            <LockKeyhole className="w-3 h-3" /> Tersimpan
+          </span>
+        )}
+        {!isLocked && submitted && (
+          <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#10B981] bg-[#10B981]/10 px-3 py-1.5 rounded-full border border-[#10B981]/20">
             <CheckCircle className="w-3 h-3" /> Tersimpan
           </span>
         )}
       </div>
-      <div className="p-5 bg-white">
-        <p className="text-sm font-semibold text-[#395886] leading-relaxed mb-3">{prompt}</p>
+
+      {/* Body */}
+      <div className="p-5">
+        <div className="mb-3 p-4 rounded-xl bg-[#F8FAFF] border border-[#D5DEEF]/80">
+          <p className="text-sm font-semibold text-[#395886] leading-relaxed">{prompt}</p>
+        </div>
+
         <textarea
-          value={text} onChange={e => setText(e.target.value)} disabled={submitted} rows={4}
-          className="w-full p-3.5 border-2 border-[#D5DEEF] rounded-xl text-sm text-[#395886] focus:outline-none focus:border-[#628ECB] transition-all resize-none disabled:bg-[#F8FAFF] leading-relaxed"
+          value={text}
+          onChange={e => setText(e.target.value)}
+          disabled={isLocked}
+          rows={4}
+          className={`w-full p-4 border-2 rounded-xl text-sm leading-relaxed outline-none transition-all resize-none
+            ${isLocked
+              ? 'border-[#10B981]/20 bg-[#ECFDF5] text-[#065F46] cursor-not-allowed'
+              : 'border-[#D5DEEF] bg-white text-[#395886] focus:border-[#628ECB] focus:ring-4 focus:ring-[#628ECB]/5'}`}
           placeholder={`Tuliskan jawabanmu di sini... (minimal ${minChars} karakter)`}
         />
-        <div className="flex items-center justify-between mt-2">
-          <span className={`text-[10px] font-bold ${ready ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
-            {text.trim().length} karakter{text.trim().length > 0 && text.trim().length < minChars ? ` (${minChars - text.trim().length} lagi)` : ''}
-            {ready ? ' ✓' : ''}
-          </span>
-          {!submitted ? (
-            <button onClick={() => { if (!ready) return; setSubmitted(true); onSubmit(text.trim()); }}
+
+        {/* Stats bar */}
+        <div className="flex items-center justify-between mt-3 px-1">
+          <div className="flex items-center gap-2">
+            <div className="h-1.5 w-20 rounded-full bg-[#EEF2FF] overflow-hidden">
+              <div className={`h-full transition-all duration-500 ${ready || isLocked ? 'bg-[#10B981]' : 'bg-[#628ECB]'}`}
+                style={{ width: `${Math.min(100, (text.trim().length / minChars) * 100)}%` }} />
+            </div>
+            <span className={`text-[10px] font-bold ${ready || isLocked ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
+              {text.trim().length} / {minChars} karakter{ready || isLocked ? ' ✓' : ''}
+            </span>
+          </div>
+
+          {!isLocked && !submitted && (
+            <button
+              onClick={() => { if (!ready) return; setSubmitted(true); onSubmit(text.trim()); }}
               disabled={!ready}
-              className={`flex items-center gap-1.5 px-5 py-2 rounded-xl font-bold text-xs transition-all active:scale-95
-                ${ready ? 'bg-[#628ECB] text-white hover:bg-[#395886] shadow-sm' : 'bg-[#EEF2FF] text-[#395886]/30 cursor-not-allowed'}`}>
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all active:scale-95 shadow-sm
+                ${ready ? 'bg-[#628ECB] text-white hover:bg-[#395886]' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}>
               {submitLabel} <ChevronRight className="w-3.5 h-3.5" />
             </button>
-          ) : (
-            <span className="text-xs font-bold text-[#10B981]">Refleksi tersimpan ✓</span>
           )}
         </div>
       </div>
     </div>
   );
 }
+
+// ── Sticky Countdown Timer ────────────────────────────────────────────────────
+export function CountdownTimer({
+  seconds, onExpire, label, compact = false,
+}: {
+  seconds: number; onExpire?: () => void; label?: string; compact?: boolean;
+}) {
+  const [remaining, setRemaining] = useState(seconds);
+  const onExpireRef = useRef(onExpire);
+  onExpireRef.current = onExpire;
+
+  useEffect(() => {
+    setRemaining(seconds);
+  }, [seconds]);
+
+  useEffect(() => {
+    if (remaining <= 0) {
+      onExpireRef.current?.();
+      return;
+    }
+    const t = setInterval(() => setRemaining(r => {
+      if (r <= 1) { clearInterval(t); onExpireRef.current?.(); return 0; }
+      return r - 1;
+    }), 1000);
+    return () => clearInterval(t);
+  }, [remaining <= 0]);
+
+  const mins = Math.floor(remaining / 60);
+  const secs = remaining % 60;
+  const urgent = remaining > 0 && remaining <= 60;
+  const expired = remaining <= 0;
+
+  if (compact) {
+    return (
+      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black transition-colors
+        ${expired ? 'bg-red-100 text-red-600 border border-red-200' :
+          urgent ? 'bg-amber-100 text-amber-700 border border-amber-200 animate-pulse' :
+          'bg-[#628ECB]/8 text-[#628ECB] border border-[#628ECB]/20'}`}>
+        <Clock className="w-3 h-3" />
+        {expired ? 'Waktu Habis' : `${mins}:${String(secs).padStart(2, '0')}`}
+      </div>
+    );
+  }
+
+  return (
+    <div className={`sticky top-[76px] z-40 flex items-center justify-between px-4 py-2.5 rounded-xl border-2 shadow-sm transition-colors
+      ${expired ? 'bg-red-50 border-red-200' :
+        urgent ? 'bg-amber-50 border-amber-200' :
+        'bg-white border-[#D5DEEF]'}`}>
+      <div className="flex items-center gap-2">
+        <Clock className={`w-4 h-4 ${expired ? 'text-red-500' : urgent ? 'text-amber-600' : 'text-[#628ECB]'}`} />
+        <span className={`text-[10px] font-black uppercase tracking-widest ${expired ? 'text-red-600' : 'text-[#395886]/50'}`}>
+          {label || 'Waktu Tersisa'}
+        </span>
+      </div>
+      <div className={`text-lg font-black tabular-nums ${expired ? 'text-red-600' : urgent ? 'text-amber-700' : 'text-[#395886]'}`}>
+        {expired ? '00:00' : `${mins}:${String(secs).padStart(2, '0')}`}
+      </div>
+    </div>
+  );
+}
+
+// ── Stage Completed Overlay ───────────────────────────────────────────────────
+export function StageCompletedOverlay({
+  stageName, onViewSummary,
+}: { stageName: string; onViewSummary?: () => void }) {
+  return (
+    <div className="rounded-2xl border-2 border-[#10B981]/30 bg-gradient-to-br from-[#ECFDF5] to-white p-6 text-center space-y-4 shadow-sm">
+      <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-[#10B981]/10">
+        <CheckCircle className="w-8 h-8 text-[#10B981]" />
+      </div>
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981]">Tahap Selesai</p>
+        <h3 className="text-lg font-black text-[#065F46] mt-1">{stageName} Telah Diselesaikan</h3>
+        <p className="text-xs text-[#10B981]/70 mt-2 max-w-md mx-auto leading-relaxed">
+          Aktivitas ini sudah tidak dapat diubah. Jawabanmu telah tersimpan dan dapat ditinjau kembali.
+        </p>
+      </div>
+      {onViewSummary && (
+        <button onClick={onViewSummary} className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#10B981] text-white font-bold text-sm hover:bg-[#059669] transition-all shadow-md">
+          <Eye className="w-4 h-4" /> Lihat Ringkasan Jawaban
+        </button>
+      )}
+    </div>
+  );
+}
+
+// Need Eye icon import
+import { Eye } from 'lucide-react';
 
 // ── SectionDivider ────────────────────────────────────────────────────────────
 export function SectionDivider({ label, icon }: { label: string; icon?: React.ReactNode }) {

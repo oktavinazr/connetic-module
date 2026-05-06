@@ -40,6 +40,8 @@ import { StageAnswerDetail } from '../components/admin/StageDetail';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DragAutoScroll } from '../components/DragAutoScroll';
+import { CountdownTimer, StageCompletedOverlay } from '../components/stages/StageKit';
+import { getStageTimers, getTimerRemaining } from '../utils/stageTimer';
 
 type StageType =
   | 'constructivism'
@@ -268,6 +270,32 @@ export function LessonPage() {
   const [guideVisible, setGuideVisible] = useState(true);
   const [showStageSummary, setShowStageSummary] = useState(false);
   const [pendingReflection, setPendingReflection] = useState<{ stageAnswer: unknown } | null>(null);
+
+  // ── Stage Timer ──
+  const [stageTimers, setStageTimers] = useState<any[]>([]);
+  const [timerRemaining, setTimerRemaining] = useState<number>(-1);
+  const [timerExpired, setTimerExpired] = useState(false);
+
+  useEffect(() => {
+    if (lessonId && currentStageIndex !== null) {
+      getStageTimers(lessonId).then(timers => {
+        setStageTimers(timers);
+        const timer = timers.find(t => t.stage_index === currentStageIndex);
+        if (timer && timer.duration_minutes > 0) {
+          setTimerRemaining(timer.duration_minutes * 60);
+          setTimerExpired(false);
+        } else {
+          setTimerRemaining(-1);
+          setTimerExpired(false);
+        }
+      });
+    }
+  }, [lessonId, currentStageIndex]);
+
+  const handleTimerExpire = () => {
+    setTimerExpired(true);
+    setTimerRemaining(0);
+  };
 
   useEffect(() => {
     if (user && lessonId) {
@@ -744,10 +772,28 @@ export function LessonPage() {
             </div>
           ) : (
             <div className="w-full">
-              <DndProvider backend={HTML5Backend}>
-                <DragAutoScroll />
-                {renderStage()}
-              </DndProvider>
+              {/* Countdown timer for current stage */}
+              {timerRemaining > 0 && !isStageCompleted && !timerExpired && (
+                <div className="mb-4">
+                  <CountdownTimer
+                    seconds={timerRemaining}
+                    onExpire={handleTimerExpire}
+                    label={`Waktu ${currentStage.type}`}
+                  />
+                </div>
+              )}
+              {timerExpired && !isStageCompleted && (
+                <div className="mb-4 p-4 rounded-xl bg-red-50 border-2 border-red-200 text-center">
+                  <p className="text-sm font-black text-red-600">Waktu Habis!</p>
+                  <p className="text-xs text-red-500 mt-1">Aktivitas otomatis terkunci. Jawaban terakhir akan disimpan.</p>
+                </div>
+              )}
+              {(!timerExpired || isStageCompleted) && (
+                <DndProvider backend={HTML5Backend}>
+                  <DragAutoScroll />
+                  {renderStage()}
+                </DndProvider>
+              )}
               {pendingReflection !== null && (
                 <InlineReflectionEssay
                   prompt={stageReflectionPrompts[currentStage.type as StageType]}

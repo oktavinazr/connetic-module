@@ -9,6 +9,7 @@ import {
 import { getCurrentUser } from '../../utils/auth';
 import { getLessonProgress, saveStageAttempt } from '../../utils/progress';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
+import { EssayBox } from './StageKit';
 
 // -- Interfaces -----------------------------------------------------------------
 
@@ -443,55 +444,18 @@ function DisruptionSimulation({ lessonId, stageIndex, onComplete }: {
   );
 }
 
-// -- Inline Essay (tanpa container berat) --------------------------------------
+// -- Inline Essay (now uses unified EssayBox from StageKit) --------------------
 
 function InlineEssay({ onDone }: { onDone: (essay: string) => void }) {
-  const [text, setText] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
-  const minWords = 20;
-  const ready = wordCount >= minWords;
-
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="h-8 w-8 rounded-lg bg-[#628ECB]/10 flex items-center justify-center">
-          <PenLine className="w-4 h-4 text-[#628ECB]" />
-        </div>
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Refleksi Mandiri — X.TCP.5</p>
-          <p className="text-xs font-bold text-[#395886]/70">Mengapa proses pengiriman data di internet harus mengikuti urutan lapisan (layer) yang baku?</p>
-        </div>
-      </div>
-
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        disabled={submitted}
-        rows={4}
-        className="w-full p-4 border-2 border-[#D5DEEF] rounded-lg text-sm text-[#395886] focus:border-[#628ECB] focus:ring-2 focus:ring-[#628ECB]/10 outline-none transition-all bg-white resize-none disabled:bg-[#F8FAFD]"
-        placeholder="Tuliskan argumenmu berdasarkan analogi pizza yang telah dipelajari..."
+      <EssayBox
+        objectiveLabel="X.TCP.5"
+        prompt="Mengapa proses pengiriman data di internet harus mengikuti urutan lapisan (layer) yang baku?"
+        submitLabel="Selesaikan Tahap Questioning"
+        minChars={60}
+        onSubmit={onDone}
       />
-
-      <div className="flex items-center justify-between mt-3">
-        <div className="flex items-center gap-2">
-          <div className="h-1.5 w-20 rounded-full bg-[#D5DEEF] overflow-hidden">
-            <div className={`h-full transition-all duration-500 ${ready ? 'bg-[#10B981]' : 'bg-[#628ECB]'}`} style={{ width: `${Math.min(100, (wordCount / minWords) * 100)}%` }} />
-          </div>
-          <p className={`text-[10px] font-bold ${ready ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>{wordCount} / {minWords} kata</p>
-        </div>
-        {!submitted ? (
-          <button
-            onClick={() => { if (ready) { setSubmitted(true); onDone(text.trim()); } }}
-            disabled={!ready}
-            className={`px-5 py-2 rounded-lg font-bold text-xs transition-all active:scale-95 ${ready ? 'bg-[#395886] text-white hover:bg-[#2A4468]' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
-          >
-            Selesaikan Tahap Questioning <ChevronRight className="w-3.5 h-3.5 inline ml-1" />
-          </button>
-        ) : (
-          <span className="flex items-center gap-1.5 text-xs font-black text-[#10B981]"><CheckCircle className="w-4 h-4" /> Tersimpan</span>
-        )}
-      </div>
     </div>
   );
 }

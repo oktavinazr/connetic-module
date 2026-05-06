@@ -234,7 +234,25 @@ GRANT ALL ON TABLE public.admin_questions TO authenticated;
 GRANT ALL ON TABLE public.admin_questions TO service_role;
 
 
--- 9. MENYIAPKAN TABEL ADMIN STAGE OVERRIDES (Custom Stage oleh Admin)
+-- 9. MENYIAPKAN TABEL STAGE TIMERS (Timer per Tahap CTL)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.stage_timers (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    lesson_id TEXT NOT NULL,
+    stage_index INTEGER NOT NULL,
+    duration_minutes INTEGER NOT NULL DEFAULT 0,
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(lesson_id, stage_index)
+);
+
+ALTER TABLE public.stage_timers DISABLE ROW LEVEL SECURITY;
+
+GRANT ALL ON TABLE public.stage_timers TO anon;
+GRANT ALL ON TABLE public.stage_timers TO authenticated;
+GRANT ALL ON TABLE public.stage_timers TO service_role;
+
+
+-- 10. MENYIAPKAN TABEL ADMIN STAGE OVERRIDES (Custom Stage oleh Admin)
 -- ==============================================================================
 CREATE TABLE IF NOT EXISTS public.admin_stage_overrides (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,

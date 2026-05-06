@@ -8,6 +8,7 @@ import { getCurrentUser } from '../../utils/auth';
 import { getLessonProgress, saveStageAttempt } from '../../utils/progress';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
 import { CourierDefinition } from './CourierDefinition';
+import { EssayBox } from './StageKit';
 
 // -- Types ----------------------------------------------------------------------
 
@@ -46,63 +47,7 @@ function getYouTubeId(url: string) {
   return match && match[2].length === 11 ? match[2] : null;
 }
 
-// -- Essay Box -----------------------------------------------------------------
-
-function EssayBox({
-  prompt, objectiveLabel, submitLabel, onSubmit, minWords = 15,
-}: {
-  prompt: string; objectiveLabel: string; submitLabel: string; onSubmit: (text: string) => void; minWords?: number;
-}) {
-  const [text, setText] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
-  const ready = wordCount >= minWords;
-
-  return (
-    <div className="mt-5 p-6 rounded-[2rem] bg-gradient-to-br from-[#628ECB]/5 to-[#395886]/5 border-2 border-[#628ECB]/20 shadow-inner">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="p-2 rounded-xl bg-[#628ECB]/10 text-[#628ECB]">
-          <PenLine className="w-4 h-4" />
-        </div>
-        <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60">Refleksi Mandiri — {objectiveLabel}</p>
-      </div>
-      <p className="text-sm font-bold text-[#395886] leading-relaxed mb-4">{prompt}</p>
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        disabled={submitted}
-        rows={4}
-        className="w-full px-5 py-4 border-2 border-[#D5DEEF] rounded-2xl text-sm text-[#395886] focus:outline-none focus:ring-4 focus:ring-[#628ECB]/10 focus:border-[#628ECB] transition-all bg-white/80 backdrop-blur-sm resize-none disabled:bg-[#F0F3FA]/50"
-        placeholder="Tuliskan pemikiran logismu di sini..."
-      />
-      <div className="flex items-center justify-between mt-3 mb-4 px-1">
-        <div className="flex items-center gap-2">
-          <div className={`h-1.5 w-24 rounded-full bg-[#D5DEEF] overflow-hidden`}>
-             <div className={`h-full transition-all duration-500 ${ready ? 'bg-[#10B981]' : 'bg-[#628ECB]'}`} style={{ width: `${Math.min(100, (wordCount / minWords) * 100)}%` }} />
-          </div>
-          <p className={`text-[11px] font-black uppercase tracking-tighter ${ready ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
-            {wordCount} / {minWords} Kata
-          </p>
-        </div>
-        {submitted && (
-          <span className="flex items-center gap-1.5 text-xs font-black text-[#10B981] uppercase tracking-widest">
-            <CheckCircle className="w-4 h-4" /> Tersimpan
-          </span>
-        )}
-      </div>
-      {!submitted && (
-        <button
-          onClick={() => { if (ready) { setSubmitted(true); onSubmit(text.trim()); } }}
-          disabled={!ready}
-          className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg font-black text-sm transition-all shadow-md active:scale-95 ${ready ? 'bg-[#10B981] text-white hover:bg-[#059669] shadow-green-200' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
-        >
-          {submitLabel}
-          <ArrowRight className="w-5 h-5" />
-        </button>
-      )}
-    </div>
-  );
-}
+// Removed local EssayBox; using unified EssayBox from StageKit
 
 // -- Story Scramble - Slot-Based DnD -------------------------------------------
 

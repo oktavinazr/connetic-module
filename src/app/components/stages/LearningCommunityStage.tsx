@@ -123,11 +123,18 @@ function ConceptPhase({
 
 // -- Phase 2: Case Study + Argument Input --------------------------------------
 
-function CasePhase({ study, isSubmitted, submitError, onNext }: { study: CaseStudy; isSubmitted?: boolean; submitError?: string | null; onNext: (choiceId: string, choiceText: string, argument: string) => void }) {
+function CasePhase({ study, isSubmitted, submitError, checkingSubmission, onNext }: { study: CaseStudy; isSubmitted?: boolean; submitError?: string | null; checkingSubmission?: boolean; onNext: (choiceId: string, choiceText: string, argument: string) => void }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [argument, setArgument] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const ready = selected && argument.trim().length >= 15;
+
+  if (checkingSubmission) return (
+    <div className="flex flex-col items-center justify-center py-16 space-y-3">
+      <RotateCcw className="w-8 h-8 text-[#F59E0B] animate-spin" />
+      <p className="text-xs font-bold text-[#395886]/50">Memeriksa status pengiriman...</p>
+    </div>
+  );
 
   return (
     <div className={`space-y-6 ${anim.zoomIn}`}>
@@ -421,13 +428,33 @@ function DiscussionPhase({
   );
 }
 
-// -- Phase 4: Activity Result --------------------------------------------------
+// -- Phase 4: Activity Result (with Tie-Breaker) ------------------------------
 
 function ResultPhase({ moduleId, discussions, onDone }: { moduleId: string; discussions: GroupDiscussion[]; onDone: () => void }) {
+  const user = getCurrentUser();
   const sorted = [...discussions].sort((a, b) => b.votes.length - a.votes.length);
-  const bestArgument = sorted[0];
-  if (!bestArgument) return null;
-  
+  const topVoteCount = sorted[0]?.votes.length ?? 0;
+  const topArgs = sorted.filter(d => d.votes.length === topVoteCount && d.votes.length > 0);
+  const isTie = topArgs.length > 1;
+
+  if (sorted.length === 0) return null;
+
+  const [tieBroken, setTieBroken] = useState(false);
+  const [selectedTieBreaker, setSelectedTieBreaker] = useState<string | null>(null);
+
+  // Tie-breaker: pick earliest submitted among tied
+  const handleTieBreak = () => {
+    const earliest = [...topArgs].sort((a, b) =>
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+    setSelectedTieBreaker(earliest[0].id);
+    setTieBroken(true);
+  };
+
+  const displayedArgs = isTie && !tieBroken ? topArgs : isTie && tieBroken
+    ? [topArgs.find(a => a.id === selectedTieBreaker)!]
+    : [sorted[0]];
+
   return (
     <div className={`space-y-6 ${anim.zoomIn}`}>
       <ActivityCard
@@ -440,28 +467,86 @@ function ResultPhase({ moduleId, discussions, onDone }: { moduleId: string; disc
         labelCls="text-[#F59E0B]"
       >
         <div className="space-y-6">
-          <InstructionBox accent="text-[#395886]">
-            Berdasarkan voting internal, argumen berikut dianggap paling tepat oleh kelompokmu.
-          </InstructionBox>
+          {isTie && !tieBroken ? (
+            /* ── TIE STATE ── */
+            <>
+              <InstructionBox accent="text-[#F59E0B]">
+                <span className="font-black text-[#F59E0B]">⚠ Hasil Voting Setara!</span> Beberapa argumen memiliki jumlah vote yang sama. Pilih mekanisme tie-breaker untuk menentukan argumen utama.
+              </InstructionBox>
 
-          <div className="p-5 rounded-lg border-2 border-[#F59E0B] bg-[#FFFBEB] shadow-sm relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><Award className="w-20 h-20 text-[#F59E0B]" /></div>
-            <div className="flex items-center gap-3 mb-4 relative z-10">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[9px] font-black text-white shadow-md bg-[#F59E0B]">
-                {bestArgument.user_name.substring(0, 2).toUpperCase()}
-              </div>
-              <div>
-                <p className="text-sm font-black text-[#395886]">{bestArgument.user_name}</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <ThumbsUp className="w-3 h-3 text-[#F59E0B]" />
-                  <span className="text-[10px] font-black uppercase text-[#F59E0B]">{bestArgument.votes.length} Suara Kelompok</span>
+              <div className="p-4 rounded-xl bg-amber-50 border-2 border-amber-200 space-y-2 text-center">
+                <div className="flex items-center justify-center gap-2 text-amber-700">
+                  <ArrowUpDown className="w-5 h-5" />
+                  <span className="text-sm font-black uppercase">Hasil Setara — {topArgs.length} Argumen Co-Top ({topVoteCount} Vote)</span>
                 </div>
+                <p className="text-xs text-amber-600/70">Perlu diskusi lanjutan atau gunakan tie-breaker di bawah.</p>
               </div>
-            </div>
-            <p className="text-sm font-bold text-[#395886] leading-relaxed relative z-10 italic">
-              "{bestArgument.argument}"
-            </p>
-          </div>
+
+              {/* Show all tied arguments side by side */}
+              <div className="grid gap-3">
+                {topArgs.map((disc, idx) => (
+                  <div key={disc.id} className="p-4 rounded-xl border-2 border-[#F59E0B]/30 bg-[#FFFBEB] shadow-sm">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[9px] font-black text-white shadow-md bg-[#F59E0B]">
+                        {disc.user_name.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-[#395886]">{disc.user_name}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <ThumbsUp className="w-3 h-3 text-[#F59E0B]" />
+                          <span className="text-[10px] font-black uppercase text-[#F59E0B]">{disc.votes.length} Suara</span>
+                          <span className="text-[9px] font-bold text-[#395886]/30 ml-1">#{idx + 1} Co-Top</span>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-sm font-bold text-[#395886] leading-relaxed italic">"{disc.argument}"</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="p-4 rounded-xl bg-[#F8FAFD] border-2 border-dashed border-[#D5DEEF] space-y-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/50 text-center">Mekanisme Tie-Breaker</p>
+                <button
+                  onClick={handleTieBreak}
+                  className="w-full py-3 rounded-xl bg-[#395886] text-white font-bold text-sm hover:bg-[#2A4468] transition-all flex items-center justify-center gap-2"
+                >
+                  <Clock className="w-4 h-4" /> Gunakan Urutan Submit Tercepat
+                </button>
+                <p className="text-[10px] text-[#395886]/30 text-center">Argumen yang dikirim paling awal akan dipilih sebagai pemenang.</p>
+              </div>
+            </>
+          ) : (
+            /* ── RESOLVED STATE (single winner or tie broken) ── */
+            <>
+              {isTie && tieBroken && (
+                <div className="p-3 rounded-xl bg-[#10B981]/8 border border-[#10B981]/20 flex items-center gap-2 mb-2">
+                  <CheckCircle className="w-4 h-4 text-[#10B981]" />
+                  <span className="text-xs font-bold text-[#065F46]">Tie-breaker diterapkan: argumen tercepat dipilih</span>
+                </div>
+              )}
+
+              {displayedArgs.map((bestArgument) => (
+                <div key={bestArgument.id} className="p-5 rounded-lg border-2 border-[#F59E0B] bg-[#FFFBEB] shadow-sm relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><Award className="w-20 h-20 text-[#F59E0B]" /></div>
+                  <div className="flex items-center gap-3 mb-4 relative z-10">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[9px] font-black text-white shadow-md bg-[#F59E0B]">
+                      {bestArgument.user_name.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-[#395886]">{bestArgument.user_name}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <ThumbsUp className="w-3 h-3 text-[#F59E0B]" />
+                        <span className="text-[10px] font-black uppercase text-[#F59E0B]">{bestArgument.votes.length} Suara Kelompok</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-sm font-bold text-[#395886] leading-relaxed relative z-10 italic">
+                    "{bestArgument.argument}"
+                  </p>
+                </div>
+              ))}
+            </>
+          )}
 
           <div className="flex items-start gap-3 p-4 rounded-xl bg-[#F0FDF4] border border-[#10B981]/20">
             <CheckCircle className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />
@@ -492,9 +577,32 @@ function ModuleFlow({
   const [phase, setPhase] = useState<'concept' | 'case' | 'discussion' | 'result'>('concept');
   const [discussions, setDiscussions] = useState<GroupDiscussion[]>([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [checkingSubmission, setCheckingSubmission] = useState(true);
   const user = getCurrentUser();
 
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // ── One-time submission guard: check if user already submitted ──
+  useEffect(() => {
+    let cancelled = false;
+    getGroupDiscussions(lessonId, moduleId, groupName).then(existing => {
+      if (cancelled) return;
+      const alreadySubmitted = existing.some(d => d.user_id === user!.id);
+      if (alreadySubmitted) {
+        setIsSubmitted(true);
+        // If all members have submitted, jump straight to discussion
+        getGroupMembers(groupName).then(members => {
+          const submissions = existing.map(d => d.user_id);
+          const allDone = members.length > 0 && members.every(m => submissions.includes(m.user_id));
+          if (allDone) {
+            setPhase('discussion');
+          }
+        });
+      }
+      setCheckingSubmission(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleCaseSubmit = async (choiceId: string, choiceText: string, argument: string) => {
     setSubmitError(null);
@@ -539,7 +647,7 @@ function ModuleFlow({
     <div className="w-full space-y-6">
       <StepTracker steps={steps} current={currentStep} />
       {phase === 'concept' && <ConceptPhase title={title} concept={concept} layers={layers} isEncapsulation={isEncapsulation} onNext={() => setPhase('case')} />}
-      {phase === 'case' && <CasePhase study={study} isSubmitted={isSubmitted} submitError={submitError} onNext={handleCaseSubmit} />}
+      {phase === 'case' && <CasePhase study={study} isSubmitted={isSubmitted} submitError={submitError} checkingSubmission={checkingSubmission} onNext={handleCaseSubmit} />}
       {phase === 'discussion' && <DiscussionPhase lessonId={lessonId} moduleId={moduleId} groupName={groupName} onNext={finalizeModule} />}
       {phase === 'result' && <ResultPhase moduleId={moduleId} discussions={discussions} onDone={handleResultDone} />}
     </div>
