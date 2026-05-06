@@ -8,9 +8,8 @@ export const lesson2Stages: Stage[] = [
       'Siswa membangun pemahaman awal tentang mekanisme pembukaan koneksi (handshake) melalui analogi percakapan sehari-hari.',
     objectiveCode: 'X.TCP.8',
     activityGuide: [
-      'Amati video tentang bagaimana dua komputer mulai berbicara satu sama lain.',
-      'Susun potongan percakapan antara dua orang yang ingin memulai obrolan formal.',
-      'Jelaskan mengapa kepastian kesiapan kedua belah pihak sangat penting sebelum data mulai dikirim.',
+      'Tonton video, lalu susun potongan percakapan handshake dengan drag & drop hingga urutannya logis.',
+      'Tulis alasan mengapa kesiapan kedua pihak harus dipastikan sebelum data dikirim.',
     ],
     apersepsi:
       'Pernahkah kamu menelepon teman, lalu langsung bicara panjang lebar tanpa memastikan dia sudah menjawab "Halo"? Apa yang terjadi jika ternyata dia belum siap mendengarkan? Dalam jaringan, komputer juga harus memastikan "kesiapan" lawan bicaranya sebelum mengirim data penting...',
@@ -48,9 +47,9 @@ export const lesson2Stages: Stage[] = [
       'Siswa mengeksplorasi field TCP Flags (SYN, ACK) dan mekanisme Windowing untuk mengatur aliran data.',
     objectiveCode: 'X.TCP.4 & X.TCP.5',
     activityGuide: [
-      'Pelajari fungsi Flags dalam TCP Header melalui panel eksplorasi.',
-      'Pasangkan jenis Flag dengan fungsinya dalam mengontrol koneksi.',
-      'Analisis bagaimana Window Size menentukan berapa banyak data yang boleh dikirim sekaligus.',
+      'Pelajari fungsi TCP Flags (SYN, ACK, FIN) melalui panel eksplorasi interaktif.',
+      'Cocokkan setiap jenis Flag dengan fungsinya menggunakan klik-pasangkan.',
+      'Analisis bagaimana Window Size mengatur jumlah data yang boleh dikirim sekaligus.',
     ],
     material: {
       title: 'Mekanisme Kontrol TCP',
@@ -100,9 +99,9 @@ export const lesson2Stages: Stage[] = [
       'Siswa menganalisis masalah Flow Control ketika terjadi penumpukan data di sisi penerima.',
     objectiveCode: 'X.TCP.5',
     activityGuide: [
-      'Amati skenario "Receiver Overflow" di mana data datang lebih cepat dari kemampuan proses.',
-      'Tentukan field header mana yang harus dimodifikasi untuk menyelamatkan koneksi.',
-      'Berikan argumen mengapa solusi tersebut paling efektif dibandingkan sekadar memutus koneksi.',
+      'Amati skenario "Receiver Overflow": data datang lebih cepat dari kemampuan proses penerima.',
+      'Pilih field header TCP yang harus disesuaikan untuk menyelamatkan koneksi.',
+      'Jelaskan alasan mengapa solusi flow control lebih baik daripada memutus koneksi.',
     ],
     problemVisual: {
       icon: '⚠️',
@@ -149,8 +148,8 @@ export const lesson2Stages: Stage[] = [
     objectiveCode: 'X.TCP.5',
     activityGuide: [
       'Baca skenario kemacetan pada jalur uplink internet sekolah.',
-      'Diskusikan dalam kelompok: apakah lebih baik mengirim data pelan-pelan sejak awal, atau cepat lalu melambat saat macet?',
-      'Berikan voting pada argumen teman yang paling mempertimbangkan efisiensi bandwidth.',
+      'Pilih jawaban strategi pengiriman, tulis argumen, lalu kirim ke kelompok.',
+      'Diskusikan dan beri vote pada argumen terbaik di papan diskusi kelompok.',
     ],
     encapsulationCase: {
       id: 'X.TCP.5.B',
@@ -210,9 +209,9 @@ export const lesson2Stages: Stage[] = [
       'Siswa mensimulasikan proses Three-Way Handshake antara Client dan Server langkah demi langkah.',
     objectiveCode: 'X.TCP.8',
     activityGuide: [
-      'Ikuti peragaan langkah demi langkah mulai dari pengiriman paket SYN.',
-      'Lakukan aksi klik untuk mengirim SYN-ACK dan ACK sebagai respons.',
-      'Amati perubahan status koneksi dari CLOSED menjadi ESTABLISHED.',
+      'Ikuti simulasi Three-Way Handshake langkah demi langkah secara runtut.',
+      'Klik untuk mengirim SYN, balas dengan SYN-ACK, lalu kirim ACK final.',
+      'Amati perubahan status koneksi dari CLOSED → ESTABLISHED.',
     ],
     practiceInstructions: {
       forTeacher: [
@@ -260,9 +259,9 @@ export const lesson2Stages: Stage[] = [
       'Siswa merangkum mekanisme keandalan TCP melalui peta konsep dan refleksi kritis.',
     objectiveCode: 'X.TCP.9',
     activityGuide: [
-      'Lengkapi peta konsep tentang hubungan antara Flags, Handshake, dan Flow Control.',
-      'Tuliskan refleksi tentang mengapa TCP disebut sebagai protokol yang "Reliable" (Andal).',
-      'Evaluasi pemahamanmu tentang perbedaan mekanisme kontrol dalam TCP.',
+      'Hubungkan konsep Flags, Handshake, dan Flow Control dengan memilih label yang tepat.',
+      'Tulis refleksi: mengapa TCP disebut protokol yang andal (reliable)?',
+      'Nilai pemahamanmu tentang perbedaan mekanisme kontrol dalam TCP.',
     ],
     conceptMapNodes: [
       { id: 'cn1', label: 'Handshake', description: 'Proses pembukaan koneksi.', colorClass: 'blue' },
@@ -301,9 +300,9 @@ export const lesson2Stages: Stage[] = [
       'Siswa mendiagnosis masalah koneksi "Slow Connection" pada server web perusahaan.',
     objectiveCode: 'X.TCP.10',
     activityGuide: [
-      'Analisis log trafik yang menunjukkan banyak paket retransmisi dan window size yang kecil.',
-      'Tentukan apakah masalahnya ada di handshake yang gagal atau aliran data yang tersumbat.',
-      'Berikan rekomendasi perbaikan teknis yang paling tepat.',
+      'Analisis log trafik: banyak retransmisi dan window size kecil — baca dengan teliti.',
+      'Pilih diagnosis: masalah handshake gagal atau aliran data tersumbat.',
+      'Jelaskan alasan dan berikan rekomendasi perbaikan teknis yang paling tepat.',
     ],
     branchingScenario: {
       context:

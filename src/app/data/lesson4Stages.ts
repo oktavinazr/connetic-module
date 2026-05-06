@@ -8,9 +8,8 @@ export const lesson4Stages: Stage[] = [
       'Siswa menyadari keterbatasan sumber daya alamat digital melalui analogi pertumbuhan penduduk.',
     objectiveCode: 'X.IPv6.1',
     activityGuide: [
-      'Tonton video tentang krisis alamat IPv4 di dunia.',
-      'Susun urutan pertumbuhan jumlah perangkat internet dari tahun ke tahun.',
-      'Refleksikan apa yang terjadi jika plat nomor kendaraan di kota habis, tapi mobil terus bertambah.',
+      'Tonton video krisis IPv4, lalu susun tahapan pertumbuhan perangkat internet dengan drag & drop.',
+      'Tulis pendapatmu: apa yang terjadi jika alamat habis tapi perangkat terus bertambah?',
     ],
     apersepsi:
       'Pernahkah kamu membayangkan apa yang terjadi jika semua orang di dunia punya 10 gadget yang butuh internet? IPv4 hanya punya 4 miliar alamat. Penduduk bumi saja sudah 8 miliar. Kita butuh "gudang alamat" yang jauh lebih besar agar semua perangkat bisa terhubung...',
@@ -37,9 +36,9 @@ export const lesson4Stages: Stage[] = [
       'Siswa mengeksplorasi format 128-bit Heksadesimal pada IPv6 dan teknik penyederhanaannya.',
     objectiveCode: 'X.IPv6.3',
     activityGuide: [
-      'Pelajari struktur IPv6 yang menggunakan 8 blok heksadesimal.',
-      'Praktikkan aturan kompresi nol (zero compression) untuk memperpendek alamat.',
-      'Identifikasi jenis alamat khusus seperti Loopback dan Link-Local.',
+      'Pelajari struktur IPv6 128-bit dengan 8 blok heksadesimal melalui panel eksplorasi.',
+      'Praktikkan aturan kompresi: hapus leading zero dan ganti blok nol berurutan dengan ::.',
+      'Identifikasi jenis alamat khusus IPv6 seperti Loopback (::1) dan Link-Local.',
     ],
     material: {
       title: 'Struktur Alamat IPv6',
@@ -87,9 +86,9 @@ export const lesson4Stages: Stage[] = [
       'Siswa menganalisis tantangan transisi dari IPv4 ke IPv6 dalam infrastruktur sekolah.',
     objectiveCode: 'X.IPv6.8',
     activityGuide: [
-      'Amati skenario "Incompatibility": Laptop IPv6 ingin akses Server IPv4.',
-      'Diskusikan mengapa mereka tidak bisa langsung "nyambung" tanpa bantuan.',
-      'Pilih strategi transisi (Dual Stack vs Tunneling) yang paling masuk akal.',
+      'Amati skenario "Incompatibility": Laptop IPv6 tidak bisa akses Server IPv4 langsung.',
+      'Pilih strategi transisi (Dual Stack vs Tunneling) yang paling tepat.',
+      'Jelaskan alasan teknis mengapa strategi tersebut paling masuk akal.',
     ],
     problemVisual: {
       icon: '🔌',
@@ -135,9 +134,9 @@ export const lesson4Stages: Stage[] = [
       'Siswa berdiskusi tentang masa depan internet dengan IPv6 dan IoT (Internet of Things).',
     objectiveCode: 'X.IPv6.8',
     activityGuide: [
-      'Baca artikel singkat tentang smart city yang butuh jutaan sensor.',
-      'Diskusikan: Mengapa IPv6 adalah kunci keberhasilan Smart City?',
-      'Vote argumen teman yang paling visioner namun tetap logis secara teknis.',
+      'Baca artikel Smart City: jutaan sensor IoT butuh alamat unik.',
+      'Pilih jawaban, tulis argumen mengapa IPv6 kunci Smart City, lalu kirim ke kelompok.',
+      'Diskusikan dan beri vote pada argumen paling visioner dan logis secara teknis.',
     ],
     encapsulationCase: {
       id: 'X.IPv6.8.B',
@@ -197,9 +196,9 @@ export const lesson4Stages: Stage[] = [
       'Siswa mensimulasikan teknik kompresi alamat IPv6 agar lebih ringkas dan mudah dikelola.',
     objectiveCode: 'X.IPv6.3',
     activityGuide: [
-      'Amati alamat IPv6 yang sangat panjang dan penuh angka nol.',
-      'Lakukan aksi penghapusan nol di depan (leading zeros).',
-      'Terapkan aturan titik dua ganda (::) untuk menyingkat blok nol berurutan.',
+      'Amati alamat IPv6 panjang penuh nol, lalu hapus leading zero di setiap blok.',
+      'Terapkan aturan :: (double colon) untuk menyingkat blok nol berurutan.',
+      'Verifikasi hasil kompresi: pastikan alamat tetap valid dan tidak ambigu.',
     ],
     practiceInstructions: {
       forTeacher: [
@@ -248,9 +247,9 @@ export const lesson4Stages: Stage[] = [
       'Siswa merangkum perbedaan IPv4 dan IPv6 serta mengevaluasi kesiapan migrasi.',
     objectiveCode: 'X.IPv6.9',
     activityGuide: [
-      'Lengkapi peta konsep tentang perbedaan Bit, Format, dan Fitur keamanan.',
-      'Tuliskan refleksi tentang kendala utama migrasi IPv6 di Indonesia.',
-      'Evaluasi pemahamanmu tentang teknik kompresi IPv6.',
+      'Hubungkan konsep Bit Length, Format Heksadesimal, dan Fitur Keamanan dengan label yang tepat.',
+      'Tulis refleksi: apa kendala utama migrasi IPv6 di Indonesia?',
+      'Nilai pemahamanmu tentang teknik kompresi alamat IPv6.',
     ],
     conceptMapNodes: [
       { id: 'cn1', label: 'IPv6', description: 'Alamat 128-bit.', colorClass: 'blue' },
@@ -287,9 +286,9 @@ export const lesson4Stages: Stage[] = [
       'Siswa merancang strategi implementasi IPv6 pada jaringan sekolah menengah.',
     objectiveCode: 'X.IPv6.10',
     activityGuide: [
-      'Analisis kondisi sekolah: 50% perangkat lama (IPv4), 50% perangkat baru (IPv6 ready).',
-      'Pilih metode transisi yang menjamin kegiatan belajar mengajar tidak terganggu.',
-      'Jelaskan rencana bertahap dari testing hingga migrasi penuh.',
+      'Analisis kondisi sekolah: 50% perangkat IPv4 lama, 50% perangkat baru IPv6-ready.',
+      'Pilih metode transisi (Dual Stack / Tunneling / Translation) yang paling aman.',
+      'Jelaskan rencana bertahap: dari testing → migrasi bertahap → IPv6 penuh.',
     ],
     branchingScenario: {
       context:

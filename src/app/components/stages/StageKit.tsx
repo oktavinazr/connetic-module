@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   AlertCircle, CheckCircle, Info, XCircle, RotateCcw, ChevronRight,
-  PenLine, Clock, LockKeyhole,
+  PenLine, Clock, LockKeyhole, ChevronDown,
 } from 'lucide-react';
 
 // ── Animation class strings ───────────────────────────────────────────────────
@@ -326,6 +326,75 @@ export function StageCompletedOverlay({
 
 // Need Eye icon import
 import { Eye } from 'lucide-react';
+
+// ── ActivityGuideBox ──────────────────────────────────────────────────────────
+// Collapsible activity guide placed between stage title and activity content.
+// Default collapsed — keeps the initial view clean. Each step is specific to the
+// activity type (drag & drop, essay, discussion, simulation, etc.).
+export function ActivityGuideBox({
+  steps,
+  accentColor = 'text-[#628ECB]',
+  borderColor = 'border-[#628ECB]/25',
+  collapsed = true,
+  onToggle,
+}: {
+  steps: string[];
+  accentColor?: string;
+  borderColor?: string;
+  collapsed?: boolean;
+  onToggle?: () => void;
+}) {
+  if (!steps || steps.length === 0) return null;
+  return (
+    <div className={`rounded-xl border ${borderColor} bg-[#F4F6FC] shadow-sm overflow-hidden transition-all duration-300`}>
+      {/* Toggle header */}
+      <button
+        onClick={onToggle}
+        className={`flex w-full items-center justify-between px-4 py-3 transition-colors hover:bg-[#EEF1F8] ${accentColor}`}
+      >
+        <div className="flex items-center gap-2.5">
+          <Info className="w-4 h-4 shrink-0" />
+          <span className="text-[11px] font-bold">
+            {collapsed ? 'Lihat Panduan' : 'Sembunyikan Panduan'}
+          </span>
+          {collapsed && (
+            <span className="text-[10px] font-medium text-[#395886]/40 hidden sm:inline">
+              — {steps.length} langkah
+            </span>
+          )}
+        </div>
+        <ChevronDown
+          className={`w-4 h-4 shrink-0 transition-transform duration-300 ${collapsed ? '' : 'rotate-180'}`}
+        />
+      </button>
+
+      {/* Collapsible content */}
+      <div
+        className={`grid transition-all duration-300 ease-in-out ${
+          collapsed ? 'grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr] opacity-100'
+        }`}
+      >
+        <div className="overflow-hidden">
+          <ol className="space-y-1.5 px-4 pb-3.5">
+            {steps.map((step, idx) => (
+              <li key={idx} className="flex items-start gap-2.5">
+                <span
+                  className={`flex shrink-0 items-center justify-center rounded-full text-[9px] font-black bg-white border ${borderColor} ${accentColor} mt-0.5`}
+                  style={{ minWidth: '18px', height: '18px' }}
+                >
+                  {idx + 1}
+                </span>
+                <span className="text-[11px] font-medium text-[#395886]/80 leading-relaxed">
+                  {step}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ── SectionDivider ────────────────────────────────────────────────────────────
 export function SectionDivider({ label, icon }: { label: string; icon?: React.ReactNode }) {

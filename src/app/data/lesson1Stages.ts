@@ -8,9 +8,9 @@ export const lesson1Stages: Stage[] = [
       'Siswa membangun pemahaman awal tentang TCP dari pengalaman digital sehari-hari melalui Story Scramble dan Analogy Sorting.',
     objectiveCode: 'X.TCP.1 & X.TCP.2',
     activityGuide: [
-      'Tonton video konteks, lalu susun potongan cerita aktivitas digital sampai alurnya masuk akal.',
-      'Tulis definisi TCP dengan kata-katamu sendiri berdasarkan cerita yang kamu susun.',
-      'Kelompokkan kartu analogi kurir dan fungsi TCP, lalu tulis fungsi utama TCP dengan bahasamu sendiri.',
+      'Tonton video, lalu susun ulang potongan cerita dengan drag & drop hingga urutannya logis.',
+      'Tulis definisi TCP berdasarkan cerita yang telah kamu susun.',
+      'Seret kartu analogi kurir ke kotak yang sesuai, lalu jelaskan fungsi utama TCP.',
     ],
     apersepsi:
       'Pernahkah kamu mengirim file besar ke teman lewat internet, lalu file-nya tiba-tiba rusak atau tidak lengkap saat diterima? Atau saat chat, pesanmu muncul di urutan yang berbeda dari yang kamu kirim? Bayangkan bagaimana internet memastikan semua data yang kamu kirim tiba dengan utuh dan berurutan...',
@@ -111,10 +111,10 @@ export const lesson1Stages: Stage[] = [
       'Siswa mengeksplorasi hierarki 5 lapisan TCP/IP dan memahami fungsi spesifik setiap lapisan secara bertahap.',
     objectiveCode: 'X.TCP.3 & X.TCP.4',
     activityGuide: [
-      'Pelajari setiap lapisan TCP/IP melalui panel eksplorasi interaktif.',
-      'Susun urutan 5 lapisan TCP/IP dengan benar pada aktivitas Layer Sorting.',
-      'Pasangkan setiap lapisan dengan fungsi teknisnya yang paling tepat.',
-      'Tuliskan refleksimu untuk memperkuat pemahaman konsep.',
+      'Buka dan pelajari tiap lapisan TCP/IP melalui panel eksplorasi interaktif.',
+      'Susun 5 lapisan TCP/IP dengan drag & drop, mulai dari Application hingga Physical.',
+      'Cocokkan setiap lapisan dengan fungsi teknisnya menggunakan klik-pasangkan.',
+      'Tulis refleksi untuk memperkuat pemahaman konsep.',
     ],
     logicalThinkingIndicators: [
       'Keruntutan Berpikir: menata hierarki 5 lapisan TCP/IP secara logis.',
@@ -249,9 +249,9 @@ export const lesson1Stages: Stage[] = [
       'Siswa mengeksplorasi rasa ingin tahu, memilih solusi teknis, dan membangun argumen logis berdasarkan field TCP Header yang relevan.',
     objectiveCode: 'X.TCP.5',
     activityGuide: [
-      'Amati skenario kerusakan paket dan aktifkan pertanyaanmu lewat bank pertanyaan.',
-      'Pilih solusi teknis yang paling sesuai dengan field TCP Header yang relevan.',
-      'Jelaskan alasan logismu sebelum mengirim jawaban.',
+      'Pelajari Peta Analogi Pizza untuk memahami peran 5 lapisan TCP/IP.',
+      'Seret nama lapisan ke kotak gangguan yang sesuai (drag & drop).',
+      'Tulis refleksi: mengapa urutan lapisan harus baku dalam pengiriman data.',
     ],
     logicalThinkingIndicators: [
       'Kemampuan Berargumen: memilih alasan teknis yang tepat dan menjelaskannya secara logis.',
@@ -343,10 +343,10 @@ export const lesson1Stages: Stage[] = [
       'Berkolaborasi dalam kelompok untuk membangun logika kolektif tentang alur data TCP/IP melalui 4 tahap sistematis.',
     objectiveCode: 'X.TCP.6 & X.TCP.7',
     activityGuide: [
-      'Simak Simulasi Interaktif TCP/IP sebagai fondasi awal.',
-      'Selesaikan Aktivitas X.TCP.6 (Enkapsulasi) melalui eksplorasi konsep, studi kasus, dan diskusi kelompok.',
-      'Selesaikan Aktivitas X.TCP.7 (Dekapsulasi) dengan alur yang identik untuk sisi penerima.',
-      'Lihat Hasil Keseluruhan Kelompok sebagai kesimpulan logika kolektif kalian.',
+      'Simak Simulasi Interaktif Enkapsulasi & Dekapsulasi sebagai fondasi.',
+      'Analisis skenario Enkapsulasi (X.TCP.6): pilih jawaban, tulis argumen, kirim ke kelompok.',
+      'Analisis skenario Dekapsulasi (X.TCP.7): pilih jawaban, tulis argumen, kirim ke kelompok.',
+      'Diskusikan dan beri vote pada argumen terbaik di papan diskusi kelompok.',
     ],
     logicalThinkingIndicators: [
       'Kemampuan Berargumen: menyampaikan alasan logis di balik urutan proses.',
@@ -403,9 +403,9 @@ export const lesson1Stages: Stage[] = [
       'Siswa akan mempraktikkan secara langsung proses kerja TCP/IP dari pengirim (PC A) hingga penerima (PC B) melalui alur step-by-step Encapsulation → Transmisi → Decapsulation.',
     objectiveCode: 'X.TCP.8',
     activityGuide: [
-      'Ikuti urutan simulasi dari Application Layer sampai data diterima kembali.',
-      'Selesaikan aksi praktik pada setiap langkah yang meminta interaksi.',
-      'Gunakan model ini sebagai contoh sistematis sebelum menarik kesimpulan akhir.',
+      'Ikuti 9 langkah simulasi dari PC A (pengirim) ke PC B (penerima) secara runtut.',
+      'Lakukan drag & drop TCP Header, pilih alamat tujuan, dan aktifkan MAC Frame.',
+      'Tahan tombol Listen, klik Kirim, lalu lepas lapisan pembungkus di sisi penerima.',
     ],
     logicalThinkingIndicators: [
       'Keruntutan Berpikir: mengikuti alur kerja TCP secara sistematis dari awal hingga akhir.',
@@ -508,9 +508,9 @@ export const lesson1Stages: Stage[] = [
       'Siswa menyusun peta konsep and refleksi tertulis untuk merangkum hubungan antar konsep TCP dari encapsulation hingga decapsulation.',
     objectiveCode: 'X.TCP.9',
     activityGuide: [
-      'Lengkapi peta konsep terlebih dahulu agar hubungan antar ide utama terlihat jelas.',
-      'Ringkas kembali pemahamanmu dengan kalimat sendiri.',
-      'Nilai perkembangan dirimu pada seluruh capaian pembelajaran pertemuan ini.',
+      'Hubungkan konsep-konsep TCP/IP dengan memilih label penghubung yang tepat.',
+      'Tulis ringkasan pemahamanmu sendiri: apa itu TCP dan bagaimana enkapsulasi & dekapsulasi bekerja.',
+      'Nilai perkembangan dirimu secara jujur pada seluruh capaian pembelajaran.',
     ],
     logicalThinkingIndicators: [
       'Penarikan Kesimpulan: menghubungkan konsep inti menjadi gambaran utuh tentang cara kerja TCP.',
@@ -615,9 +615,9 @@ export const lesson1Stages: Stage[] = [
       'Siswa menyelesaikan studi kasus bercabang yang menilai analisis, argumentasi, and penarikan kesimpulan pada beberapa masalah pengiriman paket TCP.',
     objectiveCode: 'X.TCP.10',
     activityGuide: [
-      'Baca konteks, bukti masalah, and fokus gangguan sebelum mengambil keputusan awal.',
-      'Pilih jalur diagnosis yang paling logis lalu jelaskan alasan setiap pilihanmu.',
-      'Ikuti cabang kasus sampai akhir and simpulkan langkah prioritas perbaikannya.',
+      'Baca konteks kasus, bukti masalah, dan tiga area fokus gangguan dengan teliti.',
+      'Pilih jalur diagnosis, jelaskan alasan teknis, lalu pilih prioritas tindak lanjut.',
+      'Ikuti cabang kasus hingga akhir dan simpulkan langkah perbaikan paling berdampak.',
     ],
     logicalThinkingIndicators: [
       'Keruntutan Berpikir: menentukan urutan diagnosis yang paling masuk akal.',

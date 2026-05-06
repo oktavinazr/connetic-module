@@ -8,9 +8,8 @@ export const lesson3Stages: Stage[] = [
       'Siswa memahami kebutuhan alamat unik dalam jaringan melalui analogi sistem pengiriman surat.',
     objectiveCode: 'X.IP.1',
     activityGuide: [
-      'Simak video tentang bagaimana alamat IP bekerja seperti alamat rumah.',
-      'Susun komponen alamat pengiriman surat agar paket sampai ke tujuan yang benar.',
-      'Refleksikan apa yang terjadi jika dua rumah memiliki alamat yang persis sama di satu kota.',
+      'Tonton video, lalu susun hierarki alamat surat dengan drag & drop dari paling umum ke paling spesifik.',
+      'Tulis alasan mengapa alamat IP harus unik — tidak boleh ada dua perangkat dengan IP sama.',
     ],
     apersepsi:
       'Bayangkan kamu mengirim surat ke teman, tapi kamu hanya menuliskan nama "Budi" tanpa nomor rumah, nama jalan, atau nama kota. Apakah surat itu akan sampai? Begitu juga di internet, miliaran perangkat butuh alamat yang sangat spesifik dan unik agar data tidak salah kirim.',
@@ -38,9 +37,9 @@ export const lesson3Stages: Stage[] = [
       'Siswa mengeksplorasi struktur 32-bit IPv4 dan pembagian kelas alamat (A, B, C).',
     objectiveCode: 'X.IP.3',
     activityGuide: [
-      'Gunakan IPv4 Analyzer untuk melihat perubahan bentuk IP dari desimal ke biner.',
-      'Pelajari rentang angka pada setiap kelas IP (Classful Addressing).',
-      'Kelompokkan beberapa contoh alamat IP ke dalam kelas yang sesuai.',
+      'Gunakan IPv4 Analyzer untuk melihat konversi IP dari desimal ke biner 32-bit.',
+      'Pelajari rentang angka setiap kelas IP (A, B, C) melalui panel eksplorasi.',
+      'Kelompokkan contoh alamat IP ke dalam kelas yang sesuai dengan drag & drop.',
     ],
     material: {
       title: 'Struktur Alamat IPv4',
@@ -96,8 +95,8 @@ export const lesson3Stages: Stage[] = [
     objectiveCode: 'X.IP.4',
     activityGuide: [
       'Amati skenario "Duplicate IP Address" pada dua komputer di lab.',
-      'Identifikasi mengapa sistem operasi menampilkan peringatan error.',
-      'Pilih solusi teknis untuk memperbaiki konflik tanpa mematikan router.',
+      'Pilih field header atau mekanisme yang paling relevan untuk mendeteksi konflik.',
+      'Jelaskan solusi teknis untuk memperbaiki konflik tanpa mematikan router.',
     ],
     problemVisual: {
       icon: '🚫',
@@ -143,9 +142,9 @@ export const lesson3Stages: Stage[] = [
       'Siswa berkolaborasi merancang pengalamatan IP untuk jaringan Lab Komputer baru.',
     objectiveCode: 'X.IP.4',
     activityGuide: [
-      'Baca kebutuhan Lab: 20 komputer siswa, 1 komputer guru, dan 1 server.',
-      'Pilih rentang IP Kelas C yang paling efisien dan tuliskan argumen pembagiannya.',
-      'Diskusikan dengan teman kelompok apakah rentang tersebut cukup untuk pengembangan di masa depan.',
+      'Baca kebutuhan Lab: 20 PC siswa, 1 PC guru, 1 server — total 22 host.',
+      'Pilih rentang IP Kelas C paling efisien, tulis argumen, lalu kirim ke kelompok.',
+      'Diskusikan dan beri vote: apakah rentang ini cukup untuk pengembangan masa depan?',
     ],
     encapsulationCase: {
       id: 'X.IP.4.B',
@@ -205,9 +204,9 @@ export const lesson3Stages: Stage[] = [
       'Siswa mempraktikkan pengubahan format IPv4 dari desimal ke biner untuk memahami cara komputer membaca alamat.',
     objectiveCode: 'X.IP.3',
     activityGuide: [
-      'Ikuti demonstrasi pengubahan satu oktet (8-bit) dari desimal ke biner.',
-      'Selesaikan tantangan konversi angka 192 dan 168 ke dalam bentuk 0 dan 1.',
-      'Lakukan pengelompokan bit-bit tersebut menjadi alamat IP yang utuh.',
+      'Ikuti demonstrasi konversi satu oktet (8-bit) dari desimal ke biner.',
+      'Selesaikan tantangan: ubah angka 192 dan 168 ke bentuk biner (0 dan 1).',
+      'Gabungkan bit-bit tersebut menjadi alamat IP 32-bit yang utuh.',
     ],
     practiceInstructions: {
       forTeacher: [
@@ -255,8 +254,8 @@ export const lesson3Stages: Stage[] = [
       'Siswa menyusun struktur hierarki IPv4 dan mengevaluasi keterbatasan jumlah alamat IPv4.',
     objectiveCode: 'X.IP.9',
     activityGuide: [
-      'Lengkapi peta konsep tentang Kelas IP, Subnet Mask, dan Host.',
-      'Tuliskan refleksi tentang mengapa dunia mulai kehabisan alamat IPv4.',
+      'Hubungkan konsep Kelas IP, Subnet Mask, dan Host dengan memilih label yang tepat.',
+      'Tulis refleksi: mengapa dunia mulai kehabisan alamat IPv4?',
       'Nilai kemampuanmu dalam menentukan kelas IP secara cepat.',
     ],
     conceptMapNodes: [
@@ -293,9 +292,9 @@ export const lesson3Stages: Stage[] = [
       'Siswa merancang skema pengalamatan IP untuk sebuah jaringan UMKM.',
     objectiveCode: 'X.IP.10',
     activityGuide: [
-      'Baca data aset UMKM: 5 Laptop, 1 Server Kasir, dan 1 WiFi Router.',
-      'Tentukan alamat IP masing-masing perangkat menggunakan standar Kelas C.',
-      'Jelaskan mengapa kamu memilih angka-angka tersebut untuk kemudahan maintenance.',
+      'Baca data aset UMKM: 5 Laptop, 1 Server Kasir, 1 WiFi Router — total 7 perangkat.',
+      'Rancang alamat IP masing-masing perangkat menggunakan standar Kelas C.',
+      'Jelaskan alasan pemilihan angka untuk kemudahan maintenance.',
     ],
     branchingScenario: {
       context:

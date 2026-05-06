@@ -5,7 +5,6 @@ import {
   BookOpen,
   CheckCircle,
   ChevronLeft,
-  ChevronDown,
   Eye,
   FileText,
   HelpCircle,
@@ -40,7 +39,7 @@ import { StageAnswerDetail } from '../components/admin/StageDetail';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DragAutoScroll } from '../components/DragAutoScroll';
-import { CountdownTimer, StageCompletedOverlay } from '../components/stages/StageKit';
+import { ActivityGuideBox, CountdownTimer, StageCompletedOverlay } from '../components/stages/StageKit';
 import { getStageTimers, getTimerRemaining } from '../utils/stageTimer';
 
 type StageType =
@@ -267,8 +266,8 @@ export function LessonPage() {
     const firstIncomplete = lesson.stages.findIndex((_, index) => !initialProgress.completedStages.includes(index));
     return firstIncomplete !== -1 ? firstIncomplete : 0;
   });
-  const [guideVisible, setGuideVisible] = useState(true);
   const [showStageSummary, setShowStageSummary] = useState(false);
+  const [guideCollapsed, setGuideCollapsed] = useState(true);
   const [pendingReflection, setPendingReflection] = useState<{ stageAnswer: unknown } | null>(null);
 
   // ── Stage Timer ──
@@ -341,7 +340,7 @@ export function LessonPage() {
   }, [currentStageIndex, lesson, lessonId, navigate, progress, progressLoaded]);
 
   useEffect(() => {
-    setGuideVisible(true);
+    setGuideCollapsed(true);
     setPendingReflection(null);
   }, [currentStageIndex]);
 
@@ -628,36 +627,6 @@ export function LessonPage() {
                     </div>
                   </div>
                 )}
-
-                <div className="rounded-xl border border-white/70 bg-white/50 overflow-hidden">
-                  <button
-                    onClick={() => setGuideVisible(!guideVisible)}
-                    className={`flex w-full items-center justify-between px-4 py-2.5 transition-all hover:bg-white/40 ${guide.accentColor}`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Info className="h-3.5 w-3.5" />
-                      <span className="text-[11px] font-bold">Panduan Aktivitas Siswa</span>
-                    </div>
-                    <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${guideVisible ? 'rotate-180' : ''}`} />
-                  </button>
-                  <div className={`grid transition-all duration-300 ease-in-out ${guideVisible ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-                    <div className="overflow-hidden">
-                      <ol className="space-y-2 px-4 pb-3">
-                        {stageGuideSteps.map((step, index) => (
-                          <li
-                            key={`${currentStage.type}-${index}`}
-                            className="flex items-start gap-3 text-[11px] font-medium text-[#395886]/75"
-                          >
-                            <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white text-[9px] font-black shadow-sm ${guide.accentColor}`}>
-                              {index + 1}
-                            </span>
-                            <span className="leading-relaxed">{step}</span>
-                          </li>
-                        ))}
-                      </ol>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               {user?.role === 'admin' && (atpAbcd || logicalThinkingIndicators.length > 0 || facilitatorNotes.length > 0) && (
@@ -711,6 +680,14 @@ export function LessonPage() {
               )}
             </div>
           </div>
+
+          {!isStageCompleted && stageGuideSteps.length > 0 && (
+            <ActivityGuideBox
+              steps={stageGuideSteps}
+              collapsed={guideCollapsed}
+              onToggle={() => setGuideCollapsed(!guideCollapsed)}
+            />
+          )}
 
           {isStageCompleted && pendingReflection === null ? (
             <div className="flex flex-col gap-4">
