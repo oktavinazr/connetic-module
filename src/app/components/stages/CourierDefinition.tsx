@@ -35,8 +35,8 @@ interface LayerInfo {
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
-const DEFINITION_WORDS = ['Aturan', 'Universal', 'Pengiriman', 'Data', 'Utuh'];
-const CORRECT_DEFINITION = 'Aturan Universal Pengiriman Data Utuh';
+const DEFINITION_WORDS = ['Protokol', 'Pengiriman', 'Data', 'Berlapis'];
+const CORRECT_DEFINITION = 'Protokol Pengiriman Data Berlapis';
 
 // ── Layer Data ─────────────────────────────────────────────────────────────
 
@@ -59,48 +59,48 @@ const LAYERS: LayerInfo[] = [
     title: 'Transport Layer',
     layerName: 'Layer 4 — Transport',
     analogi:
-      'Foto dipecah menjadi potongan kecil (segmen) dan diberi nomor urut supaya bisa disusun ulang nanti.',
+      'TCP Header ditambahkan ke data yang sudah dipecah menjadi segmen-segmen kecil. TCP Header berisi nomor urut agar data bisa disusun kembali dengan benar di sisi penerima, seperti memberi label nomor pada tiap potongan puzzle.',
     teknis:
-      'Layer Transport memecah data menjadi segmen. TCP menjamin urutan & keutuhan. Ada nomor port & sequence number.',
+      'TCP Header membantu mengatur data agar tetap urut dan lengkap. Berisi Sequence Number untuk menyusun ulang segmen, serta Port dan Checksum untuk memastikan data sampai ke aplikasi yang tepat.',
     icon: <Box className="w-7 h-7" />,
     accent: '#3B82F6',
     accentBg: 'bg-blue-50 border-blue-200 text-blue-600',
-    badge: 'Segmentasi',
+    badge: 'TCP Header',
   },
   {
     id: 3,
     title: 'Network Layer',
     layerName: 'Layer 3 — Network',
     analogi:
-      'Setiap potongan diberi alamat tujuan seperti menulis alamat rumah di amplop surat.',
+      'IP Header ditambahkan ke segmen data. IP Header berfungsi seperti menulis alamat pada amplop surat — menentukan dari mana data berasal dan ke mana data harus dikirim.',
     teknis:
-      'Layer Network menambahkan IP address pengirim & penerima. Protokol utama: IP (Internet Protocol).',
+      'IP Header membantu menentukan arah perjalanan data. Berisi alamat pengirim dan penerima agar setiap paket data tahu rute yang harus dilalui dalam jaringan.',
     icon: <MapPin className="w-7 h-7" />,
     accent: '#7C3AED',
     accentBg: 'bg-purple-50 border-purple-200 text-purple-600',
-    badge: 'Routing IP',
+    badge: 'IP Header',
   },
   {
     id: 2,
     title: 'Data Link Layer',
     layerName: 'Layer 2 — Data Link',
     analogi:
-      'Amplop dibungkus plastik pelindung dan ditempel barcode alamat fisik (MAC) supaya sampai ke perangkat yang tepat.',
+      'Data dibungkus dengan MAC/Frame agar bisa dikenali oleh perangkat tujuan dalam jaringan lokal, seperti menempelkan barcode pada paket kiriman agar kurir tahu ke perangkat mana paket harus diserahkan.',
     teknis:
-      'Layer Data Link membungkus paket menjadi frame. Menambahkan MAC Address. Ada error detection (CRC).',
+      'MAC/Frame membantu mengenali perangkat tujuan dalam jaringan lokal. Mengubah paket menjadi frame dan menambahkan alamat fisik (MAC Address) agar data sampai ke perangkat yang tepat dalam satu jaringan.',
     icon: <Shield className="w-7 h-7" />,
     accent: '#059669',
     accentBg: 'bg-emerald-50 border-emerald-200 text-emerald-600',
-    badge: 'Frame & MAC',
+    badge: 'MAC / Frame',
   },
   {
     id: 1,
     title: 'Physical Layer',
     layerName: 'Layer 1 — Physical',
     analogi:
-      'Paket fisik dikirim lewat kurir, jalan raya, dan kabel menuju rumah penerima dalam bentuk sinyal.',
+      'Data yang sudah dibungkus lengkap diubah menjadi sinyal listrik, cahaya, atau gelombang radio agar bisa dikirim melalui kabel atau nirkabel menuju perangkat penerima.',
     teknis:
-      'Layer Physical mengonversi frame menjadi sinyal listrik/cahaya/gelombang radio melalui media transmisi (kabel, fiber, wireless).',
+      'Physical Layer mengubah data menjadi sinyal/bit yang dapat dikirim melalui media transmisi seperti kabel tembaga, serat optik, atau gelombang radio (Wi-Fi).',
     icon: <Zap className="w-7 h-7" />,
     accent: '#DB2777',
     accentBg: 'bg-rose-50 border-rose-200 text-rose-600',
@@ -221,7 +221,7 @@ function TransportBox({
           className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
           style={{ background: `${accent}15`, color: accent }}
         >
-          Nomor Urut 1/5
+          TCP Header
         </span>
       </div>
     </motion.div>
@@ -244,7 +244,7 @@ function IPLabel({ accent, dimmed }: { accent: string; dimmed?: boolean }) {
           color: accent,
         }}
       >
-        192.168.1.10 → 10.0.0.5
+        IP Header
       </div>
     </motion.div>
   );
@@ -266,7 +266,7 @@ function MACFrame({ accent, dimmed }: { accent: string; dimmed?: boolean }) {
         className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[9px] font-mono font-bold tracking-[0.15em] px-2.5 py-1 rounded-lg shadow-sm"
         style={{ background: '#FFFFFF', color: accent, border: `1px solid ${accent}30` }}
       >
-        AA:BB:CC:DD:EE:FF
+        MAC / Frame
       </div>
     </motion.div>
   );
@@ -555,7 +555,7 @@ export function CourierDefinition({ onComplete }: { onComplete?: () => void }) {
                           }}
                         >
                           <FileImage className="w-5 h-5" style={{ color: LAYERS[1].accent, opacity: 0.5 }} />
-                          <span className="text-[8px] font-black uppercase text-[#395886]/25">Segmen 1/5</span>
+                          <span className="text-[8px] font-black uppercase text-[#395886]/25">Segmen Data</span>
                         </div>
                         <IPLabel accent={LAYERS[2].accent} dimmed={currentStep > 3} />
                       </div>
@@ -583,7 +583,7 @@ export function CourierDefinition({ onComplete }: { onComplete?: () => void }) {
                               border: `1px solid ${LAYERS[2].accent}30`,
                             }}
                           >
-                            192.168.1.10 → 10.0.0.5
+                            IP Header
                           </div>
                         </div>
                         <MACFrame accent={LAYERS[3].accent} dimmed={currentStep > 4} />
@@ -689,7 +689,7 @@ export function CourierDefinition({ onComplete }: { onComplete?: () => void }) {
 
       {/* ── Definition Builder (Step 6) ────────────────────────────── */}
       {currentStep === 6 && (
-        <div className="px-8 pb-8 space-y-5">
+        <div className="px-8 pt-6 pb-8 space-y-5">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -708,7 +708,7 @@ export function CourierDefinition({ onComplete }: { onComplete?: () => void }) {
             </div>
 
             <p className="text-sm text-[#395886]/60 leading-relaxed mb-5">
-              Berdasarkan perjalanan paket data yang baru saja kamu lihat, susun kata-kata
+              Berdasarkan animasi perjalanan paket data yang baru saja kamu lihat, susun kata-kata
               berikut menjadi definisi TCP/IP yang tepat. Klik kata untuk memindahkannya.
             </p>
 
@@ -815,8 +815,8 @@ export function CourierDefinition({ onComplete }: { onComplete?: () => void }) {
                         {isCorrect && (
                           <p className="mt-2 text-xs text-[#395886]/60 leading-relaxed">
                             <strong>TCP/IP (Transmission Control Protocol / Internet Protocol)</strong> adalah
-                            aturan universal pengiriman data utuh melalui jaringan internet, yang bekerja dalam
-                            lapisan-lapisan enkapsulasi dari Application hingga Physical layer.
+                            sekumpulan protokol komunikasi yang mengatur pengiriman data melalui beberapa
+                            lapisan (enkapsulasi) agar data sampai dengan utuh dan terstruktur ke tujuan.
                           </p>
                         )}
                         {!isCorrect && (
@@ -872,7 +872,7 @@ export function CourierDefinition({ onComplete }: { onComplete?: () => void }) {
                     </div>
                   </div>
                   <span className="text-sm text-[#395886]/70 font-medium leading-relaxed">
-                    Saya sudah memahami alur pengiriman data melalui animasi di atas
+                    Saya sudah memahami proses enkapsulasi data melalui animasi di atas
                   </span>
                 </label>
 
@@ -889,7 +889,7 @@ export function CourierDefinition({ onComplete }: { onComplete?: () => void }) {
                     disabled={!confirmed}
                     className="inline-flex items-center gap-2 bg-[#628ECB] text-white px-6 py-3 rounded-2xl text-sm font-black shadow-sm transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed enabled:hover:bg-[#5179B5] enabled:hover:shadow-md"
                   >
-                    Lanjut ke Aktivitas
+                    Lanjut ke Aktivitas Berikutnya
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>

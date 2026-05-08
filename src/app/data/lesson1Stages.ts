@@ -8,9 +8,9 @@ export const lesson1Stages: Stage[] = [
       'Siswa membangun pemahaman awal tentang TCP dari pengalaman digital sehari-hari melalui Story Scramble dan Analogy Sorting.',
     objectiveCode: 'X.TCP.1 & X.TCP.2',
     activityGuide: [
-      'Tonton video, lalu susun ulang potongan cerita dengan drag & drop hingga urutannya logis.',
-      'Tulis definisi TCP berdasarkan cerita yang telah kamu susun.',
-      'Seret kartu analogi kurir ke kotak yang sesuai, lalu jelaskan fungsi utama TCP.',
+      'Tekan tombol "Mulai Perjalanan" untuk memulai simulasi perjalanan paket data melalui 5 lapisan TCP/IP.',
+      'Gunakan tombol "Lanjutkan Perjalanan" untuk melihat proses enkapsulasi data secara bertahap dari Application Layer hingga Physical Layer.',
+      'Setelah animasi selesai, susun kata-kata menjadi definisi TCP/IP yang tepat pada aktivitas "Bangun Definisi TCP/IP".',
     ],
     apersepsi:
       'Pernahkah kamu mengirim file besar ke teman lewat internet, lalu file-nya tiba-tiba rusak atau tidak lengkap saat diterima? Atau saat chat, pesanmu muncul di urutan yang berbeda dari yang kamu kirim? Bayangkan bagaimana internet memastikan semua data yang kamu kirim tiba dengan utuh dan berurutan...',

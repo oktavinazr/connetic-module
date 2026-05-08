@@ -275,11 +275,11 @@ export const stageLearningObjectivesByLesson: Record<string, Partial<Record<Stag
     constructivism: [
       {
         code: 'X.TCP.1',
-        description: 'Mampu mendefinisikan TCP dalam jaringan komputer',
+        description: 'Mampu mendefinisikan TCP/IP dalam jaringan komputer',
         atpAbcd: {
           audience: 'Peserta didik',
-          behavior: 'mampu mendefinisikan TCP dalam jaringan komputer dan telekomunikasi',
-          condition: 'melalui aktivitas constructivism berupa apersepsi animasi berbasis pengalaman penggunaan internet pada media CONNETIC Module',
+          behavior: 'mampu mendefinisikan TCP/IP dalam jaringan komputer dan telekomunikasi',
+          condition: 'melalui aktivitas constructivism berupa animasi interaktif dan susun cerita pengiriman pesan pada CONNETIC Module',
           degree: 'dengan tepat',
         },
       },
@@ -288,7 +288,7 @@ export const stageLearningObjectivesByLesson: Record<string, Partial<Record<Stag
         description: 'Mampu menentukan fungsi utama TCP',
         atpAbcd: {
           audience: 'Peserta didik',
-          behavior: 'mampu menentukan fungsi utama TCP',
+          behavior: 'mampu menentukan fungsi utama TCP/IP dalam proses komunikasi data',
           condition: 'melalui aktivitas constructivism berupa pengelompokan analogi kurir fisik dan protokol digital pada media CONNETIC Module',
           degree: 'dengan tepat',
         },
@@ -550,7 +550,7 @@ export const lessons: Record<string, Lesson> = {
       'Peserta didik telah mengenal penggunaan komputer dan internet dalam kehidupan sehari-hari serta memahami secara umum fungsi jaringan komputer',
       'Peserta didik juga memiliki kemampuan dasar dalam mengikuti pembelajaran, berpikir logis sederhana, serta menunjukkan sikap disiplin dan tanggung jawab dalam penggunaan teknologi',
     ],
-    materials: ['Transmission Control Protocol (TCP)', 'Fungsi TCP dalam Protokol TCP/IP', 'Lapisan Protokol TCP/IP', 'Alur Transmisi Data (Encapsulation & Decapsulation)'],
+    materials: ['Konsep Dasar TCP/IP', 'Lapisan Protokol TCP/IP', 'Alur Transmisi Data (Encapsulation & Decapsulation)'],
     pretest: {
       questions: [
         {

@@ -175,7 +175,7 @@ export function LandingPage() {
                 <div className="h-1.5 w-24 rounded-full bg-[#628ECB]" />
 
                 <p className="max-w-xl text-lg leading-relaxed text-[#395886]/70 font-medium">
-                  Optimalkan pemahaman konsep <span className="text-[#395886] font-bold">TCP</span> dan <span className="text-[#395886] font-bold">IP Address</span> melalui model 7 tahapan CTL yang dirancang khusus untuk meningkatkan <span className="font-bold text-[#395886]">Logical Thinking</span> siswa SMK.
+                  Optimalkan pemahaman konsep <span className="text-[#395886] font-bold">TCP/IP</span> dan <span className="text-[#395886] font-bold">IP Address</span> melalui model 7 tahapan CTL yang dirancang khusus untuk meningkatkan <span className="font-bold text-[#395886]">Logical Thinking</span> siswa SMK.
                 </p>
               </div>
 
@@ -207,7 +207,7 @@ export function LandingPage() {
 
                     <div className="grid grid-cols-2 gap-3">
                       {[
-                        { num: 1, topic: 'TCP' },
+                        { num: 1, topic: 'Konsep Dasar TCP/IP' },
                         { num: 2, topic: 'Mekanisme TCP' },
                         { num: 3, topic: 'IPv4' },
                         { num: 4, topic: 'IPv6' },
@@ -271,7 +271,7 @@ export function LandingPage() {
                   <strong>CONNETIC Module</strong> adalah media pembelajaran interaktif berbasis web yang dirancang untuk mendukung pembelajaran mata pelajaran <strong>Dasar-Dasar Teknik Jaringan Komputer dan Telekomunikasi (DDTJKT)</strong> pada siswa kelas X TJKT SMK.
                 </p>
                 <p>
-                  Media ini menggunakan pendekatan <strong>Contextual Teaching and Learning (CTL)</strong> yang menghubungkan materi pembelajaran dengan situasi nyata, sehingga siswa dapat memahami konsep secara lebih mendalam. Materi yang dibahas meliputi <strong>TCP, Mekanisme TCP, IPv4,</strong> dan <strong>IPv6</strong>.
+                  Media ini menggunakan pendekatan <strong>Contextual Teaching and Learning (CTL)</strong> yang menghubungkan materi pembelajaran dengan situasi nyata, sehingga siswa dapat memahami konsep secara lebih mendalam. Materi yang dibahas meliputi <strong>Konsep Dasar TCP/IP, Mekanisme TCP, IPv4,</strong> dan <strong>IPv6</strong>.
                 </p>
                 <p>
                   Tujuan utama pengembangan media ini adalah meningkatkan kemampuan <strong>logical thinking</strong> (berpikir logis) siswa melalui aktivitas pembelajaran yang terstruktur, interaktif, dan bermakna dengan 7 tahapan CTL.
@@ -513,7 +513,7 @@ export function LandingPage() {
               <div className="mt-4 space-y-2">
                 <h4 className="text-sm font-bold uppercase tracking-widest text-white/50">Materi</h4>
                 <div className="flex flex-wrap gap-2">
-                  {['TCP', 'Mekanisme TCP', 'IPv4', 'IPv6'].map((m) => (
+                  {['Konsep Dasar TCP/IP', 'Mekanisme TCP', 'IPv4', 'IPv6'].map((m) => (
                     <span key={m} className="rounded-lg bg-white/10 px-2.5 py-1 text-xs font-semibold text-white/70">
                       {m}
                     </span>
