@@ -156,16 +156,20 @@ export function InstructionBox({
 // Standard essay/reflection box used across ALL CTL stages
 // Supports: disabled (read-only completed), defaultValue (restore saved), locked mode
 export function EssayBox({
-  prompt, objectiveLabel, submitLabel, onSubmit, minChars = 30,
+  prompt, objectiveLabel, submitLabel, onSubmit, minChars = 30, minWords,
   disabled = false, defaultValue = '', locked = false,
 }: {
   prompt: string; objectiveLabel: string; submitLabel: string;
-  onSubmit: (text: string) => void; minChars?: number;
+  onSubmit: (text: string) => void; minChars?: number; minWords?: number;
   disabled?: boolean; defaultValue?: string; locked?: boolean;
 }) {
   const [text, setText] = useState(defaultValue);
   const [submitted, setSubmitted] = useState(!!defaultValue && disabled);
-  const ready = text.trim().length >= minChars;
+  const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+  const charCount = text.trim().length;
+  const useWords = minWords !== undefined && minWords > 0;
+  const ready = useWords ? wordCount >= minWords! : charCount >= minChars;
+  const countLabel = useWords ? `${wordCount} / ${minWords} kata` : `${charCount} / ${minChars} karakter`;
   const isLocked = locked || (disabled && submitted);
 
   return (
@@ -208,7 +212,7 @@ export function EssayBox({
             ${isLocked
               ? 'border-[#10B981]/20 bg-[#ECFDF5] text-[#065F46] cursor-not-allowed'
               : 'border-[#D5DEEF] bg-white text-[#395886] focus:border-[#628ECB] focus:ring-4 focus:ring-[#628ECB]/5'}`}
-          placeholder={`Tuliskan jawabanmu di sini... (minimal ${minChars} karakter)`}
+          placeholder={`Tuliskan jawabanmu di sini... (${useWords ? `minimal ${minWords} kata` : `minimal ${minChars} karakter`})`}
         />
 
         {/* Stats bar */}
@@ -216,10 +220,10 @@ export function EssayBox({
           <div className="flex items-center gap-2">
             <div className="h-1.5 w-20 rounded-full bg-[#EEF2FF] overflow-hidden">
               <div className={`h-full transition-all duration-500 ${ready || isLocked ? 'bg-[#10B981]' : 'bg-[#628ECB]'}`}
-                style={{ width: `${Math.min(100, (text.trim().length / minChars) * 100)}%` }} />
+                style={{ width: `${Math.min(100, (useWords ? wordCount / minWords! : charCount / minChars) * 100)}%` }} />
             </div>
             <span className={`text-[10px] font-bold ${ready || isLocked ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
-              {text.trim().length} / {minChars} karakter{ready || isLocked ? ' ✓' : ''}
+              {countLabel}{ready || isLocked ? ' ✓' : ''}
             </span>
           </div>
 

@@ -86,23 +86,31 @@ function StoryDropSlot({ slotNum, fragment, validated, onDrop, onReturn }: {
     collect: m => ({ isOver: m.isOver() }),
   });
 
+  // Only show correct/wrong indicators AFTER validation
   const isCorrect = validated && !!fragment && fragment.order === slotNum;
   const isWrong = validated && !!fragment && fragment.order !== slotNum;
 
+  // Neutral: slot has a card but not yet validated — show simple neutral style
+  const isNeutralPlaced = !!fragment && !validated;
+
   return (
     <div className="flex items-start gap-3">
-      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black mt-2.5
-        ${isCorrect ? 'bg-[#10B981] text-white' : isWrong ? 'bg-red-400 text-white' : 'bg-[#395886]/10 text-[#395886]/50'}`}>
+      {/* Slot number circle */}
+      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black mt-2.5 transition-colors duration-300
+        ${isCorrect ? 'bg-[#10B981] text-white' : ''}
+        ${isWrong ? 'bg-red-400 text-white' : ''}
+        ${!validated ? 'bg-[#E8ECF4] text-[#395886]/50' : ''}`}>
         {slotNum}
       </div>
+      {/* Drop zone */}
       <div
         ref={drop as unknown as React.Ref<HTMLDivElement>}
         className={`flex-1 min-h-[52px] rounded-xl border-2 transition-all p-2.5
-          ${isOver && !validated ? 'border-[#628ECB] bg-[#628ECB]/12 shadow-[0_0_24px_rgba(98,142,203,0.3)] scale-[1.02] ring-2 ring-[#628ECB]/25' : ''}
+          ${isOver && !validated ? 'border-[#628ECB] bg-[#628ECB]/8 shadow-[0_0_20px_rgba(98,142,203,0.2)] scale-[1.02]' : ''}
           ${!fragment && !isOver ? 'border-dashed border-[#D5DEEF] bg-[#F8FAFF]' : ''}
-          ${isCorrect ? 'border-[#10B981] bg-[#10B981]/8' : ''}
-          ${isWrong ? 'border-red-300 bg-red-50' : ''}
-          ${fragment && !validated && !isOver ? 'border-[#628ECB]/40 bg-[#628ECB]/5' : ''}`}
+          ${isNeutralPlaced ? 'border-[#D5DEEF] bg-white' : ''}
+          ${isCorrect ? 'border-[#10B981] bg-[#F0FDF4]' : ''}
+          ${isWrong ? 'border-red-300 bg-red-50' : ''}`}
       >
         {fragment ? (
           <div className="flex items-start gap-2">
@@ -113,7 +121,7 @@ function StoryDropSlot({ slotNum, fragment, validated, onDrop, onReturn }: {
                 className="shrink-0 text-[#395886]/30 hover:text-red-400 transition text-sm font-bold leading-none mt-0.5"
                 title="Kembalikan ke pool"
               >
-                x
+                ×
               </button>
             )}
             {isCorrect && <CheckCircle className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" />}
@@ -121,7 +129,7 @@ function StoryDropSlot({ slotNum, fragment, validated, onDrop, onReturn }: {
           </div>
         ) : (
           <p className={`text-[11px] font-medium text-center py-2 transition-colors ${isOver ? 'text-[#628ECB]' : 'text-[#395886]/30'}`}>
-            {isOver ? '(drop)' : 'Seret cerita ke sini...'}
+            {isOver ? 'Letakkan di sini' : `Slot ${slotNum}`}
           </p>
         )}
       </div>
@@ -130,16 +138,14 @@ function StoryDropSlot({ slotNum, fragment, validated, onDrop, onReturn }: {
 }
 
 function StoryScramblePhase({
-  storyScramble, videoUrl, apersepsi, essayPrompt, lessonId, stageIndex, onComplete, initialData,
+  storyScramble, lessonId, stageIndex, onComplete, onScrambleDone, initialData,
 }: {
   storyScramble: NonNullable<ConstructivismStageProps['storyScramble']>;
-  videoUrl?: string;
-  apersepsi?: string;
-  essayPrompt?: string;
   lessonId: string;
   stageIndex: number;
-  onComplete: (essayText?: string, currentSlots?: Record<number, string>) => void;
-  initialData?: { slots?: Record<number, string>; validated?: boolean };
+  onComplete: (currentSlots?: Record<number, string>) => void;
+  onScrambleDone?: () => void;
+  initialData?: { slots?: Record<number, string>; validated?: boolean; scrambleDone?: boolean };
 }) {
   const user = getCurrentUser();
 
@@ -155,7 +161,7 @@ function StoryScramblePhase({
   const [slots, setSlots] = useState<Record<number, string>>(initialData?.slots || {});
   const [validated, setValidated] = useState(initialData?.validated || false);
   const [attempts, setAttempts] = useState(0);
-  const [showPost, setShowPost] = useState(false);
+  const [scrambleDone, setScrambleDone] = useState(initialData?.scrambleDone || false);
 
   useEffect(() => {
     getLessonProgress(user!.id, lessonId).then((p) => {
@@ -166,6 +172,10 @@ function StoryScramblePhase({
   useEffect(() => {
     if (initialData?.slots) setSlots(initialData.slots);
     if (initialData?.validated) setValidated(initialData.validated);
+    if (initialData?.scrambleDone) {
+      setScrambleDone(true);
+      onScrambleDone?.();
+    }
   }, [initialData]);
 
   const placedIds = new Set(Object.values(slots));
@@ -180,7 +190,7 @@ function StoryScramblePhase({
       const next = { ...prev };
       Object.keys(next).forEach(k => { if (next[Number(k)] === id) delete next[Number(k)]; });
       next[slotNum] = id;
-      onComplete(undefined, next);
+      onComplete(next);
       return next;
     });
   };
@@ -190,7 +200,7 @@ function StoryScramblePhase({
     setSlots(prev => {
       const next = { ...prev };
       delete next[slotNum];
-      onComplete(undefined, next);
+      onComplete(next);
       return next;
     });
   };
@@ -204,9 +214,12 @@ function StoryScramblePhase({
     const newAttempts = await saveStageAttempt(user!.id, lessonId, stageIndex, isCorrectOrder);
     setAttempts(newAttempts);
     setValidated(true);
-    onComplete(undefined, slots);
+    onComplete(slots);
     if (isCorrectOrder || newAttempts >= 3) {
-      setTimeout(() => setShowPost(true), isCorrectOrder ? 700 : 0);
+      setTimeout(() => {
+        setScrambleDone(true);
+        onScrambleDone?.();
+      }, isCorrectOrder ? 700 : 0);
     }
   };
 
@@ -223,7 +236,7 @@ function StoryScramblePhase({
     });
     if (hasChanges) {
       setSlots(nextSlots);
-      onComplete(undefined, nextSlots);
+      onComplete(nextSlots);
     }
     setValidated(false);
   };
@@ -232,37 +245,22 @@ function StoryScramblePhase({
 
   return (
     <div className="max-w-4xl mx-auto space-y-5">
-      {(videoUrl || apersepsi) && (
-        <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm overflow-hidden">
-          <div className="flex items-center gap-3 px-5 py-3 bg-[#628ECB]/8 border-b border-[#628ECB]/20">
-            <PlayCircle className="w-4 h-4 text-[#628ECB]" />
-            <h3 className="text-sm font-bold text-[#395886]">Konteks Pembelajaran</h3>
-          </div>
-          {videoUrl ? (
-            <div className="aspect-video w-full bg-black">
-              {getYouTubeId(videoUrl) ? (
-                <iframe
-                  className="w-full h-full"
-                  src={`https://www.youtube.com/embed/${getYouTubeId(videoUrl)}`}
-                  title="Video pembelajaran"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-white text-sm">Video tidak dapat dimuat</div>
-              )}
-            </div>
-          ) : (
-            <div className="px-5 py-5 bg-gradient-to-br from-[#628ECB]/5 to-transparent">
-              <div className="flex items-start gap-4">
-                <Lightbulb className="w-5 h-5 text-[#628ECB] mt-0.5 shrink-0" />
-                <p className="text-[#395886]/80 leading-relaxed text-sm italic">"{apersepsi}"</p>
-              </div>
-            </div>
-          )}
+      {/* Tahukah Kamu? — Brief TCP/IP context */}
+      <div className="bg-white rounded-2xl border-2 border-[#628ECB]/15 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 px-5 py-3 bg-amber-50/60 border-b border-amber-100">
+          <Lightbulb className="w-4 h-4 text-amber-500" />
+          <h3 className="text-sm font-bold text-[#395886]">Tahukah Kamu?</h3>
         </div>
-      )}
+        <div className="px-5 py-4">
+          <p className="text-sm text-[#395886]/75 leading-relaxed">
+            Setiap kali kamu mengirim pesan, foto, atau video melalui internet, data tersebut tidak
+            dikirim sekaligus. Data dipecah menjadi potongan-potongan kecil, diberi nomor urut, dan
+            dikirim melalui jaringan komputer dan telekomunikasi. Di sisi penerima, potongan-potongan
+            itu disusun kembali agar pesanmu sampai dengan utuh dan berurutan. Proses inilah yang
+            diatur oleh <strong className="text-[#628ECB]">TCP/IP</strong> — sekumpulan aturan komunikasi data dalam jaringan.
+          </p>
+        </div>
+      </div>
 
       <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-5 py-3 bg-[#628ECB]/8 border-b border-[#628ECB]/20">
@@ -332,8 +330,8 @@ function StoryScramblePhase({
                   {isCorrectOrder
                     ? <><CheckCircle className="inline w-3.5 h-3.5 mr-1" />{storyScramble.successMessage}</>
                     : attempts < 3
-                    ? <><XCircle className="inline w-3.5 h-3.5 mr-1" />Urutan belum tepat - slot merah perlu diperbaiki.</>
-                    : <><Info className="inline w-3.5 h-3.5 mr-1" />Lihat slot yang benar: urutan 1 ke {storyScramble.fragments.length} sesuai alur logis cerita.</>}
+                    ? <><XCircle className="inline w-3.5 h-3.5 mr-1" />Beberapa slot belum tepat. Kartu yang salah akan dikembalikan, silakan susun ulang.</>
+                    : <><Info className="inline w-3.5 h-3.5 mr-1" />Berikut urutan yang benar sebagai bahan pembelajaran sebelum melanjutkan.</>}
                 </div>
               )}
             </div>
@@ -346,11 +344,11 @@ function StoryScramblePhase({
               className="h-1.5 rounded-full transition-all duration-500"
               style={{
                 width: `${(Object.keys(slots).length / storyScramble.fragments.length) * 100}%`,
-                background: allFilled ? 'linear-gradient(90deg,#10B981,#059669)' : 'linear-gradient(90deg,#628ECB,#395886)',
+                background: (validated && isCorrectOrder) ? 'linear-gradient(90deg,#10B981,#059669)' : 'linear-gradient(90deg,#628ECB,#395886)',
               }}
             />
           </div>
-          <span className={`text-[10px] font-bold shrink-0 ${allFilled ? 'text-[#10B981]' : 'text-[#395886]/50'}`}>
+          <span className={`text-[10px] font-bold shrink-0 ${(validated && isCorrectOrder) ? 'text-[#10B981]' : 'text-[#395886]/50'}`}>
             {Object.keys(slots).length}/{storyScramble.fragments.length}
           </span>
         </div>
@@ -368,7 +366,7 @@ function StoryScramblePhase({
           )}
           {validated && !isCorrectOrder && attempts < 3 && (
             <button onClick={handleRetry} className="w-full py-2.5 rounded-xl font-bold text-sm bg-red-50 text-red-600 border-2 border-red-200 hover:bg-red-100 flex items-center justify-center gap-2">
-              <RotateCcw className="w-4 h-4" /> Perbaiki Slot yang Salah
+              <RotateCcw className="w-4 h-4" /> Susun Ulang Kartu yang Salah
             </button>
           )}
         </div>
@@ -387,21 +385,14 @@ function StoryScramblePhase({
           </div>
         )}
 
-        {showPost && essayPrompt && (
-          <EssayBox
-            prompt={essayPrompt}
-            objectiveLabel="X.TCP.1"
-            submitLabel="Lanjut ke Aktivitas 2 - Process Chain"
-            onSubmit={(text) => onComplete(text)}
-          />
-        )}
-        {showPost && !essayPrompt && (
-          <button
-            onClick={() => onComplete(undefined)}
-            className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm"
-          >
-            Lanjut ke Aktivitas 2 <ChevronRight className="w-4 h-4" />
-          </button>
+        {scrambleDone && (
+          <div className="mt-4 p-4 rounded-xl bg-[#10B981]/8 border-2 border-[#10B981]/20 flex items-center gap-3">
+            <CheckCircle className="w-5 h-5 text-[#10B981] shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-[#065F46]">Cerita berhasil disusun!</p>
+              <p className="text-xs text-[#10B981]/70">Lanjutkan ke refleksi mandiri di bawah untuk menulis pemahamanmu.</p>
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -1144,6 +1135,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
   const [analogyData, setAnalogyData] = useState<any>(null);
   const [mcqData, setMcqData] = useState<any>(null);
   const [isRestored, setIsRestored] = useState(false);
+  const [scrambleEssayVisible, setScrambleEssayVisible] = useState(false);
   const [courierCompleted, setCourierCompleted] = useState(false);
 
   const hasEssayFlow = !!(constructivismEssay1 || constructivismEssay2);
@@ -1165,7 +1157,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
   useEffect(() => {
     if (!isRestored) return;
     const progressMap = { scramble: 20, analogy: 55, mcq: 80 } as const;
-    void tracker.saveSnapshot(
+    void tracker.saveImmediate(
       {
         phase,
         essay1Text,
@@ -1218,33 +1210,41 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
       <div className="space-y-4">
         <StoryScramblePhase
           storyScramble={storyScramble}
-          videoUrl={videoUrl}
-          apersepsi={apersepsi}
-          essayPrompt={constructivismEssay1}
           lessonId={lessonId}
           stageIndex={stageIndex}
           initialData={scrambleData}
-          onComplete={(essayText, currentSlots) => {
-            if (essayText !== undefined) setEssay1Text(essayText);
-            if (currentSlots !== undefined) setScrambleData({ slots: currentSlots, validated: true });
-            
-            if (essayText !== undefined) {
+          onScrambleDone={() => {
+            setScrambleEssayVisible(true);
+            setScrambleData((prev: any) => ({ ...(prev || {}), scrambleDone: true }));
+          }}
+          onComplete={(currentSlots) => {
+            if (currentSlots !== undefined) setScrambleData({ slots: currentSlots });
+          }}
+        />
+
+        {scrambleEssayVisible && constructivismEssay1 && (
+          <EssayBox
+            prompt={constructivismEssay1}
+            objectiveLabel="X.TCP.1"
+            submitLabel="Lanjut ke Aktivitas 2 - Process Chain"
+            minWords={20}
+            onSubmit={(text) => {
+              setEssay1Text(text);
               if (analogySortGroups?.length) {
-                void tracker.trackEvent('constructivism_scramble_completed', { hasEssay: !!essayText }, { progressPercent: 45 });
+                void tracker.trackEvent('constructivism_scramble_completed', { hasEssay: true }, { progressPercent: 45 });
                 setPhase('analogy');
               } else if (hasEssayFlow || !props.options?.length) {
-                const finalAnswer = { essay1: essayText, summary: essayText };
+                const finalAnswer = { essay1: text, summary: text };
                 void tracker.complete(finalAnswer, { phase: 'scramble', finalAnswer });
                 onComplete(finalAnswer);
               } else {
-                void tracker.trackEvent('constructivism_scramble_completed', { hasEssay: !!essayText }, { progressPercent: 70 });
+                void tracker.trackEvent('constructivism_scramble_completed', { hasEssay: true }, { progressPercent: 70 });
                 setPhase('mcq');
               }
-            } else if (currentSlots) {
-              setScrambleData({ slots: currentSlots });
-            }
-          }}
-        />
+            }}
+          />
+        )}
+
         <SkipButton
           targetPhase={analogySortGroups?.length ? 'analogy' : props.options?.length ? 'mcq' : 'complete'}
           nextLabel={analogySortGroups?.length ? 'Lanjut ke Process Chain' : props.options?.length ? 'Lanjut ke Pertanyaan' : 'Selesaikan Tahap Ini'}

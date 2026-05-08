@@ -280,7 +280,7 @@ export function CourierDefinition({ onComplete }: { onComplete?: () => void }) {
   const [finished, setFinished] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
-  const [availableWords, setAvailableWords] = useState<string[]>([...DEFINITION_WORDS]);
+  const [availableWords, setAvailableWords] = useState<string[]>(() => [...DEFINITION_WORDS].sort(() => Math.random() - 0.5));
   const [arrangedWords, setArrangedWords] = useState<string[]>([]);
   const [definitionResult, setDefinitionResult] = useState<string | null>(null);
 
@@ -309,7 +309,7 @@ export function CourierDefinition({ onComplete }: { onComplete?: () => void }) {
     setCurrentStep(0);
     setShowCards(false);
     setFinished(false);
-    setAvailableWords([...DEFINITION_WORDS]);
+    setAvailableWords([...DEFINITION_WORDS].sort(() => Math.random() - 0.5));
     setArrangedWords([]);
     setDefinitionResult(null);
   }, []);

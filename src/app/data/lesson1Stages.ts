@@ -8,52 +8,52 @@ export const lesson1Stages: Stage[] = [
       'Siswa membangun pemahaman awal tentang TCP dari pengalaman digital sehari-hari melalui Story Scramble dan Analogy Sorting.',
     objectiveCode: 'X.TCP.1 & X.TCP.2',
     activityGuide: [
-      'Tekan tombol "Mulai Perjalanan" untuk memulai simulasi perjalanan paket data melalui 5 lapisan TCP/IP.',
-      'Gunakan tombol "Lanjutkan Perjalanan" untuk melihat proses enkapsulasi data secara bertahap dari Application Layer hingga Physical Layer.',
-      'Setelah animasi selesai, susun kata-kata menjadi definisi TCP/IP yang tepat pada aktivitas "Bangun Definisi TCP/IP".',
+      'Susun potongan cerita digital menjadi urutan yang logis menggunakan drag & drop.',
+      'Setelah urutan cerita selesai disusun, tulis refleksi mandiri berdasarkan hasil pemahamanmu.',
+      'Lanjutkan ke aktivitas Process Chain untuk mengurutkan analogi kurir dan fungsi TCP.',
     ],
     apersepsi:
-      'Pernahkah kamu mengirim file besar ke teman lewat internet, lalu file-nya tiba-tiba rusak atau tidak lengkap saat diterima? Atau saat chat, pesanmu muncul di urutan yang berbeda dari yang kamu kirim? Bayangkan bagaimana internet memastikan semua data yang kamu kirim tiba dengan utuh dan berurutan...',
+      '',
     storyScramble: {
       instruction:
-        'Raka sedang browsing referensi, mengirim chat ke temannya, lalu mengirim file presentasi kelompok. Susun 6 potongan cerita berikut menjadi urutan yang logis agar kamu bisa menyimpulkan sendiri peran TCP.',
+        'Bagaimana sebuah data bisa dikirim dari satu perangkat ke perangkat lain melalui internet? Susun 6 potongan cerita berikut menjadi urutan yang logis untuk memahami bagaimana data dikirim dan diterima secara runtut dan aman menggunakan aturan komunikasi TCP/IP.',
       fragments: [
         {
           id: 'f1',
-          text: 'Raka membuka browser untuk mencari referensi, lalu menyiapkan file presentasi kelompok di laptopnya.',
+          text: 'Seorang pengguna ingin mengirim file dokumen penting ke rekan kerjanya melalui internet.',
           order: 1,
         },
         {
           id: 'f2',
-          text: 'Setelah itu Raka mengirim chat kepada Dina bahwa ia akan mengirim file presentasi final lewat internet.',
+          text: 'Aplikasi pengirim menyiapkan data dan memulai proses pengiriman melalui jaringan komputer.',
           order: 2,
         },
         {
           id: 'f3',
-          text: 'Saat tombol kirim ditekan, data chat dan file tidak dikirim sekaligus, tetapi dipecah menjadi segmen-segmen kecil.',
+          text: 'Sebelum dikirim, data dipecah menjadi potongan-potongan kecil (segmen) agar lebih mudah dikelola.',
           order: 3,
         },
         {
           id: 'f4',
-          text: 'Setiap segmen diberi nomor urut dan informasi tujuan agar bisa dikenali selama perjalanan di jaringan.',
+          text: 'Setiap segmen diberi nomor urut dan informasi alamat tujuan agar sampai ke penerima yang tepat.',
           order: 4,
         },
         {
           id: 'f5',
-          text: 'Segmen-segmen melintas melalui jaringan; ada yang tiba lebih dahulu, ada yang terlambat, dan yang rusak atau hilang harus diminta ulang.',
+          text: 'Segmen-segmen melintasi jaringan melewati berbagai perangkat; ada yang tiba lebih dahulu, ada yang terlambat, dan segmen yang rusak dikirim ulang.',
           order: 5,
         },
         {
           id: 'f6',
-          text: 'Di sisi penerima, segmen disusun kembali sesuai urutannya sehingga chat terbaca utuh and file presentasi bisa dibuka dengan benar.',
+          text: 'Di sisi penerima, seluruh segmen disusun kembali sesuai nomor urutnya sehingga data kembali utuh seperti semula.',
           order: 6,
         },
       ],
       successMessage:
-        'Urutanmu sudah logis! Kamu berhasil membangun pemahaman awal tentang bagaimana data digital dikirim.',
+        'Urutanmu tepat! Kamu telah memahami bagaimana data dikirim dan diterima melalui jaringan menggunakan aturan komunikasi TCP/IP.',
     },
     constructivismEssay1:
-      'Berdasarkan alur cerita yang baru saja kamu susun, apa itu TCP menurut pemahamanmu? Tuliskan definisimu dengan kata-katamu sendiri!',
+      'Berdasarkan alur cerita yang baru saja kamu susun, jelaskan bagaimana TCP/IP mengatur pengiriman data melalui jaringan! Tuliskan dengan kata-katamu sendiri.',
     analogySortGroups: [
       { id: 'tcp', label: 'Proses Kerja TCP', colorClass: 'blue' },
     ],

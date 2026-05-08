@@ -160,10 +160,16 @@ export async function upsertActivitySnapshot(params: {
 
   const now = new Date().toISOString();
   const current = await getCurrentSession(userId, lessonId, stageIndex, stageType);
+
+  // Guard: if already completed, don't allow any further updates
+  if (current.status === 'completed') {
+    return;
+  }
+
   const startedAt = current.startedAt ?? now;
-  const status = params.completed
+  const status: CTLActivityStatus = params.completed
     ? 'completed'
-    : params.status ?? (current.status === 'completed' ? 'completed' : 'in_progress');
+    : params.status ?? 'in_progress';
   const progressPercent = Math.max(
     current.progressPercent,
     Math.min(100, Math.round(params.progressPercent ?? current.progressPercent ?? 0)),
@@ -209,6 +215,12 @@ export async function trackActivityEvent(params: CTLActivityEvent) {
 
   const now = new Date().toISOString();
   const current = await getCurrentSession(userId, lessonId, stageIndex, stageType);
+
+  // Guard: don't track events for already completed sessions
+  if (current.status === 'completed') {
+    return;
+  }
+
   const attemptDelta = normalizeNumber(params.attemptDelta);
   const errorCount = normalizeNumber(params.errorCount);
   const isCorrect = params.isCorrect === true;
@@ -222,7 +234,7 @@ export async function trackActivityEvent(params: CTLActivityEvent) {
     lesson_id: lessonId,
     stage_index: stageIndex,
     stage_type: stageType,
-    status: current.status === 'completed' ? 'completed' : 'in_progress',
+    status: 'in_progress' as CTLActivityStatus,
     progress_percent: progressPercent,
     latest_snapshot: current.latestSnapshot,
     final_answer: current.finalAnswer ?? null,
@@ -278,6 +290,13 @@ export async function completeActivitySession(params: {
   latestSnapshot?: Record<string, any>;
 }) {
   const { userId, lessonId, stageIndex, stageType, finalAnswer } = params;
+  // Guard: check if already completed before proceeding
+  if (isUuid(userId)) {
+    const current = await getCurrentSession(userId, lessonId, stageIndex, stageType);
+    if (current.status === 'completed') {
+      return;
+    }
+  }
   const snapshot = params.latestSnapshot ?? { finalAnswer };
   await upsertActivitySnapshot({
     userId,

@@ -139,6 +139,30 @@ export function useActivityTracker({ lessonId, stageIndex, stageType }: TrackerO
     });
   }, [lessonId, stageIndex, stageType, user?.id]);
 
+  // Force immediate save (skip debounce) — use for critical state changes like phase transitions
+  const saveImmediate = useCallback(async (
+    snapshot: Record<string, any>,
+    options?: { progressPercent?: number; status?: CTLActivityStatus; finalAnswer?: any; completed?: boolean },
+  ) => {
+    if (!user?.id || isLoading) return;
+    if (snapshotTimerRef.current) {
+      clearTimeout(snapshotTimerRef.current);
+      snapshotTimerRef.current = null;
+    }
+    pendingSnapshotRef.current = null;
+    await upsertActivitySnapshot({
+      userId: user.id,
+      lessonId,
+      stageIndex,
+      stageType,
+      snapshot,
+      progressPercent: options?.progressPercent,
+      status: options?.status,
+      finalAnswer: options?.finalAnswer,
+      completed: options?.completed,
+    });
+  }, [lessonId, stageIndex, stageType, user?.id, isLoading]);
+
   useEffect(() => {
     return () => {
       if (snapshotTimerRef.current) {
@@ -158,8 +182,9 @@ export function useActivityTracker({ lessonId, stageIndex, stageType }: TrackerO
     session,
     isLoading,
     saveSnapshot,
+    saveImmediate,
     trackEvent,
     complete,
-  }), [complete, isLoading, saveSnapshot, session, trackEvent, user]);
+  }), [complete, isLoading, saveImmediate, saveSnapshot, session, trackEvent, user]);
 }
 
