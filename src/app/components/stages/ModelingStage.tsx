@@ -1183,7 +1183,7 @@ export function ModelingStage({
                 : 'bg-gradient-to-r from-[#395886] to-[#628ECB] shadow-[#628ECB]/20 hover:opacity-90'
               : 'bg-[#E5E7EB] cursor-not-allowed shadow-none text-[#395886]/30'
             }`}>
-          {step === 8 ? 'Selesai' : 'Lanjut'} <ChevronRight className="w-4 h-4" />
+          {step === 8 ? 'Submit Aktivitas' : 'Lanjut'} <ChevronRight className="w-4 h-4" />
         </button>
       </div>
     </div>

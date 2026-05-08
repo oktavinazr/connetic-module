@@ -229,7 +229,7 @@ export function AuthenticAssessmentStage({
                 <RotateCcw className="mx-auto mb-0.5 h-3.5 w-3.5" /> Coba Jalur Lain
               </button>
               <button onClick={handleComplete} className="flex flex-[2] items-center justify-center gap-2 rounded-lg bg-[#10B981] py-2.5 text-xs font-black text-white shadow-lg transition-all hover:bg-[#059669]">
-                Selesaikan Penilaian <ArrowRight className="h-3.5 w-3.5" />
+                Submit Aktivitas <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>
           ) : (

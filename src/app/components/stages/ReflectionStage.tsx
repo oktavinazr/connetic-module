@@ -292,7 +292,7 @@ function ConceptMapBuilder({
                 : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'
             }`}
           >
-            {allAnswered ? 'Selesaikan Refleksi' : `Pilih ${connections.filter(c => answers[`${c.from}->${c.to}`] === undefined).length} label lagi`}
+            {allAnswered ? 'Submit Aktivitas' : `Pilih ${connections.filter(c => answers[`${c.from}->${c.to}`] === undefined).length} label lagi`}
             <ChevronRight className="w-4 h-4" />
           </button>
         ) : (

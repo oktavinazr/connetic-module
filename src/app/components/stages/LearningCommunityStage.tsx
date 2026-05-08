@@ -837,7 +837,7 @@ export function LearningCommunityStage({
           <EssayBox 
             objectiveLabel={moduleId}
             prompt="Berdasarkan hasil diskusi kelompokmu, simpulkan mengapa pemahaman alur enkapsulasi dan dekapsulasi sangat penting bagi seorang teknisi jaringan dalam melakukan troubleshooting?"
-            submitLabel="Selesaikan Seluruh Aktivitas"
+            submitLabel="Submit Aktivitas"
             onSubmit={essay => {
               const finalAnswer = { module1Data, module2Data, finalConclusion: essay };
               void tracker.complete(finalAnswer, { finalAnswer });

@@ -721,11 +721,11 @@ function OrderedProcessChain({ items, essayPrompt, lessonId, stageIndex, onCompl
       )}
 
       {showEssay && essayPrompt && (
-        <EssayBox prompt={essayPrompt} objectiveLabel="X.TCP.2" submitLabel="Selesai & Lanjutkan" onSubmit={(text) => onComplete(text)} />
+        <EssayBox prompt={essayPrompt} objectiveLabel="X.TCP.2" submitLabel="Submit & Lanjutkan" onSubmit={(text) => onComplete(text)} />
       )}
       {showEssay && !essayPrompt && (
         <button onClick={() => onComplete(undefined)} className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm">
-          Lanjutkan ke Tahap Berikutnya <ChevronRight className="w-4 h-4" />
+          Submit Aktivitas <ChevronRight className="w-4 h-4" />
         </button>
       )}
     </div>
@@ -942,11 +942,11 @@ function GroupBucketContent({
         )}
 
         {showEssay && essayPrompt && (
-          <EssayBox prompt={essayPrompt} objectiveLabel="X.TCP.2" submitLabel="Selesai & Lanjutkan" onSubmit={(text) => onComplete(text)} />
+          <EssayBox prompt={essayPrompt} objectiveLabel="X.TCP.2" submitLabel="Submit & Lanjutkan" onSubmit={(text) => onComplete(text)} />
         )}
         {showExplanation && !essayPrompt && (
           <button onClick={() => onComplete(undefined)} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm transition-all">
-            {allCorrect ? 'Lanjutkan ke Tahap Berikutnya' : 'Selesai & Lanjut'} <ChevronRight className="w-4 h-4" />
+            {allCorrect ? 'Submit Aktivitas' : 'Selesai & Submit'} <ChevronRight className="w-4 h-4" />
           </button>
         )}
       </div>
@@ -1103,7 +1103,7 @@ function MCQPhase({
           </button>
         ) : (
           <button onClick={() => onComplete({ selectedOption, reason, isCorrect })} className="w-full py-2.5 rounded-xl bg-[#628ECB] text-white font-semibold text-sm hover:bg-[#395886] transition-all flex items-center justify-center gap-2 shadow-sm">
-            Lanjutkan ke Tahap Berikutnya <ChevronRight className="w-4 h-4" />
+            Submit Aktivitas <ChevronRight className="w-4 h-4" />
           </button>
         )}
       </div>
@@ -1175,13 +1175,20 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
   const SkipButton = ({ targetPhase, nextLabel }: { targetPhase?: 'analogy' | 'mcq' | 'complete'; nextLabel: string }) => {
     if (!isCompleted) return null;
     return (
-      <div className="flex justify-center my-6">
+      <div className="flex flex-col items-center my-8 p-6 rounded-2xl bg-gradient-to-r from-[#10B981]/5 to-[#ECFDF5] border-2 border-[#10B981]/20">
+        <div className="flex items-center gap-2 mb-3">
+          <CheckCircle className="w-5 h-5 text-[#10B981]" />
+          <span className="text-xs font-black uppercase tracking-widest text-[#10B981]">Aktivitas Sudah Dikerjakan</span>
+        </div>
+        <p className="text-xs text-[#065F46]/70 mb-4 max-w-md text-center">
+          Aktivitas ini telah kamu selesaikan sebelumnya. Jawabanmu sudah tersimpan dan tidak dapat diubah.
+        </p>
         <button
           onClick={() => {
             if (targetPhase === 'complete') onComplete({});
             else if (targetPhase) setPhase(targetPhase);
           }}
-          className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-[#10B981] text-white font-black text-sm hover:bg-[#059669] transition-all shadow-xl shadow-[#10B981]/20 active:scale-95"
+          className="flex items-center gap-3 px-8 py-3 rounded-2xl bg-[#10B981] text-white font-black text-sm hover:bg-[#059669] transition-all shadow-xl shadow-[#10B981]/20 active:scale-95"
         >
           {nextLabel} <ArrowRight className="w-5 h-5" />
         </button>
@@ -1228,6 +1235,8 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
             objectiveLabel="X.TCP.1"
             submitLabel="Lanjut ke Aktivitas 2 - Process Chain"
             minWords={20}
+            defaultValue={essay1Text}
+            disabled={!!essay1Text}
             onSubmit={(text) => {
               setEssay1Text(text);
               if (analogySortGroups?.length) {
@@ -1247,7 +1256,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
 
         <SkipButton
           targetPhase={analogySortGroups?.length ? 'analogy' : props.options?.length ? 'mcq' : 'complete'}
-          nextLabel={analogySortGroups?.length ? 'Lanjut ke Process Chain' : props.options?.length ? 'Lanjut ke Pertanyaan' : 'Selesaikan Tahap Ini'}
+          nextLabel={analogySortGroups?.length ? 'Lanjut ke Process Chain' : props.options?.length ? 'Lanjut ke Pertanyaan' : 'Submit Aktivitas'}
         />
       </div>
     );
@@ -1282,7 +1291,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
         />
         <SkipButton
           targetPhase={props.options?.length ? 'mcq' : 'complete'}
-          nextLabel={props.options?.length ? 'Lanjut ke Pertanyaan' : 'Selesaikan Tahap Ini'}
+          nextLabel={props.options?.length ? 'Lanjut ke Pertanyaan' : 'Submit Aktivitas'}
         />
       </div>
     );
@@ -1300,7 +1309,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
           onComplete(finalAnswer);
         }}
       />
-      <SkipButton targetPhase="complete" nextLabel="Selesaikan Tahap Ini" />
+      <SkipButton targetPhase="complete" nextLabel="Submit Aktivitas" />
     </div>
   );
 }

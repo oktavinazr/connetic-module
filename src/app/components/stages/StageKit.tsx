@@ -164,13 +164,13 @@ export function EssayBox({
   disabled?: boolean; defaultValue?: string; locked?: boolean;
 }) {
   const [text, setText] = useState(defaultValue);
-  const [submitted, setSubmitted] = useState(!!defaultValue && disabled);
+  const [submitted, setSubmitted] = useState(!!defaultValue && (disabled || locked));
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
   const charCount = text.trim().length;
   const useWords = minWords !== undefined && minWords > 0;
   const ready = useWords ? wordCount >= minWords! : charCount >= minChars;
   const countLabel = useWords ? `${wordCount} / ${minWords} kata` : `${charCount} / ${minChars} karakter`;
-  const isLocked = locked || (disabled && submitted);
+  const isLocked = locked || disabled || (disabled && submitted);
 
   return (
     <div className="rounded-2xl border-2 border-[#628ECB]/20 shadow-sm overflow-hidden bg-white">

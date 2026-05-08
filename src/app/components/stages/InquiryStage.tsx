@@ -255,7 +255,7 @@ function DragDropLayerSorter({ flowItems, lessonId, stageIndex, onComplete, onNe
             Periksa Susunan
           </button>
         ) : isDone ? (
-          <button onClick={onNext || (() => onComplete(slots))} className="w-full py-3 rounded-xl bg-[#628ECB] text-white font-black text-sm hover:bg-[#395886] shadow-lg transition-all active:scale-95">Lanjut ke Refleksi Praktik <ChevronRight className="w-4 h-4 ml-1 inline" /></button>
+          <button onClick={onNext || (() => onComplete(slots))} className="w-full py-3 rounded-xl bg-[#628ECB] text-white font-black text-sm hover:bg-[#395886] shadow-lg transition-all active:scale-95">Submit & Lanjut <ChevronRight className="w-4 h-4 ml-1 inline" /></button>
         ) : (
            <button onClick={handleRetry} className="w-full py-3 rounded-xl bg-red-50 text-red-600 font-bold text-sm border-2 border-red-200 flex items-center justify-center gap-2">
              <RotateCcw className="w-4 h-4" /> Perbaiki yang Salah
@@ -401,7 +401,7 @@ function ExplorePhase({ explorationSections, onNext }: { explorationSections: Ex
             className={`w-full py-5 rounded-[1.5rem] font-black text-sm transition-all flex items-center justify-center gap-3 shadow-xl active:scale-95
               ${allOpened ? 'bg-[#10B981] text-white hover:bg-[#059669] shadow-green-200' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed shadow-none'}`}
           >
-            {allOpened ? 'Lanjut ke Aktivitas Tantangan' : `Selesaikan Eksplorasi (${openedIds.size}/${explorationSections.length})`}
+            {allOpened ? 'Lanjut ke Aktivitas Tantangan' : `Buka Semua Eksplorasi (${openedIds.size}/${explorationSections.length})`}
             <ArrowRight className="w-5 h-5" />
           </button>
         </div>
@@ -576,7 +576,7 @@ function MatchingPhase({ pairs, lessonId, stageIndex, onComplete, shuffleRight, 
                 onClick={() => onComplete(matches)}
                 className="w-full py-4 rounded-2xl bg-[#10B981] text-white font-black text-sm hover:bg-[#059669] shadow-lg shadow-green-200 transition-all active:scale-95"
               >
-                {completeLabel ?? 'Lanjut ke Refleksi Analisis'} <ChevronRight className="w-4 h-4 ml-1 inline" />
+                {completeLabel ?? 'Submit & Lanjut'} <ChevronRight className="w-4 h-4 ml-1 inline" />
               </button>
             )}
 
@@ -676,7 +676,7 @@ function InquiryLesson1Page(props: InquiryStageProps) {
   if (isCompleted) return (
     <div className="flex justify-center py-8">
       <button onClick={() => onComplete({})} className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-[#10B981] text-white font-black shadow-lg hover:scale-105 transition-all">
-        Lanjut ke Tahap Questioning <ArrowRight className="w-5 h-5" />
+        Submit Aktivitas <ArrowRight className="w-5 h-5" />
       </button>
     </div>
   );
@@ -707,7 +707,7 @@ function InquiryLesson1Page(props: InquiryStageProps) {
           <InquiryEssayBox
             objectiveLabel="X.TCP.3"
             prompt={inquiryReflection1 ?? '...'}
-            submitLabel="Lanjut ke Aktivitas X.TCP.4"
+            submitLabel="Submit & Lanjut ke X.TCP.4"
             minWords={20}
             onSubmit={(text) => {
               setReflection1(text);
@@ -738,7 +738,7 @@ function InquiryLesson1Page(props: InquiryStageProps) {
             <InquiryEssayBox
               objectiveLabel="X.TCP.4"
               prompt={inquiryReflection2 ?? '...'}
-              submitLabel="Selesaikan Tahap Inquiry"
+              submitLabel="Submit Aktivitas"
               minWords={20}
               onSubmit={(text) => {
                 setReflection2(text);

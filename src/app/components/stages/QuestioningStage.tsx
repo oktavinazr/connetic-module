@@ -429,7 +429,7 @@ function DisruptionSimulation({ lessonId, stageIndex, onComplete }: {
             onClick={() => onComplete(placements)}
             className="w-full py-4 rounded-2xl bg-[#10B981] text-white font-black text-sm hover:bg-[#059669] shadow-lg shadow-green-200 transition-all active:scale-95"
           >
-            Lanjut ke Refleksi Akhir <ArrowRight className="w-4 h-4 inline ml-2" />
+            Submit & Lanjut <ArrowRight className="w-4 h-4 inline ml-2" />
           </button>
         ) : (
           <button
@@ -452,7 +452,7 @@ function InlineEssay({ onDone }: { onDone: (essay: string) => void }) {
       <EssayBox
         objectiveLabel="X.TCP.5"
         prompt="Mengapa proses pengiriman data di internet harus mengikuti urutan lapisan (layer) yang baku?"
-        submitLabel="Selesaikan Tahap Questioning"
+        submitLabel="Submit Aktivitas"
         minChars={60}
         onSubmit={onDone}
       />
@@ -680,7 +680,7 @@ function QuestioningOriginal({
           <div className="space-y-4 animate-in fade-in">
              <label className="block text-xs font-bold text-[#395886]">Berikan alasan logismu:</label>
              <textarea value={justification} onChange={e => setJustification(e.target.value)} rows={3} className="w-full p-4 rounded-xl border-2 border-[#D5DEEF] text-xs font-medium focus:border-[#628ECB] outline-none" placeholder="Tuliskan alasan teknismu..." />
-             <button onClick={() => { const finalAnswer = { selectedId: selectedId!, isCorrect, askedQuestions, justification }; void tracker.complete(finalAnswer, { finalAnswer, selectedId, askedQuestions, justification }); onComplete(finalAnswer); }} disabled={justification.length < 10} className="w-full py-3 bg-[#628ECB] text-white rounded-xl font-bold text-sm hover:bg-[#395886] transition-all">Selesaikan Tahapan</button>
+             <button onClick={() => { const finalAnswer = { selectedId: selectedId!, isCorrect, askedQuestions, justification }; void tracker.complete(finalAnswer, { finalAnswer, selectedId, askedQuestions, justification }); onComplete(finalAnswer); }} disabled={justification.length < 10} className="w-full py-3 bg-[#628ECB] text-white rounded-xl font-bold text-sm hover:bg-[#395886] transition-all">Submit Aktivitas</button>
           </div>
         )}
 

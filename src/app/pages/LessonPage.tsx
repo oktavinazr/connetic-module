@@ -698,7 +698,7 @@ export function LessonPage() {
                 <div className="flex-1">
                   <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981]">Tahap Selesai</p>
                   <p className="text-base font-bold text-[#065F46]">{displayTitle} berhasil diselesaikan</p>
-                  <p className="text-xs text-[#10B981]/70 mt-0.5">Jawabanmu telah tersimpan. Review lengkap tersedia setelah semua tahapan selesai.</p>
+                  <p className="text-xs text-[#10B981]/70 mt-0.5">Seluruh aktivitas dan refleksi telah tersimpan. Kamu tidak dapat mengubah jawaban yang sudah disubmit.</p>
                 </div>
               </div>
 
@@ -714,22 +714,45 @@ export function LessonPage() {
                 </div>
               )}
 
-              {(currentStageAnswer as any)?.reflection && (
+              {((currentStageAnswer as any)?.reflection || (currentStageAnswer as any)?.essay1 || (currentStageAnswer as any)?.essay2 || (currentStageAnswer as any)?.justification || (currentStageAnswer as any)?.summary) && (
                 <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm overflow-hidden">
                   <div className="flex items-center gap-3 px-5 py-3 bg-[#628ECB]/5 border-b border-[#628ECB]/10">
                     <Eye className="w-4 h-4 text-[#628ECB]" />
-                    <p className="text-xs font-bold text-[#395886]">Refleksi Mandiri Kamu</p>
+                    <p className="text-xs font-bold text-[#395886]">Refleksi & Jawaban Esai Kamu</p>
                   </div>
-                  <div className="p-5">
-                    <p className="text-sm text-[#395886] leading-relaxed">{(currentStageAnswer as any).reflection}</p>
+                  <div className="p-5 space-y-3">
+                    {(currentStageAnswer as any)?.reflection && (
+                      <p className="text-sm text-[#395886] leading-relaxed italic bg-[#F8FAFF] p-3 rounded-xl border border-[#D5DEEF]">"{(currentStageAnswer as any).reflection}"</p>
+                    )}
+                    {(currentStageAnswer as any)?.essay1 && (
+                      <div>
+                        <p className="text-[10px] font-bold text-[#395886]/50 uppercase mb-1">Esai Aktivitas 1</p>
+                        <p className="text-sm text-[#395886] leading-relaxed italic bg-[#F8FAFF] p-3 rounded-xl border border-[#D5DEEF]">"{(currentStageAnswer as any).essay1}"</p>
+                      </div>
+                    )}
+                    {(currentStageAnswer as any)?.essay2 && (
+                      <div>
+                        <p className="text-[10px] font-bold text-[#395886]/50 uppercase mb-1">Esai Aktivitas 2</p>
+                        <p className="text-sm text-[#395886] leading-relaxed italic bg-[#F8FAFF] p-3 rounded-xl border border-[#D5DEEF]">"{(currentStageAnswer as any).essay2}"</p>
+                      </div>
+                    )}
+                    {(currentStageAnswer as any)?.justification && (
+                      <div>
+                        <p className="text-[10px] font-bold text-[#395886]/50 uppercase mb-1">Argumen & Justifikasi</p>
+                        <p className="text-sm text-[#395886] leading-relaxed italic bg-[#F8FAFF] p-3 rounded-xl border border-[#D5DEEF]">"{(currentStageAnswer as any).justification}"</p>
+                      </div>
+                    )}
+                    {(currentStageAnswer as any)?.summary && !(currentStageAnswer as any)?.reflection && !(currentStageAnswer as any)?.essay1 && !(currentStageAnswer as any)?.essay2 && !(currentStageAnswer as any)?.justification && (
+                      <p className="text-sm text-[#395886] leading-relaxed italic bg-[#F8FAFF] p-3 rounded-xl border border-[#D5DEEF]">"{(currentStageAnswer as any).summary}"</p>
+                    )}
                   </div>
                 </div>
               )}
 
-              <div className="flex items-center justify-between py-4 border-t border-[#D5DEEF]">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4 border-t border-[#D5DEEF]">
                 <div className="flex items-center gap-2 text-xs text-[#10B981] font-semibold">
                   <CheckCircle className="w-4 h-4" />
-                  Tahap selesai dikerjakan
+                  Tahap selesai dikerjakan — jawabanmu telah tersimpan
                 </div>
                 <button
                   onClick={() => {
@@ -740,9 +763,9 @@ export function LessonPage() {
                       window.scrollTo(0, 0);
                     }
                   }}
-                  className="flex items-center gap-2 bg-[#628ECB] text-white px-6 py-2.5 rounded-xl hover:bg-[#395886] transition-all font-bold text-sm shadow-md active:scale-95"
+                  className="flex items-center gap-2 bg-[#628ECB] text-white px-6 py-2.5 rounded-xl hover:bg-[#395886] transition-all font-bold text-sm shadow-md active:scale-95 whitespace-nowrap"
                 >
-                  {isLastStage ? 'Selesaikan Aktivitas' : 'Lanjutkan'}
+                  {isLastStage ? 'Lanjut ke Post-Test' : `Lanjut ke ${getStageDisplayTitle(lesson.stages[currentStageIndex + 1].type)}`}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
