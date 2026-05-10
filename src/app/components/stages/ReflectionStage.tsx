@@ -37,6 +37,7 @@ interface ReflectionStageProps {
   isCompleted?: boolean;
   conceptMapNodes?: ConceptMapNode[];
   conceptMapConnections?: ConceptMapConnection[];
+  conceptMapTitle?: string;
 }
 
 // -- Color map ------------------------------------------------------------------
@@ -55,12 +56,13 @@ const DEFAULT_COLOR = COLOR_MAP.blue;
 // -- Concept Map Builder --------------------------------------------------------
 
 function ConceptMapBuilder({
-  lessonId, stageIndex, onComplete, nodes: rawNodes, connections: rawConnections, initialData,
+  lessonId, stageIndex, onComplete, nodes: rawNodes, connections: rawConnections, initialData, conceptMapTitle,
 }: {
   lessonId: string; stageIndex: number; onComplete: (data: any) => void;
   nodes: ConceptMapNode[];
   connections: ConceptMapConnection[];
   initialData?: any;
+  conceptMapTitle?: string;
 }) {
   const tracker = useActivityTracker({ lessonId, stageIndex, stageType: 'reflection' });
 
@@ -121,7 +123,7 @@ function ConceptMapBuilder({
           </div>
           <div className="flex-1">
             <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#6366F1]">Reflection — Concept Map</p>
-            <h3 className="text-sm font-bold text-[#395886]">Hubungkan Antar Konsep TCP/IP</h3>
+            <h3 className="text-sm font-bold text-[#395886]">{conceptMapTitle || 'Hubungkan Antar Konsep TCP/IP'}</h3>
           </div>
           {validated && (
             <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#10B981] bg-[#10B981]/10 px-2.5 py-1 rounded-full">
@@ -309,7 +311,7 @@ function ConceptMapBuilder({
 
 export function ReflectionStage({
   lessonId, stageIndex, onComplete, isCompleted,
-  conceptMapNodes, conceptMapConnections,
+  conceptMapNodes, conceptMapConnections, conceptMapTitle,
 }: ReflectionStageProps) {
   const tracker = useActivityTracker({ lessonId, stageIndex, stageType: 'reflection' });
   const [mapData, setMapData] = useState<any>(null);
@@ -348,6 +350,7 @@ export function ReflectionStage({
       nodes={nodes}
       connections={connections}
       initialData={mapData}
+      conceptMapTitle={conceptMapTitle}
     />
   );
 }

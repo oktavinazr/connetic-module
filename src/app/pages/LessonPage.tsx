@@ -492,6 +492,7 @@ export function LessonPage() {
             moduleId={currentStage.moduleId || ''}
             conceptMapNodes={currentStage.conceptMapNodes}
             conceptMapConnections={currentStage.conceptMapConnections}
+            conceptMapTitle={`Hubungkan Antar Konsep ${lesson.topic}`}
           />
         );
       case 'authentic-assessment':
@@ -796,7 +797,11 @@ export function LessonPage() {
               )}
               {pendingReflection !== null && (
                 <InlineReflectionEssay
-                  prompt={stageReflectionPrompts[currentStage.type as StageType]}
+                  prompt={
+                    (currentStage.type === 'reflection' && (currentStage as any).essayReflection?.materialSummaryPrompt)
+                      ? (currentStage as any).essayReflection.materialSummaryPrompt
+                      : stageReflectionPrompts[currentStage.type as StageType]
+                  }
                   onDone={(essay) => handleStageComplete({ ...(pendingReflection.stageAnswer as object), reflection: essay })}
                 />
               )}

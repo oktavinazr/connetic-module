@@ -42,12 +42,12 @@ interface InquiryStageProps {
 // -- Color maps -----------------------------------------------------------------
 
 const colorMap = {
-  blue:   { border: 'border-[#628ECB]', bg: 'bg-[#628ECB]/8', badge: 'bg-[#628ECB] text-white', light: 'bg-[#628ECB]/15 text-[#395886]' },
-  green:  { border: 'border-[#10B981]', bg: 'bg-[#10B981]/8', badge: 'bg-[#10B981] text-white', light: 'bg-[#10B981]/15 text-[#065F46]' },
-  purple: { border: 'border-[#8B5CF6]', bg: 'bg-[#8B5CF6]/8', badge: 'bg-[#8B5CF6] text-white', light: 'bg-[#8B5CF6]/15 text-[#4C1D95]' },
-  amber:  { border: 'border-[#F59E0B]', bg: 'bg-[#F59E0B]/8', badge: 'bg-[#F59E0B] text-white', light: 'bg-[#F59E0B]/15 text-[#78350F]' },
-  pink:   { border: 'border-[#EC4899]', bg: 'bg-[#EC4899]/8', badge: 'bg-[#EC4899] text-white', light: 'bg-[#EC4899]/15 text-[#831843]' },
-  indigo: { border: 'border-[#6366F1]', bg: 'bg-[#6366F1]/8', badge: 'bg-[#6366F1] text-white', light: 'bg-[#6366F1]/15 text-[#312E81]' },
+  blue:   { border: 'border-[#628ECB]', bg: 'bg-[#628ECB]/8', badge: 'bg-[#628ECB] text-white', light: 'bg-[#628ECB]/15 text-[#395886]', text: 'text-[#395886]' },
+  green:  { border: 'border-[#10B981]', bg: 'bg-[#10B981]/8', badge: 'bg-[#10B981] text-white', light: 'bg-[#10B981]/15 text-[#065F46]', text: 'text-[#065F46]' },
+  purple: { border: 'border-[#8B5CF6]', bg: 'bg-[#8B5CF6]/8', badge: 'bg-[#8B5CF6] text-white', light: 'bg-[#8B5CF6]/15 text-[#4C1D95]', text: 'text-[#4C1D95]' },
+  amber:  { border: 'border-[#F59E0B]', bg: 'bg-[#F59E0B]/8', badge: 'bg-[#F59E0B] text-white', light: 'bg-[#F59E0B]/15 text-[#78350F]', text: 'text-[#78350F]' },
+  pink:   { border: 'border-[#EC4899]', bg: 'bg-[#EC4899]/8', badge: 'bg-[#EC4899] text-white', light: 'bg-[#EC4899]/15 text-[#831843]', text: 'text-[#831843]' },
+  indigo: { border: 'border-[#6366F1]', bg: 'bg-[#6366F1]/8', badge: 'bg-[#6366F1] text-white', light: 'bg-[#6366F1]/15 text-[#312E81]', text: 'text-[#312E81]' },
 };
 
 const flowLayerColors: Record<string, { gradient: string; borderB: string }> = {
@@ -412,9 +412,10 @@ function ExplorePhase({ explorationSections, onNext }: { explorationSections: Ex
 
 // -- Matching Phase -----------------------------------------------------------
 
-function MatchingPhase({ pairs, lessonId, stageIndex, onComplete, shuffleRight, completeLabel, initialData }: {
+function MatchingPhase({ pairs, lessonId, stageIndex, onComplete, onNext, shuffleRight, completeLabel, initialData }: {
   pairs: MatchingPair[]; lessonId: string; stageIndex: number;
   onComplete: (matches: Record<string, string>) => void;
+  onNext?: () => void;
   shuffleRight?: boolean; completeLabel?: string;
   initialData?: { matches?: Record<string, string>; validated?: boolean };
 }) {
@@ -573,7 +574,7 @@ function MatchingPhase({ pairs, lessonId, stageIndex, onComplete, shuffleRight, 
               </button>
             ) : (
               <button
-                onClick={() => onComplete(matches)}
+                onClick={() => { onComplete(matches); onNext?.(); }}
                 className="w-full py-4 rounded-2xl bg-[#10B981] text-white font-black text-sm hover:bg-[#059669] shadow-lg shadow-green-200 transition-all active:scale-95"
               >
                 {completeLabel ?? 'Submit & Lanjut'} <ChevronRight className="w-4 h-4 ml-1 inline" />
@@ -755,6 +756,186 @@ function InquiryLesson1Page(props: InquiryStageProps) {
   return null;
 }
 
+// -- Group Classifier ----------------------------------------------------------
+
+const DRAG_GC = 'GC_ITEM';
+
+function GCChip({ id, text, validated, isCorrect, isWrong }: {
+  id: string; text: string; validated: boolean; isCorrect?: boolean; isWrong?: boolean;
+}) {
+  const [{ isDragging }, drag] = useDrag({
+    type: DRAG_GC,
+    item: { id },
+    canDrag: !validated,
+    collect: m => ({ isDragging: m.isDragging() }),
+  });
+  return (
+    <div
+      ref={drag as unknown as React.Ref<HTMLDivElement>}
+      className={`px-3 py-1.5 rounded-lg border-2 font-mono text-xs font-bold select-none transition-all
+        ${!validated ? 'cursor-grab hover:scale-105 bg-[#F0F3FA] border-[#D5DEEF] text-[#395886]' : ''}
+        ${validated && isCorrect ? 'bg-[#ECFDF5] border-[#10B981] text-[#065F46] cursor-default' : ''}
+        ${validated && isWrong ? 'bg-red-50 border-red-300 text-red-600 cursor-default' : ''}
+        ${isDragging ? 'opacity-30 cursor-grabbing' : ''}`}
+    >
+      {text}{validated && (isCorrect ? ' ✓' : isWrong ? ' ✗' : '')}
+    </div>
+  );
+}
+
+function GCZone({ group, items, allItems, validated, onDrop }: {
+  group: Group; items: GroupItem[]; allItems: GroupItem[]; validated: boolean;
+  onDrop: (groupId: string, itemId: string) => void;
+}) {
+  const cm = colorMap[group.colorClass] || colorMap.blue;
+  const [{ isOver }, drop] = useDrop({
+    accept: DRAG_GC,
+    drop: (d: { id: string }) => onDrop(group.id, d.id),
+    collect: m => ({ isOver: m.isOver() }),
+  });
+  return (
+    <div
+      ref={drop as unknown as React.Ref<HTMLDivElement>}
+      className={`rounded-2xl border-2 p-4 min-h-[100px] transition-all duration-300
+        ${validated ? `${cm.bg} ${cm.border}` : isOver ? `${cm.bg} ${cm.border}` : 'bg-white border-[#D5DEEF]'}`}
+    >
+      <p className={`text-[10px] font-black uppercase tracking-widest mb-3 ${cm.text}`}>{group.label}</p>
+      <div className="flex flex-wrap gap-1.5 min-h-[36px]">
+        {items.length === 0 ? (
+          <span className="text-[10px] text-[#395886]/25 italic font-bold self-center w-full text-center py-1">
+            {validated ? '(Kosong)' : 'Seret IP ke sini...'}
+          </span>
+        ) : items.map(item => {
+          const isCorrect = validated && item.correctGroup === group.id;
+          const isWrong = validated && item.correctGroup !== group.id;
+          return (
+            <GCChip key={item.id} id={item.id} text={item.text} validated={validated} isCorrect={isCorrect} isWrong={isWrong} />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function GroupClassifier({ groups, groupItems, initialData, onComplete, onNext }: {
+  groups: Group[]; groupItems: GroupItem[];
+  initialData?: any;
+  onComplete: (data: any) => void;
+  onNext?: () => void;
+}) {
+  const [placements, setPlacements] = useState<Record<string, string>>(initialData?.placements || {});
+  const [validated, setValidated] = useState(initialData?.validated || false);
+
+  const unplaced = groupItems.filter(item => !placements[item.id]);
+  const allPlaced = unplaced.length === 0;
+  const correctCount = Object.entries(placements).filter(([itemId, groupId]) =>
+    groupItems.find(i => i.id === itemId)?.correctGroup === groupId
+  ).length;
+
+  useEffect(() => {
+    if (initialData?.validated) setValidated(true);
+  }, [initialData]);
+
+  const handleDrop = (groupId: string, itemId: string) => {
+    if (validated) return;
+    setPlacements(prev => ({ ...prev, [itemId]: groupId }));
+  };
+
+  const handleValidate = () => {
+    setValidated(true);
+    const data = { placements, validated: true, correctCount, total: groupItems.length };
+    onComplete(data);
+    onNext?.();
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-4 animate-in fade-in duration-700">
+      <div className="bg-white rounded-2xl border-2 border-[#10B981]/25 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#10B981]/10 to-[#628ECB]/5 border-b border-[#10B981]/15">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#10B981]/15">
+            <Tag className="w-5 h-5 text-[#10B981]" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#10B981]">Aktivitas Klasifikasi</p>
+            <h3 className="text-sm font-bold text-[#395886]">Kelompokkan Alamat IP ke Kelas yang Tepat</h3>
+          </div>
+          {validated && (
+            <span className="flex items-center gap-1 text-[10px] font-bold text-[#10B981] bg-[#10B981]/10 px-2 py-1 rounded-full">
+              <CheckCircle className="w-3 h-3" /> {correctCount}/{groupItems.length} Benar
+            </span>
+          )}
+        </div>
+      </div>
+
+      {!validated && (
+        <div className="bg-white rounded-2xl border-2 border-dashed border-[#D5DEEF] p-4">
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/40 mb-3">Alamat IP — Seret ke kelas yang tepat</p>
+          {unplaced.length === 0 ? (
+            <p className="text-xs text-[#10B981] font-bold italic text-center py-1">Semua sudah ditempatkan! Klik "Periksa Klasifikasi".</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {unplaced.map(item => <GCChip key={item.id} id={item.id} text={item.text} validated={false} />)}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        {groups.map(group => (
+          <GCZone
+            key={group.id}
+            group={group}
+            items={groupItems.filter(item => placements[item.id] === group.id)}
+            allItems={groupItems}
+            validated={validated}
+            onDrop={handleDrop}
+          />
+        ))}
+      </div>
+
+      {validated && correctCount < groupItems.length && (
+        <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Lightbulb className="w-4 h-4 text-amber-500" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">Kunci Jawaban</p>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-3">
+            {groups.map(group => {
+              const cm = colorMap[group.colorClass] || colorMap.blue;
+              return (
+                <div key={group.id} className="bg-white rounded-xl p-3 border border-amber-100">
+                  <p className={`text-[10px] font-black uppercase tracking-wider mb-2 ${cm.text}`}>{group.label}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {groupItems.filter(i => i.correctGroup === group.id).map(item => (
+                      <span key={item.id} className={`px-2 py-1 rounded-lg text-xs font-bold font-mono ${cm.bg} ${cm.text} border ${cm.border}`}>{item.text}</span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {!validated ? (
+        <button
+          onClick={handleValidate}
+          disabled={!allPlaced}
+          className={`w-full py-3.5 rounded-xl font-black text-sm transition-all active:scale-95 ${
+            allPlaced ? 'bg-[#10B981] text-white hover:bg-[#059669] shadow-lg shadow-green-200' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'
+          }`}
+        >
+          {allPlaced ? 'Periksa Klasifikasi' : `Tempatkan ${unplaced.length} alamat lagi`} <ChevronRight className="w-4 h-4 ml-1 inline" />
+        </button>
+      ) : (
+        <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20 text-sm font-black text-[#065F46]">
+          <CheckCircle className="w-4 h-4" /> Klasifikasi selesai — tulis refleksimu di bawah
+        </div>
+      )}
+    </div>
+  );
+}
+
 // -- Main InquiryStage Router --------------------------------------------------
 
 export function InquiryStage(props: InquiryStageProps) {
@@ -772,6 +953,9 @@ export function InquiryStage(props: InquiryStageProps) {
   const [flowData, setFlowData] = useState<any>(null);
   const [groupData, setGroupData] = useState<any>(null);
   const [matchingData, setMatchingData] = useState<any>(null);
+  const [activityStep, setActivityStep] = useState(1);
+  const [reflection1, setReflection1] = useState('');
+  const [reflection2, setReflection2] = useState('');
   const [isRestored, setIsRestored] = useState(false);
 
   useEffect(() => {
@@ -782,6 +966,9 @@ export function InquiryStage(props: InquiryStageProps) {
       if (snap.flowData) setFlowData(snap.flowData);
       if (snap.groupData) setGroupData(snap.groupData);
       if (snap.matchingData) setMatchingData(snap.matchingData);
+      if (snap.activityStep) setActivityStep(snap.activityStep);
+      if (snap.reflection1) setReflection1(snap.reflection1);
+      if (snap.reflection2) setReflection2(snap.reflection2);
       setIsRestored(true);
     } else if (!tracker.isLoading) {
       setIsRestored(true);
@@ -793,18 +980,15 @@ export function InquiryStage(props: InquiryStageProps) {
     const progressMap = { material: 10, explore: 30, analyzer: 45, activities: 65 } as const;
     void tracker.saveSnapshot(
       {
-        phase,
-        subPhase,
-        flowData,
-        groupData,
-        matchingData,
+        phase, subPhase, flowData, groupData, matchingData,
+        activityStep, reflection1, reflection2,
         hasFlow: !!props.flowItems?.length,
         hasGroup: !!props.groupItems?.length,
         hasMatching: !!props.matchingPairs?.length,
       },
       { progressPercent: progressMap[phase] + (phase === 'activities' ? (subPhase === 'flow' ? 0 : subPhase === 'group' ? 10 : 20) : 0) },
     );
-  }, [flowData, groupData, isRestored, matchingData, phase, props.flowItems?.length, props.groupItems?.length, props.matchingPairs?.length, subPhase, tracker]);
+  }, [activityStep, flowData, groupData, isRestored, matchingData, phase, props.flowItems?.length, props.groupItems?.length, props.matchingPairs?.length, reflection1, reflection2, subPhase, tracker]);
 
   if (tracker.isLoading || !isRestored) return (
     <div className="flex flex-col items-center justify-center py-20 space-y-4">
@@ -846,16 +1030,98 @@ export function InquiryStage(props: InquiryStageProps) {
   }
 
   if (phase === 'activities') {
-    if (subPhase === 'flow' && props.flowItems) return <DragDropLayerSorter flowItems={props.flowItems} lessonId={props.lessonId} stageIndex={props.stageIndex} initialData={flowData} onComplete={(slots) => setFlowData({ slots })} onNext={() => {
-       if (props.groups) setSubPhase('group');
-       else if (props.matchingPairs) setSubPhase('matching');
-       else {
-         const finalAnswer = { flowData: { ...flowData, validated: true } };
-         void tracker.complete(finalAnswer, { phase: 'activities', subPhase: 'flow', finalAnswer });
-         onComplete(finalAnswer);
-       }
-    }} />;
-    // Other phases (Lesson 2, 3, 4) would go here similarly with standardized UI
+    return (
+      <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+        {subPhase === 'flow' && props.flowItems && (
+          <>
+            <DragDropLayerSorter
+              flowItems={props.flowItems}
+              lessonId={props.lessonId}
+              stageIndex={props.stageIndex}
+              initialData={flowData}
+              onComplete={(slots) => setFlowData({ slots })}
+              onNext={() => {
+                setFlowData((prev: any) => ({ ...prev, validated: true }));
+                setActivityStep(2);
+              }}
+            />
+            {activityStep >= 2 && props.inquiryReflection1 && (
+              <InquiryEssayBox
+                objectiveLabel="Refleksi Aktivitas 1"
+                prompt={props.inquiryReflection1}
+                submitLabel="Simpan & Lanjut ke Aktivitas 2"
+                minWords={20}
+                onSubmit={(text) => {
+                  setReflection1(text);
+                  setActivityStep(1);
+                  if (props.groups && props.groupItems) setSubPhase('group');
+                  else if (props.matchingPairs) setSubPhase('matching');
+                  else {
+                    const finalAnswer = { flowData, reflection1: text, summary: text };
+                    void tracker.complete(finalAnswer, { phase: 'done', finalAnswer });
+                    onComplete(finalAnswer);
+                  }
+                }}
+              />
+            )}
+          </>
+        )}
+
+        {subPhase === 'group' && props.groups && props.groupItems && (
+          <>
+            <GroupClassifier
+              groups={props.groups as Group[]}
+              groupItems={props.groupItems as GroupItem[]}
+              initialData={groupData}
+              onComplete={(data) => setGroupData(data)}
+              onNext={() => setActivityStep(2)}
+            />
+            {activityStep >= 2 && props.inquiryReflection2 && (
+              <InquiryEssayBox
+                objectiveLabel="Refleksi Aktivitas 2"
+                prompt={props.inquiryReflection2}
+                submitLabel="Submit Aktivitas Inquiry"
+                minWords={20}
+                onSubmit={(text) => {
+                  setReflection2(text);
+                  const finalAnswer = { flowData, groupData, reflection1, reflection2: text, summary: text };
+                  void tracker.complete(finalAnswer, { phase: 'done', finalAnswer });
+                  onComplete(finalAnswer);
+                }}
+              />
+            )}
+          </>
+        )}
+
+        {subPhase === 'matching' && props.matchingPairs && (
+          <>
+            <MatchingPhase
+              pairs={props.matchingPairs}
+              lessonId={props.lessonId}
+              stageIndex={props.stageIndex}
+              shuffleRight
+              initialData={matchingData}
+              onComplete={(matches) => setMatchingData({ matches })}
+              onNext={() => setActivityStep(2)}
+            />
+            {activityStep >= 2 && props.inquiryReflection2 && (
+              <InquiryEssayBox
+                objectiveLabel="Refleksi Aktivitas 2"
+                prompt={props.inquiryReflection2}
+                submitLabel="Submit Aktivitas Inquiry"
+                minWords={20}
+                onSubmit={(text) => {
+                  setReflection2(text);
+                  const finalAnswer = { flowData, matchingData, reflection1, reflection2: text, summary: text };
+                  void tracker.complete(finalAnswer, { phase: 'done', finalAnswer });
+                  onComplete(finalAnswer);
+                }}
+              />
+            )}
+          </>
+        )}
+      </div>
+    );
   }
 
   return null;
