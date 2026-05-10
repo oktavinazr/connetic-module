@@ -325,7 +325,7 @@ function StudentDetailModal({ activity, onClose }: { activity: StudentActivitySu
               )}
               <h2 className="text-2xl font-bold">{activity.student.name}</h2>
               <p className="mt-1 text-sm text-white/75">
-                {activity.student.nis} · {activity.student.class} · {activity.student.gender}
+                {activity.student.nis} • {activity.student.class} • {activity.student.gender}
               </p>
             </div>
             <div className="text-right">
@@ -1558,7 +1558,7 @@ export function AdminPage() {
                           </span>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-sm text-[#395886] truncate">{s.student.name}</p>
-                            <p className="text-xs text-[#395886]/50">{s.student.class}{s.group ? ` Â· ${s.group}` : ''}</p>
+                            <p className="text-xs text-[#395886]/50">{s.student.class}{s.group ? ` • ${s.group}` : ''}</p>
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
                             <div className="text-right">
@@ -1706,7 +1706,7 @@ export function AdminPage() {
                                 </div>
                                 <div className="min-w-0">
                                   <p className="font-bold text-[#395886] text-sm truncate">{activity.student.name}</p>
-                                  <p className="text-[11px] font-bold text-[#628ECB] mt-0.5">{activity.student.nis} Â· {activity.student.class}</p>
+                                  <p className="text-[11px] font-bold text-[#628ECB] mt-0.5">{activity.student.nis} • {activity.student.class}</p>
                                 </div>
                               </div>
                             </td>
@@ -1883,7 +1883,7 @@ export function AdminPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-bold text-[#395886] text-sm truncate">{m.student.name}</p>
-                            <p className="text-xs text-[#395886]/50">{m.student.class} Â· {m.student.nis}</p>
+                            <p className="text-xs text-[#395886]/50">{m.student.class} • {m.student.nis}</p>
                           </div>
                           <span className="text-xs font-bold text-[#395886]/50">{m.overallProgress}%</span>
                           <button onClick={() => setSelectedStudent(m)} className="shrink-0 text-[#395886]/30 hover:text-[#628ECB] transition-colors">
@@ -2050,7 +2050,7 @@ export function AdminPage() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-bold text-[#395886] truncate">{s.name}</p>
-                              <p className="text-[10px] text-[#395886]/50">{s.class} Â· {s.nis}</p>
+                              <p className="text-[10px] text-[#395886]/50">{s.class} • {s.nis}</p>
                             </div>
                             <select
                               value=""
@@ -2324,7 +2324,7 @@ export function AdminPage() {
                 <div className="min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-0.5">Info Akun Siswa</p>
                   <h2 className="text-xl font-black leading-tight truncate">{accountStudent.student.name}</h2>
-                  <p className="text-white/70 text-sm mt-0.5">{accountStudent.student.nis} Â· {accountStudent.student.class}</p>
+                  <p className="text-white/70 text-sm mt-0.5">{accountStudent.student.nis} • {accountStudent.student.class}</p>
                 </div>
               </div>
             </div>

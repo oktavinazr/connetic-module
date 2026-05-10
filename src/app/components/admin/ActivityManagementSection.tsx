@@ -395,7 +395,7 @@ export function StageEditModal({
                 {meta.icon} {meta.label}
               </div>
               <h3 className="text-lg font-bold leading-tight">{stage.title}</h3>
-              <p className="text-white/70 text-xs mt-0.5">Pertemuan {lessonId} · Tahap {stageIndex + 1}</p>
+              <p className="text-white/70 text-xs mt-0.5">Pertemuan {lessonId} • Tahap {stageIndex + 1}</p>
             </div>
             <button onClick={onClose}><X className="w-5 h-5 text-white/70 hover:text-white" /></button>
           </div>

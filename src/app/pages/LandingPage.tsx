@@ -175,7 +175,7 @@ export function LandingPage() {
                 <div className="h-1.5 w-24 rounded-full bg-[#628ECB]" />
 
                 <p className="max-w-xl text-lg leading-relaxed text-[#395886]/70 font-medium">
-                  Optimalkan pemahaman konsep <span className="text-[#395886] font-bold">TCP/IP</span> dan <span className="text-[#395886] font-bold">IP Address</span> melalui model 7 tahapan CTL yang dirancang khusus untuk meningkatkan <span className="font-bold text-[#395886]">Logical Thinking</span> siswa SMK.
+                  Optimalkan pemahaman konsep <span className="text-[#395886] font-bold">TCP/IP</span> dan <span className="text-[#395886] font-bold">Alamat IP</span> melalui model 7 tahapan CTL yang dirancang khusus untuk meningkatkan <span className="font-bold text-[#395886]">Logical Thinking</span> siswa SMK.
                 </p>
               </div>
 
@@ -528,7 +528,7 @@ export function LandingPage() {
         <div className="border-t border-white/10">
           <div className={`${desktopContainer} py-5 text-center`}>
             <p className="text-xs text-white/40">
-              &copy; 2026 CONNETIC Module. All rights reserved. &nbsp;·&nbsp; Designed for Modern Education
+              &copy; 2026 CONNETIC Module. All rights reserved. &nbsp;•&nbsp; Designed for Modern Education
             </p>
           </div>
         </div>

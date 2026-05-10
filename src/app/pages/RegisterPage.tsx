@@ -225,7 +225,7 @@ export function RegisterPage() {
                       value={classRoom}
                       onChange={(e) => setClassRoom(e.target.value)}
                       className="w-full rounded-2xl border border-[#D5DEEF] bg-white px-4 py-3.5 text-[#395886] outline-none transition focus:border-[#628ECB] focus:ring-4 focus:ring-[#628ECB]/15"
-                      placeholder="Contoh: X TKJ 1"
+                      placeholder="Contoh: X TJKT 1"
                       required
                     />
                   </div>

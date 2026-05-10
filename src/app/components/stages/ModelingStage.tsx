@@ -993,9 +993,9 @@ export function ModelingStage({
 
             {/* Section labels */}
             <div className="flex items-end px-5 pt-3 pb-0 text-[8px] font-black uppercase tracking-widest leading-none select-none">
-              <div className="flex-[4] text-center text-[#628ECB] opacity-70">◄ PC A · Enkapsulasi ►</div>
-              <div className="flex-[2] text-center text-[#EC4899] opacity-70">· Fisik ·</div>
-              <div className="flex-[3] text-center text-[#10B981] opacity-70">◄ PC B · Dekapsulasi ►</div>
+              <div className="flex-[4] text-center text-[#628ECB] opacity-70">◄ PC A • Enkapsulasi ►</div>
+              <div className="flex-[2] text-center text-[#EC4899] opacity-70">• Fisik •</div>
+              <div className="flex-[3] text-center text-[#10B981] opacity-70">◄ PC B • Dekapsulasi ►</div>
             </div>
 
             {/* Scrollable track */}

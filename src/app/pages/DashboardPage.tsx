@@ -765,7 +765,7 @@ export function DashboardPage() {
                   <div className="min-w-0">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-[#628ECB] mb-0.5">Kelompok Anda</p>
                     <p className="text-xl font-black text-[#395886] truncate">{selectedGroup}</p>
-                    <p className="text-xs text-[#395886]/50 font-medium mt-0.5">{studentsInSelectedGroup.length} anggota · Peran: Anggota</p>
+                    <p className="text-xs text-[#395886]/50 font-medium mt-0.5">{studentsInSelectedGroup.length} anggota • Peran: Anggota</p>
                   </div>
                 </div>
 

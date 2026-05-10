@@ -272,7 +272,7 @@ export function StageAnswerDetail({ stage, answer }: { stage: Stage; answer: any
                           {sorted.slice(1).map((d: any, di: number) => (
                             <div key={di} className="bg-white/80 p-2 rounded-lg border border-[#D5DEEF]/30">
                               <div className="flex justify-between items-start mb-1">
-                                <p className="text-[9px] font-black text-[#395886]">{d.user_name} <span className="font-normal text-[#395886]/40">· {d.choice_text}</span></p>
+                                <p className="text-[9px] font-black text-[#395886]">{d.user_name} <span className="font-normal text-[#395886]/40">• {d.choice_text}</span></p>
                                 <span className="text-[8px] font-bold text-[#395886]/40">{d.votes?.length || 0} suara</span>
                               </div>
                               <p className="text-[#395886]/80 text-[10px] italic">"{d.argument}"</p>
