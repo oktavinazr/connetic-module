@@ -71,7 +71,7 @@ export const register = async (
       .select('id')
       .or(`email.eq.${normalizedEmail},username.eq.${normalizedUsername},nis.eq.${normalizedNis}`);
 
-    if (checkError) throw checkError;
+    if (checkError) throw new Error(checkError.message || checkError.code || 'Gagal cek data pengguna');
 
     if (existing && existing.length > 0) {
       return false;
@@ -81,7 +81,7 @@ export const register = async (
       name: name.trim(),
       username: normalizedUsername,
       email: normalizedEmail,
-      password: hashedPassword, // <-- Simpan hash ke database
+      password: hashedPassword,
       gender,
       class: classRoom.trim(),
       nis: normalizedNis,
@@ -89,7 +89,7 @@ export const register = async (
       registered_at: new Date().toISOString(),
     }]);
 
-    if (error) throw error;
+    if (error) throw new Error(error.message || error.code || 'Gagal menyimpan data');
 
     return true;
   } catch (err) {
