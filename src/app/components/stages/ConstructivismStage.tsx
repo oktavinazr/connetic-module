@@ -8,7 +8,7 @@ import { getCurrentUser } from '../../utils/auth';
 import { getLessonProgress, saveStageAttempt } from '../../utils/progress';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
 import { CourierDefinition } from './CourierDefinition';
-import { EssayBox } from './StageKit';
+import { EssayBox, ContinueActivityButton } from './StageKit';
 
 // -- Types ----------------------------------------------------------------------
 
@@ -1137,6 +1137,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
   const [isRestored, setIsRestored] = useState(false);
   const [scrambleEssayVisible, setScrambleEssayVisible] = useState(false);
   const [courierCompleted, setCourierCompleted] = useState(false);
+  const [pendingNextPhase, setPendingNextPhase] = useState<'analogy' | 'mcq' | null>(null);
 
   const hasEssayFlow = !!(constructivismEssay1 || constructivismEssay2);
 
@@ -1144,6 +1145,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
     if (!tracker.isLoading && tracker.session?.latestSnapshot && !isRestored) {
       const snap = tracker.session.latestSnapshot;
       if (snap.phase) setPhase(snap.phase);
+      if (snap.pendingNextPhase) setPendingNextPhase(snap.pendingNextPhase);
       if (snap.essay1Text) setEssay1Text(snap.essay1Text);
       if (snap.scrambleData) setScrambleData(snap.scrambleData);
       if (snap.analogyData) setAnalogyData(snap.analogyData);
@@ -1160,6 +1162,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
     void tracker.saveImmediate(
       {
         phase,
+        pendingNextPhase,
         essay1Text,
         scrambleData,
         analogyData,
@@ -1170,7 +1173,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
       },
       { progressPercent: progressMap[phase] },
     );
-  }, [analogyData, analogySortGroups?.length, essay1Text, hasEssayFlow, isRestored, mcqData, phase, scrambleData, storyScramble, tracker]);
+  }, [analogyData, analogySortGroups?.length, essay1Text, hasEssayFlow, isRestored, mcqData, pendingNextPhase, phase, scrambleData, storyScramble, tracker]);
 
   const SkipButton = ({ targetPhase, nextLabel }: { targetPhase?: 'analogy' | 'mcq' | 'complete'; nextLabel: string }) => {
     if (!isCompleted) return null;
@@ -1233,7 +1236,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
           <EssayBox
             prompt={constructivismEssay1}
             objectiveLabel="X.TCP.1"
-            submitLabel="Lanjut ke Aktivitas 2 - Process Chain"
+            submitLabel="Submit Refleksi X.TCP.1"
             minWords={20}
             defaultValue={essay1Text}
             disabled={!!essay1Text}
@@ -1241,16 +1244,27 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
               setEssay1Text(text);
               if (analogySortGroups?.length) {
                 void tracker.trackEvent('constructivism_scramble_completed', { hasEssay: true }, { progressPercent: 45 });
-                setPhase('analogy');
+                setPendingNextPhase('analogy');
               } else if (hasEssayFlow || !props.options?.length) {
                 const finalAnswer = { essay1: text, summary: text };
                 void tracker.complete(finalAnswer, { phase: 'scramble', finalAnswer });
                 onComplete(finalAnswer);
               } else {
                 void tracker.trackEvent('constructivism_scramble_completed', { hasEssay: true }, { progressPercent: 70 });
-                setPhase('mcq');
+                setPendingNextPhase('mcq');
               }
             }}
+          />
+        )}
+
+        {essay1Text && pendingNextPhase && (
+          <ContinueActivityButton
+            onClick={() => {
+              const next = pendingNextPhase;
+              setPendingNextPhase(null);
+              setPhase(next);
+            }}
+            label={pendingNextPhase === 'analogy' ? 'Lanjutkan ke Aktivitas 2 — Analogy Sorting (X.TCP.2)' : 'Lanjutkan ke Konteks Pembelajaran'}
           />
         )}
 
@@ -1282,13 +1296,21 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
                 onComplete(finalAnswer);
               } else {
                 void tracker.trackEvent('constructivism_analogy_completed', { hasEssay: !!essayText }, { progressPercent: 80 });
-                setPhase('mcq');
+                setPendingNextPhase('mcq');
               }
             } else if (currentState) {
               setAnalogyData(currentState);
             }
           }}
         />
+
+        {pendingNextPhase === 'mcq' && (
+          <ContinueActivityButton
+            onClick={() => { setPendingNextPhase(null); setPhase('mcq'); }}
+            label="Lanjutkan ke Konteks Pembelajaran"
+          />
+        )}
+
         <SkipButton
           targetPhase={props.options?.length ? 'mcq' : 'complete'}
           nextLabel={props.options?.length ? 'Lanjut ke Pertanyaan' : 'Submit Aktivitas'}

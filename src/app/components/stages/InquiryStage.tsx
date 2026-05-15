@@ -9,7 +9,7 @@ import { getCurrentUser } from '../../utils/auth';
 import { getLessonProgress, saveStageAttempt } from '../../utils/progress';
 import { Ipv4Analyzer } from '../ui/Ipv4Analyzer';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
-import { EssayBox } from './StageKit';
+import { EssayBox, ContinueActivityButton } from './StageKit';
 
 // -- Types ----------------------------------------------------------------------
 
@@ -61,9 +61,11 @@ const flowLayerColors: Record<string, { gradient: string; borderB: string }> = {
 // -- Standardized Essay Box (Uses unified StageKit EssayBox) --------------------
 
 function InquiryEssayBox({
-  prompt, objectiveLabel, submitLabel, onSubmit, minWords = 15,
+  prompt, objectiveLabel, submitLabel, onSubmit, minWords = 20,
+  defaultValue = '', disabled = false,
 }: {
   prompt: string; objectiveLabel: string; submitLabel: string; onSubmit: (text: string) => void; minWords?: number;
+  defaultValue?: string; disabled?: boolean;
 }) {
   return (
     <div className="mt-5">
@@ -71,8 +73,10 @@ function InquiryEssayBox({
         objectiveLabel={objectiveLabel}
         prompt={prompt}
         submitLabel={submitLabel}
-        minChars={minWords * 5}
+        minWords={minWords}
         onSubmit={onSubmit}
+        defaultValue={defaultValue}
+        disabled={disabled}
       />
     </div>
   );
@@ -650,6 +654,7 @@ function InquiryLesson1Page(props: InquiryStageProps) {
   const [reflection2, setReflection2] = useState('');
   const [flowData, setFlowData] = useState<any>(null);
   const [isRestored, setIsRestored] = useState(false);
+  const [pendingNextActivity, setPendingNextActivity] = useState(false);
 
   useEffect(() => {
     if (!tracker.isLoading && tracker.session?.latestSnapshot && !isRestored) {
@@ -660,6 +665,7 @@ function InquiryLesson1Page(props: InquiryStageProps) {
       if (snap.matchingAnswers) setMatchingAnswers(snap.matchingAnswers);
       if (snap.reflection2) setReflection2(snap.reflection2);
       if (snap.flowData) setFlowData(snap.flowData);
+      if (snap.pendingNextActivity) setPendingNextActivity(snap.pendingNextActivity);
       setIsRestored(true);
     } else if (!tracker.isLoading) {
       setIsRestored(true);
@@ -670,9 +676,9 @@ function InquiryLesson1Page(props: InquiryStageProps) {
     if (!isRestored) return;
     const progressMap = { material: 10, explore: 30, activities: 55, activities2: 85 } as const;
     void tracker.saveSnapshot({
-      phase, activityStep, reflection1, matchingAnswers, reflection2, flowData,
+      phase, activityStep, reflection1, matchingAnswers, reflection2, flowData, pendingNextActivity,
     }, { progressPercent: progressMap[phase] });
-  }, [activityStep, flowData, isRestored, matchingAnswers, phase, reflection1, reflection2, tracker]);
+  }, [activityStep, flowData, isRestored, matchingAnswers, pendingNextActivity, phase, reflection1, reflection2, tracker]);
 
   if (isCompleted) return (
     <div className="flex justify-center py-8">
@@ -708,13 +714,21 @@ function InquiryLesson1Page(props: InquiryStageProps) {
           <InquiryEssayBox
             objectiveLabel="X.TCP.3"
             prompt={inquiryReflection1 ?? '...'}
-            submitLabel="Submit & Lanjut ke X.TCP.4"
+            submitLabel="Submit Refleksi X.TCP.3"
             minWords={20}
+            defaultValue={reflection1}
+            disabled={!!reflection1}
             onSubmit={(text) => {
               setReflection1(text);
-              setPhase('activities2');
-              setActivityStep(1);
+              setPendingNextActivity(true);
             }}
+          />
+        )}
+
+        {reflection1 && pendingNextActivity && (
+          <ContinueActivityButton
+            onClick={() => { setPendingNextActivity(false); setPhase('activities2'); setActivityStep(1); }}
+            label="Lanjutkan ke Aktivitas X.TCP.4 — Cocokkan Fungsi Layer"
           />
         )}
       </div>
@@ -947,7 +961,7 @@ export function InquiryStage(props: InquiryStageProps) {
   });
 
   if (lessonId === '1') return <InquiryLesson1Page {...props} />;
-  
+
   const [phase, setPhase] = useState<'material' | 'explore' | 'analyzer' | 'activities'>('material');
   const [subPhase, setSubPhase] = useState<'flow' | 'group' | 'matching'>('flow');
   const [flowData, setFlowData] = useState<any>(null);
@@ -957,6 +971,7 @@ export function InquiryStage(props: InquiryStageProps) {
   const [reflection1, setReflection1] = useState('');
   const [reflection2, setReflection2] = useState('');
   const [isRestored, setIsRestored] = useState(false);
+  const [pendingNextSubPhase, setPendingNextSubPhase] = useState<'group' | 'matching' | null>(null);
 
   useEffect(() => {
     if (!tracker.isLoading && tracker.session?.latestSnapshot && !isRestored) {
@@ -969,6 +984,7 @@ export function InquiryStage(props: InquiryStageProps) {
       if (snap.activityStep) setActivityStep(snap.activityStep);
       if (snap.reflection1) setReflection1(snap.reflection1);
       if (snap.reflection2) setReflection2(snap.reflection2);
+      if (snap.pendingNextSubPhase) setPendingNextSubPhase(snap.pendingNextSubPhase);
       setIsRestored(true);
     } else if (!tracker.isLoading) {
       setIsRestored(true);
@@ -982,13 +998,14 @@ export function InquiryStage(props: InquiryStageProps) {
       {
         phase, subPhase, flowData, groupData, matchingData,
         activityStep, reflection1, reflection2,
+        pendingNextSubPhase,
         hasFlow: !!props.flowItems?.length,
         hasGroup: !!props.groupItems?.length,
         hasMatching: !!props.matchingPairs?.length,
       },
       { progressPercent: progressMap[phase] + (phase === 'activities' ? (subPhase === 'flow' ? 0 : subPhase === 'group' ? 10 : 20) : 0) },
     );
-  }, [activityStep, flowData, groupData, isRestored, matchingData, phase, props.flowItems?.length, props.groupItems?.length, props.matchingPairs?.length, reflection1, reflection2, subPhase, tracker]);
+  }, [activityStep, flowData, groupData, isRestored, matchingData, pendingNextSubPhase, phase, props.flowItems?.length, props.groupItems?.length, props.matchingPairs?.length, reflection1, reflection2, subPhase, tracker]);
 
   if (tracker.isLoading || !isRestored) return (
     <div className="flex flex-col items-center justify-center py-20 space-y-4">
@@ -1049,19 +1066,31 @@ export function InquiryStage(props: InquiryStageProps) {
               <InquiryEssayBox
                 objectiveLabel="Refleksi Aktivitas 1"
                 prompt={props.inquiryReflection1}
-                submitLabel="Simpan & Lanjut ke Aktivitas 2"
+                submitLabel="Submit Refleksi Aktivitas 1"
                 minWords={20}
+                defaultValue={reflection1}
+                disabled={!!reflection1}
                 onSubmit={(text) => {
                   setReflection1(text);
-                  setActivityStep(1);
-                  if (props.groups && props.groupItems) setSubPhase('group');
-                  else if (props.matchingPairs) setSubPhase('matching');
+                  if (props.groups && props.groupItems) setPendingNextSubPhase('group');
+                  else if (props.matchingPairs) setPendingNextSubPhase('matching');
                   else {
                     const finalAnswer = { flowData, reflection1: text, summary: text };
                     void tracker.complete(finalAnswer, { phase: 'done', finalAnswer });
                     onComplete(finalAnswer);
                   }
                 }}
+              />
+            )}
+            {reflection1 && pendingNextSubPhase && (
+              <ContinueActivityButton
+                onClick={() => {
+                  const next = pendingNextSubPhase;
+                  setPendingNextSubPhase(null);
+                  setActivityStep(1);
+                  setSubPhase(next);
+                }}
+                label={pendingNextSubPhase === 'group' ? 'Lanjutkan ke Aktivitas Klasifikasi Kelas IP' : 'Lanjutkan ke Aktivitas Pencocokan Fungsi Layer'}
               />
             )}
           </>

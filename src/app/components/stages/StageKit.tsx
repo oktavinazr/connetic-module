@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   AlertCircle, CheckCircle, Info, XCircle, RotateCcw, ChevronRight,
-  PenLine, Clock, LockKeyhole, ChevronDown,
+  PenLine, Clock, LockKeyhole, ChevronDown, ArrowRight,
 } from 'lucide-react';
 
 // ── Animation class strings ───────────────────────────────────────────────────
@@ -154,9 +154,9 @@ export function InstructionBox({
 
 // ── UNIFIED EssayBox ──────────────────────────────────────────────────────────
 // Standard essay/reflection box used across ALL CTL stages
-// Supports: disabled (read-only completed), defaultValue (restore saved), locked mode
+// Default: 20 words minimum. Supports disabled (read-only), defaultValue (restore), locked mode.
 export function EssayBox({
-  prompt, objectiveLabel, submitLabel, onSubmit, minChars = 30, minWords,
+  prompt, objectiveLabel, submitLabel, onSubmit, minChars = 30, minWords = 20,
   disabled = false, defaultValue = '', locked = false,
 }: {
   prompt: string; objectiveLabel: string; submitLabel: string;
@@ -168,7 +168,7 @@ export function EssayBox({
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
   const charCount = text.trim().length;
   const useWords = minWords !== undefined && minWords > 0;
-  const ready = useWords ? wordCount >= minWords! : charCount >= minChars;
+  const ready = useWords ? wordCount >= minWords : charCount >= minChars;
   const countLabel = useWords ? `${wordCount} / ${minWords} kata` : `${charCount} / ${minChars} karakter`;
   const isLocked = locked || disabled || (disabled && submitted);
 
@@ -179,20 +179,15 @@ export function EssayBox({
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#628ECB]/10">
           <PenLine className="w-4 h-4 text-[#628ECB]" />
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60">
+        <div className="flex-1 min-w-0 text-left">
+          <p className="text-left text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60">
             Refleksi Mandiri — {objectiveLabel}
           </p>
-          <p className="text-xs font-bold text-[#395886]">Tulis pemahamanmu dengan kata-katamu sendiri</p>
+          <p className="text-left text-xs font-bold text-[#395886]">Tulis pemahamanmu dengan kata-katamu sendiri</p>
         </div>
-        {isLocked && (
+        {(isLocked || (!isLocked && submitted)) && (
           <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#10B981] bg-[#10B981]/10 px-3 py-1.5 rounded-full border border-[#10B981]/20">
             <LockKeyhole className="w-3 h-3" /> Tersimpan
-          </span>
-        )}
-        {!isLocked && submitted && (
-          <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#10B981] bg-[#10B981]/10 px-3 py-1.5 rounded-full border border-[#10B981]/20">
-            <CheckCircle className="w-3 h-3" /> Tersimpan
           </span>
         )}
       </div>
@@ -200,7 +195,7 @@ export function EssayBox({
       {/* Body */}
       <div className="p-5">
         <div className="mb-3 p-4 rounded-xl bg-[#F8FAFF] border border-[#D5DEEF]/80">
-          <p className="text-sm font-semibold text-[#395886] leading-relaxed">{prompt}</p>
+          <p className="text-sm font-semibold text-[#395886] leading-relaxed text-justify">{prompt}</p>
         </div>
 
         <textarea
@@ -212,32 +207,59 @@ export function EssayBox({
             ${isLocked
               ? 'border-[#10B981]/20 bg-[#ECFDF5] text-[#065F46] cursor-not-allowed'
               : 'border-[#D5DEEF] bg-white text-[#395886] focus:border-[#628ECB] focus:ring-4 focus:ring-[#628ECB]/5'}`}
-          placeholder={`Tuliskan jawabanmu di sini... (${useWords ? `minimal ${minWords} kata` : `minimal ${minChars} karakter`})`}
+          placeholder={`Tuliskan jawabanmu di sini... (minimal ${minWords} kata)`}
         />
 
         {/* Stats bar */}
-        <div className="flex items-center justify-between mt-3 px-1">
-          <div className="flex items-center gap-2">
-            <div className="h-1.5 w-20 rounded-full bg-[#EEF2FF] overflow-hidden">
-              <div className={`h-full transition-all duration-500 ${ready || isLocked ? 'bg-[#10B981]' : 'bg-[#628ECB]'}`}
-                style={{ width: `${Math.min(100, (useWords ? wordCount / minWords! : charCount / minChars) * 100)}%` }} />
+        <div className="mt-3 px-1 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-1.5 w-20 rounded-full bg-[#EEF2FF] overflow-hidden">
+                <div className={`h-full transition-all duration-500 ${ready || isLocked ? 'bg-[#10B981]' : 'bg-[#628ECB]'}`}
+                  style={{ width: `${Math.min(100, (useWords ? wordCount / minWords : charCount / minChars) * 100)}%` }} />
+              </div>
+              <span className={`text-[10px] font-bold ${ready || isLocked ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
+                {countLabel}{ready || isLocked ? ' ✓' : ''}
+              </span>
             </div>
-            <span className={`text-[10px] font-bold ${ready || isLocked ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
-              {countLabel}{ready || isLocked ? ' ✓' : ''}
-            </span>
+
+            {!isLocked && !submitted && (
+              <button
+                onClick={() => { if (!ready) return; setSubmitted(true); onSubmit(text.trim()); }}
+                disabled={!ready}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all active:scale-95 shadow-sm
+                  ${ready ? 'bg-[#628ECB] text-white hover:bg-[#395886]' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}>
+                {submitLabel} <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
-          {!isLocked && !submitted && (
-            <button
-              onClick={() => { if (!ready) return; setSubmitted(true); onSubmit(text.trim()); }}
-              disabled={!ready}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all active:scale-95 shadow-sm
-                ${ready ? 'bg-[#628ECB] text-white hover:bg-[#395886]' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}>
-              {submitLabel} <ChevronRight className="w-3.5 h-3.5" />
-            </button>
+          {!isLocked && !submitted && !ready && (
+            <p className="text-[10px] text-[#395886]/40 font-medium">
+              Minimal {minWords} kata untuk mengirim jawaban.
+            </p>
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── ContinueActivityButton ────────────────────────────────────────────────────
+// Shown after a sub-activity essay is saved, before advancing to the next sub-activity
+export function ContinueActivityButton({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <div className="flex flex-col items-center gap-4 p-6 rounded-2xl bg-gradient-to-r from-[#10B981]/5 to-[#ECFDF5] border-2 border-[#10B981]/20 animate-in fade-in duration-500">
+      <div className="flex items-center gap-2">
+        <CheckCircle className="w-5 h-5 text-[#10B981]" />
+        <span className="text-sm font-bold text-[#10B981]">Jawaban berhasil disimpan!</span>
+      </div>
+      <button
+        onClick={onClick}
+        className="flex items-center gap-3 px-8 py-3 rounded-2xl bg-[#10B981] text-white font-black text-sm hover:bg-[#059669] shadow-xl shadow-[#10B981]/20 active:scale-95 transition-all"
+      >
+        {label} <ArrowRight className="w-5 h-5" />
+      </button>
     </div>
   );
 }

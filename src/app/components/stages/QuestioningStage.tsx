@@ -677,10 +677,20 @@ function QuestioningOriginal({
         </div>
 
         {(isCorrect || attempts >= 3) && (
-          <div className="space-y-4 animate-in fade-in">
-             <label className="block text-xs font-bold text-[#395886]">Berikan alasan logismu:</label>
-             <textarea value={justification} onChange={e => setJustification(e.target.value)} rows={3} className="w-full p-4 rounded-xl border-2 border-[#D5DEEF] text-xs font-medium focus:border-[#628ECB] outline-none" placeholder="Tuliskan alasan teknismu..." />
-             <button onClick={() => { const finalAnswer = { selectedId: selectedId!, isCorrect, askedQuestions, justification }; void tracker.complete(finalAnswer, { finalAnswer, selectedId, askedQuestions, justification }); onComplete(finalAnswer); }} disabled={justification.length < 10} className="w-full py-3 bg-[#628ECB] text-white rounded-xl font-bold text-sm hover:bg-[#395886] transition-all">Submit Aktivitas</button>
+          <div className="space-y-3 animate-in fade-in">
+            <label className="block text-xs font-bold text-[#395886]">Berikan alasan logismu:</label>
+            <textarea value={justification} onChange={e => setJustification(e.target.value)} rows={3}
+              className="w-full p-4 rounded-xl border-2 border-[#D5DEEF] text-xs font-medium focus:border-[#628ECB] outline-none resize-none"
+              placeholder="Tuliskan alasan teknismu... (minimal 20 kata)" />
+            <p className={`text-[10px] ${justification.trim().split(/\s+/).filter(Boolean).length >= 20 ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
+              {justification.trim().split(/\s+/).filter(Boolean).length} / 20 kata{justification.trim().split(/\s+/).filter(Boolean).length >= 20 ? ' ✓' : ' — minimal 20 kata untuk mengirim'}
+            </p>
+            <button
+              onClick={() => { const finalAnswer = { selectedId: selectedId!, isCorrect, askedQuestions, justification }; void tracker.complete(finalAnswer, { finalAnswer, selectedId, askedQuestions, justification }); onComplete(finalAnswer); }}
+              disabled={justification.trim().split(/\s+/).filter(Boolean).length < 20}
+              className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${justification.trim().split(/\s+/).filter(Boolean).length >= 20 ? 'bg-[#628ECB] text-white hover:bg-[#395886]' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}>
+              Submit Aktivitas
+            </button>
           </div>
         )}
 

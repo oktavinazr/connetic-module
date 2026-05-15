@@ -39,7 +39,7 @@ import { StageAnswerDetail } from '../components/admin/StageDetail';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DragAutoScroll } from '../components/DragAutoScroll';
-import { ActivityGuideBox, CountdownTimer, StageCompletedOverlay } from '../components/stages/StageKit';
+import { ActivityGuideBox, CountdownTimer, EssayBox, StageCompletedOverlay } from '../components/stages/StageKit';
 import { getStageTimers, getTimerRemaining } from '../utils/stageTimer';
 
 type StageType =
@@ -175,8 +175,6 @@ const stageNeedsExternalReflection = (type: StageType, lid: string): boolean => 
 };
 
 function InlineReflectionEssay({ prompt, onDone }: { prompt: string; onDone: (essay: string) => void }) {
-  const [essay, setEssay] = useState('');
-  const [submitted, setSubmitted] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -185,56 +183,14 @@ function InlineReflectionEssay({ prompt, onDone }: { prompt: string; onDone: (es
   }, []);
 
   return (
-    <div ref={ref} className="mt-4 rounded-2xl border-2 border-[#628ECB]/20 bg-white shadow-sm overflow-hidden">
-      <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#628ECB]/8 to-transparent border-b border-[#628ECB]/10">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#628ECB]/10">
-          <Eye className="w-4 h-4 text-[#628ECB]" />
-        </div>
-        <div className="flex-1">
-          <p className="text-[9px] font-black uppercase tracking-widest text-[#628ECB]">Refleksi Mandiri</p>
-          <p className="text-xs font-bold text-[#395886]">Tulis pemahaman atau kesimpulanmu berdasarkan aktivitas ini</p>
-        </div>
-        {submitted && (
-          <span className="flex items-center gap-1 text-[10px] font-bold text-[#10B981] bg-[#10B981]/10 px-2.5 py-1 rounded-full">
-            <CheckCircle className="w-3 h-3" /> Tersimpan
-          </span>
-        )}
-      </div>
-      <div className="p-5">
-        <div className="mb-3 p-3 rounded-xl bg-[#F8FAFF] border border-[#D5DEEF]">
-          <p className="text-xs font-bold text-[#395886] leading-relaxed">{prompt}</p>
-        </div>
-        <textarea
-          value={essay}
-          onChange={e => setEssay(e.target.value)}
-          disabled={submitted}
-          rows={4}
-          className={`w-full p-3 rounded-xl border-2 text-sm leading-relaxed resize-none outline-none transition-all
-            ${submitted
-              ? 'border-[#10B981]/30 bg-[#ECFDF5] text-[#065F46]'
-              : 'border-[#D5DEEF] bg-[#F8FAFF] focus:bg-white focus:border-[#628ECB]'}`}
-          placeholder="Tuliskan refleksimu di sini... (minimal 30 karakter)"
-        />
-        <div className="flex items-center justify-between mt-2">
-          <span className={`text-[10px] font-bold ${essay.length >= 30 ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
-            {essay.length} karakter{essay.length > 0 && essay.length < 30 ? ` (${30 - essay.length} lagi)` : ''}{essay.length >= 30 ? ' (v)' : ''}
-          </span>
-          {!submitted ? (
-            <button
-              onClick={() => { setSubmitted(true); onDone(essay); }}
-              disabled={essay.length < 30}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold text-xs transition-all
-                ${essay.length >= 30
-                  ? 'bg-[#628ECB] text-white hover:bg-[#395886] shadow-sm active:scale-95'
-                  : 'bg-[#EEF2FF] text-[#395886]/30 cursor-not-allowed'}`}
-            >
-              <ArrowRight className="w-3.5 h-3.5" /> Kirim Refleksi
-            </button>
-          ) : (
-            <span className="text-xs font-bold text-[#10B981]">Refleksi berhasil disimpan</span>
-          )}
-        </div>
-      </div>
+    <div ref={ref} className="mt-4">
+      <EssayBox
+        prompt={prompt}
+        objectiveLabel="Refleksi"
+        submitLabel="Submit Jawaban"
+        minWords={20}
+        onSubmit={onDone}
+      />
     </div>
   );
 }
@@ -264,7 +220,7 @@ export function LessonPage() {
   const [currentStageIndex, setCurrentStageIndex] = useState<number | null>(() => {
     if (!initialProgress?.pretestCompleted || !lesson) return null;
     const firstIncomplete = lesson.stages.findIndex((_, index) => !initialProgress.completedStages.includes(index));
-    return firstIncomplete !== -1 ? firstIncomplete : 0;
+    return firstIncomplete !== -1 ? firstIncomplete : lesson.stages.length - 1;
   });
   const [showStageSummary, setShowStageSummary] = useState(false);
   const [guideCollapsed, setGuideCollapsed] = useState(true);
@@ -335,7 +291,7 @@ export function LessonPage() {
       const firstIncomplete = lesson.stages.findIndex(
         (_, index) => !progress.completedStages.includes(index),
       );
-      setCurrentStageIndex(firstIncomplete !== -1 ? firstIncomplete : 0);
+      setCurrentStageIndex(firstIncomplete !== -1 ? firstIncomplete : lesson.stages.length - 1);
     }
   }, [currentStageIndex, lesson, lessonId, navigate, progress, progressLoaded]);
 

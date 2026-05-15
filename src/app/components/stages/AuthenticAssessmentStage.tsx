@@ -53,18 +53,21 @@ export function AuthenticAssessmentStage({
     );
   }, [followUpChoice, followUpReason, followUpSubmitted, initialChoice, initialReason, initialSubmitted, isDone, showFinalSummary]);
 
+  const countWords = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
+  const MIN_WORDS = 20;
+
   const handleInitialSubmit = () => {
     if (!initialChoice) { setError('Pilih langkah diagnosis awal terlebih dahulu.'); return; }
-    if (initialReason.trim().length < 25) { setError('Tuliskan alasan diagnosis awal minimal 25 karakter.'); return; }
+    if (countWords(initialReason) < MIN_WORDS) { setError(`Tuliskan alasan diagnosis awal minimal ${MIN_WORDS} kata.`); return; }
     setError(''); setInitialSubmitted(true);
-    void tracker.trackEvent('initial_decision_submitted', { initialChoice, reasonLength: initialReason.trim().length }, { progressPercent: 55 });
+    void tracker.trackEvent('initial_decision_submitted', { initialChoice, wordCount: countWords(initialReason) }, { progressPercent: 55 });
   };
 
   const handleFollowUpSubmit = () => {
     if (!followUpChoice) { setError('Pilih prioritas tindak lanjut terlebih dahulu.'); return; }
-    if (followUpReason.trim().length < 25) { setError('Tuliskan alasan prioritas minimal 25 karakter.'); return; }
+    if (countWords(followUpReason) < MIN_WORDS) { setError(`Tuliskan alasan prioritas minimal ${MIN_WORDS} kata.`); return; }
     setError(''); setFollowUpSubmitted(true);
-    void tracker.trackEvent('follow_up_submitted', { followUpChoice, reasonLength: followUpReason.trim().length }, { progressPercent: 85 });
+    void tracker.trackEvent('follow_up_submitted', { followUpChoice, wordCount: countWords(followUpReason) }, { progressPercent: 85 });
   };
 
   const handleReset = () => {
@@ -149,14 +152,16 @@ export function AuthenticAssessmentStage({
               <label className="mb-1.5 block text-[11px] font-bold text-[#395886]">Jelaskan alasan diagnosis awalmu:</label>
               <textarea value={initialReason} onChange={e => setInitialReason(e.target.value)} disabled={initialSubmitted} rows={3}
                 className="w-full resize-none rounded-lg border-2 border-[#D5DEEF] p-3 text-xs font-medium text-[#395886] outline-none transition-all focus:border-[#F43F5E] disabled:bg-[#F8FAFD]"
-                placeholder="Tuliskan bukti apa yang membuatmu memilih langkah ini lebih dulu." />
-              <p className={`mt-1 text-[10px] ${initialReason.trim().length >= 25 ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>{initialReason.trim().length} karakter (minimal 25)</p>
+                placeholder={`Tuliskan bukti apa yang membuatmu memilih langkah ini... (minimal ${MIN_WORDS} kata)`} />
+              <p className={`mt-1 text-[10px] ${countWords(initialReason) >= MIN_WORDS ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
+                {countWords(initialReason)} / {MIN_WORDS} kata{countWords(initialReason) >= MIN_WORDS ? ' ✓' : ` — minimal ${MIN_WORDS} kata untuk melanjutkan`}
+              </p>
             </div>
 
             {!initialSubmitted && (
-              <button onClick={handleInitialSubmit} disabled={!initialChoice || initialReason.trim().length < 25}
+              <button onClick={handleInitialSubmit} disabled={!initialChoice || countWords(initialReason) < MIN_WORDS}
                 className={`mt-4 w-full rounded-lg py-2.5 text-xs font-black transition-all ${
-                  initialChoice && initialReason.trim().length >= 25 ? 'bg-[#F43F5E] text-white shadow-lg' : 'cursor-not-allowed bg-[#D5DEEF] text-[#395886]/40'
+                  initialChoice && countWords(initialReason) >= MIN_WORDS ? 'bg-[#F43F5E] text-white shadow-lg' : 'cursor-not-allowed bg-[#D5DEEF] text-[#395886]/40'
                 }`}>Ambil Keputusan Awal</button>
             )}
 
@@ -176,13 +181,15 @@ export function AuthenticAssessmentStage({
                   <label className="mb-1.5 block text-[11px] font-bold text-[#395886]">Jelaskan alasan prioritas tindak lanjutmu:</label>
                   <textarea value={followUpReason} onChange={e => setFollowUpReason(e.target.value)} disabled={followUpSubmitted} rows={3}
                     className="w-full resize-none rounded-lg border-2 border-[#D5DEEF] p-3 text-xs font-medium text-[#395886] outline-none transition-all focus:border-[#395886] disabled:bg-[#F8FAFD]"
-                    placeholder="Jelaskan mengapa masalah ini perlu diprioritaskan lebih dulu." />
-                  <p className={`mt-1 text-[10px] ${followUpReason.trim().length >= 25 ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>{followUpReason.trim().length} karakter (minimal 25)</p>
+                    placeholder={`Jelaskan mengapa masalah ini perlu diprioritaskan... (minimal ${MIN_WORDS} kata)`} />
+                  <p className={`mt-1 text-[10px] ${countWords(followUpReason) >= MIN_WORDS ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
+                    {countWords(followUpReason)} / {MIN_WORDS} kata{countWords(followUpReason) >= MIN_WORDS ? ' ✓' : ` — minimal ${MIN_WORDS} kata untuk melanjutkan`}
+                  </p>
                 </div>
                 {!followUpSubmitted && (
-                  <button onClick={handleFollowUpSubmit} disabled={!followUpChoice || followUpReason.trim().length < 25}
+                  <button onClick={handleFollowUpSubmit} disabled={!followUpChoice || countWords(followUpReason) < MIN_WORDS}
                     className={`mt-4 w-full rounded-lg py-2.5 text-xs font-black transition-all ${
-                      followUpChoice && followUpReason.trim().length >= 25 ? 'bg-[#395886] text-white shadow-lg' : 'cursor-not-allowed bg-[#D5DEEF] text-[#395886]/40'
+                      followUpChoice && countWords(followUpReason) >= MIN_WORDS ? 'bg-[#395886] text-white shadow-lg' : 'cursor-not-allowed bg-[#D5DEEF] text-[#395886]/40'
                     }`}>Konfirmasi Prioritas</button>
                 )}
               </div>
