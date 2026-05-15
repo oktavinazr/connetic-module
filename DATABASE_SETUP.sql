@@ -281,8 +281,18 @@ CREATE TABLE IF NOT EXISTS public.admin_stage_sync (
     force_advance BOOLEAN DEFAULT false,
     force_advance_at TIMESTAMPTZ,
     status TEXT DEFAULT 'active',
+    session_status TEXT DEFAULT 'idle',
+    paused_at TIMESTAMPTZ,
+    total_paused_ms INTEGER DEFAULT 0,
+    added_minutes INTEGER DEFAULT 0,
     updated_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Add new columns for existing tables (safe if already exist)
+ALTER TABLE public.admin_stage_sync ADD COLUMN IF NOT EXISTS session_status TEXT DEFAULT 'idle';
+ALTER TABLE public.admin_stage_sync ADD COLUMN IF NOT EXISTS paused_at TIMESTAMPTZ;
+ALTER TABLE public.admin_stage_sync ADD COLUMN IF NOT EXISTS total_paused_ms INTEGER DEFAULT 0;
+ALTER TABLE public.admin_stage_sync ADD COLUMN IF NOT EXISTS added_minutes INTEGER DEFAULT 0;
 
 ALTER TABLE public.admin_stage_sync DISABLE ROW LEVEL SECURITY;
 

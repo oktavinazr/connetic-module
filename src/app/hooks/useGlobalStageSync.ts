@@ -1,33 +1,30 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { getStageTimers, getTimerRemaining, type StageTimer } from '../utils/stageTimer';
+import { getStageTimers } from '../utils/stageTimer';
 import {
   getAdminStageSync,
   clearForceAdvance,
+  calcTimerRemaining,
   type AdminStageSync,
 } from '../utils/adminStageSync';
 
 interface GlobalStageSyncState {
-  /** Whether the global sync is loaded */
   loaded: boolean;
-  /** The admin-controlled global sync state */
   sync: AdminStageSync | null;
-  /** The stage timer for the current stage */
-  timer: StageTimer | undefined;
-  /** Remaining seconds (-1 = unlimited) */
+  timerMinutes: number;
   timerRemaining: number;
-  /** Whether the timer has expired */
   timerExpired: boolean;
-  /** Whether force-advance was triggered by admin */
+  isPaused: boolean;
+  isUnlimited: boolean;
   forceAdvanced: boolean;
-  /** Whether student should show "waiting" screen */
+  isIdle: boolean;
   shouldWait: boolean;
-  /** Manually trigger a refresh of sync state */
+  wasReset: boolean;
   refresh: () => void;
-  /** Called by student when they detect force-advance and are advancing */
   acknowledgeAdvance: () => void;
+  clearReset: () => void;
 }
 
-const POLL_INTERVAL_MS = 3000;
+const POLL_INTERVAL_MS = 1000;
 
 export function useGlobalStageSync(
   lessonId: string,
@@ -36,25 +33,55 @@ export function useGlobalStageSync(
 ): GlobalStageSyncState {
   const [sync, setSync] = useState<AdminStageSync | null>(null);
   const [loaded, setLoaded] = useState(false);
-  const [timer, setTimer] = useState<StageTimer | undefined>();
+  const [timerMinutes, setTimerMinutes] = useState(0);
   const [timerRemaining, setTimerRemaining] = useState(-1);
   const [timerExpired, setTimerExpired] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isUnlimited, setIsUnlimited] = useState(true);
   const [forceAdvanced, setForceAdvanced] = useState(false);
+  const [wasReset, setWasReset] = useState(false);
   const stageCompletedRef = useRef(isStageCompleted);
   stageCompletedRef.current = isStageCompleted;
+  const prevStartedAtRef = useRef<string | null | undefined>(null);
+
+  const isIdle = !sync || sync.session_status === 'idle';
 
   const refresh = useCallback(async () => {
-    const s = await getAdminStageSync(lessonId);
+    const [s, timers] = await Promise.all([
+      getAdminStageSync(lessonId),
+      getStageTimers(lessonId),
+    ]);
     setSync(s);
-    setLoaded(true);
-  }, [lessonId]);
 
-  // Load timers
-  useEffect(() => {
-    getStageTimers(lessonId).then(timers => {
-      const t = timers.find(tm => tm.stage_index === stageIndex);
-      setTimer(t);
-    });
+    const tm = timers.find(t => t.stage_index === (s?.current_stage_index ?? stageIndex));
+    const mins = tm?.duration_minutes ?? 0;
+    setTimerMinutes(mins);
+
+    if (s && s.session_status !== 'idle') {
+      const { seconds, isExpired, isUnlimited: unlimited, isPaused: paused } = calcTimerRemaining(s, mins);
+      setTimerRemaining(seconds);
+      setTimerExpired(isExpired);
+      setIsUnlimited(unlimited);
+      setIsPaused(paused);
+    } else {
+      setTimerRemaining(-1);
+      setTimerExpired(false);
+      setIsUnlimited(true);
+      setIsPaused(false);
+    }
+
+    setLoaded(true);
+
+    // Detect reset: stage_started_at changed to a newer value while student was completed
+    if (
+      prevStartedAtRef.current &&
+      s?.stage_started_at &&
+      s.stage_started_at !== prevStartedAtRef.current &&
+      stageCompletedRef.current
+    ) {
+      setWasReset(true);
+    }
+    prevStartedAtRef.current = s?.stage_started_at;
   }, [lessonId, stageIndex]);
 
   // Initial load + polling
@@ -64,31 +91,21 @@ export function useGlobalStageSync(
     return () => clearInterval(interval);
   }, [refresh]);
 
-  // Compute timer remaining
+  // Local countdown tick between polls
   useEffect(() => {
-    if (!timer) {
-      setTimerRemaining(-1);
-      setTimerExpired(false);
-      return;
-    }
-
-    const updateTimer = () => {
-      // Use the admin sync started_at if available, else fallback to local
-      const startedAt = sync?.stage_started_at;
-      const { seconds, isExpired } = getTimerRemaining(timer, startedAt ?? null);
-
-      if (isExpired && !timerExpired) {
-        setTimerExpired(true);
-        setTimerRemaining(0);
-      } else if (!isExpired) {
-        setTimerRemaining(seconds);
-      }
-    };
-
-    updateTimer();
-    const t = setInterval(updateTimer, 1000);
+    if (!loaded || isIdle || isPaused || isUnlimited || timerRemaining <= 0) return;
+    const t = setInterval(() => {
+      setTimerRemaining(r => Math.max(0, r - 1));
+    }, 1000);
     return () => clearInterval(t);
-  }, [timer, sync?.stage_started_at, timerExpired]);
+  }, [loaded, isIdle, isPaused, isUnlimited, timerRemaining <= 0 ? 0 : 1]);
+
+  // Detect expired
+  useEffect(() => {
+    if (timerRemaining === 0 && !isUnlimited) {
+      setTimerExpired(true);
+    }
+  }, [timerRemaining, isUnlimited]);
 
   // Detect force-advance
   useEffect(() => {
@@ -102,24 +119,21 @@ export function useGlobalStageSync(
     clearForceAdvance(lessonId);
   }, [lessonId]);
 
-  // Should wait: student completed but timer still running OR force_advance not yet
-  // AND not all students have advanced
+  const clearReset = useCallback(() => setWasReset(false), []);
+
   const shouldWait =
     isStageCompleted &&
+    !isIdle &&
+    sync?.session_status !== 'idle' &&
     sync?.status !== 'advanced' &&
-    !timerExpired &&
     !forceAdvanced &&
     sync?.current_stage_index === stageIndex;
 
   return {
-    loaded,
-    sync,
-    timer,
-    timerRemaining,
-    timerExpired,
-    forceAdvanced,
-    shouldWait,
-    refresh,
-    acknowledgeAdvance,
+    loaded, sync,
+    timerMinutes,
+    timerRemaining, timerExpired, isPaused, isUnlimited,
+    forceAdvanced, isIdle, shouldWait, wasReset,
+    refresh, acknowledgeAdvance, clearReset,
   };
 }

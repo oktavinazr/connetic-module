@@ -15,6 +15,7 @@ import {
   Trophy,
   Users,
   Video,
+  Clock,
 } from 'lucide-react';
 import {
   Dialog,
@@ -39,7 +40,7 @@ import { StageAnswerDetail } from '../components/admin/StageDetail';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DragAutoScroll } from '../components/DragAutoScroll';
-import { ActivityGuideBox, CountdownTimer, EssayBox, StageCompletedOverlay } from '../components/stages/StageKit';
+import { ActivityGuideBox, EssayBox, StageCompletedOverlay } from '../components/stages/StageKit';
 import { useGlobalStageSync } from '../hooks/useGlobalStageSync';
 
 type StageType =
@@ -223,7 +224,7 @@ export function LessonPage() {
     return firstIncomplete !== -1 ? firstIncomplete : lesson.stages.length - 1;
   });
   const [showStageSummary, setShowStageSummary] = useState(false);
-  const [guideCollapsed, setGuideCollapsed] = useState(true);
+  // Activity guide is always open
   const [pendingReflection, setPendingReflection] = useState<{ stageAnswer: unknown } | null>(null);
 
   // ── Global Stage Sync (timer + force-advance + waiting) ──
@@ -278,9 +279,21 @@ export function LessonPage() {
   }, [currentStageIndex, lesson, lessonId, navigate, progress, progressLoaded]);
 
   useEffect(() => {
-    setGuideCollapsed(true);
     setPendingReflection(null);
   }, [currentStageIndex]);
+
+  // Sync to admin stage when session is active
+  useEffect(() => {
+    if (!globalSync.loaded || globalSync.isIdle) return;
+    const syncStage = globalSync.sync?.current_stage_index;
+    if (syncStage !== undefined && syncStage !== currentStageIndex) {
+      // Only auto-advance forward, never backward
+      if (syncStage > (currentStageIndex ?? 0)) {
+        setCurrentStageIndex(syncStage);
+        window.scrollTo(0, 0);
+      }
+    }
+  }, [globalSync.sync?.current_stage_index, globalSync.loaded, globalSync.isIdle]);
 
   if (!lesson || currentStageIndex === null) return null;
 
@@ -308,10 +321,15 @@ export function LessonPage() {
   };
 
   const handleStageClick = (index: number) => {
+    // Only allow: completed stages (review) OR the current admin-synced stage
     const isCompleted = progress.completedStages.includes(index);
-    const isNextToComplete = index === 0 || progress.completedStages.includes(index - 1);
+    const syncStage = globalSync.sync?.current_stage_index ?? 0;
+    const isCurrentSyncStage = index === syncStage;
     
-    if (fullyCompleted || isCompleted || isNextToComplete) {
+    // Block if session is idle
+    if (globalSync.isIdle) return;
+    
+    if (fullyCompleted || isCompleted || isCurrentSyncStage) {
       setCurrentStageIndex(index);
       window.scrollTo(0, 0);
     }
@@ -507,7 +525,7 @@ export function LessonPage() {
                   <button
                     key={index}
                     onClick={() => handleStageClick(index)}
-                    disabled={!fullyCompleted}
+                    disabled={!fullyCompleted && !completed && !isCurrent}
                     title={getStageDisplayTitle(stage.type)}
                     className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[10px] font-bold transition-all ${
                       isCurrent
@@ -515,7 +533,7 @@ export function LessonPage() {
                         : completed
                           ? 'border-[#10B981]/20 bg-[#10B981]/10 text-[#10B981]'
                           : 'border-[#D5DEEF] bg-white text-[#395886]/35'
-                    } ${!fullyCompleted ? 'cursor-default' : 'cursor-pointer'}`}
+                    } ${(!fullyCompleted && !completed && !isCurrent) ? 'cursor-default opacity-60' : 'cursor-pointer'}`}
                   >
                     <div
                       className={`h-1.5 w-1.5 shrink-0 rounded-full ${
@@ -618,15 +636,44 @@ export function LessonPage() {
             </div>
           </div>
 
-          {!isStageCompleted && stageGuideSteps.length > 0 && (
-            <ActivityGuideBox
-              steps={stageGuideSteps}
-              collapsed={guideCollapsed}
-              onToggle={() => setGuideCollapsed(!guideCollapsed)}
-            />
-          )}
+          {/* ── Session state screens ── */}
+          {globalSync.isIdle ? (
+            <div className="w-full">
+              <div className="rounded-2xl border-2 border-[#628ECB]/20 bg-gradient-to-br from-[#F0F3FA] to-white p-10 text-center shadow-sm">
+                <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-[#628ECB]/10">
+                  <Clock className="h-10 w-10 text-[#628ECB] animate-pulse" />
+                </div>
+                <h3 className="text-xl font-black text-[#395886]">Menunggu guru memulai sesi pembelajaran...</h3>
+                <p className="mt-2 text-sm text-[#395886]/60 max-w-md mx-auto">
+                  Guru akan memulai sesi kelas sebentar lagi. Tahapan CTL akan terbuka secara otomatis setelah sesi dimulai.
+                </p>
+                <div className="mt-6 flex justify-center">
+                  <div className="flex gap-1.5">
+                    {[0, 1, 2].map(i => (
+                      <div key={i} className="h-2 w-2 rounded-full bg-[#628ECB]/40 animate-bounce"
+                        style={{ animationDelay: `${i * 0.15}s` }} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Pause banner */}
+              {globalSync.isPaused && !isStageCompleted && (
+                <div className="w-full mb-4 p-4 rounded-xl bg-amber-50 border-2 border-amber-200 text-center">
+                  <p className="text-sm font-black text-amber-700">⏸ Sesi Dijeda oleh Guru</p>
+                  <p className="text-xs text-amber-600 mt-1">Timer dihentikan sementara. Tunggu guru melanjutkan sesi.</p>
+                </div>
+              )}
 
-          {isStageCompleted && pendingReflection === null ? (
+              {/* Activity guide */}
+              {!isStageCompleted && stageGuideSteps.length > 0 && (
+                <ActivityGuideBox steps={stageGuideSteps} />
+              )}
+
+              {/* Completed / Waiting / Active stage */}
+              {isStageCompleted && pendingReflection === null ? (
             <div className="flex flex-col gap-4">
               <div className="rounded-2xl border-2 border-[#10B981]/30 bg-gradient-to-r from-[#ECFDF5] to-white p-5 flex items-center gap-4 shadow-sm">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#10B981] shadow-md">
@@ -651,60 +698,51 @@ export function LessonPage() {
                 </div>
               )}
 
-              {((currentStageAnswer as any)?.reflection || (currentStageAnswer as any)?.essay1 || (currentStageAnswer as any)?.essay2 || (currentStageAnswer as any)?.justification || (currentStageAnswer as any)?.summary) && (
-                <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm overflow-hidden">
-                  <div className="flex items-center gap-3 px-5 py-3 bg-[#628ECB]/5 border-b border-[#628ECB]/10">
-                    <Eye className="w-4 h-4 text-[#628ECB]" />
-                    <p className="text-xs font-bold text-[#395886]">Refleksi & Jawaban Esai Kamu</p>
-                  </div>
-                  <div className="p-5 space-y-3">
-                    {(currentStageAnswer as any)?.reflection && (
-                      <p className="text-sm text-[#395886] leading-relaxed italic bg-[#F8FAFF] p-3 rounded-xl border border-[#D5DEEF]">"{(currentStageAnswer as any).reflection}"</p>
-                    )}
-                    {(currentStageAnswer as any)?.essay1 && (
-                      <div>
-                        <p className="text-[10px] font-bold text-[#395886]/50 uppercase mb-1">Esai Aktivitas 1</p>
-                        <p className="text-sm text-[#395886] leading-relaxed italic bg-[#F8FAFF] p-3 rounded-xl border border-[#D5DEEF]">"{(currentStageAnswer as any).essay1}"</p>
-                      </div>
-                    )}
-                    {(currentStageAnswer as any)?.essay2 && (
-                      <div>
-                        <p className="text-[10px] font-bold text-[#395886]/50 uppercase mb-1">Esai Aktivitas 2</p>
-                        <p className="text-sm text-[#395886] leading-relaxed italic bg-[#F8FAFF] p-3 rounded-xl border border-[#D5DEEF]">"{(currentStageAnswer as any).essay2}"</p>
-                      </div>
-                    )}
-                    {(currentStageAnswer as any)?.justification && (
-                      <div>
-                        <p className="text-[10px] font-bold text-[#395886]/50 uppercase mb-1">Argumen & Justifikasi</p>
-                        <p className="text-sm text-[#395886] leading-relaxed italic bg-[#F8FAFF] p-3 rounded-xl border border-[#D5DEEF]">"{(currentStageAnswer as any).justification}"</p>
-                      </div>
-                    )}
-                    {(currentStageAnswer as any)?.summary && !(currentStageAnswer as any)?.reflection && !(currentStageAnswer as any)?.essay1 && !(currentStageAnswer as any)?.essay2 && !(currentStageAnswer as any)?.justification && (
-                      <p className="text-sm text-[#395886] leading-relaxed italic bg-[#F8FAFF] p-3 rounded-xl border border-[#D5DEEF]">"{(currentStageAnswer as any).summary}"</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4 border-t border-[#D5DEEF]">
                 <div className="flex items-center gap-2 text-xs text-[#10B981] font-semibold">
                   <CheckCircle className="w-4 h-4" />
                   Tahap selesai dikerjakan — jawabanmu telah tersimpan
                 </div>
-                <button
-                  onClick={() => {
-                    if (isLastStage) {
-                      setShowStageSummary(true);
-                    } else {
-                      setCurrentStageIndex(currentStageIndex + 1);
-                      window.scrollTo(0, 0);
-                    }
-                  }}
-                  className="flex items-center gap-2 bg-[#628ECB] text-white px-6 py-2.5 rounded-xl hover:bg-[#395886] transition-all font-bold text-sm shadow-md active:scale-95 whitespace-nowrap"
-                >
-                  {isLastStage ? 'Lanjut ke Post-Test' : `Lanjut ke ${getStageDisplayTitle(lesson.stages[currentStageIndex + 1].type)}`}
-                  <ArrowRight className="h-4 w-4" />
-                </button>
+                {/* Only allow advancing when admin has force-advanced/skipped */}
+                {(globalSync.forceAdvanced || globalSync.sync?.status === 'advanced') ? (
+                  <button
+                    onClick={() => {
+                      if (isLastStage) {
+                        setShowStageSummary(true);
+                      } else {
+                        setCurrentStageIndex(currentStageIndex + 1);
+                        window.scrollTo(0, 0);
+                      }
+                    }}
+                    className="flex items-center gap-2 bg-[#628ECB] text-white px-6 py-2.5 rounded-xl hover:bg-[#395886] transition-all font-bold text-sm shadow-md active:scale-95 whitespace-nowrap"
+                  >
+                    {isLastStage ? 'Lanjut ke Post-Test' : `Lanjut ke ${getStageDisplayTitle(lesson.stages[currentStageIndex + 1].type)}`}
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                ) : (
+                  <span className="text-xs text-[#395886]/40 italic">Menunggu guru melanjutkan tahap...</span>
+                )}
+              </div>
+            </div>
+          ) : (globalSync.timerExpired && !globalSync.forceAdvanced) ? (
+            /* ── Timer Expired — all students wait ── */
+            <div className="w-full">
+              <div className="rounded-2xl border-2 border-red-200 bg-gradient-to-br from-red-50 to-white p-8 text-center shadow-sm">
+                <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
+                  <Clock className="h-10 w-10 text-red-500" />
+                </div>
+                <h3 className="text-xl font-black text-[#395886]">⏰ Waktu Habis</h3>
+                <p className="mt-2 text-sm text-[#395886]/60 max-w-md mx-auto">
+                  Waktu pengerjaan telah habis. Tunggu guru melanjutkan ke tahap berikutnya.
+                </p>
+                <div className="mt-6 flex justify-center">
+                  <div className="flex gap-1.5">
+                    {[0, 1, 2].map(i => (
+                      <div key={i} className="h-2 w-2 rounded-full bg-red-300 animate-bounce"
+                        style={{ animationDelay: `${i * 0.15}s` }} />
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           ) : globalSync.shouldWait ? (
@@ -714,18 +752,10 @@ export function LessonPage() {
                 <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-amber-100">
                   <Clock className="h-10 w-10 text-amber-500 animate-pulse" />
                 </div>
-                <h3 className="text-xl font-black text-[#395886]">Menunggu siswa lain...</h3>
+                <h3 className="text-xl font-black text-[#395886]">Menunggu instruksi guru...</h3>
                 <p className="mt-2 text-sm text-[#395886]/60 max-w-md mx-auto">
-                  Kamu sudah menyelesaikan tahap ini. Tunggu hingga semua siswa selesai atau guru melanjutkan ke tahap berikutnya.
+                  Kamu sudah menyelesaikan tahap ini. Guru akan melanjutkan ke tahap berikutnya setelah seluruh siswa siap.
                 </p>
-                {globalSync.timerRemaining > 0 && (
-                  <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white border border-[#D5DEEF] px-4 py-2 shadow-sm">
-                    <Clock className="w-4 h-4 text-[#628ECB]" />
-                    <span className="text-sm font-bold text-[#395886]">
-                      Sisa waktu kelas: {Math.floor(globalSync.timerRemaining / 60)}:{String(globalSync.timerRemaining % 60).padStart(2, '0')}
-                    </span>
-                  </div>
-                )}
                 <div className="mt-6 flex justify-center">
                   <div className="flex gap-1.5">
                     {[0, 1, 2].map(i => (
@@ -741,27 +771,11 @@ export function LessonPage() {
             </div>
           ) : (
             <div className="w-full">
-              {/* Countdown timer synced with global state */}
-              {globalSync.timerRemaining > 0 && !isStageCompleted && !globalSync.timerExpired && (
-                <div className="mb-4">
-                  <CountdownTimer
-                    seconds={globalSync.timerRemaining}
-                    label={`Waktu ${currentStage.type}`}
-                  />
-                </div>
-              )}
-              {globalSync.timerExpired && !isStageCompleted && (
-                <div className="mb-4 p-4 rounded-xl bg-red-50 border-2 border-red-200 text-center">
-                  <p className="text-sm font-black text-red-600">Waktu Habis!</p>
-                  <p className="text-xs text-red-500 mt-1">Aktivitas otomatis terkunci. Jawaban terakhir akan disimpan.</p>
-                </div>
-              )}
-              {(!globalSync.timerExpired || isStageCompleted) && (
-                <DndProvider backend={HTML5Backend}>
-                  <DragAutoScroll />
-                  {renderStage()}
-                </DndProvider>
-              )}
+              {/* Stage content — no timer display for students */}
+              <DndProvider backend={HTML5Backend}>
+                <DragAutoScroll />
+                {renderStage()}
+              </DndProvider>
               {pendingReflection !== null && (
                 <InlineReflectionEssay
                   prompt={
@@ -795,6 +809,8 @@ export function LessonPage() {
                 </div>
               )}
             </div>
+          )}
+            </>
           )}
         </main>
       </div>

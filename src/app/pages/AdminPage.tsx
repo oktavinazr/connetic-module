@@ -1347,12 +1347,88 @@ export function AdminPage() {
   ], [activeStudents, totalStudents]);
 
   function exportCsv() {
-    const headers = [
+    // ===== SHEET 1: ANALISIS BUTIR SOAL (Binary: 1=Benar, 0=Salah, kosong=Belum) =====
+    const preQCount = globalPretest.questions.length;
+    const postQCount = globalPosttest.questions.length;
+
+    // Header info row
+    const infoRow1 = ['ANALISIS BUTIR SOAL — Format: 1 = Benar | 0 = Salah | kosong = Belum Dikerjakan'];
+    const emptyRow = [''];
+    const sectionLabel = (label: string) => [label];
+
+    // Per-question headers
+    const binaryHeaders = [
+      'NIS', 'Nama', 'Kelas',
+      ...Array.from({ length: preQCount }, (_, i) => `Pre-Umum Q${i + 1}`),
+      ...Array.from({ length: postQCount }, (_, i) => `Post-Umum Q${i + 1}`),
+      ...lessonList.flatMap(l => [
+        ...Array.from({ length: l.pretest.questions.length }, (_, i) => `Pre-${l.title} Q${i + 1}`),
+        ...Array.from({ length: l.posttest.questions.length }, (_, i) => `Post-${l.title} Q${i + 1}`),
+      ]),
+    ];
+
+    // Kunci jawaban row
+    const kunciRow = [
+      'KUNCI', 'JAWABAN', '',
+      ...globalPretest.questions.map(q => String.fromCharCode(65 + q.correctAnswer)),
+      ...globalPosttest.questions.map(q => String.fromCharCode(65 + q.correctAnswer)),
+      ...lessonList.flatMap(l => [
+        ...l.pretest.questions.map(q => String.fromCharCode(65 + q.correctAnswer)),
+        ...l.posttest.questions.map(q => String.fromCharCode(65 + q.correctAnswer)),
+      ]),
+    ];
+
+    const binaryRows = filteredResults.map(s => {
+      const preUmum = s.globalPretestCompleted
+        ? globalPretest.questions.map((q, qi) => {
+            const ans = s.globalPretestAnswers[qi];
+            return ans === q.correctAnswer ? 1 : ans != null ? 0 : '';
+          })
+        : Array(preQCount).fill('');
+
+      const postUmum = s.globalPosttestCompleted
+        ? globalPosttest.questions.map((q, qi) => {
+            const ans = s.globalPosttestAnswers[qi];
+            return ans === q.correctAnswer ? 1 : ans != null ? 0 : '';
+          })
+        : Array(postQCount).fill('');
+
+      const lessonDetails = lessonList.flatMap(l => {
+        const ld = s.lessons.find(ls => ls.lessonId === l.id);
+        const preAns = ld?.pretestCompleted
+          ? l.pretest.questions.map((q, qi) => {
+              const ans = ld.pretestAnswers[qi];
+              return ans === q.correctAnswer ? 1 : ans != null ? 0 : '';
+            })
+          : Array(l.pretest.questions.length).fill('');
+        const postAns = ld?.posttestCompleted
+          ? l.posttest.questions.map((q, qi) => {
+              const ans = ld.posttestAnswers[qi];
+              return ans === q.correctAnswer ? 1 : ans != null ? 0 : '';
+            })
+          : Array(l.posttest.questions.length).fill('');
+        return [...preAns, ...postAns];
+      });
+
+      return [
+        s.student.nis, s.student.name, s.student.class,
+        ...preUmum, ...postUmum,
+        ...lessonDetails,
+      ];
+    });
+
+    // Build binary analysis CSV
+    const binaryCsv = [
+      infoRow1, emptyRow, binaryHeaders, kunciRow, ...binaryRows,
+    ].map(r => r.map(v => `"${v ?? ''}"`).join(',')).join('\n');
+
+    // ===== SHEET 2: RINGKASAN NILAI =====
+    const ringkasanHeaders = [
       'NIS', 'Nama', 'Kelas', 'Kelompok', 'Progress (%)',
       'Pre-Test Umum', 'Post-Test Umum',
       ...lessonList.flatMap(l => [`Pre-${l.title}`, `Post-${l.title}`]),
     ];
-    const rows = filteredResults.map(s => [
+    const ringkasanRows = filteredResults.map(s => [
       s.student.nis,
       s.student.name,
       s.student.class,
@@ -1365,8 +1441,16 @@ export function AdminPage() {
         l.posttestCompleted ? l.posttest ?? 0 : '-',
       ]),
     ]);
-    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
-    const blob = new Blob(['ï»¿' + csv], { type: 'text/csv;charset=utf-8;' });
+
+    const ringkasanLabel = [['RINGKASAN NILAI']];
+    const ringkasanCsv = [
+      ...ringkasanLabel, emptyRow, ringkasanHeaders, ...ringkasanRows,
+    ].map(r => r.map(v => `"${v ?? ''}"`).join(',')).join('\n');
+
+    // Gabung: Sheet Analisis Butir Soal dulu, lalu Sheet Ringkasan
+    const combinedCsv = `${binaryCsv}\n\n\n\n\n${ringkasanCsv}`;
+
+    const blob = new Blob(['\uFEFF' + combinedCsv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

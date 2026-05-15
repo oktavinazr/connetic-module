@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   ChevronDown, ChevronRight, CheckCircle, XCircle, RotateCcw, BookOpen,
   GripVertical, Info, AlertCircle, Layers, Tag, ArrowRight, PenLine,
-  Link as LinkIcon, GraduationCap, Lightbulb
+  Link as LinkIcon, GraduationCap, Lightbulb, Database, Zap, Network, ShieldCheck
 } from 'lucide-react';
 import { useDrag, useDrop } from 'react-dnd';
 import { getCurrentUser } from '../../utils/auth';
@@ -609,34 +609,111 @@ function MatchingPhase({ pairs, lessonId, stageIndex, onComplete, onNext, shuffl
   );
 }
 
-// -- Material Viewer ----------------------------------------------------------
+// -- Material Viewer (Redesigned - modern, visual, interactive) -------------
 
 function MaterialViewer({ material, onNext }: { material: InquiryStageProps['material'], onNext: () => void }) {
   if (!material) return null;
+
+  // Split content into logical segments if there are multiple paragraphs
+  const mainConcepts = material.content.slice(0, Math.ceil(material.content.length / 2));
+  const details = material.content.slice(Math.ceil(material.content.length / 2));
+
+  const conceptIcons = [
+    { icon: <Database className="w-5 h-5" />, bg: 'bg-[#628ECB]/10', text: 'text-[#628ECB]' },
+    { icon: <Zap className="w-5 h-5" />, bg: 'bg-[#F59E0B]/10', text: 'text-[#F59E0B]' },
+    { icon: <Layers className="w-5 h-5" />, bg: 'bg-[#8B5CF6]/10', text: 'text-[#8B5CF6]' },
+    { icon: <Network className="w-5 h-5" />, bg: 'bg-[#10B981]/10', text: 'text-[#10B981]' },
+    { icon: <Lightbulb className="w-5 h-5" />, bg: 'bg-[#EC4899]/10', text: 'text-[#EC4899]' },
+    { icon: <ShieldCheck className="w-5 h-5" />, bg: 'bg-[#6366F1]/10', text: 'text-[#6366F1]' },
+  ];
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500 text-center">
-      <div className="bg-white rounded-2xl border-2 border-[#10B981]/20 shadow-sm overflow-hidden p-8">
-        <div className="flex items-center gap-4 mb-8 text-left">
-          <div className="w-14 h-14 rounded-2xl bg-[#10B981]/10 flex items-center justify-center shrink-0">
-            <GraduationCap className="w-8 h-8 text-[#10B981]" />
+    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
+      {/* Header card */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#10B981] to-[#059669] p-6 text-white shadow-lg">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+        <div className="relative flex items-start gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center shrink-0 backdrop-blur-sm">
+            <GraduationCap className="w-7 h-7 text-white" />
           </div>
           <div>
-            <p className="text-[10px] font-black text-[#10B981] uppercase tracking-widest">Materi Pembelajaran</p>
-            <h2 className="text-xl font-black text-[#395886]">{material.title}</h2>
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60 mb-1">Materi Pembelajaran</p>
+            <h2 className="text-xl font-black text-white leading-tight">{material.title}</h2>
+            <p className="text-xs text-white/70 mt-1">Pahami konsep dasar sebelum eksplorasi lebih lanjut</p>
           </div>
         </div>
-        <div className="space-y-4 mb-8 text-left">
-          {material.content.map((p, i) => <p key={i} className="text-[#395886]/80 text-sm leading-relaxed font-medium">{p}</p>)}
-        </div>
-        {material.examples && (
-          <div className="bg-[#F8FAFF] rounded-2xl p-6 border-2 border-[#10B981]/10 mb-8 text-left">
-            <div className="grid sm:grid-cols-2 gap-3">
-              {material.examples.map((ex, i) => <div key={i} className="flex items-center gap-3 bg-white p-3 rounded-xl border border-[#D5DEEF]"><div className="w-2 h-2 rounded-full bg-[#10B981]" /><span className="text-xs font-bold text-[#395886]">{ex}</span></div>)}
-            </div>
-          </div>
-        )}
-        <button onClick={onNext} className="w-full py-4 rounded-2xl bg-[#10B981] text-white font-black text-sm shadow-lg active:scale-95 transition-all">Saya Sudah Memahami Materi <ArrowRight className="w-5 h-5 ml-2 inline" /></button>
       </div>
+
+      {/* Concept cards grid */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        {mainConcepts.map((paragraph, i) => {
+          const ico = conceptIcons[i % conceptIcons.length];
+          return (
+            <div key={i} className="group relative rounded-2xl border-2 border-[#D5DEEF] bg-white p-5 shadow-sm hover:shadow-md hover:border-[#10B981]/30 transition-all duration-300">
+              <div className={`w-10 h-10 rounded-xl ${ico.bg} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+                <span className={ico.text}>{ico.icon}</span>
+              </div>
+              <span className="absolute top-4 right-4 text-[10px] font-black text-[#395886]/15">0{i + 1}</span>
+              <p className="text-sm text-[#395886]/80 leading-relaxed font-medium">{paragraph}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Detail section - timeline style */}
+      {details.length > 0 && (
+        <div className="rounded-2xl border-2 border-[#10B981]/15 bg-[#F0FDF6] p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-5">
+            <Info className="w-4 h-4 text-[#10B981]" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981]">Pendalaman Konsep</p>
+          </div>
+          <div className="space-y-4">
+            {details.map((paragraph, i) => (
+              <div key={i} className="flex gap-4">
+                <div className="flex flex-col items-center">
+                  <div className="w-8 h-8 rounded-full bg-[#10B981] text-white flex items-center justify-center text-xs font-black shrink-0 shadow-sm">
+                    {mainConcepts.length + i + 1}
+                  </div>
+                  {i < details.length - 1 && <div className="w-0.5 flex-1 bg-[#10B981]/20 mt-1" />}
+                </div>
+                <div className="flex-1 bg-white rounded-xl border border-[#10B981]/10 p-4 -mt-1">
+                  <p className="text-sm text-[#395886]/80 leading-relaxed font-medium">{paragraph}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Examples accordion */}
+      {material.examples && material.examples.length > 0 && (
+        <div className="rounded-2xl border-2 border-[#F59E0B]/20 bg-gradient-to-br from-amber-50 to-white p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <Lightbulb className="w-5 h-5 text-[#F59E0B]" />
+            <p className="text-xs font-black uppercase tracking-widest text-[#F59E0B]">Contoh di Dunia Nyata</p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {material.examples.map((ex, i) => (
+              <div key={i} className="flex items-start gap-3 bg-white p-4 rounded-xl border border-[#F59E0B]/15 shadow-sm hover:shadow-md transition-shadow">
+                <div className="w-8 h-8 rounded-lg bg-[#F59E0B]/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="text-xs font-black text-[#F59E0B]">{i + 1}</span>
+                </div>
+                <p className="text-xs font-bold text-[#395886] leading-relaxed">{ex}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* CTA button */}
+      <button
+        onClick={onNext}
+        className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-black text-sm shadow-lg shadow-[#10B981]/20 hover:shadow-xl hover:shadow-[#10B981]/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+      >
+        Saya Sudah Memahami Materi
+        <ArrowRight className="w-5 h-5" />
+      </button>
     </div>
   );
 }

@@ -8,15 +8,32 @@ export interface AdminStageSync {
   force_advance: boolean;
   force_advance_at: string | null;
   status: 'active' | 'waiting' | 'advanced';
+  session_status: 'idle' | 'active' | 'paused';
+  paused_at: string | null;
+  total_paused_ms: number;
+  added_minutes: number;
   updated_at?: string;
 }
 
 const cache = new Map<string, AdminStageSync>();
 
-/**
- * Get the current global stage sync state for a lesson.
- * This is a singleton row per lesson that controls synchronized stage progression.
- */
+function normalizeSync(data: any): AdminStageSync {
+  return {
+    id: data.id,
+    lesson_id: data.lesson_id,
+    current_stage_index: data.current_stage_index ?? 0,
+    stage_started_at: data.stage_started_at ?? null,
+    force_advance: data.force_advance ?? false,
+    force_advance_at: data.force_advance_at ?? null,
+    status: data.status ?? 'active',
+    session_status: data.session_status ?? 'idle',
+    paused_at: data.paused_at ?? null,
+    total_paused_ms: data.total_paused_ms ?? 0,
+    added_minutes: data.added_minutes ?? 0,
+    updated_at: data.updated_at,
+  };
+}
+
 export async function getAdminStageSync(lessonId: string): Promise<AdminStageSync | null> {
   const cached = cache.get(lessonId);
   if (cached) return { ...cached };
@@ -27,64 +44,150 @@ export async function getAdminStageSync(lessonId: string): Promise<AdminStageSyn
     .eq('lesson_id', lessonId)
     .maybeSingle();
 
-  if (error) {
-    console.error('[getAdminStageSync]', error.message);
+  if (error || !data) {
+    if (error) console.error('[getAdminStageSync]', error.message);
     return null;
   }
 
-  if (!data) return null;
-
-  const sync: AdminStageSync = {
-    id: data.id,
-    lesson_id: data.lesson_id,
-    current_stage_index: data.current_stage_index,
-    stage_started_at: data.stage_started_at ?? null,
-    force_advance: data.force_advance ?? false,
-    force_advance_at: data.force_advance_at ?? null,
-    status: data.status ?? 'active',
-    updated_at: data.updated_at,
-  };
-
+  const sync = normalizeSync(data);
   cache.set(lessonId, sync);
   return { ...sync };
 }
 
-/**
- * Initialize or update the global stage sync for a lesson.
- * Called when a new stage begins for the class.
- */
-export async function setAdminStageSync(
-  lessonId: string,
-  stageIndex: number,
-  stageStartedAt?: string,
-): Promise<void> {
+/** Start session: set status=active, stage=0, record start time */
+export async function startSession(lessonId: string): Promise<void> {
   const now = new Date().toISOString();
-  const payload = {
-    lesson_id: lessonId,
-    current_stage_index: stageIndex,
-    stage_started_at: stageStartedAt ?? now,
-    force_advance: false,
-    force_advance_at: null,
-    status: 'active',
-    updated_at: now,
-  };
+  const { error } = await supabase
+    .from('admin_stage_sync')
+    .upsert({
+      lesson_id: lessonId,
+      current_stage_index: 0,
+      stage_started_at: now,
+      force_advance: false,
+      force_advance_at: null,
+      status: 'active',
+      session_status: 'active',
+      paused_at: null,
+      total_paused_ms: 0,
+      added_minutes: 0,
+      updated_at: now,
+    }, { onConflict: 'lesson_id' });
+
+  if (error) console.error('[startSession]', error.message);
+  cache.delete(lessonId);
+}
+
+/** Pause session for all students */
+export async function pauseSession(lessonId: string): Promise<void> {
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from('admin_stage_sync')
+    .update({
+      session_status: 'paused',
+      paused_at: now,
+      updated_at: now,
+    })
+    .eq('lesson_id', lessonId);
+
+  if (error) console.error('[pauseSession]', error.message);
+  cache.delete(lessonId);
+}
+
+/** Resume session from pause */
+export async function resumeSession(lessonId: string): Promise<void> {
+  // Read current state to calculate accumulated pause time
+  const current = await getAdminStageSync(lessonId);
+  const now = new Date();
+  const nowISO = now.toISOString();
+
+  let additionalPauseMs = 0;
+  if (current?.paused_at) {
+    additionalPauseMs = now.getTime() - new Date(current.paused_at).getTime();
+  }
 
   const { error } = await supabase
     .from('admin_stage_sync')
-    .upsert(payload, { onConflict: 'lesson_id' });
+    .update({
+      session_status: 'active',
+      paused_at: null,
+      total_paused_ms: (current?.total_paused_ms ?? 0) + additionalPauseMs,
+      updated_at: nowISO,
+    })
+    .eq('lesson_id', lessonId);
 
-  if (error) {
-    console.error('[setAdminStageSync]', error.message);
-    return;
-  }
+  if (error) console.error('[resumeSession]', error.message);
+  cache.delete(lessonId);
+}
+
+/** Add minutes to current stage timer */
+export async function addSessionTime(lessonId: string, minutes: number): Promise<void> {
+  const current = await getAdminStageSync(lessonId);
+  const now = new Date().toISOString();
+
+  const { error } = await supabase
+    .from('admin_stage_sync')
+    .update({
+      added_minutes: (current?.added_minutes ?? 0) + minutes,
+      updated_at: now,
+    })
+    .eq('lesson_id', lessonId);
+
+  if (error) console.error('[addSessionTime]', error.message);
+  cache.delete(lessonId);
+}
+
+/** Skip to next stage (advance all students) */
+export async function skipToNextStage(lessonId: string): Promise<void> {
+  const current = await getAdminStageSync(lessonId);
+  const nextIndex = (current?.current_stage_index ?? 0) + 1;
+  const now = new Date().toISOString();
+
+  const { error } = await supabase
+    .from('admin_stage_sync')
+    .update({
+      current_stage_index: nextIndex,
+      stage_started_at: now,
+      force_advance: false,
+      force_advance_at: null,
+      status: 'active',
+      session_status: 'active',
+      paused_at: null,
+      total_paused_ms: 0,
+      added_minutes: 0,
+      updated_at: now,
+    })
+    .eq('lesson_id', lessonId);
+
+  if (error) console.error('[skipToNextStage]', error.message);
+  cache.delete(lessonId);
+}
+
+/** Reset current stage: restart timer only, preserve all student progress */
+export async function resetCurrentStage(lessonId: string): Promise<void> {
+  const now = new Date().toISOString();
+
+  // Only reset sync state — student answers and progress are preserved
+  const { error: syncError } = await supabase
+    .from('admin_stage_sync')
+    .update({
+      stage_started_at: now,
+      force_advance: false,
+      force_advance_at: null,
+      status: 'waiting',
+      session_status: 'idle',
+      paused_at: null,
+      total_paused_ms: 0,
+      added_minutes: 0,
+      updated_at: now,
+    })
+    .eq('lesson_id', lessonId);
+
+  if (syncError) console.error('[resetCurrentStage]', syncError.message);
 
   cache.delete(lessonId);
 }
 
-/**
- * Admin force-advances the stage.
- * All students will detect this on their next poll and advance.
- */
+/** Legacy compat: force advance (same as skip but doesn't reset timer) */
 export async function forceAdvanceStage(lessonId: string): Promise<void> {
   const now = new Date().toISOString();
   const { error } = await supabase
@@ -97,18 +200,10 @@ export async function forceAdvanceStage(lessonId: string): Promise<void> {
     })
     .eq('lesson_id', lessonId);
 
-  if (error) {
-    console.error('[forceAdvanceStage]', error.message);
-    return;
-  }
-
+  if (error) console.error('[forceAdvanceStage]', error.message);
   cache.delete(lessonId);
 }
 
-/**
- * Reset the force_advance flag after students have advanced.
- * Called server-side but we expose it for cleanup.
- */
 export async function clearForceAdvance(lessonId: string): Promise<void> {
   const { error } = await supabase
     .from('admin_stage_sync')
@@ -120,18 +215,50 @@ export async function clearForceAdvance(lessonId: string): Promise<void> {
     })
     .eq('lesson_id', lessonId);
 
-  if (error) {
-    console.error('[clearForceAdvance]', error.message);
-    return;
-  }
-
+  if (error) console.error('[clearForceAdvance]', error.message);
   cache.delete(lessonId);
 }
 
-/**
- * Get all active sessions for a specific lesson and stage.
- * Used by the admin monitoring grid.
- */
+/** Calculate remaining seconds accounting for pause and added time */
+export function calcTimerRemaining(
+  sync: AdminStageSync | null,
+  timerMinutes: number,
+): { seconds: number; isExpired: boolean; isUnlimited: boolean; isPaused: boolean } {
+  if (!sync || sync.session_status === 'idle') {
+    return { seconds: -1, isExpired: false, isUnlimited: true, isPaused: false };
+  }
+
+  if (timerMinutes <= 0) {
+    return { seconds: -1, isExpired: false, isUnlimited: true, isPaused: sync.session_status === 'paused' };
+  }
+
+  if (!sync.stage_started_at) {
+    return { seconds: timerMinutes * 60 + (sync.added_minutes ?? 0) * 60, isExpired: false, isUnlimited: false, isPaused: sync.session_status === 'paused' };
+  }
+
+  const now = Date.now();
+  const startedMs = new Date(sync.stage_started_at).getTime();
+  const totalDurationSec = timerMinutes * 60 + (sync.added_minutes ?? 0) * 60;
+
+  // Calculate effective paused duration
+  let pausedMs = sync.total_paused_ms ?? 0;
+  if (sync.session_status === 'paused' && sync.paused_at) {
+    pausedMs += now - new Date(sync.paused_at).getTime();
+  }
+
+  const elapsedSec = (now - startedMs - pausedMs) / 1000;
+  const remaining = Math.max(0, totalDurationSec - elapsedSec);
+
+  return {
+    seconds: Math.ceil(remaining),
+    isExpired: remaining <= 0,
+    isUnlimited: false,
+    isPaused: sync.session_status === 'paused',
+  };
+}
+
+// ── Student status query (unchanged) ─────────────────────────────────────────
+
 export interface StudentStageStatus {
   userId: string;
   userName: string;
@@ -152,7 +279,6 @@ export async function getStudentStageStatuses(
   lessonId: string,
   stageIndex?: number,
 ): Promise<StudentStageStatus[]> {
-  // Get all users first
   const { data: users, error: userError } = await supabase
     .from('users')
     .select('id, name, nis, class, group_name')
@@ -163,7 +289,6 @@ export async function getStudentStageStatuses(
     return [];
   }
 
-  // Get all ctl_activity_sessions for this lesson
   let query = supabase
     .from('ctl_activity_sessions')
     .select('*')
@@ -180,16 +305,14 @@ export async function getStudentStageStatuses(
     return [];
   }
 
-  const sessionMap = new Map<string, typeof sessions[0]>();
+  const sessionMap = new Map<string, any>();
   (sessions || []).forEach(s => {
-    const key = `${s.user_id}|${s.stage_index}`;
-    sessionMap.set(key, s);
+    sessionMap.set(`${s.user_id}|${s.stage_index}`, s);
   });
 
   return users.map(user => {
     const key = `${user.id}|${stageIndex ?? 0}`;
     const session = sessionMap.get(key);
-
     return {
       userId: user.id,
       userName: user.name,
@@ -208,31 +331,20 @@ export async function getStudentStageStatuses(
   });
 }
 
-/**
- * Count how many students are completed vs total for a stage.
- */
 export async function getStageCompletionStats(
   lessonId: string,
   stageIndex: number,
 ): Promise<{ completed: number; total: number; inProgress: number; notStarted: number }> {
   const statuses = await getStudentStageStatuses(lessonId, stageIndex);
-  const completed = statuses.filter(s => s.status === 'completed').length;
-  const inProgress = statuses.filter(s => s.status === 'in_progress').length;
-  const notStarted = statuses.filter(s => s.status === 'not_started').length;
-
   return {
-    completed,
+    completed: statuses.filter(s => s.status === 'completed').length,
     total: statuses.length,
-    inProgress,
-    notStarted,
+    inProgress: statuses.filter(s => s.status === 'in_progress').length,
+    notStarted: statuses.filter(s => s.status === 'not_started').length,
   };
 }
 
-// Polling helper: clear cache
 export function clearSyncCache(lessonId?: string) {
-  if (lessonId) {
-    cache.delete(lessonId);
-  } else {
-    cache.clear();
-  }
+  if (lessonId) cache.delete(lessonId);
+  else cache.clear();
 }

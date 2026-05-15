@@ -1,53 +1,69 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   getStudentStageStatuses,
-  getStageCompletionStats,
-  forceAdvanceStage,
+  startSession,
+  pauseSession,
+  resumeSession,
+  skipToNextStage,
+  resetCurrentStage,
   getAdminStageSync,
-  setAdminStageSync,
+  calcTimerRemaining,
   type StudentStageStatus,
 } from '../../utils/adminStageSync';
-import { getStageTimers, getTimerRemaining, type StageTimer } from '../../utils/stageTimer';
+import { getStageTimers } from '../../utils/stageTimer';
 import { lessons } from '../../data/lessons';
-import { RefreshCw, SkipForward, Users, Clock, CheckCircle, Timer, Play } from 'lucide-react';
+import { RefreshCw, SkipForward, Users, Clock, Timer, Filter, Play, Pause, RotateCcw } from 'lucide-react';
 
-const STATUS_COLORS: Record<string, { bg: string; text: string; border: string; label: string }> = {
-  not_started: { bg: 'bg-gray-100', text: 'text-gray-400', border: 'border-gray-200', label: 'Belum Mulai' },
-  in_progress: { bg: 'bg-[#628ECB]/10', text: 'text-[#628ECB]', border: 'border-[#628ECB]/30', label: 'Mengerjakan' },
-  completed: { bg: 'bg-[#10B981]/10', text: 'text-[#10B981]', border: 'border-[#10B981]/30', label: 'Selesai' },
-};
-
-const STAGE_COLORS = ['#628ECB', '#10B981', '#8B5CF6', '#F59E0B', '#EC4899', '#F59E0B', '#8B5CF6'];
-const STAGE_NAMES = ['Constructivism', 'Inquiry', 'Questioning', 'Learning Community', 'Modeling', 'Reflection', 'Authentic Assessment'];
+const STAGE_LABELS = ['Constructivism', 'Inquiry', 'Questioning', 'Learning Com.', 'Modeling', 'Reflection', 'Assessment'];
 
 export function RealtimeMonitorSection() {
   const [lessonId, setLessonId] = useState('1');
-  const [statuses, setStatuses] = useState<StudentStageStatus[]>([]);
-  const [stageIndex, setStageIndex] = useState(0);
+  const [allStatuses, setAllStatuses] = useState<Record<number, StudentStageStatus[]>>({});
   const [loading, setLoading] = useState(true);
-  const [timers, setTimers] = useState<StageTimer[]>([]);
-  const [timerRemaining, setTimerRemaining] = useState(-1);
   const [syncState, setSyncState] = useState<Awaited<ReturnType<typeof getAdminStageSync>>>(null);
-  const [stats, setStats] = useState({ completed: 0, total: 0, inProgress: 0, notStarted: 0 });
-  const [skipping, setSkipping] = useState(false);
-  const [starting, setStarting] = useState(false);
-  const [tick, setTick] = useState(0);
+  const [timerMinutes, setTimerMinutes] = useState(0);
+  const [timerRemaining, setTimerRemaining] = useState(-1);
+  const [timerExpired, setTimerExpired] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isUnlimited, setIsUnlimited] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [filterGroup, setFilterGroup] = useState('all');
 
   const lesson = lessons[lessonId];
+  const stageCount = lesson?.stages?.length ?? 7;
 
-  // Auto-refresh every 5 seconds
   const refresh = useCallback(async () => {
-    const [s, tm, sy] = await Promise.all([
-      getStudentStageStatuses(lessonId, stageIndex),
-      getStageTimers(lessonId),
-      getAdminStageSync(lessonId),
-    ]);
-    setStatuses(s);
-    setTimers(tm);
-    setSyncState(sy);
+    const sync = await getAdminStageSync(lessonId);
+    setSyncState(sync);
+
+    const timers = await getStageTimers(lessonId);
+    const stageIdx = sync?.current_stage_index ?? 0;
+    const tm = timers.find(t => t.stage_index === stageIdx);
+    const mins = tm?.duration_minutes ?? 0;
+    setTimerMinutes(mins);
+
+    if (sync && sync.session_status !== 'idle') {
+      const { seconds, isExpired, isUnlimited: unlimited, isPaused: paused } = calcTimerRemaining(sync, mins);
+      setTimerRemaining(seconds);
+      setTimerExpired(isExpired);
+      setIsUnlimited(unlimited);
+      setIsPaused(paused);
+    } else {
+      setTimerRemaining(-1);
+      setTimerExpired(false);
+      setIsUnlimited(true);
+      setIsPaused(false);
+    }
+
+    const stagePromises = Array.from({ length: stageCount }, (_, i) =>
+      getStudentStageStatuses(lessonId, i),
+    );
+    const results = await Promise.all(stagePromises);
+    const statusMap: Record<number, StudentStageStatus[]> = {};
+    results.forEach((r, i) => { statusMap[i] = r; });
+    setAllStatuses(statusMap);
     setLoading(false);
-    setTick(t => t + 1);
-  }, [lessonId, stageIndex]);
+  }, [lessonId, stageCount]);
 
   useEffect(() => {
     setLoading(true);
@@ -56,79 +72,48 @@ export function RealtimeMonitorSection() {
     return () => clearInterval(interval);
   }, [refresh]);
 
-  // Compute stats
-  useEffect(() => {
-    const completed = statuses.filter(s => s.status === 'completed').length;
-    const inProgress = statuses.filter(s => s.status === 'in_progress').length;
-    const notStarted = statuses.filter(s => s.status === 'not_started').length;
-    setStats({ completed, total: statuses.length, inProgress, notStarted });
-  }, [statuses]);
+  const isIdle = !syncState || syncState.session_status === 'idle';
+  const currentSyncStage = syncState?.current_stage_index ?? 0;
 
-  // Compute timer remaining
+  // Local countdown tick
   useEffect(() => {
-    const timer = timers.find(t => t.stage_index === stageIndex);
-    const startedAt = syncState?.stage_started_at;
-    if (timer && timer.duration_minutes > 0) {
-      const { seconds, isExpired } = getTimerRemaining(timer, startedAt ?? null);
-      if (isExpired) {
-        setTimerRemaining(0);
-      } else {
-        setTimerRemaining(seconds);
-      }
-    } else {
-      setTimerRemaining(-1);
-    }
-  }, [timers, stageIndex, syncState, tick]);
-
-  // Real-time countdown tick
-  useEffect(() => {
-    if (timerRemaining <= 0) return;
-    const t = setInterval(() => {
-      setTimerRemaining(r => Math.max(0, r - 1));
-    }, 1000);
+    if (isIdle || isPaused || isUnlimited || timerRemaining <= 0) return;
+    const t = setInterval(() => setTimerRemaining(r => Math.max(0, r - 1)), 1000);
     return () => clearInterval(t);
-  }, [timerRemaining <= 0 ? 0 : 1]);
+  }, [isIdle, isPaused, isUnlimited, timerRemaining]);
 
-  const timer = timers.find(t => t.stage_index === stageIndex);
-  const timerMinutes = timer?.duration_minutes ?? 0;
+  const doAction = async (label: string, fn: () => Promise<void>) => {
+    setActionLoading(label);
+    await fn();
+    await refresh();
+    setActionLoading(null);
+  };
+
   const mins = Math.floor(Math.max(0, timerRemaining) / 60);
   const secs = Math.max(0, timerRemaining) % 60;
-  const allDone = stats.total > 0 && stats.completed === stats.total;
-  const timerExpired = timerRemaining === 0 && timerMinutes > 0;
 
-  const handleForceAdvance = async () => {
-    if (!window.confirm(`Lanjutkan semua siswa ke tahap berikutnya sekarang?`)) return;
-    setSkipping(true);
-    await forceAdvanceStage(lessonId);
-    await refresh();
-    setSkipping(false);
-  };
+  // Flat, stable, alphabetically sorted
+  const stage0 = allStatuses[0] ?? [];
+  const allStudents = [...stage0].sort((a, b) => a.userName.localeCompare(b.userName, 'id'));
+  const groupNames = [...new Set(allStudents.map(s => s.groupName || 'Belum Berkelompok'))].sort();
+  const filteredStudents = filterGroup === 'all'
+    ? allStudents
+    : allStudents.filter(s => (s.groupName || 'Belum Berkelompok') === filterGroup);
 
-  const handleStartStage = async (idx: number) => {
-    setStarting(true);
-    setStageIndex(idx);
-    await setAdminStageSync(lessonId, idx);
-    await refresh();
-    setStarting(false);
-  };
+  const stageStats = Array.from({ length: stageCount }, (_, i) => {
+    const ss = allStatuses[i] ?? [];
+    return {
+      completed: ss.filter(s => s.status === 'completed').length,
+      inProgress: ss.filter(s => s.status === 'in_progress').length,
+      notStarted: ss.filter(s => s.status === 'not_started').length,
+      total: ss.length,
+    };
+  });
 
-  const groupedByGroup = () => {
-    const groups: Record<string, StudentStageStatus[]> = {};
-    statuses.forEach(s => {
-      const g = s.groupName || 'Belum Berkelompok';
-      if (!groups[g]) groups[g] = [];
-      groups[g].push(s);
-    });
-    return groups;
-  };
+  const totalCompleted = stageStats[currentSyncStage]?.completed ?? 0;
+  const totalStudents = allStudents.length;
 
-  if (!lesson) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <p className="text-sm text-[#395886]/40">Pilih pertemuan untuk memantau.</p>
-      </div>
-    );
-  }
+  const isLastStage = currentSyncStage >= stageCount - 1;
 
   return (
     <div className="space-y-6">
@@ -137,223 +122,257 @@ export function RealtimeMonitorSection() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#628ECB] mb-2">Realtime Monitor</p>
           <h1 className="text-3xl font-bold text-[#395886] tracking-tight mb-1">Monitoring Aktivitas CTL Realtime</h1>
-          <p className="text-sm text-[#395886]/60">Pantau progres seluruh siswa per tahapan secara langsung. Sinkronisasi otomatis setiap 5 detik.</p>
+          <p className="text-sm text-[#395886]/60">Kontrol sesi kelas, timer, dan pantau progres seluruh siswa.</p>
         </div>
         <div className="flex items-center gap-3">
-          <select
-            value={lessonId}
-            onChange={e => { setLessonId(e.target.value); setStageIndex(0); }}
-            className="px-4 py-2 text-sm border border-[#D5DEEF] rounded-xl bg-white text-[#395886] font-semibold"
-          >
+          <select value={lessonId} onChange={e => setLessonId(e.target.value)}
+            className="px-4 py-2 text-sm border border-[#D5DEEF] rounded-xl bg-white text-[#395886] font-semibold">
             {Object.keys(lessons).map(id => (
               <option key={id} value={id}>Pertemuan {id}: {lessons[id].topic}</option>
             ))}
           </select>
-          <button
-            onClick={refresh}
-            className="p-2.5 rounded-xl border border-[#D5DEEF] bg-white hover:bg-[#F0F3FA] text-[#628ECB] transition-colors"
-            title="Segarkan"
-          >
+          <button onClick={refresh}
+            className="p-2.5 rounded-xl border border-[#D5DEEF] bg-white hover:bg-[#F0F3FA] text-[#628ECB] transition-colors">
             <RefreshCw className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* Stage Selector */}
-      <div className="bg-white rounded-2xl border border-[#D5DEEF] p-4 shadow-sm">
-        <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/40 mb-3">Pilih Tahapan</p>
-        <div className="flex flex-wrap gap-2">
-          {lesson.stages.map((stage, idx) => (
+      {/* ── Session Controls ── */}
+      <div className="bg-white rounded-2xl border border-[#D5DEEF] p-5 shadow-sm">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Start / Pause / Resume */}
+          {isIdle ? (
             <button
-              key={idx}
-              onClick={() => handleStartStage(idx)}
-              disabled={starting}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border-2
-                ${stageIndex === idx
-                  ? 'text-white shadow-md'
-                  : 'border-[#D5DEEF] bg-white text-[#395886]/60 hover:border-[#628ECB]/30 hover:text-[#395886]'
-                }
-                ${starting ? 'opacity-50 cursor-wait' : 'cursor-pointer'}
-              `}
-              style={stageIndex === idx ? { backgroundColor: STAGE_COLORS[idx], borderColor: STAGE_COLORS[idx] } : {}}
+              onClick={() => doAction('start', () => startSession(lessonId))}
+              disabled={actionLoading !== null}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold bg-[#10B981] text-white shadow-md hover:bg-[#059669] transition-all disabled:opacity-50"
             >
-              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-white/20 text-xs font-black">
-                {idx + 1}
-              </span>
-              {STAGE_NAMES[idx] || stage.type}
+              {actionLoading === 'start' ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              Mulai Sesi
             </button>
-          ))}
+          ) : isPaused ? (
+            <button
+              onClick={() => doAction('resume', () => resumeSession(lessonId))}
+              disabled={actionLoading !== null}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold bg-[#10B981] text-white shadow-md hover:bg-[#059669] transition-all disabled:opacity-50"
+            >
+              {actionLoading === 'resume' ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              Lanjutkan Sesi
+            </button>
+          ) : (
+            <button
+              onClick={() => doAction('pause', () => pauseSession(lessonId))}
+              disabled={actionLoading !== null}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold bg-[#F59E0B] text-white shadow-md hover:bg-[#D97706] transition-all disabled:opacity-50"
+            >
+              {actionLoading === 'pause' ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Pause className="w-4 h-4" />}
+              Jeda Waktu
+            </button>
+          )}
+
+          {/* Skip stage */}
+          {!isIdle && (
+            <button
+              onClick={() => {
+                const action = isLastStage ? 'Ini tahap terakhir. Lanjutkan?' : `Lanjut ke ${STAGE_LABELS[currentSyncStage + 1]}?`;
+                if (window.confirm(action)) doAction('skip', () => skipToNextStage(lessonId));
+              }}
+              disabled={actionLoading !== null}
+              className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold bg-[#EC4899] text-white shadow-md hover:bg-[#DB2777] transition-all disabled:opacity-50"
+            >
+              <SkipForward className="w-4 h-4" />
+              Skip Tahapan
+            </button>
+          )}
+
+          {/* Status indicator + compact reset */}
+          <div className="ml-auto flex items-center gap-2">
+            {/* Compact reset button — only when session active/paused */}
+            {!isIdle && (
+              <button
+                onClick={() => {
+                  if (window.confirm('Reset timer tahapan ini?\n\nJawaban siswa yang sudah terkumpul TETAP TERSIMPAN. Hanya timer yang diulang dari awal.'))
+                    doAction('reset', () => resetCurrentStage(lessonId));
+                }}
+                disabled={actionLoading !== null}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-[#395886]/40 hover:text-red-500 hover:bg-red-50 border border-transparent hover:border-red-200 transition-all disabled:opacity-50"
+                title="Reset tahapan ke awal"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Reset
+              </button>
+            )}
+            {isIdle ? (
+              <span className="rounded-full bg-gray-100 px-3 py-1.5 text-[10px] font-bold text-gray-500">Sesi belum dimulai</span>
+            ) : isPaused ? (
+              <span className="rounded-full bg-amber-100 px-3 py-1.5 text-[10px] font-bold text-amber-700">Sesi dijeda</span>
+            ) : (
+              <span className="rounded-full bg-[#10B981]/10 px-3 py-1.5 text-[10px] font-bold text-[#10B981]">Sesi berjalan</span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Stats + Timer + Skip */}
+      {/* Stats Row */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Completion stats */}
         <div className="bg-white rounded-2xl border border-[#D5DEEF] p-4 shadow-sm">
           <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/40 mb-2">Status Kelas</p>
           <div className="flex items-end gap-2">
-            <span className="text-3xl font-black text-[#10B981]">{stats.completed}</span>
-            <span className="text-lg text-[#395886]/30">/ {stats.total}</span>
-            <span className="text-xs font-bold text-[#395886]/50 mb-1">selesai</span>
+            <span className="text-3xl font-black text-[#10B981]">{totalCompleted}</span>
+            <span className="text-lg text-[#395886]/30">/ {totalStudents}</span>
           </div>
           <div className="mt-2 h-1.5 bg-[#D5DEEF] rounded-full overflow-hidden">
-            <div
-              className="h-full bg-[#10B981] rounded-full transition-all duration-500"
-              style={{ width: `${stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%` }}
-            />
-          </div>
-          <div className="mt-2 flex gap-3 text-[10px] font-bold">
-            <span className="text-[#628ECB]">{stats.inProgress} mengerjakan</span>
-            <span className="text-gray-400">{stats.notStarted} belum</span>
+            <div className="h-full bg-[#10B981] rounded-full transition-all"
+              style={{ width: `${totalStudents > 0 ? Math.round((totalCompleted / totalStudents) * 100) : 0}%` }} />
           </div>
         </div>
 
-        {/* Timer */}
         <div className="bg-white rounded-2xl border border-[#D5DEEF] p-4 shadow-sm">
-          <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/40 mb-2">Timer Tahap</p>
-          {timerMinutes > 0 ? (
-            <div className={`flex items-center gap-2 ${timerRemaining <= 60 && timerRemaining > 0 ? 'text-amber-600' : timerRemaining === 0 ? 'text-red-600' : 'text-[#395886]'}`}>
-              <Clock className={`w-5 h-5 ${timerRemaining <= 60 && timerRemaining > 0 ? 'animate-pulse' : ''}`} />
-              <span className="text-2xl font-black font-mono">
-                {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
-              </span>
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/40 mb-2">
+            Timer — {STAGE_LABELS[currentSyncStage] || `Tahap ${currentSyncStage + 1}`}
+          </p>
+          {isIdle ? (
+            <span className="text-lg text-[#395886]/30">—</span>
+          ) : isPaused ? (
+            <div className="flex items-center gap-2 text-amber-600">
+              <Pause className="w-5 h-5" />
+              <span className="text-2xl font-black font-mono">{String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}</span>
+              <span className="text-[10px] font-bold">(dijeda)</span>
             </div>
-          ) : (
+          ) : isUnlimited ? (
             <div className="flex items-center gap-2 text-[#395886]/40">
               <Timer className="w-5 h-5" />
               <span className="text-lg font-bold">Tanpa batas</span>
             </div>
+          ) : (
+            <div className={`flex items-center gap-2 ${timerRemaining <= 60 ? 'text-amber-600' : timerExpired ? 'text-red-600' : 'text-[#395886]'}`}>
+              <Clock className={`w-5 h-5 ${timerRemaining <= 60 && !timerExpired ? 'animate-pulse' : ''}`} />
+              <span className="text-2xl font-black font-mono">{String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}</span>
+            </div>
           )}
           <p className="mt-1 text-[10px] text-[#395886]/40">
-            {timerMinutes > 0 ? `Durasi: ${timerMinutes} menit` : 'Timer belum diatur'}
-            {timerExpired && <span className="ml-2 text-red-500 font-bold">⏰ WAKTU HABIS</span>}
+            {!isUnlimited && `Durasi: ${timerMinutes} menit`}
+            {timerExpired && <span className="ml-2 text-red-500 font-bold">⏰ HABIS</span>}
           </p>
         </div>
 
-        {/* Skip button */}
-        <div className="bg-white rounded-2xl border border-[#D5DEEF] p-4 shadow-sm flex flex-col justify-center">
-          <button
-            onClick={handleForceAdvance}
-            disabled={skipping || stats.total === 0}
-            className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all
-              ${allDone || timerExpired
-                ? 'bg-[#10B981] text-white shadow-md hover:bg-[#059669]'
-                : 'bg-[#F59E0B] text-white shadow-md hover:bg-[#D97706]'
-              }
-              disabled:opacity-50 disabled:cursor-not-allowed`}
-          >
-            {skipping ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
-            ) : (
-              <SkipForward className="w-4 h-4" />
-            )}
-            Skip & Lanjut Tahap
-          </button>
-          <p className="mt-1.5 text-[9px] text-center text-[#395886]/40">
-            {allDone ? 'Semua siswa sudah selesai' : `${stats.completed}/${stats.total} selesai — tetap bisa skip`}
-          </p>
-        </div>
-
-        {/* Quick info */}
-        <div className="bg-white rounded-2xl border border-[#D5DEEF] p-4 shadow-sm flex flex-col justify-center">
-          <div className="flex items-center gap-2 text-[#395886]">
-            <Users className="w-5 h-5 text-[#628ECB]" />
-            <span className="text-lg font-bold">{stats.total} siswa</span>
+        <div className="bg-white rounded-2xl border border-[#D5DEEF] p-4 shadow-sm flex items-center justify-center">
+          <div className="text-center">
+            <Users className="w-6 h-6 text-[#628ECB] mx-auto mb-1" />
+            <p className="text-lg font-bold text-[#395886]">{totalStudents} siswa</p>
+            <p className="text-[10px] text-[#395886]/40">{lesson?.title} — {lesson?.topic}</p>
           </div>
-          <p className="mt-1 text-[10px] text-[#395886]/40">
-            {lesson.title} — {lesson.topic}
-          </p>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-[#D5DEEF] p-4 shadow-sm flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-2xl font-black text-[#628ECB]">{currentSyncStage + 1}/{stageCount}</div>
+            <p className="text-[10px] text-[#395886]/40">Tahap aktif</p>
+          </div>
         </div>
       </div>
 
-      {/* Student Grid */}
+      {/* Progress bar per stage */}
+      <div className="bg-white rounded-2xl border border-[#D5DEEF] p-4 shadow-sm">
+        <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/40 mb-3">Progres Per Tahap</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+          {Array.from({ length: stageCount }, (_, i) => {
+            const s = stageStats[i];
+            const pct = s.total > 0 ? Math.round((s.completed / s.total) * 100) : 0;
+            const isActive = i === currentSyncStage;
+            return (
+              <div key={i} className={`rounded-xl border-2 p-3 text-center transition-all ${isActive ? 'border-[#628ECB] bg-[#628ECB]/5 shadow-sm' : 'border-[#D5DEEF] bg-[#F8FAFD]'}`}>
+                <p className="text-[9px] font-black uppercase tracking-wider text-[#395886]/50 mb-1">{STAGE_LABELS[i]}</p>
+                <p className={`text-lg font-black ${isActive ? 'text-[#628ECB]' : pct >= 100 ? 'text-[#10B981]' : 'text-[#395886]'}`}>{pct}%</p>
+                <div className="mt-1.5 h-1 bg-[#D5DEEF] rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full transition-all ${pct >= 100 ? 'bg-[#10B981]' : 'bg-[#628ECB]'}`} style={{ width: `${pct}%` }} />
+                </div>
+                <p className="mt-1 text-[8px] text-[#395886]/40">{s.completed}/{s.total}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Student grid */}
       <div className="bg-white rounded-2xl border border-[#D5DEEF] shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#D5DEEF] flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-[#D5DEEF] flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-[#395886]">Status Siswa — {STAGE_NAMES[stageIndex] || `Tahap ${stageIndex + 1}`}</h3>
-            <span className="text-xs text-[#395886]/40">({statuses.length} siswa)</span>
+            <h3 className="font-bold text-[#395886]">Status Seluruh Siswa</h3>
+            <span className="text-xs text-[#395886]/40">({filteredStudents.length} siswa)</span>
           </div>
-          <div className="flex items-center gap-3 text-[10px] font-bold">
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-gray-300" /> Belum</span>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#628ECB]" /> Proses</span>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" /> Selesai</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <Filter className="w-3 h-3 text-[#395886]/40" />
+              <select value={filterGroup} onChange={e => setFilterGroup(e.target.value)}
+                className="text-[10px] font-bold border border-[#D5DEEF] rounded-lg px-2.5 py-1.5 bg-white text-[#395886] outline-none focus:ring-2 focus:ring-[#628ECB]/20">
+                <option value="all">Semua Kelompok</option>
+                {groupNames.map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
+            </div>
+            <div className="flex items-center gap-3 text-[9px] font-bold">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gray-300" /> Belum</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#628ECB]" /> Proses</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#10B981]" /> Selesai</span>
+            </div>
           </div>
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <RefreshCw className="w-6 h-6 text-[#628ECB] animate-spin" />
-          </div>
+          <div className="flex items-center justify-center py-16"><RefreshCw className="w-6 h-6 text-[#628ECB] animate-spin" /></div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs">
               <thead>
-                <tr className="bg-[#F8FAFD] text-left">
-                  <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-[#395886]/50">No</th>
-                  <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-[#395886]/50">Nama Siswa</th>
-                  <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-[#395886]/50">Kelas</th>
-                  <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-[#395886]/50">Kelompok</th>
-                  <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-[#395886]/50 text-center">Status</th>
-                  <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-[#395886]/50 text-center">Progress</th>
-                  <th className="px-5 py-3 text-[10px] font-black uppercase tracking-widest text-[#395886]/50 text-center">Percobaan</th>
+                <tr className="bg-[#F8FAFD]">
+                  <th className="sticky left-0 z-10 bg-[#F8FAFD] px-1 py-2.5 text-center text-[10px] font-black uppercase tracking-widest text-[#395886]/50 w-[40px]">No</th>
+                  <th className="sticky left-[40px] z-10 bg-[#F8FAFD] px-3 py-2.5 text-left text-[10px] font-black uppercase tracking-widest text-[#395886]/50 min-w-[150px]">Nama</th>
+                  <th className="px-2 py-2.5 text-left text-[10px] font-black uppercase tracking-widest text-[#395886]/50 min-w-[60px]">Kelas</th>
+                  <th className="px-2 py-2.5 text-left text-[10px] font-black uppercase tracking-widest text-[#395886]/50 min-w-[90px]">Kelompok</th>
+                  {Array.from({ length: stageCount }, (_, i) => (
+                    <th key={i} className="px-2 py-2.5 text-center text-[9px] font-black uppercase tracking-wider min-w-[64px]">
+                      <span className={i === currentSyncStage ? 'text-[#628ECB]' : 'text-[#395886]/50'}>{STAGE_LABELS[i]?.split(' ')[0]}</span>
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#D5DEEF]">
-                {Object.entries(groupedByGroup()).map(([groupName, students]) => (
-                  <React.Fragment key={groupName}>
-                    <tr className="bg-[#F0F3FA]/50">
-                      <td colSpan={7} className="px-5 py-2 text-[10px] font-black uppercase tracking-widest text-[#628ECB]">
-                        <Users className="w-3 h-3 inline mr-1.5" />
-                        {groupName}
-                        <span className="ml-2 text-[#395886]/40 font-normal normal-case">
-                          ({students.filter(s => s.status === 'completed').length}/{students.length} selesai)
-                        </span>
-                      </td>
-                    </tr>
-                    {students.map((student, i) => {
-                      const status = STATUS_COLORS[student.status] || STATUS_COLORS.not_started;
+                {filteredStudents.map((student, rowIdx) => (
+                  <tr key={student.userId} className="hover:bg-[#F8FAFD] transition-colors">
+                    <td className="sticky left-0 z-10 bg-white px-1 py-2 text-center text-[10px] font-bold text-[#395886]/30 border-r border-[#D5DEEF]/50 w-[40px]">{rowIdx + 1}</td>
+                    <td className="sticky left-[40px] z-10 bg-white px-3 py-2 border-r border-[#D5DEEF]/50">
+                      <p className="font-semibold text-[#395886] truncate max-w-[140px]">{student.userName}</p>
+                      <p className="text-[9px] text-[#395886]/40">{student.userNis}</p>
+                    </td>
+                    <td className="px-2 py-2 text-[10px] text-[#395886]/60">{student.userClass || '—'}</td>
+                    <td className="px-2 py-2"><span className="inline-block rounded-full bg-[#628ECB]/8 px-2 py-0.5 text-[9px] font-bold text-[#628ECB]">{student.groupName || '—'}</span></td>
+                    {Array.from({ length: stageCount }, (_, stageIdx) => {
+                      const statuses = allStatuses[stageIdx] ?? [];
+                      const st = statuses.find(s => s.userId === student.userId);
+                      const status = st?.status ?? 'not_started';
+                      const pct = st?.progressPercent ?? 0;
                       return (
-                        <tr key={student.userId} className="hover:bg-[#F8FAFD] transition-colors">
-                          <td className="px-5 py-2.5 text-xs text-[#395886]/40">{i + 1}</td>
-                          <td className="px-5 py-2.5">
-                            <p className="font-semibold text-[#395886] text-xs">{student.userName}</p>
-                            <p className="text-[10px] text-[#395886]/40">{student.userNis}</p>
-                          </td>
-                          <td className="px-5 py-2.5 text-xs text-[#395886]/60">{student.userClass}</td>
-                          <td className="px-5 py-2.5 text-xs text-[#395886]/60">{student.groupName || '—'}</td>
-                          <td className="px-5 py-2.5 text-center">
-                            <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${status.bg} ${status.text} border ${status.border}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${student.status === 'in_progress' ? 'bg-[#628ECB] animate-pulse' : student.status === 'completed' ? 'bg-[#10B981]' : 'bg-gray-300'}`} />
-                              {status.label}
-                            </span>
-                          </td>
-                          <td className="px-5 py-2.5 text-center">
-                            <div className="flex items-center justify-center gap-2">
-                              <div className="w-16 bg-[#D5DEEF] rounded-full h-1.5 overflow-hidden">
-                                <div
-                                  className={`h-full rounded-full transition-all ${student.status === 'completed' ? 'bg-[#10B981]' : 'bg-[#628ECB]'}`}
-                                  style={{ width: `${student.progressPercent}%` }}
-                                />
-                              </div>
-                              <span className="text-[10px] font-bold text-[#395886]/60 w-7">{student.progressPercent}%</span>
+                        <td key={stageIdx} className="px-1 py-2 text-center">
+                          {status === 'completed' ? (
+                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#10B981]/10 text-[#10B981] text-[11px] font-black">✓</span>
+                          ) : status === 'in_progress' ? (
+                            <div className="flex flex-col items-center gap-0.5">
+                              <span className="w-2 h-2 rounded-full bg-[#628ECB] animate-pulse" />
+                              <span className="text-[8px] font-bold text-[#628ECB]">{pct}%</span>
                             </div>
-                          </td>
-                          <td className="px-5 py-2.5 text-center">
-                            <span className={`text-xs font-bold ${student.totalAttempts > 0 ? 'text-[#628ECB]' : 'text-[#395886]/25'}`}>
-                              {student.totalAttempts > 0 ? `${student.totalAttempts}×` : '—'}
-                            </span>
-                          </td>
-                        </tr>
+                          ) : (
+                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-300 text-[11px] font-black">—</span>
+                          )}
+                        </td>
                       );
                     })}
-                  </React.Fragment>
-                ))}
-                {statuses.length === 0 && !loading && (
-                  <tr>
-                    <td colSpan={7} className="px-5 py-12 text-center text-sm text-[#395886]/35">
-                      Belum ada data siswa untuk tahap ini.
-                    </td>
                   </tr>
+                ))}
+                {filteredStudents.length === 0 && !loading && (
+                  <tr><td colSpan={4 + stageCount} className="px-5 py-12 text-center text-sm text-[#395886]/35">
+                    {filterGroup !== 'all' ? `Tidak ada siswa di kelompok "${filterGroup}".` : 'Belum ada data.'}
+                  </td></tr>
                 )}
               </tbody>
             </table>
@@ -361,12 +380,11 @@ export function RealtimeMonitorSection() {
         )}
       </div>
 
-      {/* Legend */}
-      <div className="flex items-center gap-4 px-5 py-3 bg-white rounded-2xl border border-[#D5DEEF] shadow-sm text-[10px] text-[#395886]/50">
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gray-300" /> Abu-abu: Belum mulai</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#628ECB]" /> Biru: Sedang mengerjakan</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#10B981]" /> Hijau: Selesai</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" /> Merah: Waktu habis/belum submit</span>
+      <div className="flex flex-wrap items-center gap-4 px-5 py-3 bg-white rounded-2xl border border-[#D5DEEF] shadow-sm text-[9px] font-bold text-[#395886]/50">
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gray-300" /> Belum</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#628ECB]" /> Proses</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#10B981]" /> Selesai</span>
+        <span className="ml-auto flex items-center gap-1"><RefreshCw className="w-3 h-3 text-[#395886]/30" /> Auto-refresh 5 detik</span>
       </div>
     </div>
   );

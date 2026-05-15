@@ -127,7 +127,8 @@ function CasePhase({ study, isSubmitted, submitError, checkingSubmission, onNext
   const [selected, setSelected] = useState<string | null>(null);
   const [argument, setArgument] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const ready = selected && argument.trim().length >= 15;
+  const wordCount = argument.trim() ? argument.trim().split(/\s+/).length : 0;
+  const ready = selected && wordCount >= 20;
 
   if (checkingSubmission) return (
     <div className="flex flex-col items-center justify-center py-16 space-y-3">
@@ -190,9 +191,14 @@ function CasePhase({ study, isSubmitted, submitError, checkingSubmission, onNext
                     <CheckCircle className="w-3.5 h-3.5" /> Argumen Berhasil Dikirim ke Kelompok
                   </div>
                 ) : (
-                  <p className={`text-[10px] font-bold ${argument.trim().length >= 15 ? 'text-[#10B981]' : 'text-[#395886]/30'}`}>
-                    {argument.trim().length} / 15 Karakter Minimal
-                  </p>
+                  <>
+                    <p className={`text-[10px] font-bold ${wordCount >= 20 ? 'text-[#10B981]' : 'text-[#395886]/30'}`}>
+                      {wordCount} / 20 Kata Minimal
+                    </p>
+                    {wordCount > 0 && wordCount < 20 && (
+                      <p className="text-[10px] text-amber-600 font-medium mt-1">Argumen minimal 20 kata ya! Baru {20 - wordCount} kata lagi.</p>
+                    )}
+                  </>
                 )}
               </div>
             </div>
