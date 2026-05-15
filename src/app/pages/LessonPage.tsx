@@ -40,7 +40,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DragAutoScroll } from '../components/DragAutoScroll';
 import { ActivityGuideBox, CountdownTimer, EssayBox, StageCompletedOverlay } from '../components/stages/StageKit';
-import { getStageTimers, getTimerRemaining } from '../utils/stageTimer';
+import { useGlobalStageSync } from '../hooks/useGlobalStageSync';
 
 type StageType =
   | 'constructivism'
@@ -226,31 +226,13 @@ export function LessonPage() {
   const [guideCollapsed, setGuideCollapsed] = useState(true);
   const [pendingReflection, setPendingReflection] = useState<{ stageAnswer: unknown } | null>(null);
 
-  // ── Stage Timer ──
-  const [stageTimers, setStageTimers] = useState<any[]>([]);
-  const [timerRemaining, setTimerRemaining] = useState<number>(-1);
-  const [timerExpired, setTimerExpired] = useState(false);
-
-  useEffect(() => {
-    if (lessonId && currentStageIndex !== null) {
-      getStageTimers(lessonId).then(timers => {
-        setStageTimers(timers);
-        const timer = timers.find(t => t.stage_index === currentStageIndex);
-        if (timer && timer.duration_minutes > 0) {
-          setTimerRemaining(timer.duration_minutes * 60);
-          setTimerExpired(false);
-        } else {
-          setTimerRemaining(-1);
-          setTimerExpired(false);
-        }
-      });
-    }
-  }, [lessonId, currentStageIndex]);
-
-  const handleTimerExpire = () => {
-    setTimerExpired(true);
-    setTimerRemaining(0);
-  };
+  // ── Global Stage Sync (timer + force-advance + waiting) ──
+  const isStageCompleted = progress.completedStages.some(idx => Number(idx) === currentStageIndex);
+  const globalSync = useGlobalStageSync(
+    lessonId ?? '',
+    currentStageIndex ?? 0,
+    isStageCompleted || pendingReflection !== null,
+  );
 
   useEffect(() => {
     if (user && lessonId) {
@@ -334,8 +316,6 @@ export function LessonPage() {
       window.scrollTo(0, 0);
     }
   };
-
-  const isStageCompleted = progress.completedStages.some(idx => Number(idx) === currentStageIndex);
 
   const handleStageActivityComplete = (answer: unknown) => {
     if (stageNeedsExternalReflection(currentStage.type as StageType, lessonId!)) {
@@ -727,25 +707,56 @@ export function LessonPage() {
                 </button>
               </div>
             </div>
+          ) : globalSync.shouldWait ? (
+            /* ── Waiting Screen ── */
+            <div className="w-full">
+              <div className="rounded-2xl border-2 border-[#F59E0B]/30 bg-gradient-to-br from-amber-50 to-white p-8 text-center shadow-sm">
+                <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-amber-100">
+                  <Clock className="h-10 w-10 text-amber-500 animate-pulse" />
+                </div>
+                <h3 className="text-xl font-black text-[#395886]">Menunggu siswa lain...</h3>
+                <p className="mt-2 text-sm text-[#395886]/60 max-w-md mx-auto">
+                  Kamu sudah menyelesaikan tahap ini. Tunggu hingga semua siswa selesai atau guru melanjutkan ke tahap berikutnya.
+                </p>
+                {globalSync.timerRemaining > 0 && (
+                  <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white border border-[#D5DEEF] px-4 py-2 shadow-sm">
+                    <Clock className="w-4 h-4 text-[#628ECB]" />
+                    <span className="text-sm font-bold text-[#395886]">
+                      Sisa waktu kelas: {Math.floor(globalSync.timerRemaining / 60)}:{String(globalSync.timerRemaining % 60).padStart(2, '0')}
+                    </span>
+                  </div>
+                )}
+                <div className="mt-6 flex justify-center">
+                  <div className="flex gap-1.5">
+                    {[0, 1, 2].map(i => (
+                      <div
+                        key={i}
+                        className="h-2 w-2 rounded-full bg-amber-400 animate-bounce"
+                        style={{ animationDelay: `${i * 0.15}s` }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           ) : (
             <div className="w-full">
-              {/* Countdown timer for current stage */}
-              {timerRemaining > 0 && !isStageCompleted && !timerExpired && (
+              {/* Countdown timer synced with global state */}
+              {globalSync.timerRemaining > 0 && !isStageCompleted && !globalSync.timerExpired && (
                 <div className="mb-4">
                   <CountdownTimer
-                    seconds={timerRemaining}
-                    onExpire={handleTimerExpire}
+                    seconds={globalSync.timerRemaining}
                     label={`Waktu ${currentStage.type}`}
                   />
                 </div>
               )}
-              {timerExpired && !isStageCompleted && (
+              {globalSync.timerExpired && !isStageCompleted && (
                 <div className="mb-4 p-4 rounded-xl bg-red-50 border-2 border-red-200 text-center">
                   <p className="text-sm font-black text-red-600">Waktu Habis!</p>
                   <p className="text-xs text-red-500 mt-1">Aktivitas otomatis terkunci. Jawaban terakhir akan disimpan.</p>
                 </div>
               )}
-              {(!timerExpired || isStageCompleted) && (
+              {(!globalSync.timerExpired || isStageCompleted) && (
                 <DndProvider backend={HTML5Backend}>
                   <DragAutoScroll />
                   {renderStage()}
@@ -760,6 +771,28 @@ export function LessonPage() {
                   }
                   onDone={(essay) => handleStageComplete({ ...(pendingReflection.stageAnswer as object), reflection: essay })}
                 />
+              )}
+
+              {/* Auto-advance when force-advance triggered by admin */}
+              {globalSync.forceAdvanced && isStageCompleted && (
+                <div className="mt-6 p-5 rounded-2xl bg-[#10B981]/5 border-2 border-[#10B981]/30 text-center">
+                  <p className="text-sm font-bold text-[#10B981]">Guru telah melanjutkan ke tahap berikutnya!</p>
+                  <button
+                    onClick={() => {
+                      globalSync.acknowledgeAdvance();
+                      if (isLastStage) {
+                        setShowStageSummary(true);
+                      } else {
+                        setCurrentStageIndex(currentStageIndex + 1);
+                        window.scrollTo(0, 0);
+                      }
+                    }}
+                    className="mt-3 inline-flex items-center gap-2 bg-[#10B981] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md hover:bg-[#059669] transition-all active:scale-95"
+                  >
+                    Lanjutkan
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
               )}
             </div>
           )}

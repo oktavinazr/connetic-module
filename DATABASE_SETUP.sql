@@ -270,7 +270,36 @@ GRANT ALL ON TABLE public.admin_stage_overrides TO authenticated;
 GRANT ALL ON TABLE public.admin_stage_overrides TO service_role;
 
 
--- 10. CATATAN PENTING UNTUK ADMIN:
+
+-- 11. MENYIAPKAN TABEL ADMIN STAGE SYNC (Sinkronisasi Tahap Realtime)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.admin_stage_sync (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    lesson_id TEXT UNIQUE NOT NULL,
+    current_stage_index INTEGER NOT NULL DEFAULT 0,
+    stage_started_at TIMESTAMPTZ,
+    force_advance BOOLEAN DEFAULT false,
+    force_advance_at TIMESTAMPTZ,
+    status TEXT DEFAULT 'active',
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.admin_stage_sync DISABLE ROW LEVEL SECURITY;
+
+GRANT ALL ON TABLE public.admin_stage_sync TO anon;
+GRANT ALL ON TABLE public.admin_stage_sync TO authenticated;
+GRANT ALL ON TABLE public.admin_stage_sync TO service_role;
+
+-- Aktifkan realtime untuk monitoring
+DO $$
+BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_stage_sync;
+EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'Tabel admin_stage_sync sudah ada di publication supabase_realtime';
+END $$;
+
+
+-- 12. CATATAN PENTING UNTUK ADMIN:
 -- ==============================================================================
 -- Jika Anda baru saja menjalankan script ini, pastikan untuk:
 -- 1. Logout dari aplikasi.

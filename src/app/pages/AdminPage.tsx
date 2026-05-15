@@ -54,6 +54,7 @@ import { getLessonActivitySessions, getStudentActivityFeed, type CTLActivityEven
 import { getStageTimers, setStageTimer, deleteStageTimer, type StageTimer } from '../utils/stageTimer';
 import { Header } from '../components/layout/Header';
 import { QuestionManagementSection } from '../components/admin/QuestionManagementSection';
+import { RealtimeMonitorSection } from '../components/admin/RealtimeMonitorSection';
 import { StageAnswerDetail, CTL_META } from '../components/admin/StageDetail';
 import {
   AlertDialog,
@@ -68,9 +69,9 @@ import {
 
 // â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-type AdminSection = 'dashboard' | 'students' | 'groups' | 'question-management' | 'results' | 'timers';
+type AdminSection = 'dashboard' | 'students' | 'groups' | 'question-management' | 'results' | 'timers' | 'realtime';
 
-const ADMIN_SECTIONS: AdminSection[] = ['dashboard', 'students', 'groups', 'question-management', 'results', 'timers'];
+const ADMIN_SECTIONS: AdminSection[] = ['dashboard', 'students', 'groups', 'question-management', 'results', 'timers', 'realtime'];
 
 const CHART_COLORS = ['#628ECB', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1', '#14B8A6'];
 
@@ -681,6 +682,7 @@ function AdminSidebar({
     { id: 'groups', label: 'Manajemen Kelompok', icon: <UserPlus className="w-4 h-4" /> },
     { id: 'question-management', label: 'Manajemen Soal', icon: <BookOpen className="w-4 h-4" /> },
     { id: 'timers', label: 'Pengatur Waktu Tahap', icon: <Clock className="w-4 h-4" /> },
+    { id: 'realtime', label: 'Monitoring Realtime', icon: <MonitorPlay className="w-4 h-4" /> },
     { id: 'results', label: 'Hasil Belajar', icon: <BarChart2 className="w-4 h-4" /> },
   ];
   return (
@@ -1382,6 +1384,7 @@ export function AdminPage() {
     { label: 'Manajemen Kelompok', onClick: () => setSection('groups'), icon: <UserPlus className="h-4 w-4" /> },
     { label: 'Manajemen Soal Pretest & Posttest', onClick: () => setSection('question-management'), icon: <BookOpen className="h-4 w-4" /> },
     { label: 'Pengatur Waktu Tahap', onClick: () => setSection('timers'), icon: <Clock className="h-4 w-4" /> },
+    { label: 'Monitoring Realtime', onClick: () => setSection('realtime'), icon: <MonitorPlay className="h-4 w-4" /> },
     { label: 'Hasil Belajar', onClick: () => setSection('results'), icon: <BarChart2 className="h-4 w-4" /> },
     { label: 'Logout', onClick: confirmLogout, icon: <LogOut className="h-4 w-4" />, danger: true },
   ];
@@ -1392,6 +1395,7 @@ export function AdminPage() {
     groups: 'Manajemen Kelompok',
     'question-management': 'Manajemen Soal Pretest & Posttest',
     timers: 'Pengatur Waktu Tahap CTL',
+    realtime: 'Monitoring Realtime CTL',
     results: 'Hasil Belajar',
   };
 
@@ -2146,6 +2150,9 @@ export function AdminPage() {
 
             {/* â”€â”€ Pengatur Waktu Tahap CTL â”€â”€ */}
             {section === 'timers' && <TimerManagementSection />}
+
+            {/* â”€â”€ Monitoring Realtime CTL â”€â”€ */}
+            {section === 'realtime' && <RealtimeMonitorSection />}
 
             {/* â”€â”€ Hasil Belajar â”€â”€ */}
             {section === 'results' && (
