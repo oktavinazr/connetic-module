@@ -1132,6 +1132,43 @@ export function AdminPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Deduplicated activity feed: group by user+lesson+stage+eventType, keep latest + count
+  const EVENT_LABELS: Record<string, { label: string; color: string }> = {
+    stage_completed: { label: '✅ Selesai', color: 'text-[#10B981]' },
+    constructivism_scramble_completed: { label: '🧩 Susun Konsep Selesai', color: 'text-[#628ECB]' },
+    constructivism_analogy_completed: { label: '🔗 Analogi Selesai', color: 'text-[#628ECB]' },
+    questioning_simulation_completed: { label: '💬 Simulasi Tanya-Jawab', color: 'text-[#8B5CF6]' },
+    questioning_validation: { label: '✔ Validasi Jawaban', color: 'text-[#8B5CF6]' },
+    question_opened: { label: '📖 Buka Pertanyaan', color: 'text-[#8B5CF6]' },
+    reflection_map_completed: { label: '🗺 Peta Refleksi Selesai', color: 'text-[#F59E0B]' },
+    initial_decision_submitted: { label: '✍ Keputusan Awal', color: 'text-[#EC4899]' },
+    follow_up_submitted: { label: '📝 Keputusan Lanjutan', color: 'text-[#EC4899]' },
+    stage_final_answer_recorded: { label: '💾 Jawaban Tersimpan', color: 'text-[#10B981]' },
+    attempt_recorded: { label: '🔄 Percobaan', color: 'text-[#6366F1]' },
+  };
+
+  const dedupedActivityFeed = useMemo(() => {
+    const meaningful = activityFeed.filter(
+      e => !['stage_opened', 'stage_closed'].includes(e.eventType),
+    );
+    const groupedMap = new Map<string, { event: CTLActivityEvent; count: number }>();
+    meaningful.forEach(event => {
+      const key = `${event.userId}|${event.lessonId}|${event.stageIndex}|${event.eventType}`;
+      const existing = groupedMap.get(key);
+      if (!existing) {
+        groupedMap.set(key, { event, count: 1 });
+      } else {
+        existing.count++;
+        if (event.createdAt && existing.event.createdAt && event.createdAt > existing.event.createdAt) {
+          existing.event = event;
+        }
+      }
+    });
+    return [...groupedMap.values()]
+      .sort((a, b) => (b.event.createdAt ?? '').localeCompare(a.event.createdAt ?? ''))
+      .slice(0, 8);
+  }, [activityFeed]);
+
   // Stats
   const totalStudents = studentActivities.length;
   const activeStudents = studentActivities.filter(s => s.overallProgress > 0).length;
@@ -1594,22 +1631,57 @@ export function AdminPage() {
                     <span className="text-xs font-bold bg-[#10B981]/10 text-[#10B981] px-2.5 py-1 rounded-full">Realtime Feed</span>
                   </div>
                   <div className="divide-y divide-[#D5DEEF]">
-                    {activityFeed.slice(0, 8).map((event) => (
-                      <div key={event.id} className="px-6 py-3.5 flex items-center justify-between gap-4 hover:bg-[#F8FAFD] transition-colors">
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-[#395886] truncate">
-                            Siswa `{event.userId.slice(0, 8)}` • Pertemuan {event.lessonId} • Tahap {event.stageIndex + 1}
-                          </p>
-                          <p className="text-xs text-[#395886]/50">{event.stageType} • {event.eventType}</p>
-                        </div>
-                        <div className="shrink-0 text-right">
-                          <p className="text-xs font-bold text-[#628ECB]">{event.progressPercent ?? 0}%</p>
-                          <p className="text-[10px] text-[#395886]/40">{event.createdAt ? new Date(event.createdAt).toLocaleString('id-ID') : '—'}</p>
-                        </div>
+                    {dedupedActivityFeed.length === 0 ? (
+                      <div className="px-6 py-8 text-sm text-[#395886]/35 text-center">
+                        Belum ada aktivitas CTL yang tercatat.
                       </div>
-                    ))}
-                    {activityFeed.length === 0 && (
-                      <div className="px-6 py-8 text-sm text-[#395886]/35 text-center">Belum ada aktivitas CTL yang tercatat.</div>
+                    ) : (
+                      dedupedActivityFeed.map(({ event, count }) => {
+                        const activity = studentActivities.find(a => a.student.id === event.userId);
+                        const studentName = activity?.student?.name ?? `Siswa ${event.userId.slice(0, 8)}`;
+                        const lesson = lessons[event.lessonId];
+                        const lessonTitle = lesson?.title ?? `Pertemuan ${event.lessonId}`;
+                        const stage = lesson?.stages?.[event.stageIndex];
+                        const stageTitle = stage?.title ?? `Tahap ${event.stageIndex + 1}`;
+                        const evLabel = EVENT_LABELS[event.eventType] ?? { label: event.eventType, color: 'text-[#395886]/50' };
+                        const correct = event.isCorrect === true;
+                        const wrong = event.isCorrect === false;
+
+                        return (
+                          <div key={event.id} className="px-6 py-3.5 flex items-center justify-between gap-4 hover:bg-[#F8FAFD] transition-colors">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-semibold text-[#395886] truncate">
+                                {studentName} • {lessonTitle}
+                              </p>
+                              <p className="text-xs truncate">
+                                <span className={evLabel.color}>{evLabel.label}</span>
+                                {count > 1 && (
+                                  <span className="ml-1 text-[11px] font-bold text-[#6366F1]">×{count}</span>
+                                )}
+                                <span className="text-[#395886]/35"> — {CTL_META[event.stageType]?.label ?? event.stageType} · {stageTitle}</span>
+                                {event.eventType === 'attempt_recorded' && correct && (
+                                  <span className="ml-1.5 rounded-full bg-[#10B981]/10 px-1.5 py-px text-[10px] font-bold text-[#10B981]">✓ benar</span>
+                                )}
+                                {event.eventType === 'attempt_recorded' && wrong && (
+                                  <span className="ml-1.5 rounded-full bg-red-50 px-1.5 py-px text-[10px] font-bold text-red-500">✗ salah</span>
+                                )}
+                              </p>
+                            </div>
+                            <div className="shrink-0 text-right">
+                              {(event.progressPercent != null && event.progressPercent > 0) ? (
+                                <p className="text-xs font-bold text-[#628ECB]">{event.progressPercent}%</p>
+                              ) : (
+                                <p className="text-xs text-[#395886]/25">—</p>
+                              )}
+                              <p className="text-[10px] text-[#395886]/40">
+                                {event.createdAt
+                                  ? new Date(event.createdAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+                                  : '—'}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })
                     )}
                   </div>
                 </div>
