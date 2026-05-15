@@ -73,6 +73,7 @@ export function RealtimeMonitorSection() {
   }, [refresh]);
 
   const isIdle = !syncState || syncState.session_status === 'idle';
+  const isCompleted = syncState?.status === 'completed';
   const currentSyncStage = syncState?.current_stage_index ?? 0;
 
   // Local countdown tick
@@ -140,7 +141,27 @@ export function RealtimeMonitorSection() {
 
       {/* ── Session Controls ── */}
       <div className="bg-white rounded-2xl border border-[#D5DEEF] p-5 shadow-sm">
-        <div className="flex flex-wrap items-center gap-3">
+        {isCompleted ? (
+          /* Completed state — pertemuan selesai */
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#10B981]/10 text-[#10B981] text-sm font-bold">
+              <CheckCircle className="w-4 h-4" />
+              Sudah selesai untuk pertemuan ini
+            </div>
+            <button
+              onClick={() => {
+                if (window.confirm('Reset seluruh sesi ke awal?\n\nSemua jawaban siswa TETAP TERSIMPAN. Hanya sesi yang diulang dari Constructivism.'))
+                  doAction('reset', () => resetCurrentStage(lessonId));
+              }}
+              disabled={actionLoading !== null}
+              className="flex items-center gap-1 px-3 py-2 rounded-lg text-[11px] font-bold text-[#395886]/40 hover:text-red-500 hover:bg-red-50 border border-transparent hover:border-red-200 transition-all disabled:opacity-50"
+            >
+              <RotateCcw className="w-3 h-3" />
+              Reset Sesi
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center gap-3">
           {/* Start / Pause / Resume */}
           {isIdle ? (
             <button
@@ -206,7 +227,7 @@ export function RealtimeMonitorSection() {
             {!isIdle && (
               <button
                 onClick={() => {
-                  if (window.confirm('Reset timer tahapan ini?\n\nJawaban siswa yang sudah terkumpul TETAP TERSIMPAN. Hanya timer yang diulang dari awal.'))
+                  if (window.confirm('Reset seluruh sesi ke awal?\n\nSemua jawaban siswa TETAP TERSIMPAN. Sesi akan kembali ke Constructivism.'))
                     doAction('reset', () => resetCurrentStage(lessonId));
                 }}
                 disabled={actionLoading !== null}
@@ -226,6 +247,7 @@ export function RealtimeMonitorSection() {
             )}
           </div>
         </div>
+        )}
       </div>
 
       {/* Stats Row */}

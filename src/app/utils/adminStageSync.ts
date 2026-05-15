@@ -163,14 +163,15 @@ export async function skipToNextStage(lessonId: string): Promise<void> {
   cache.delete(lessonId);
 }
 
-/** Reset current stage: restart timer only, preserve all student progress */
+/** Reset entire session back to initial state (stage 0, idle). Preserves all student data. */
 export async function resetCurrentStage(lessonId: string): Promise<void> {
   const now = new Date().toISOString();
 
-  // Only reset sync state — student answers and progress are preserved
+  // Full session reset: back to stage 0, idle, timer cleared
   const { error: syncError } = await supabase
     .from('admin_stage_sync')
     .update({
+      current_stage_index: 0,
       stage_started_at: now,
       force_advance: false,
       force_advance_at: null,
