@@ -12,7 +12,7 @@ import {
 } from '../../utils/adminStageSync';
 import { getStageTimers } from '../../utils/stageTimer';
 import { lessons } from '../../data/lessons';
-import { RefreshCw, SkipForward, Users, Clock, Timer, Filter, Play, Pause, RotateCcw } from 'lucide-react';
+import { RefreshCw, SkipForward, Users, Clock, Timer, Filter, Play, Pause, RotateCcw, CheckCircle } from 'lucide-react';
 
 const STAGE_LABELS = ['Constructivism', 'Inquiry', 'Questioning', 'Learning Com.', 'Modeling', 'Reflection', 'Assessment'];
 
@@ -171,19 +171,33 @@ export function RealtimeMonitorSection() {
             </button>
           )}
 
-          {/* Skip stage */}
+          {/* Skip / Selesaikan stage */}
           {!isIdle && (
-            <button
-              onClick={() => {
-                const action = isLastStage ? 'Ini tahap terakhir. Lanjutkan?' : `Lanjut ke ${STAGE_LABELS[currentSyncStage + 1]}?`;
-                if (window.confirm(action)) doAction('skip', () => skipToNextStage(lessonId));
-              }}
-              disabled={actionLoading !== null}
-              className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold bg-[#EC4899] text-white shadow-md hover:bg-[#DB2777] transition-all disabled:opacity-50"
-            >
-              <SkipForward className="w-4 h-4" />
-              Skip Tahapan
-            </button>
+            isLastStage ? (
+              <button
+                onClick={() => {
+                  if (window.confirm('Selesaikan Authentic Assessment dan arahkan seluruh siswa ke Posttest?'))
+                    doAction('skip', () => skipToNextStage(lessonId));
+                }}
+                disabled={actionLoading !== null}
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold bg-[#10B981] text-white shadow-md hover:bg-[#059669] transition-all disabled:opacity-50"
+              >
+                <CheckCircle className="w-4 h-4" />
+                Selesaikan Aktivitas
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  if (window.confirm(`Lanjut ke ${STAGE_LABELS[currentSyncStage + 1]}?`))
+                    doAction('skip', () => skipToNextStage(lessonId));
+                }}
+                disabled={actionLoading !== null}
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold bg-[#EC4899] text-white shadow-md hover:bg-[#DB2777] transition-all disabled:opacity-50"
+              >
+                <SkipForward className="w-4 h-4" />
+                Skip Tahapan
+              </button>
+            )
           )}
 
           {/* Status indicator + compact reset */}

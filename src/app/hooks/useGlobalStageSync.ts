@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { supabase } from '../utils/supabase';
 import { getStageTimers } from '../utils/stageTimer';
 import {
   getAdminStageSync,
@@ -24,8 +25,6 @@ interface GlobalStageSyncState {
   clearReset: () => void;
 }
 
-const POLL_INTERVAL_MS = 1000;
-
 export function useGlobalStageSync(
   lessonId: string,
   stageIndex: number,
@@ -46,14 +45,10 @@ export function useGlobalStageSync(
 
   const isIdle = !sync || sync.session_status === 'idle';
 
-  const refresh = useCallback(async () => {
-    const [s, timers] = await Promise.all([
-      getAdminStageSync(lessonId),
-      getStageTimers(lessonId),
-    ]);
+  const applySync = useCallback((s: AdminStageSync | null, timersData?: any[]) => {
     setSync(s);
 
-    const tm = timers.find(t => t.stage_index === (s?.current_stage_index ?? stageIndex));
+    const tm = timersData?.find((t: any) => t.stage_index === (s?.current_stage_index ?? stageIndex));
     const mins = tm?.duration_minutes ?? 0;
     setTimerMinutes(mins);
 
@@ -72,7 +67,6 @@ export function useGlobalStageSync(
 
     setLoaded(true);
 
-    // Detect reset: stage_started_at changed to a newer value while student was completed
     if (
       prevStartedAtRef.current &&
       s?.stage_started_at &&
@@ -82,16 +76,65 @@ export function useGlobalStageSync(
       setWasReset(true);
     }
     prevStartedAtRef.current = s?.stage_started_at;
-  }, [lessonId, stageIndex]);
+  }, [stageIndex]);
 
-  // Initial load + polling
+  const refresh = useCallback(async () => {
+    const [s, timers] = await Promise.all([
+      getAdminStageSync(lessonId),
+      getStageTimers(lessonId),
+    ]);
+    applySync(s, timers);
+  }, [lessonId, applySync]);
+
+  // ── Supabase Realtime subscription (instant sync) ──
+  useEffect(() => {
+    const channel = supabase
+      .channel(`admin_stage_sync:${lessonId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'admin_stage_sync',
+          filter: `lesson_id=eq.${lessonId}`,
+        },
+        async (payload) => {
+          const newData = payload.new as Record<string, any> | null;
+          if (newData) {
+            // Fetch latest timers to match
+            const timers = await getStageTimers(lessonId);
+            applySync({
+              id: newData.id,
+              lesson_id: newData.lesson_id,
+              current_stage_index: newData.current_stage_index,
+              stage_started_at: newData.stage_started_at,
+              force_advance: newData.force_advance,
+              force_advance_at: newData.force_advance_at,
+              status: newData.status,
+              session_status: newData.session_status,
+              paused_at: newData.paused_at,
+              total_paused_ms: newData.total_paused_ms,
+              added_minutes: newData.added_minutes,
+              updated_at: newData.updated_at,
+            }, timers);
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [lessonId, applySync]);
+
+  // Initial load + polling (fallback)
   useEffect(() => {
     refresh();
-    const interval = setInterval(refresh, POLL_INTERVAL_MS);
+    const interval = setInterval(refresh, 2000);
     return () => clearInterval(interval);
   }, [refresh]);
 
-  // Local countdown tick between polls
+  // Local countdown tick
   useEffect(() => {
     if (!loaded || isIdle || isPaused || isUnlimited || timerRemaining <= 0) return;
     const t = setInterval(() => {
@@ -100,18 +143,12 @@ export function useGlobalStageSync(
     return () => clearInterval(t);
   }, [loaded, isIdle, isPaused, isUnlimited, timerRemaining <= 0 ? 0 : 1]);
 
-  // Detect expired
   useEffect(() => {
-    if (timerRemaining === 0 && !isUnlimited) {
-      setTimerExpired(true);
-    }
+    if (timerRemaining === 0 && !isUnlimited) setTimerExpired(true);
   }, [timerRemaining, isUnlimited]);
 
-  // Detect force-advance
   useEffect(() => {
-    if (sync?.force_advance) {
-      setForceAdvanced(true);
-    }
+    if (sync?.force_advance) setForceAdvanced(true);
   }, [sync?.force_advance]);
 
   const acknowledgeAdvance = useCallback(() => {

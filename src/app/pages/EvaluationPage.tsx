@@ -42,7 +42,8 @@ export function EvaluationPage() {
 
   const handleComplete = async (score: number, answers: number[]) => {
     await savePosttestResult(user!.id, lessonId!, score, answers);
-    getLessonProgress(user!.id, lessonId!).then(setProgress);
+    // Redirect to review page after brief delay to show results
+    setTimeout(() => navigate(`/review/${lessonId}`), 2000);
   };
 
   const existingAnswers = progress.posttestCompleted

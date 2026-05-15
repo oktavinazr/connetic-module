@@ -287,13 +287,17 @@ export function LessonPage() {
     if (!globalSync.loaded || globalSync.isIdle) return;
     const syncStage = globalSync.sync?.current_stage_index;
     if (syncStage !== undefined && syncStage !== currentStageIndex) {
-      // Only auto-advance forward, never backward
       if (syncStage > (currentStageIndex ?? 0)) {
-        setCurrentStageIndex(syncStage);
-        window.scrollTo(0, 0);
+        // If past the last stage OR status is 'completed', redirect to Posttest
+        if (syncStage >= (lesson?.stages.length ?? 0) || globalSync.sync?.status === 'completed') {
+          navigate(`/evaluation/${lessonId}`);
+        } else {
+          setCurrentStageIndex(syncStage);
+          window.scrollTo(0, 0);
+        }
       }
     }
-  }, [globalSync.sync?.current_stage_index, globalSync.loaded, globalSync.isIdle]);
+  }, [globalSync.sync?.current_stage_index, globalSync.sync?.status, globalSync.loaded, globalSync.isIdle]);
 
   if (!lesson || currentStageIndex === null) return null;
 
@@ -675,6 +679,7 @@ export function LessonPage() {
               {/* Completed / Waiting / Active stage */}
               {isStageCompleted && pendingReflection === null ? (
             <div className="flex flex-col gap-4">
+              {/* Green success banner */}
               <div className="rounded-2xl border-2 border-[#10B981]/30 bg-gradient-to-r from-[#ECFDF5] to-white p-5 flex items-center gap-4 shadow-sm">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#10B981] shadow-md">
                   <CheckCircle className="w-6 h-6 text-white" strokeWidth={2.5} />
@@ -682,10 +687,11 @@ export function LessonPage() {
                 <div className="flex-1">
                   <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981]">Tahap Selesai</p>
                   <p className="text-base font-bold text-[#065F46]">{displayTitle} berhasil diselesaikan</p>
-                  <p className="text-xs text-[#10B981]/70 mt-0.5">Seluruh aktivitas dan refleksi telah tersimpan. Kamu tidak dapat mengubah jawaban yang sudah disubmit.</p>
+                  <p className="text-xs text-[#10B981]/70 mt-0.5">Jawaban telah tersimpan dan tidak dapat diubah.</p>
                 </div>
               </div>
 
+              {/* Ringkasan Jawaban — always visible after completion */}
               {currentStageAnswer && (
                 <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm overflow-hidden">
                   <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#628ECB]/8 to-transparent border-b border-[#628ECB]/10">
@@ -698,34 +704,53 @@ export function LessonPage() {
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4 border-t border-[#D5DEEF]">
-                <div className="flex items-center gap-2 text-xs text-[#10B981] font-semibold">
-                  <CheckCircle className="w-4 h-4" />
-                  Tahap selesai dikerjakan — jawabanmu telah tersimpan
-                </div>
-                {/* Only allow advancing when admin has force-advanced/skipped */}
+              {/* Waiting indicator OR advance button */}
+              <div className="rounded-2xl border-2 border-[#F59E0B]/20 bg-gradient-to-br from-amber-50 to-white p-5 text-center shadow-sm">
                 {(globalSync.forceAdvanced || globalSync.sync?.status === 'advanced') ? (
-                  <button
-                    onClick={() => {
-                      if (isLastStage) {
-                        setShowStageSummary(true);
-                      } else {
-                        setCurrentStageIndex(currentStageIndex + 1);
-                        window.scrollTo(0, 0);
-                      }
-                    }}
-                    className="flex items-center gap-2 bg-[#628ECB] text-white px-6 py-2.5 rounded-xl hover:bg-[#395886] transition-all font-bold text-sm shadow-md active:scale-95 whitespace-nowrap"
-                  >
-                    {isLastStage ? 'Lanjut ke Post-Test' : `Lanjut ke ${getStageDisplayTitle(lesson.stages[currentStageIndex + 1].type)}`}
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
+                  /* Admin has advanced — show go button */
+                  <>
+                    <div className="flex items-center justify-center gap-2 mb-3">
+                      <CheckCircle className="w-4 h-4 text-[#10B981]" />
+                      <p className="text-sm font-bold text-[#10B981]">Guru telah melanjutkan ke tahap berikutnya!</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        globalSync.acknowledgeAdvance();
+                        if (isLastStage) {
+                          setShowStageSummary(true);
+                        } else {
+                          setCurrentStageIndex(currentStageIndex + 1);
+                          window.scrollTo(0, 0);
+                        }
+                      }}
+                      className="inline-flex items-center gap-2 bg-[#628ECB] text-white px-6 py-2.5 rounded-xl hover:bg-[#395886] transition-all font-bold text-sm shadow-md active:scale-95"
+                    >
+                      {isLastStage ? 'Lanjut ke Post-Test' : `Lanjut ke ${getStageDisplayTitle(lesson.stages[currentStageIndex + 1].type)}`}
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </>
                 ) : (
-                  <span className="text-xs text-[#395886]/40 italic">Menunggu guru melanjutkan tahap...</span>
+                  /* Still waiting for teacher */
+                  <>
+                    <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
+                      <Clock className="h-6 w-6 text-amber-500" />
+                    </div>
+                    <p className="text-sm font-bold text-[#395886]">Menunggu guru melanjutkan tahap...</p>
+                    <p className="mt-1 text-xs text-[#395886]/50">
+                      Kamu sudah selesai lebih cepat. Guru akan melanjutkan ke tahap berikutnya setelah seluruh kelas siap.
+                    </p>
+                    <div className="mt-3 flex justify-center gap-1">
+                      {[0, 1, 2].map(i => (
+                        <div key={i} className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-bounce"
+                          style={{ animationDelay: `${i * 0.15}s` }} />
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
             </div>
           ) : (globalSync.timerExpired && !globalSync.forceAdvanced) ? (
-            /* ── Timer Expired — all students wait ── */
+            /* ── Timer Expired — non-completed students wait ── */
             <div className="w-full">
               <div className="rounded-2xl border-2 border-red-200 bg-gradient-to-br from-red-50 to-white p-8 text-center shadow-sm">
                 <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
@@ -740,30 +765,6 @@ export function LessonPage() {
                     {[0, 1, 2].map(i => (
                       <div key={i} className="h-2 w-2 rounded-full bg-red-300 animate-bounce"
                         style={{ animationDelay: `${i * 0.15}s` }} />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : globalSync.shouldWait ? (
-            /* ── Waiting Screen ── */
-            <div className="w-full">
-              <div className="rounded-2xl border-2 border-[#F59E0B]/30 bg-gradient-to-br from-amber-50 to-white p-8 text-center shadow-sm">
-                <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-amber-100">
-                  <Clock className="h-10 w-10 text-amber-500 animate-pulse" />
-                </div>
-                <h3 className="text-xl font-black text-[#395886]">Menunggu instruksi guru...</h3>
-                <p className="mt-2 text-sm text-[#395886]/60 max-w-md mx-auto">
-                  Kamu sudah menyelesaikan tahap ini. Guru akan melanjutkan ke tahap berikutnya setelah seluruh siswa siap.
-                </p>
-                <div className="mt-6 flex justify-center">
-                  <div className="flex gap-1.5">
-                    {[0, 1, 2].map(i => (
-                      <div
-                        key={i}
-                        className="h-2 w-2 rounded-full bg-amber-400 animate-bounce"
-                        style={{ animationDelay: `${i * 0.15}s` }}
-                      />
                     ))}
                   </div>
                 </div>
@@ -785,28 +786,6 @@ export function LessonPage() {
                   }
                   onDone={(essay) => handleStageComplete({ ...(pendingReflection.stageAnswer as object), reflection: essay })}
                 />
-              )}
-
-              {/* Auto-advance when force-advance triggered by admin */}
-              {globalSync.forceAdvanced && isStageCompleted && (
-                <div className="mt-6 p-5 rounded-2xl bg-[#10B981]/5 border-2 border-[#10B981]/30 text-center">
-                  <p className="text-sm font-bold text-[#10B981]">Guru telah melanjutkan ke tahap berikutnya!</p>
-                  <button
-                    onClick={() => {
-                      globalSync.acknowledgeAdvance();
-                      if (isLastStage) {
-                        setShowStageSummary(true);
-                      } else {
-                        setCurrentStageIndex(currentStageIndex + 1);
-                        window.scrollTo(0, 0);
-                      }
-                    }}
-                    className="mt-3 inline-flex items-center gap-2 bg-[#10B981] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md hover:bg-[#059669] transition-all active:scale-95"
-                  >
-                    Lanjutkan
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                </div>
               )}
             </div>
           )}
