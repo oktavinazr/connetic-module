@@ -5,7 +5,7 @@ export const lesson1Stages: Stage[] = [
     type: 'constructivism',
     title: 'Constructivism',
     description:
-      'Siswa membangun pemahaman awal tentang TCP dari pengalaman digital sehari-hari melalui Story Scramble dan Analogy Sorting.',
+      'Siswa membangun pemahaman awal tentang konsep dasar TCP/IP melalui animasi perjalanan paket data dan pengelompokan analogi TCP vs IP.',
     objectiveCode: 'X.TCP.1',
     atpAbcd: {
       audience: 'Peserta didik',
@@ -14,102 +14,78 @@ export const lesson1Stages: Stage[] = [
       degree: 'dengan tepat',
     },
     activityGuide: [
-      'Susun potongan cerita digital menjadi urutan yang logis menggunakan drag & drop.',
-      'Setelah urutan cerita selesai disusun, tulis refleksi mandiri berdasarkan hasil pemahamanmu.',
-      'Lanjutkan ke aktivitas Process Chain untuk mengurutkan analogi kurir dan fungsi TCP.',
+      'Saksikan animasi perjalanan paket data melalui 5 lapisan TCP/IP dari pengirim ke penerima.',
+      'Setelah animasi selesai, susun kata-kata menjadi definisi TCP/IP yang tepat (drag & drop).',
+      'Lanjutkan ke aktivitas pengelompokan: seret setiap kartu ke kelompok TCP atau IP sesuai perannya.',
+      'Setelah pengelompokan selesai, tulis argumen tentang perbedaan TCP dan IP serta peran masing-masing.',
     ],
     apersepsi:
       '',
-    storyScramble: {
-      instruction:
-        'Bagaimana sebuah data bisa dikirim dari satu perangkat ke perangkat lain melalui internet? Susun 6 potongan cerita berikut menjadi urutan yang logis untuk memahami bagaimana data dikirim dan diterima secara runtut dan aman menggunakan aturan komunikasi TCP/IP.',
-      fragments: [
-        {
-          id: 'f1',
-          text: 'Seorang pengguna ingin mengirim file dokumen penting ke rekan kerjanya melalui internet.',
-          order: 1,
-        },
-        {
-          id: 'f2',
-          text: 'Aplikasi pengirim menyiapkan data dan memulai proses pengiriman melalui jaringan komputer.',
-          order: 2,
-        },
-        {
-          id: 'f3',
-          text: 'Sebelum dikirim, data dipecah menjadi potongan-potongan kecil (segmen) agar lebih mudah dikelola.',
-          order: 3,
-        },
-        {
-          id: 'f4',
-          text: 'Setiap segmen diberi nomor urut dan informasi alamat tujuan agar sampai ke penerima yang tepat.',
-          order: 4,
-        },
-        {
-          id: 'f5',
-          text: 'Segmen-segmen melintasi jaringan melewati berbagai perangkat; ada yang tiba lebih dahulu, ada yang terlambat, dan segmen yang rusak dikirim ulang.',
-          order: 5,
-        },
-        {
-          id: 'f6',
-          text: 'Di sisi penerima, seluruh segmen disusun kembali sesuai nomor urutnya sehingga data kembali utuh seperti semula.',
-          order: 6,
-        },
-      ],
-      successMessage:
-        'Urutanmu tepat! Kamu telah memahami bagaimana data dikirim dan diterima melalui jaringan menggunakan aturan komunikasi TCP/IP.',
-    },
-    constructivismEssay1:
-      'Berdasarkan alur cerita yang baru saja kamu susun, jelaskan bagaimana TCP/IP mengatur pengiriman data melalui jaringan! Tuliskan dengan kata-katamu sendiri.',
     analogySortGroups: [
-      { id: 'tcp', label: 'Proses Kerja TCP', colorClass: 'blue' },
+      { id: 'tcp', label: 'Peran TCP (Transmission Control Protocol)', colorClass: 'blue' },
+      { id: 'ip', label: 'Peran IP (Internet Protocol)', colorClass: 'green' },
     ],
     analogySortItems: [
-      { 
-        id: 'ap1', 
-        text: 'TCP memecah data menjadi segmen-segmen kecil sebelum pengiriman.', 
-        courierAnalogy: 'Kurir memecah barang kiriman yang besar menjadi beberapa paket kecil agar mudah dibawa.',
-        correctGroup: 'tcp', 
-        correctOrder: 1 
+      {
+        id: 'ap1',
+        text: 'Memecah data besar menjadi segmen-segmen kecil',
+        courierAnalogy: 'Seperti memotong kue besar menjadi potongan kecil agar mudah dibawa.',
+        correctGroup: 'tcp',
+        correctOrder: 1,
       },
-      { 
-        id: 'ap2', 
-        text: 'Setiap segmen diberi nomor urut (sequence number) agar dapat disusun kembali.', 
-        courierAnalogy: 'Setiap paket diberi nomor urut (1, 2, 3...) pada labelnya agar tidak tertukar urutannya.',
-        correctGroup: 'tcp', 
-        correctOrder: 2 
+      {
+        id: 'ap2',
+        text: 'Memberi nomor urut pada setiap segmen data',
+        courierAnalogy: 'Seperti memberi nomor halaman pada buku agar tidak tertukar susunannya.',
+        correctGroup: 'tcp',
+        correctOrder: 2,
       },
-      { 
-        id: 'ap3', 
-        text: 'Segmen-segmen dikirim melalui jaringan menuju komputer tujuan.', 
-        courierAnalogy: 'Paket-paket dibawa oleh kurir melewati rute jalan raya menuju alamat penerima.',
-        correctGroup: 'tcp', 
-        correctOrder: 3 
+      {
+        id: 'ap3',
+        text: 'Memverifikasi data sampai dengan utuh menggunakan checksum',
+        courierAnalogy: 'Seperti memeriksa segel paket kiriman sebelum diterima — jika rusak, minta kirim ulang.',
+        correctGroup: 'tcp',
+        correctOrder: 3,
       },
-      { 
-        id: 'ap4', 
-        text: 'Penerima memverifikasi integritas setiap segmen menggunakan checksum.', 
-        courierAnalogy: 'Penerima memeriksa kondisi fisik paket; jika ada yang sobek atau terbuka, paket dianggap rusak.',
-        correctGroup: 'tcp', 
-        correctOrder: 4 
+      {
+        id: 'ap4',
+        text: 'Mengirim konfirmasi (ACK) bahwa data telah diterima',
+        courierAnalogy: 'Seperti tanda tangan bukti terima paket oleh penerima.',
+        correctGroup: 'tcp',
+        correctOrder: 4,
       },
-      { 
-        id: 'ap5', 
-        text: 'Segmen yang rusak atau datang tidak berurutan disusun ulang sesuai sequence number.', 
-        courierAnalogy: 'Penerima menunggu semua paket tiba, lalu menyusunnya kembali sesuai nomor urut di label.',
-        correctGroup: 'tcp', 
-        correctOrder: 5 
+      {
+        id: 'ap5',
+        text: 'Menentukan alamat tujuan pengiriman (IP Address)',
+        courierAnalogy: 'Seperti menulis alamat lengkap di amplop surat — tanpa alamat, surat tidak akan sampai.',
+        correctGroup: 'ip',
+        correctOrder: 1,
       },
-      { 
-        id: 'ap6', 
-        text: 'TCP mengirim acknowledgment (ACK) ke pengirim sebagai tanda data diterima dengan utuh.', 
-        courierAnalogy: 'Kurir atau penerima memberikan laporan konfirmasi (tanda tangan) bahwa barang telah sampai dengan aman.',
-        correctGroup: 'tcp', 
-        correctOrder: 6 
+      {
+        id: 'ap6',
+        text: 'Mencari rute terbaik menuju alamat tujuan (Routing)',
+        courierAnalogy: 'Seperti GPS yang mencari jalan tercepat menuju alamat yang dituju.',
+        correctGroup: 'ip',
+        correctOrder: 2,
+      },
+      {
+        id: 'ap7',
+        text: 'Membungkus data dengan header yang berisi alamat sumber dan tujuan',
+        courierAnalogy: 'Seperti menulis alamat pengirim dan penerima di label paket.',
+        correctGroup: 'ip',
+        correctOrder: 3,
+      },
+      {
+        id: 'ap8',
+        text: 'Meneruskan paket data antar jaringan (Forwarding)',
+        courierAnalogy: 'Seperti petugas pos yang meneruskan surat dari satu kota ke kota berikutnya.',
+        correctGroup: 'ip',
+        correctOrder: 4,
       },
     ],
     constructivismEssay2:
-      'Berdasarkan urutan proses yang baru saja kamu susun, jelaskan bagaimana TCP memastikan data tiba dengan utuh dan berurutan! Tuliskan dengan kata-katamu sendiri.',
-    conclusionPrompt: 'Berdasarkan aktivitas Story Scramble dan Analogy Sorting yang telah kamu lakukan, jelaskan bagaimana kamu mampu mendefinisikan konsep dasar TCP/IP sebagai fondasi komunikasi jaringan komputer. Tuliskan dengan kata-katamu sendiri dan hubungkan dengan pengalaman belajarmu.',
+      'Setelah mengelompokkan analogi TCP dan IP, jelaskan dengan kata-katamu sendiri:\n\n1. Apa perbedaan mendasar antara TCP dan IP?\n2. Apa peran TCP dalam komunikasi jaringan?\n3. Apa peran IP dalam komunikasi jaringan?\n4. Mengapa keduanya harus bekerja sama?\n\nTuliskan jawabanmu secara lengkap dan logis!',
+    conclusionPrompt: 'Berdasarkan animasi perjalanan paket data dan aktivitas pengelompokan TCP vs IP yang telah kamu lakukan, jelaskan bagaimana kamu mampu mendefinisikan konsep dasar TCP/IP sebagai fondasi komunikasi jaringan komputer. Tuliskan dengan kata-katamu sendiri dan hubungkan dengan pengalaman belajarmu.',
   },
   {
     type: 'inquiry',

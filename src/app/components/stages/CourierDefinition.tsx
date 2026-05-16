@@ -1,10 +1,10 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  FileImage,
+  Image as ImageIcon,
   Box,
   MapPin,
-  Shield,
+  Tag,
   Zap,
   ArrowRight,
   ChevronRight,
@@ -17,6 +17,10 @@ import {
   X,
   RefreshCw,
   Lightbulb,
+  Smartphone,
+  Puzzle,
+  Route,
+  Wifi,
 } from 'lucide-react';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -35,8 +39,8 @@ interface LayerInfo {
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
-const DEFINITION_WORDS = ['Protokol', 'Pengiriman', 'Data', 'Berlapis'];
-const CORRECT_DEFINITION = 'Protokol Pengiriman Data Berlapis';
+const DEFINITION_WORDS = ['Protokol', 'Komunikasi', 'Pengiriman', 'Data', 'Jaringan', 'Berlapis'];
+const CORRECT_DEFINITION = 'Protokol Komunikasi Pengiriman Data Jaringan Berlapis';
 
 // ── Layer Data ─────────────────────────────────────────────────────────────
 
@@ -49,62 +53,62 @@ const LAYERS: LayerInfo[] = [
       'Ibarat kamu ingin mengirim foto ke teman lewat aplikasi chat. Data mentah berupa file gambar disiapkan di sisi pengirim.',
     teknis:
       'Layer Application menyediakan antarmuka bagi pengguna. Protokol: HTTP, FTP, SMTP, DNS.',
-    icon: <FileImage className="w-7 h-7" />,
+    icon: <Smartphone className="w-7 h-7" />,
     accent: '#D97706',
     accentBg: 'bg-amber-50 border-amber-200 text-amber-700',
-    badge: 'Data Mentah',
+    badge: '📱 Data Aplikasi',
   },
   {
     id: 4,
     title: 'Transport Layer',
     layerName: 'Layer 4 — Transport',
     analogi:
-      'TCP Header ditambahkan ke data yang sudah dipecah menjadi segmen-segmen kecil. TCP Header berisi nomor urut agar data bisa disusun kembali dengan benar di sisi penerima, seperti memberi label nomor pada tiap potongan puzzle.',
+      'TCP Header ditambahkan ke data. Data dipecah jadi segmen kecil dan diberi nomor urut, seperti memotong kue dan memberi label nomor agar bisa disusun ulang.',
     teknis:
-      'TCP Header membantu mengatur data agar tetap urut dan lengkap. Berisi Sequence Number untuk menyusun ulang segmen, serta Port dan Checksum untuk memastikan data sampai ke aplikasi yang tepat.',
-    icon: <Box className="w-7 h-7" />,
+      'TCP memastikan data utuh & berurutan. Berisi Sequence Number, Port, dan Checksum.',
+    icon: <Puzzle className="w-7 h-7" />,
     accent: '#3B82F6',
     accentBg: 'bg-blue-50 border-blue-200 text-blue-600',
-    badge: 'TCP Header',
+    badge: '🧩 Potongan Data',
   },
   {
     id: 3,
     title: 'Network Layer',
     layerName: 'Layer 3 — Network',
     analogi:
-      'IP Header ditambahkan ke segmen data. IP Header berfungsi seperti menulis alamat pada amplop surat — menentukan dari mana data berasal dan ke mana data harus dikirim.',
+      'IP Header ditambahkan — seperti menulis alamat pada amplop surat. Menentukan dari mana data berasal dan ke mana harus dikirim.',
     teknis:
-      'IP Header membantu menentukan arah perjalanan data. Berisi alamat pengirim dan penerima agar setiap paket data tahu rute yang harus dilalui dalam jaringan.',
-    icon: <MapPin className="w-7 h-7" />,
+      'IP menentukan rute pengiriman. Berisi alamat pengirim & penerima.',
+    icon: <Route className="w-7 h-7" />,
     accent: '#7C3AED',
     accentBg: 'bg-purple-50 border-purple-200 text-purple-600',
-    badge: 'IP Header',
+    badge: '📍 Alamat & Rute',
   },
   {
     id: 2,
     title: 'Data Link Layer',
     layerName: 'Layer 2 — Data Link',
     analogi:
-      'Data dibungkus dengan MAC/Frame agar bisa dikenali oleh perangkat tujuan dalam jaringan lokal, seperti menempelkan barcode pada paket kiriman agar kurir tahu ke perangkat mana paket harus diserahkan.',
+      'Data dibungkus MAC/Frame agar sampai ke perangkat yang tepat dalam satu jaringan, seperti menempelkan barcode pada paket kiriman.',
     teknis:
-      'MAC/Frame membantu mengenali perangkat tujuan dalam jaringan lokal. Mengubah paket menjadi frame dan menambahkan alamat fisik (MAC Address) agar data sampai ke perangkat yang tepat dalam satu jaringan.',
-    icon: <Shield className="w-7 h-7" />,
+      'MAC Address mengidentifikasi perangkat tujuan dalam jaringan lokal.',
+    icon: <Tag className="w-7 h-7" />,
     accent: '#059669',
     accentBg: 'bg-emerald-50 border-emerald-200 text-emerald-600',
-    badge: 'MAC / Frame',
+    badge: '🏷️ Label MAC',
   },
   {
     id: 1,
     title: 'Physical Layer',
     layerName: 'Layer 1 — Physical',
     analogi:
-      'Data yang sudah dibungkus lengkap diubah menjadi sinyal listrik, cahaya, atau gelombang radio agar bisa dikirim melalui kabel atau nirkabel menuju perangkat penerima.',
+      'Data diubah jadi sinyal listrik/cahaya/gelombang radio untuk dikirim lewat kabel atau Wi-Fi menuju penerima.',
     teknis:
-      'Physical Layer mengubah data menjadi sinyal/bit yang dapat dikirim melalui media transmisi seperti kabel tembaga, serat optik, atau gelombang radio (Wi-Fi).',
-    icon: <Zap className="w-7 h-7" />,
+      'Physical Layer mengubah data menjadi bit. Media: kabel tembaga, serat optik, atau gelombang radio.',
+    icon: <Wifi className="w-7 h-7" />,
     accent: '#DB2777',
     accentBg: 'bg-rose-50 border-rose-200 text-rose-600',
-    badge: 'Transmisi Bit',
+    badge: '📶 Sinyal Fisik',
   },
 ];
 
@@ -189,7 +193,7 @@ function DataFile({ accent, dimmed }: { accent: string; dimmed?: boolean }) {
           border: `2px solid ${accent}40`,
         }}
       >
-        <FileImage className="w-8 h-8" style={{ color: accent }} />
+        <ImageIcon className="w-8 h-8" style={{ color: accent }} />
         <span className="text-[9px] font-black text-[#395886]/50 uppercase tracking-wider">File</span>
       </div>
     </motion.div>
@@ -538,7 +542,7 @@ export function CourierDefinition({ onComplete }: { onComplete?: () => void }) {
                           accent={LAYERS[1].accent}
                           dimmed={currentStep > 2}
                         >
-                          <FileImage className="w-6 h-6" style={{ color: LAYERS[1].accent }} />
+                          <ImageIcon className="w-6 h-6" style={{ color: LAYERS[1].accent }} />
                         </TransportBox>
                       </div>
                     )}
@@ -554,7 +558,7 @@ export function CourierDefinition({ onComplete }: { onComplete?: () => void }) {
                             opacity: currentStep > 3 ? 0.6 : 1,
                           }}
                         >
-                          <FileImage className="w-5 h-5" style={{ color: LAYERS[1].accent, opacity: 0.5 }} />
+                          <ImageIcon className="w-5 h-5" style={{ color: LAYERS[1].accent, opacity: 0.5 }} />
                           <span className="text-[8px] font-black uppercase text-[#395886]/25">Segmen Data</span>
                         </div>
                         <IPLabel accent={LAYERS[2].accent} dimmed={currentStep > 3} />
@@ -573,7 +577,7 @@ export function CourierDefinition({ onComplete }: { onComplete?: () => void }) {
                           }}
                         >
                           <div className="flex flex-col items-center gap-1 opacity-40">
-                            <FileImage className="w-4 h-4" style={{ color: LAYERS[1].accent }} />
+                            <ImageIcon className="w-4 h-4" style={{ color: LAYERS[1].accent }} />
                             <span className="text-[7px] font-black text-[#395886]/25">DATA</span>
                           </div>
                           <div

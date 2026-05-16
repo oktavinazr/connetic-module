@@ -29,6 +29,8 @@ GRANT ALL ON TABLE public.users TO anon;
 GRANT ALL ON TABLE public.users TO authenticated;
 GRANT ALL ON TABLE public.users TO service_role;
 
+ALTER TABLE public.users DISABLE ROW LEVEL SECURITY;
+
 
 -- 2. MENYIAPKAN TABEL GROUP DISCUSSIONS (Kolaborasi Real-time)
 -- ==============================================================================

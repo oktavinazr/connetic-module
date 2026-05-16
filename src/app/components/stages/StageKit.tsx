@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   AlertCircle, CheckCircle, Info, XCircle, RotateCcw, ChevronRight,
   PenLine, Clock, LockKeyhole, ArrowRight, Trophy, Brain,
+  ChevronDown, MessageSquare, Lightbulb as LightbulbIcon, Eye,
 } from 'lucide-react';
 
 // ── Animation class strings ───────────────────────────────────────────────────
@@ -349,10 +350,6 @@ export function StageCompletedOverlay({
     </div>
   );
 }
-
-// Need Eye icon import
-import { Eye } from 'lucide-react';
-
 // ── ActivityGuideBox ──────────────────────────────────────────────────────────
 // Always-visible activity guide placed between stage title and activity content.
 // Each step is specific to the activity type (drag & drop, essay, discussion, etc.).
@@ -365,35 +362,43 @@ export function ActivityGuideBox({
   accentColor?: string;
   borderColor?: string;
 }) {
+  const [isOpen, setIsOpen] = useState(true); // Default: open on first visit
+
   if (!steps || steps.length === 0) return null;
   return (
     <div className={`rounded-xl border ${borderColor} bg-[#F4F6FC] shadow-sm overflow-hidden`}>
-      {/* Always-visible header */}
-      <div className={`flex items-center gap-2.5 px-4 py-3 ${accentColor}`}>
+      {/* Clickable header */}
+      <button
+        onClick={() => setIsOpen(o => !o)}
+        className={`w-full flex items-center gap-2.5 px-4 py-3 text-left ${accentColor} hover:bg-white/30 transition-colors`}
+      >
         <Info className="w-4 h-4 shrink-0" />
-        <span className="text-[11px] font-bold">Panduan Aktivitas</span>
+        <span className="text-[11px] font-bold flex-1">Panduan Aktivitas</span>
         <span className="text-[10px] font-medium text-[#395886]/40 hidden sm:inline">
-          — {steps.length} langkah
+          {steps.length} langkah
         </span>
-      </div>
+        <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
 
-      {/* Always-visible content */}
-      <div className="px-4 pb-3.5">
-        <ol className="space-y-1.5">
-          {steps.map((step, idx) => (
-            <li key={idx} className="flex items-start gap-2.5">
-              <span
-                className={`flex shrink-0 items-center justify-center rounded-full text-[9px] font-black bg-white border ${borderColor} ${accentColor} mt-0.5`}
-                style={{ minWidth: '18px', height: '18px' }}
-              >
-                {idx + 1}
-              </span>
-              <span className="text-[11px] font-medium text-[#395886]/80 leading-relaxed">
-                {step}
-              </span>
-            </li>
-          ))}
-        </ol>
+      {/* Collapsible content */}
+      <div className={`transition-all duration-300 overflow-hidden ${isOpen ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className="px-4 pb-3.5">
+          <ol className="space-y-1.5">
+            {steps.map((step, idx) => (
+              <li key={idx} className="flex items-start gap-2.5">
+                <span
+                  className={`flex shrink-0 items-center justify-center rounded-full text-[9px] font-black bg-white border ${borderColor} ${accentColor} mt-0.5`}
+                  style={{ minWidth: '18px', height: '18px' }}
+                >
+                  {idx + 1}
+                </span>
+                <span className="text-[11px] font-medium text-[#395886]/80 leading-relaxed">
+                  {step}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
     </div>
   );
@@ -638,4 +643,135 @@ export function FormattedQuestion({
 
 function renderBoldInline(text: string): string {
   return text.replace(/\*\*(.+?)\*\*/g, '<strong class="text-[#395886] font-extrabold">$1</strong>');
+}
+
+// ── LogicalThinkingTracker ────────────────────────────────────────────────────
+// Shows 3 logical thinking indicators as a visual step progress bar.
+// Auto-detects which indicator is active/done based on progressPercent.
+
+interface TrackerStep {
+  key: string;
+  label: string;
+  icon: React.ReactNode;
+  description: string;
+}
+
+const TRACKER_STEPS: TrackerStep[] = [
+  {
+    key: 'consistency',
+    label: 'Keruntutan Berpikir',
+    icon: <Brain className="w-4 h-4" />,
+    description: 'Memahami & menyusun konsep',
+  },
+  {
+    key: 'arguing',
+    label: 'Kemampuan Berargumen',
+    icon: <MessageSquare className="w-4 h-4" />,
+    description: 'Menjelaskan alasan & argumen',
+  },
+  {
+    key: 'conclusion',
+    label: 'Penarikan Kesimpulan',
+    icon: <LightbulbIcon className="w-4 h-4" />,
+    description: 'Menyimpulkan hasil belajar',
+  },
+];
+
+export function LogicalThinkingTracker({
+  progressPercent = 0,
+  isStageCompleted = false,
+}: {
+  progressPercent?: number;
+  isStageCompleted?: boolean;
+}) {
+  // Determine which step is active
+  // 0-35%: consistency active, 35-70%: arguing active, 70%+: conclusion active
+  const getStepStatus = (stepIndex: number): 'pending' | 'active' | 'done' => {
+    if (isStageCompleted) return 'done';
+    if (stepIndex === 0) {
+      if (progressPercent < 35) return 'active';
+      return 'done';
+    }
+    if (stepIndex === 1) {
+      if (progressPercent < 35) return 'pending';
+      if (progressPercent < 70) return 'active';
+      return 'done';
+    }
+    if (stepIndex === 2) {
+      if (progressPercent < 70) return 'pending';
+      if (progressPercent < 95) return 'active';
+      return 'done';
+    }
+    return 'pending';
+  };
+
+  return (
+    <div className="rounded-xl border border-[#D5DEEF]/60 bg-white/80 backdrop-blur-sm px-4 py-3 shadow-sm">
+      <div className="flex items-center gap-1 sm:gap-2">
+        {TRACKER_STEPS.map((step, idx) => {
+          const status = getStepStatus(idx);
+          const isLast = idx === TRACKER_STEPS.length - 1;
+
+          return (
+            <div key={step.key} className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
+              {/* Step indicator */}
+              <div
+                className={`flex items-center gap-2 px-2.5 py-2 rounded-lg flex-1 min-w-0 transition-all duration-500 ${
+                  status === 'done'
+                    ? 'bg-[#ECFDF5] border border-[#10B981]/20'
+                    : status === 'active'
+                    ? 'bg-[#EEF4FF] border border-[#628ECB]/30 shadow-sm'
+                    : 'bg-[#F8FAFD] border border-[#D5DEEF]/30'
+                }`}
+              >
+                {/* Status icon */}
+                <div
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-all duration-500 ${
+                    status === 'done'
+                      ? 'bg-[#10B981] text-white'
+                      : status === 'active'
+                      ? 'bg-[#628ECB] text-white'
+                      : 'bg-[#D5DEEF] text-[#395886]/30'
+                  }`}
+                >
+                  {status === 'done' ? (
+                    <CheckCircle className="w-3.5 h-3.5" />
+                  ) : (
+                    step.icon
+                  )}
+                </div>
+
+                {/* Label */}
+                <div className="flex-1 min-w-0 hidden sm:block">
+                  <p
+                    className={`text-[10px] font-bold leading-tight truncate transition-colors duration-500 ${
+                      status === 'done'
+                        ? 'text-[#065F46]'
+                        : status === 'active'
+                        ? 'text-[#395886]'
+                        : 'text-[#395886]/30'
+                    }`}
+                  >
+                    {step.label}
+                  </p>
+                  <p className={`text-[8px] leading-tight truncate transition-colors duration-500 ${
+                    status === 'done' ? 'text-[#10B981]/60' : status === 'active' ? 'text-[#628ECB]/60' : 'text-[#395886]/20'
+                  }`}>
+                    {status === 'done' ? 'Selesai' : status === 'active' ? step.description : 'Menunggu'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Connector line */}
+              {!isLast && (
+                <div className={`hidden sm:block h-px w-4 shrink-0 transition-colors duration-500 ${
+                  status === 'done' ? 'bg-[#10B981]/40' : 'bg-[#D5DEEF]'
+                }`} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }

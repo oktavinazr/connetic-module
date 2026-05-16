@@ -41,7 +41,7 @@ import { StageAnswerDetail } from '../components/admin/StageDetail';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DragAutoScroll } from '../components/DragAutoScroll';
-import { ActivityGuideBox, EssayBox, StageCompletedOverlay, ATPConclusionBox } from '../components/stages/StageKit';
+import { ActivityGuideBox, EssayBox, StageCompletedOverlay, ATPConclusionBox, LogicalThinkingTracker } from '../components/stages/StageKit';
 import { useGlobalStageSync } from '../hooks/useGlobalStageSync';
 
 type StageType =
@@ -221,9 +221,9 @@ export function LessonPage() {
   const [progressLoaded, setProgressLoaded] = useState(!!initialProgress);
   const [currentStageIndex, setCurrentStageIndex] = useState<number | null>(() => {
     if (!initialProgress?.pretestCompleted || !lesson) return null;
-    const firstIncomplete = lesson.stages.findIndex((_, index) => !initialProgress.completedStages.includes(index));
-    return firstIncomplete !== -1 ? firstIncomplete : lesson.stages.length - 1;
+    return 0; // Mulai dari awal, sync admin akan menyesuaikan
   });
+  const [stageInitDone, setStageInitDone] = useState(false);
   const [showStageSummary, setShowStageSummary] = useState(false);
   // Activity guide is always open
   const [pendingReflection, setPendingReflection] = useState<{ stageAnswer: unknown } | null>(null);
@@ -271,13 +271,20 @@ export function LessonPage() {
       return;
     }
 
-    if (currentStageIndex === null) {
-      const firstIncomplete = lesson.stages.findIndex(
-        (_, index) => !progress.completedStages.includes(index),
-      );
-      setCurrentStageIndex(firstIncomplete !== -1 ? firstIncomplete : lesson.stages.length - 1);
+    if (!stageInitDone && globalSync.loaded && progressLoaded) {
+      if (!globalSync.isIdle && globalSync.sync?.current_stage_index !== undefined) {
+        // Sesi aktif → ikuti tahap admin
+        setCurrentStageIndex(globalSync.sync.current_stage_index);
+      } else {
+        // Sesi idle → cari tahap pertama yang belum selesai
+        const firstIncomplete = lesson.stages.findIndex(
+          (_, index) => !progress.completedStages.includes(index),
+        );
+        setCurrentStageIndex(firstIncomplete !== -1 ? firstIncomplete : lesson.stages.length - 1);
+      }
+      setStageInitDone(true);
     }
-  }, [currentStageIndex, lesson, lessonId, navigate, progress, progressLoaded]);
+  }, [stageInitDone, lesson, lessonId, navigate, progress, progressLoaded, globalSync.loaded, globalSync.isIdle, globalSync.sync?.current_stage_index]);
 
   useEffect(() => {
     setPendingReflection(null);
@@ -285,11 +292,11 @@ export function LessonPage() {
 
   // Sync to admin stage when session is active
   useEffect(() => {
-    if (!globalSync.loaded || globalSync.isIdle) return;
+    if (!globalSync.loaded || globalSync.isIdle || currentStageIndex === null) return;
     const syncStage = globalSync.sync?.current_stage_index;
     if (syncStage !== undefined && syncStage !== currentStageIndex) {
-      if (syncStage > (currentStageIndex ?? 0)) {
-        // If past the last stage OR status is 'completed', redirect to Posttest
+      // Admin advanced → follow
+      if (syncStage > currentStageIndex) {
         if (syncStage >= (lesson?.stages.length ?? 0) || globalSync.sync?.status === 'completed') {
           navigate(`/evaluation/${lessonId}`);
         } else {
@@ -297,8 +304,13 @@ export function LessonPage() {
           window.scrollTo(0, 0);
         }
       }
+      // Student got ahead (e.g. refresh) → pull back to admin stage
+      else if (syncStage < currentStageIndex) {
+        setCurrentStageIndex(syncStage);
+        window.scrollTo(0, 0);
+      }
     }
-  }, [globalSync.sync?.current_stage_index, globalSync.sync?.status, globalSync.loaded, globalSync.isIdle]);
+  }, [globalSync.sync?.current_stage_index, globalSync.sync?.status, globalSync.loaded, globalSync.isIdle, currentStageIndex]);
 
   if (!lesson || currentStageIndex === null) return null;
 
@@ -326,18 +338,19 @@ export function LessonPage() {
   };
 
   const handleStageClick = (index: number) => {
-    // Only allow: completed stages (review) OR the current admin-synced stage
+    // Block if session is idle
+    if (globalSync.isIdle) return;
+
     const isCompleted = progress.completedStages.includes(index);
     const syncStage = globalSync.sync?.current_stage_index ?? 0;
     const isCurrentSyncStage = index === syncStage;
     
-    // Block if session is idle
-    if (globalSync.isIdle) return;
+    // Allow clicking ONLY the current admin-synced stage
+    // Completed stages from PREVIOUS sessions are NOT accessible until admin advances
+    if (!isCurrentSyncStage) return;
     
-    if (fullyCompleted || isCompleted || isCurrentSyncStage) {
-      setCurrentStageIndex(index);
-      window.scrollTo(0, 0);
-    }
+    setCurrentStageIndex(index);
+    window.scrollTo(0, 0);
   };
 
   const handleStageActivityComplete = (answer: unknown) => {
@@ -506,6 +519,7 @@ export function LessonPage() {
             currentStageIndex={currentStageIndex}
             fullyCompleted={fullyCompleted}
             onStageClick={handleStageClick}
+            syncStageIndex={globalSync.sync?.current_stage_index ?? 0}
           />
         </aside>
 
@@ -526,11 +540,13 @@ export function LessonPage() {
               {lesson.stages.map((stage, index) => {
                 const completed = progress.completedStages.includes(index);
                 const isCurrent = index === currentStageIndex;
+                const syncStage = globalSync.sync?.current_stage_index ?? 0;
+                const isAllowed = index === syncStage;
                 return (
                   <button
                     key={index}
                     onClick={() => handleStageClick(index)}
-                    disabled={!fullyCompleted && !completed && !isCurrent}
+                    disabled={!isAllowed}
                     title={getStageDisplayTitle(stage.type)}
                     className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[10px] font-bold transition-all ${
                       isCurrent
@@ -538,7 +554,7 @@ export function LessonPage() {
                         : completed
                           ? 'border-[#10B981]/20 bg-[#10B981]/10 text-[#10B981]'
                           : 'border-[#D5DEEF] bg-white text-[#395886]/35'
-                    } ${(!fullyCompleted && !completed && !isCurrent) ? 'cursor-default opacity-60' : 'cursor-pointer'}`}
+                    } ${!isAllowed ? 'cursor-default opacity-60' : 'cursor-pointer'}`}
                   >
                     <div
                       className={`h-1.5 w-1.5 shrink-0 rounded-full ${
@@ -664,22 +680,22 @@ export function LessonPage() {
             </div>
           ) : (
             <>
-              {/* Pause — full overlay to block interaction */}
-              {globalSync.isPaused && !isStageCompleted && (
-                <div className="w-full mb-4">
-                  <div className="rounded-2xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-white p-8 text-center shadow-sm">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
-                      <PauseIcon className="h-8 w-8 text-amber-600" />
+              {/* Pause — full overlay to block interaction, ALWAYS visible */}
+              {globalSync.isPaused && (
+                <div className="w-full mb-4 sticky top-[76px] z-50">
+                  <div className="rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-8 text-center shadow-lg">
+                    <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 border-4 border-amber-200">
+                      <PauseIcon className="h-10 w-10 text-amber-600" />
                     </div>
-                    <h3 className="text-lg font-black text-amber-700">⏸ Sesi Sedang Dijeda</h3>
+                    <h3 className="text-xl font-black text-amber-700">⏸ Sesi Sedang Dijeda oleh Guru</h3>
                     <p className="mt-2 text-sm text-amber-600 max-w-md mx-auto">
-                      Guru sedang menjeda sesi pembelajaran. Timer dihentikan sementara.
-                      Tunggu hingga guru melanjutkan kembali.
+                      Guru sedang menjeda sesi pembelajaran. Seluruh aktivitas dihentikan sementara.
+                      Tunggu hingga guru menekan tombol "Lanjutkan".
                     </p>
-                    <div className="mt-5 flex justify-center gap-1.5">
+                    <div className="mt-5 flex justify-center gap-2">
                       {[0, 1, 2].map(i => (
-                        <div key={i} className="h-2 w-2 rounded-full bg-amber-300 animate-bounce"
-                          style={{ animationDelay: `${i * 0.15}s` }} />
+                        <div key={i} className="h-3 w-3 rounded-full bg-amber-400 animate-bounce"
+                          style={{ animationDelay: `${i * 0.2}s` }} />
                       ))}
                     </div>
                   </div>
@@ -689,6 +705,19 @@ export function LessonPage() {
               {/* Activity guide — hide during pause */}
               {!globalSync.isPaused && !isStageCompleted && stageGuideSteps.length > 0 && (
                 <ActivityGuideBox steps={stageGuideSteps} />
+              )}
+
+              {/* Logical Thinking Progress Tracker */}
+              {!globalSync.isPaused && (
+                <LogicalThinkingTracker
+                  progressPercent={
+                    isStageCompleted || pendingReflection !== null ? 100
+                    : currentStageAnswer ? 50
+                    : globalSync.sync?.session_status === 'active' ? 25
+                    : 0
+                  }
+                  isStageCompleted={isStageCompleted || pendingReflection !== null}
+                />
               )}
 
               {/* Stage content — only show when not paused */}

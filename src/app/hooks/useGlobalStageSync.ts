@@ -89,64 +89,45 @@ export function useGlobalStageSync(
 
   // ── Supabase Realtime subscription (instant sync) ──
   useEffect(() => {
-    let retries = 0;
-    const maxRetries = 3;
-
-    const setupChannel = () => {
-      const channel = supabase
-        .channel(`admin_stage_sync:${lessonId}`)
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'admin_stage_sync',
-            filter: `lesson_id=eq.${lessonId}`,
-          },
-          async (payload) => {
-            const newData = payload.new as Record<string, any> | null;
-            if (newData) {
-              // Clear cache to force fresh fetch
-              clearSyncCache(lessonId);
-              const timers = await getStageTimers(lessonId);
-              applySync({
-                id: newData.id,
-                lesson_id: newData.lesson_id,
-                current_stage_index: newData.current_stage_index,
-                stage_started_at: newData.stage_started_at,
-                force_advance: newData.force_advance,
-                force_advance_at: newData.force_advance_at,
-                status: newData.status,
-                session_status: newData.session_status,
-                paused_at: newData.paused_at,
-                total_paused_ms: newData.total_paused_ms,
-                added_minutes: newData.added_minutes,
-                updated_at: newData.updated_at,
-              }, timers);
-            }
-          },
-        )
-        .subscribe((status) => {
-          if (status === 'SUBSCRIBED') {
-            console.log(`[realtime] admin_stage_sync:${lessonId} subscribed`);
-          } else if (status === 'CHANNEL_ERROR') {
-            console.error(`[realtime] admin_stage_sync:${lessonId} error, retrying...`);
-            if (retries < maxRetries) {
-              retries++;
-              setTimeout(setupChannel, 1000 * retries);
-            }
-          } else if (status === 'CLOSED' || status === 'TIMED_OUT') {
-            if (retries < maxRetries) {
-              retries++;
-              setTimeout(setupChannel, 500);
-            }
+    const channel = supabase
+      .channel(`admin_stage_sync:${lessonId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'admin_stage_sync',
+          filter: `lesson_id=eq.${lessonId}`,
+        },
+        async (payload) => {
+          const newData = payload.new as Record<string, any> | null;
+          if (newData) {
+            clearSyncCache(lessonId);
+            const timers = await getStageTimers(lessonId);
+            applySync({
+              id: newData.id,
+              lesson_id: newData.lesson_id,
+              current_stage_index: newData.current_stage_index,
+              stage_started_at: newData.stage_started_at,
+              force_advance: newData.force_advance,
+              force_advance_at: newData.force_advance_at,
+              status: newData.status,
+              session_status: newData.session_status,
+              paused_at: newData.paused_at,
+              total_paused_ms: newData.total_paused_ms,
+              added_minutes: newData.added_minutes,
+              updated_at: newData.updated_at,
+            }, timers);
           }
-        });
-
-      return channel;
-    };
-
-    const channel = setupChannel();
+        },
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log(`[realtime] admin_stage_sync:${lessonId} subscribed`);
+        } else {
+          console.warn(`[realtime] admin_stage_sync:${lessonId} status: ${status}`);
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);

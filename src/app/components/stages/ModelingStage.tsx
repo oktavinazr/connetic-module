@@ -4,7 +4,7 @@ import { useDrag, useDrop } from 'react-dnd';
 import {
   CheckCircle, ArrowRight, BookOpen, Lightbulb, ChevronRight,
   AlertCircle, MessageSquare, Activity, GripVertical,
-  Cable, Wifi, Radio, Lock,
+  Cable, Wifi, Radio, Lock, PenLine,
 } from 'lucide-react';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
 
@@ -193,6 +193,9 @@ export function ModelingStage({
   const [tapCount, setTapCount] = useState(0);
   const [tcpOpened, setTcpOpened] = useState(false);
   const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Argumentation essay
+  const [showArgumentEssay, setShowArgumentEssay] = useState(false);
+  const [argumentText, setArgumentText] = useState('');
   // UI
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -340,9 +343,7 @@ export function ModelingStage({
   const goNext = () => {
     if (!isStepDone) return;
     if (step === 8) {
-      const finalAnswer = { userMessage };
-      void tracker.complete(finalAnswer, { step, userMessage, completed: true });
-      onComplete(finalAnswer);
+      setShowArgumentEssay(true);
       return;
     }
     setStep(s => s + 1);
@@ -1160,6 +1161,60 @@ export function ModelingStage({
         )}
       </AnimatePresence>
 
+      {/* ── Argumentation Essay (Kemampuan Berargumen) ── */}
+      {showArgumentEssay && (
+        <div className="rounded-2xl border-2 border-[#10B981]/25 bg-gradient-to-br from-[#ECFDF5] to-white shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#10B981]/10 to-transparent border-b border-[#10B981]/15">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#10B981]/15">
+              <PenLine className="w-4 h-4 text-[#10B981]" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[9px] font-black uppercase tracking-widest text-[#10B981]/70">Kemampuan Berargumen — {objectiveCode}</p>
+              <p className="text-xs font-bold text-[#065F46]">Jelaskan Pemahamanmu</p>
+            </div>
+          </div>
+          <div className="p-5">
+            <div className="mb-3 p-4 rounded-xl bg-[#F0FDF4] border border-[#10B981]/20">
+              <p className="text-sm font-semibold text-[#065F46] leading-relaxed">
+                Berdasarkan simulasi yang baru saja kamu lakukan, jelaskan:
+              </p>
+              <ol className="mt-2 space-y-1 text-xs text-[#065F46]/80">
+                <li>1. Bagaimana data berubah bentuk dari Application hingga Physical Layer?</li>
+                <li>2. Mengapa setiap lapisan perlu menambahkan header-nya masing-masing?</li>
+                <li>3. Apa yang terjadi jika salah satu lapisan tidak menjalankan fungsinya?</li>
+              </ol>
+            </div>
+            <textarea
+              value={argumentText}
+              onChange={e => setArgumentText(e.target.value)}
+              rows={5}
+              className="w-full p-4 border-2 border-[#D5DEEF] rounded-xl text-sm leading-relaxed outline-none transition-all resize-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/5"
+              placeholder="Tuliskan argumenmu di sini... (minimal 20 kata)"
+            />
+            <div className="mt-3 flex items-center justify-between">
+              <span className={`text-[10px] font-bold ${argumentText.trim().split(/\s+/).filter(Boolean).length >= 20 ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
+                {argumentText.trim().split(/\s+/).filter(Boolean).length} / 20 kata
+              </span>
+              <button
+                onClick={() => {
+                  if (argumentText.trim().split(/\s+/).filter(Boolean).length < 20) return;
+                  const finalAnswer = { userMessage, argument: argumentText.trim() };
+                  void tracker.complete(finalAnswer, { step, userMessage, argument: argumentText.trim(), completed: true });
+                  onComplete(finalAnswer);
+                }}
+                disabled={argumentText.trim().split(/\s+/).filter(Boolean).length < 20}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 shadow-sm
+                  ${argumentText.trim().split(/\s+/).filter(Boolean).length >= 20
+                    ? 'bg-[#10B981] text-white hover:bg-[#059669]'
+                    : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
+              >
+                Simpan & Selesai <CheckCircle className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Navigation ── */}
       <div className="flex items-center justify-between gap-4 py-2">
         <button onClick={goPrev} disabled={step === 0}
@@ -1175,15 +1230,15 @@ export function ModelingStage({
           ))}
         </div>
 
-        <button onClick={goNext} disabled={!isStepDone}
+        <button onClick={goNext} disabled={!isStepDone || showArgumentEssay}
           className={`flex items-center gap-2 px-6 py-3 rounded-xl font-black text-sm text-white transition-all shadow-md active:scale-95
-            ${isStepDone
+            ${isStepDone && !showArgumentEssay
               ? step === 8
                 ? 'bg-gradient-to-r from-[#10B981] to-[#059669] shadow-[#10B981]/20 hover:opacity-90'
                 : 'bg-gradient-to-r from-[#395886] to-[#628ECB] shadow-[#628ECB]/20 hover:opacity-90'
               : 'bg-[#E5E7EB] cursor-not-allowed shadow-none text-[#395886]/30'
             }`}>
-          {step === 8 ? 'Submit Aktivitas' : 'Lanjut'} <ChevronRight className="w-4 h-4" />
+          {step === 8 ? (showArgumentEssay ? 'Tulis Argumen' : 'Lanjut ke Argumen') : 'Lanjut'} <ChevronRight className="w-4 h-4" />
         </button>
       </div>
     </div>

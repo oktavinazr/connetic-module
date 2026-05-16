@@ -12,6 +12,7 @@ interface LessonFlowSidebarProps {
   fullyCompleted?: boolean;
   onStageClick?: (index: number) => void;
   isLocked?: boolean;
+  syncStageIndex?: number;
 }
 
 export function LessonFlowSidebar({
@@ -23,6 +24,7 @@ export function LessonFlowSidebar({
   fullyCompleted = false,
   onStageClick,
   isLocked = false,
+  syncStageIndex = 0,
 }: LessonFlowSidebarProps) {
   type StepItem = { step: number; label: string; completed: boolean; href: string; alwaysCompleted?: boolean; isCtl?: boolean };
   const mainSteps: StepItem[] = [
@@ -86,8 +88,9 @@ export function LessonFlowSidebar({
                   {lesson.stages.map((stage, index) => {
                     const stageCompleted = progress.completedStages.includes(index);
                     const isCurrent = currentStep === 3 && index === currentStageIndex;
-                    // Dapat diklik jika: pelajaran sudah selesai penuh, ATAU tahap ini sudah pernah diselesaikan, ATAU ini adalah tahap yang sedang aktif (tapi disabled agar tidak re-click)
-                    const stageClickable = !isLocked && (fullyCompleted || stageCompleted) && !isCurrent && onStageClick;
+                    const isAdminStage = index === syncStageIndex;
+                    // Hanya bisa diklik jika TEPAT di tahap yang diset admin
+                    const stageClickable = !isLocked && isAdminStage && !isCurrent && onStageClick;
                     return (
                       <button
                         key={index}

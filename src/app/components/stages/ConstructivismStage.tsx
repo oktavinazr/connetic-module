@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   ChevronRight, CheckCircle, XCircle, Lightbulb, HelpCircle, PlayCircle,
   RotateCcw, AlertCircle, Info, BookOpen, GripVertical, PenLine, ArrowRight,
+  Package, Shield, MapPin, FileImage, Network,
 } from 'lucide-react';
 import { useDrag, useDrop } from 'react-dnd';
 import { getCurrentUser } from '../../utils/auth';
@@ -248,19 +249,39 @@ function StoryScramblePhase({
 
   return (
     <div className="max-w-4xl mx-auto space-y-5">
-      {/* Tahukah Kamu? — Brief TCP/IP context */}
+      {/* Tahukah Kamu? — Visual TCP/IP context */}
       <div className="bg-white rounded-2xl border-2 border-[#628ECB]/15 shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-5 py-3 bg-amber-50/60 border-b border-amber-100">
           <Lightbulb className="w-4 h-4 text-amber-500" />
           <h3 className="text-sm font-bold text-[#395886]">Tahukah Kamu?</h3>
         </div>
-        <div className="px-5 py-4">
-          <p className="text-sm text-[#395886]/75 leading-relaxed">
+        <div className="px-5 py-5">
+          <p className="text-sm text-[#395886]/75 leading-relaxed mb-4">
             Setiap kali kamu mengirim pesan, foto, atau video melalui internet, data tersebut tidak
             dikirim sekaligus. Data dipecah menjadi potongan-potongan kecil, diberi nomor urut, dan
-            dikirim melalui jaringan komputer dan telekomunikasi. Di sisi penerima, potongan-potongan
-            itu disusun kembali agar pesanmu sampai dengan utuh dan berurutan. Proses inilah yang
-            diatur oleh <strong className="text-[#628ECB]">TCP/IP</strong> — sekumpulan aturan komunikasi data dalam jaringan.
+            dikirim melalui jaringan komputer. Di sisi penerima, potongan-potongan
+            itu disusun kembali agar pesanmu sampai dengan utuh dan berurutan.
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-purple-50 border border-purple-100">
+              <FileImage className="w-6 h-6 text-purple-500" />
+              <span className="text-[10px] font-bold text-purple-600 text-center leading-tight">Data dipecah jadi segmen</span>
+            </div>
+            <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-blue-50 border border-blue-100">
+              <Package className="w-6 h-6 text-blue-500" />
+              <span className="text-[10px] font-bold text-blue-600 text-center leading-tight">Diberi nomor urut (TCP)</span>
+            </div>
+            <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-green-50 border border-green-100">
+              <MapPin className="w-6 h-6 text-green-500" />
+              <span className="text-[10px] font-bold text-green-600 text-center leading-tight">Dikirim via internet (IP)</span>
+            </div>
+            <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-amber-50 border border-amber-100">
+              <Shield className="w-6 h-6 text-amber-500" />
+              <span className="text-[10px] font-bold text-amber-600 text-center leading-tight">Disusun ulang & dicek</span>
+            </div>
+          </div>
+          <p className="mt-4 text-xs text-[#628ECB] font-semibold">
+            Proses inilah yang diatur oleh <strong className="text-[#395886]">TCP/IP</strong> — sekumpulan aturan komunikasi data dalam jaringan.
           </p>
         </div>
       </div>
@@ -271,7 +292,7 @@ function StoryScramblePhase({
             <BookOpen className="w-4 h-4 text-[#628ECB]" />
           </div>
           <div className="flex-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Aktivitas 1 - Story Scramble (X.TCP.1)</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Aktivitas 1 — Keruntutan Berpikir (X.TCP.1)</p>
             <h3 className="text-sm font-bold text-[#395886]">Susun Cerita Digital Menjadi Urutan Logis</h3>
           </div>
           <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-bold
@@ -874,7 +895,7 @@ function GroupBucketContent({
         </div>
         <div className="px-5 py-4 bg-gradient-to-br from-[#F59E0B]/5 to-transparent">
           <p className="text-sm text-[#395886]/80 leading-relaxed">
-            Seret setiap kartu ke kelompok yang tepat - apakah ini <strong>tugas kurir fisik</strong> atau <strong>fungsi protokol TCP</strong>?
+            Seret setiap kartu ke kelompok yang tepat — apakah ini <strong>peran TCP</strong> atau <strong>peran IP</strong> dalam komunikasi jaringan?
           </p>
         </div>
       </div>
@@ -967,7 +988,7 @@ function AnalogyContent(props: {
   initialData?: any;
 }) {
   const { groups, items, essayPrompt, lessonId, stageIndex, onComplete, initialData } = props;
-  const isOrderedMode = items.length > 0 && items.every(it => it.correctOrder !== undefined);
+  const isOrderedMode = groups.length === 1 && items.length > 0 && items.every(it => it.correctOrder !== undefined);
   if (isOrderedMode) {
     return <OrderedProcessChain items={items} essayPrompt={essayPrompt} lessonId={lessonId} stageIndex={stageIndex} onComplete={onComplete} initialData={initialData} />;
   }
@@ -1127,7 +1148,10 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
     stageType: 'constructivism',
   });
 
+  const [courierCompleted, setCourierCompleted] = useState(false);
+
   const [phase, setPhase] = useState<'scramble' | 'analogy' | 'mcq'>(() => {
+    if (lessonId === '1' && !courierCompleted) return 'scramble'; // CourierDefinition first
     if (storyScramble) return 'scramble';
     if (analogySortGroups?.length) return 'analogy';
     return 'mcq';
@@ -1139,7 +1163,6 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
   const [mcqData, setMcqData] = useState<any>(null);
   const [isRestored, setIsRestored] = useState(false);
   const [scrambleEssayVisible, setScrambleEssayVisible] = useState(false);
-  const [courierCompleted, setCourierCompleted] = useState(false);
   const [pendingNextPhase, setPendingNextPhase] = useState<'analogy' | 'mcq' | null>(null);
 
   const hasEssayFlow = !!(constructivismEssay1 || constructivismEssay2);
@@ -1211,14 +1234,30 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
     );
   }
 
-  if (phase === 'scramble' && storyScramble) {
+  if (phase === 'scramble') {
+    // Lesson 1: show CourierDefinition first, then proceed to analogy
     if (lessonId === '1' && !courierCompleted) {
       return (
         <div className="space-y-4">
-          <CourierDefinition onComplete={() => setCourierCompleted(true)} />
+          <CourierDefinition onComplete={() => {
+            setCourierCompleted(true);
+            if (analogySortGroups?.length) {
+              setPhase('analogy');
+            }
+          }} />
         </div>
       );
     }
+
+    if (!storyScramble) {
+      // No story scramble but courier is done → go to analogy
+      if (analogySortGroups?.length) {
+        setPhase('analogy');
+        return null;
+      }
+      return null;
+    }
+
     return (
       <div className="space-y-4">
         <StoryScramblePhase
