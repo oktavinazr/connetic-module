@@ -24,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from './ui/alert-dialog';
-import { TestQuestion } from '../data/lessons';
+import { FormattedQuestion } from '../components/stages/StageKit';
 import { lessons } from '../data/lessons';
 import { clearAssessmentDraft, getAssessmentDraft, getLessonProgress, saveAssessmentDraft } from '../utils/progress';
 import { getCurrentUser } from '../utils/auth';
@@ -494,7 +494,7 @@ export function TestPage({
                       <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-xs font-black shadow-sm ${isCorrect ? 'bg-[#10B981] text-white' : 'bg-red-500 text-white'}`}>
                         {index + 1}
                       </span>
-                      <p className="font-semibold text-[#395886] leading-snug text-sm">{q.question}</p>
+                      <FormattedQuestion text={q.question} />
                     </div>
 
                     <div className="ml-10 grid gap-1.5">
@@ -772,9 +772,7 @@ export function TestPage({
                   {currentQuestionIndex + 1} dari {questions.length}
                 </span>
               </div>
-              <h3 className="text-lg font-bold text-[#395886] leading-snug">
-                {currentQuestion.question}
-              </h3>
+              <FormattedQuestion text={currentQuestion.question} className="text-lg font-bold" />
             </div>
 
             {/* Pilihan Jawaban */}

@@ -558,3 +558,84 @@ export function ATPConclusionBox({
     </div>
   );
 }
+
+// ── FormattedQuestion ─────────────────────────────────────────────────────────
+// Renders question text with proper formatting:
+// - Paragraphs separated by blank lines
+// - Bullet points: lines starting with "- " or "* "
+// - Numbered lists: lines starting with "1. " "2. " etc
+// - Bold text: **text**
+
+export function FormattedQuestion({
+  text,
+  className = '',
+}: {
+  text: string;
+  className?: string;
+}) {
+  if (!text) return null;
+
+  const paragraphs = text.split(/\n\s*\n/);
+
+  return (
+    <div className={`space-y-3 ${className}`}>
+      {paragraphs.map((paragraph, pIdx) => {
+        const lines = paragraph.split('\n').filter(l => l.trim());
+        if (lines.length === 0) return null;
+
+        const isBulletList = lines.every(l => /^[-*•]\s/.test(l.trim()));
+        const isNumberedList = lines.every(l => /^\d+[.)]\s/.test(l.trim()));
+
+        if (isBulletList) {
+          return (
+            <ul key={pIdx} className="space-y-1.5 pl-0.5">
+              {lines.map((line, lIdx) => {
+                const cleaned = line.trim().replace(/^[-*•]\s*/, '');
+                return (
+                  <li key={lIdx} className="flex items-start gap-2.5 text-sm leading-relaxed">
+                    <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#628ECB]" />
+                    <span className="text-[#395886]" dangerouslySetInnerHTML={{ __html: renderBoldInline(cleaned) }} />
+                  </li>
+                );
+              })}
+            </ul>
+          );
+        }
+
+        if (isNumberedList) {
+          return (
+            <ol key={pIdx} className="space-y-1.5 pl-0.5">
+              {lines.map((line, lIdx) => {
+                const cleaned = line.trim().replace(/^\d+[.)]\s*/, '');
+                return (
+                  <li key={lIdx} className="flex items-start gap-2.5 text-sm leading-relaxed">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#628ECB]/10 text-[11px] font-bold text-[#628ECB]">
+                      {lIdx + 1}
+                    </span>
+                    <span className="text-[#395886]" dangerouslySetInnerHTML={{ __html: renderBoldInline(cleaned) }} />
+                  </li>
+                );
+              })}
+            </ol>
+          );
+        }
+
+        return (
+          <div key={pIdx} className="space-y-1.5">
+            {lines.map((line, lIdx) => (
+              <p
+                key={lIdx}
+                className="text-sm text-[#395886] leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: renderBoldInline(line.trim()) }}
+              />
+            ))}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function renderBoldInline(text: string): string {
+  return text.replace(/\*\*(.+?)\*\*/g, '<strong class="text-[#395886] font-extrabold">$1</strong>');
+}

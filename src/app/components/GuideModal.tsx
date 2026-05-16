@@ -67,7 +67,7 @@ export function GuideModal({ isOpen, onClose }: GuideModalProps) {
               {[
                 {
                   step: 1,
-                  title: 'Pre-Test Umum (±20 menit)',
+                  title: 'Pre-Test Umum (±30 menit)',
                   desc: 'Langkah pertama sebelum memulai pembelajaran. Kerjakan Pre-Test Umum untuk mengukur pemahaman awal Anda. Pertemuan 1 akan terbuka setelah selesai.',
                 },
                 {
@@ -77,7 +77,7 @@ export function GuideModal({ isOpen, onClose }: GuideModalProps) {
                 },
                 {
                   step: 3,
-                  title: 'Post-Test Umum (±20 menit)',
+                  title: 'Post-Test Umum (±30 menit)',
                   desc: 'Setelah semua pertemuan selesai, kerjakan Post-Test Umum sebagai evaluasi akhir untuk mengukur capaian pembelajaran Anda.',
                 },
               ].map((item) => (

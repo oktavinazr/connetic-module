@@ -4,7 +4,7 @@ import { ChevronDown, ChevronLeft, Download, HelpCircle, Users } from 'lucide-re
 import * as XLSX from 'xlsx';
 import { Header } from '../../components/layout/Header';
 import { getAllStudents, getCurrentUser, logout, type User } from '../../utils/auth';
-import { globalPosttest, globalPretest, lessons, type TestQuestion } from '../../data/lessons';
+import { FormattedQuestion } from '../../components/stages/StageKit';
 import { getGlobalTestProgress, getLessonProgress } from '../../utils/progress';
 
 type TestType = 'global-pretest' | 'global-posttest' | 'lesson-pretest' | 'lesson-posttest';
@@ -190,7 +190,7 @@ export function AnswerResultsPage() {
                             {i + 1}
                           </span>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-[#395886] leading-relaxed mb-3">{q.question}</p>
+                            <FormattedQuestion text={q.question} className="mb-3" />
                             <div className="grid grid-cols-2 gap-2">
                               {q.options.map((opt, oi) => (
                                 <div

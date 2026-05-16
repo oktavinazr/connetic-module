@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { getCurrentUser } from '../utils/auth';
 import { getLessonProgress, LessonProgress } from '../utils/progress';
-import { lessons, type TestQuestion, getStageDisplayTitle } from '../data/lessons';
+import { FormattedQuestion } from '../components/stages/StageKit';
 import { Logo } from '../components/layout/Logo';
 import { StageAnswerDetail, CTL_META } from '../components/admin/StageDetail';
 import { getLessonActivitySessions, type CTLActivitySession } from '../utils/activityTracking';
@@ -371,7 +371,7 @@ function TestReviewContent({ title, questions, answers, optionLabels }: any) {
                 <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black shadow-sm ${isCorrect ? 'bg-[#10B981] text-white' : 'bg-red-500 text-white'}`}>
                   {i + 1}
                 </span>
-                <p className="font-bold text-[#395886] text-sm leading-relaxed pt-1">{q.question}</p>
+                <FormattedQuestion text={q.question} className="pt-1" />
               </div>
               <div className="ml-12 space-y-2.5">
                 {q.options.map((opt: string, j: number) => {

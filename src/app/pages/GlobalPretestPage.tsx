@@ -41,13 +41,13 @@ export function GlobalPretestPage() {
       showResults={progress.globalPretestCompleted}
       existingAnswers={existingAnswers}
       existingScore={progress.globalPretestScore}
-      duration={20}
+      duration={30}
       instructions={[
         'Kerjakan secara mandiri tanpa membuka materi pembelajaran.',
         'Baca seluruh opsi jawaban lalu pilih satu jawaban yang paling tepat.',
         'Gunakan hasil tes ini sebagai gambaran pemahaman awal sebelum memulai materi.',
       ]}
-      durationNote="Waktu pengerjaan maksimal 20 menit. Setelah waktu habis, jawaban yang sudah dipilih akan diproses otomatis."
+      durationNote="Waktu pengerjaan maksimal 30 menit. Setelah waktu habis, jawaban yang sudah dipilih akan diproses otomatis."
     />
   );
 }

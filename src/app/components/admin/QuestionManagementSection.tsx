@@ -8,6 +8,8 @@ import {
   AlertCircle,
   CheckCircle,
   X,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { lessons, type TestQuestion } from '../../data/lessons';
 import {
@@ -16,6 +18,7 @@ import {
   resetAdminTestQuestions,
   isTestOverridden,
 } from '../../utils/adminData';
+import { FormattedQuestion } from '../stages/StageKit';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -71,6 +74,7 @@ export function QuestionManagementSection() {
   const [resetConfirm, setResetConfirm] = useState(false);
   const [formErrors, setFormErrors] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   async function refresh() {
     const [qs, overrideExists] = await Promise.all([
@@ -274,7 +278,7 @@ export function QuestionManagementSection() {
                     <span className="shrink-0 w-7 h-7 rounded-full bg-[#628ECB]/10 text-[#628ECB] text-sm font-bold flex items-center justify-center mt-0.5">
                       {i + 1}
                     </span>
-                    <p className="text-sm font-semibold text-[#395886] leading-relaxed">{q.question}</p>
+                    <FormattedQuestion text={q.question} />
                   </div>
                   <div className="mt-3 ml-10 space-y-1.5">
                     {q.options.map((opt, oi) => (
@@ -351,18 +355,67 @@ export function QuestionManagementSection() {
                 </div>
               )}
 
-              {/* Question text */}
+              {/* Question text with preview */}
               <div>
-                <label className="block text-xs font-bold text-[#395886]/60 uppercase tracking-wide mb-1.5">
-                  Pertanyaan <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={form.question}
-                  onChange={e => setForm(f => ({ ...f, question: e.target.value }))}
-                  rows={3}
-                  className="w-full border border-[#D5DEEF] rounded-xl px-4 py-3 text-sm text-[#395886] bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#628ECB]/30 focus:border-[#628ECB] resize-none"
-                  placeholder="Tulis pertanyaan di sini..."
-                />
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-[#395886]/60 uppercase tracking-wide">
+                    Pertanyaan <span className="text-red-500">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPreview(p => !p)}
+                    className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
+                      showPreview
+                        ? 'bg-[#628ECB] text-white shadow-sm'
+                        : 'text-[#628ECB] border border-[#628ECB]/25 hover:bg-[#628ECB]/5'
+                    }`}
+                  >
+                    {showPreview ? <><EyeOff className="w-3.5 h-3.5" /> Edit</> : <><Eye className="w-3.5 h-3.5" /> Preview</>}
+                  </button>
+                </div>
+
+                {showPreview ? (
+                  <div
+                    className="min-h-[140px] border-2 border-[#10B981]/30 rounded-xl p-5 bg-[#F0FDF4] cursor-pointer hover:border-[#10B981]/50 transition-colors"
+                    onClick={() => setShowPreview(false)}
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <Eye className="w-3.5 h-3.5 text-[#10B981]" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-[#10B981]">Preview Tampilan Siswa</span>
+                    </div>
+                    {form.question.trim() ? (
+                      <FormattedQuestion text={form.question} />
+                    ) : (
+                      <p className="text-sm text-[#395886]/30 italic">Ketik pertanyaan terlebih dahulu...</p>
+                    )}
+                    <p className="text-[10px] text-[#10B981]/50 mt-4 italic">Klik area ini untuk kembali ke mode edit</p>
+                  </div>
+                ) : (
+                  <textarea
+                    value={form.question}
+                    onChange={e => setForm(f => ({ ...f, question: e.target.value }))}
+                    rows={8}
+                    className="w-full border border-[#D5DEEF] rounded-xl px-4 py-3.5 text-sm text-[#395886] bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#628ECB]/30 focus:border-[#628ECB] resize-y leading-relaxed font-medium"
+                    placeholder={'Tulis pertanyaan di sini...\n\nFormat penulisan:\n- Gunakan Enter untuk baris baru\n- Baris kosong untuk memisahkan paragraf\n- Awal baris dengan "- " untuk bullet point\n- Awal baris dengan "1. " untuk daftar bernomor\n- Gunakan **teks** untuk **tebal**'}
+                  />
+                )}
+
+                {!showPreview && (
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-[#395886]/40">
+                    <span className="flex items-center gap-1">
+                      <span className="inline-flex w-4 h-4 rounded bg-[#628ECB]/15 text-[8px] font-bold items-center justify-center">↵</span> baris baru
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="font-bold text-[#628ECB]">- </span>bullet
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="font-bold text-[#628ECB]">1. </span>nomor
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="font-bold text-[#628ECB]">**teks**</span> tebal
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Options */}

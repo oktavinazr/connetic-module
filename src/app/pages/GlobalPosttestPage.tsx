@@ -95,13 +95,13 @@ export function GlobalPosttestPage() {
       showResults={progress.globalPosttestCompleted}
       existingAnswers={existingAnswers}
       existingScore={progress.globalPosttestScore}
-      duration={20}
+      duration={30}
       instructions={[
         'Kerjakan posttest setelah menyelesaikan seluruh rangkaian pembelajaran.',
         'Jawab setiap soal berdasarkan pemahaman akhir Anda tanpa bantuan teman atau catatan.',
         'Periksa kembali pilihan Anda sebelum menekan tombol selesai pada soal terakhir.',
       ]}
-      durationNote="Durasi pengerjaan 20 menit. Manfaatkan waktu untuk meninjau jawaban agar hasil akhir merefleksikan pemahaman Anda."
+      durationNote="Durasi pengerjaan 30 menit. Manfaatkan waktu untuk meninjau jawaban agar hasil akhir merefleksikan pemahaman Anda."
     />
   );
 }

@@ -60,7 +60,7 @@ export function EvaluationPage() {
       showResults={progress.posttestCompleted}
       existingAnswers={existingAnswers}
       existingScore={progress.posttestScore}
-      duration={15} // 15 menit untuk posttest pertemuan
+      duration={10} // 10 menit untuk posttest pertemuan
       lessonFlow={{
         step: 4,
         lessonId: lessonId!,
