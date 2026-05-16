@@ -16,6 +16,7 @@ import {
   Users,
   Video,
   Clock,
+  Pause as PauseIcon,
 } from 'lucide-react';
 import {
   Dialog,
@@ -663,20 +664,35 @@ export function LessonPage() {
             </div>
           ) : (
             <>
-              {/* Pause banner */}
+              {/* Pause — full overlay to block interaction */}
               {globalSync.isPaused && !isStageCompleted && (
-                <div className="w-full mb-4 p-4 rounded-xl bg-amber-50 border-2 border-amber-200 text-center">
-                  <p className="text-sm font-black text-amber-700">⏸ Sesi Dijeda oleh Guru</p>
-                  <p className="text-xs text-amber-600 mt-1">Timer dihentikan sementara. Tunggu guru melanjutkan sesi.</p>
+                <div className="w-full mb-4">
+                  <div className="rounded-2xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-white p-8 text-center shadow-sm">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
+                      <PauseIcon className="h-8 w-8 text-amber-600" />
+                    </div>
+                    <h3 className="text-lg font-black text-amber-700">⏸ Sesi Sedang Dijeda</h3>
+                    <p className="mt-2 text-sm text-amber-600 max-w-md mx-auto">
+                      Guru sedang menjeda sesi pembelajaran. Timer dihentikan sementara.
+                      Tunggu hingga guru melanjutkan kembali.
+                    </p>
+                    <div className="mt-5 flex justify-center gap-1.5">
+                      {[0, 1, 2].map(i => (
+                        <div key={i} className="h-2 w-2 rounded-full bg-amber-300 animate-bounce"
+                          style={{ animationDelay: `${i * 0.15}s` }} />
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
 
-              {/* Activity guide */}
-              {!isStageCompleted && stageGuideSteps.length > 0 && (
+              {/* Activity guide — hide during pause */}
+              {!globalSync.isPaused && !isStageCompleted && stageGuideSteps.length > 0 && (
                 <ActivityGuideBox steps={stageGuideSteps} />
               )}
 
-              {/* Completed / Waiting / Active stage */}
+              {/* Stage content — only show when not paused */}
+              {!globalSync.isPaused && <>
               {isStageCompleted && pendingReflection === null ? (
             <div className="flex flex-col gap-4">
               {/* Green success banner */}
@@ -803,6 +819,7 @@ export function LessonPage() {
               )}
             </div>
           )}
+              </>}
             </>
           )}
         </main>

@@ -137,11 +137,12 @@ export async function addSessionTime(lessonId: string, minutes: number): Promise
 }
 
 /** Skip to next stage (advance all students). On last stage, marks as completed. */
-export async function skipToNextStage(lessonId: string): Promise<void> {
+export async function skipToNextStage(lessonId: string, stageCount: number = 7): Promise<void> {
   const current = await getAdminStageSync(lessonId);
-  const nextIndex = (current?.current_stage_index ?? 0) + 1;
+  const currentIndex = current?.current_stage_index ?? 0;
+  const nextIndex = currentIndex + 1;
   const now = new Date().toISOString();
-  const isFinished = (current?.current_stage_index ?? 0) >= 6; // 6 = last stage (Authentic Assessment)
+  const isLastStage = currentIndex >= stageCount - 1;
 
   const { error } = await supabase
     .from('admin_stage_sync')
@@ -150,8 +151,8 @@ export async function skipToNextStage(lessonId: string): Promise<void> {
       stage_started_at: now,
       force_advance: false,
       force_advance_at: null,
-      status: isFinished ? 'completed' : 'active',
-      session_status: isFinished ? 'active' : 'active',
+      status: isLastStage ? 'completed' : 'active',
+      session_status: 'active',
       paused_at: null,
       total_paused_ms: 0,
       added_minutes: 0,

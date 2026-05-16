@@ -301,6 +301,9 @@ GRANT ALL ON TABLE public.admin_stage_sync TO authenticated;
 GRANT ALL ON TABLE public.admin_stage_sync TO service_role;
 
 -- Aktifkan realtime untuk monitoring
+-- REPLICA IDENTITY FULL diperlukan agar UPDATE event dikirim via Realtime
+ALTER TABLE public.admin_stage_sync REPLICA IDENTITY FULL;
+
 DO $$
 BEGIN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_stage_sync;

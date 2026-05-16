@@ -8,11 +8,14 @@ import {
   resetCurrentStage,
   getAdminStageSync,
   calcTimerRemaining,
+  clearSyncCache,
   type StudentStageStatus,
+  type AdminStageSync,
 } from '../../utils/adminStageSync';
 import { getStageTimers } from '../../utils/stageTimer';
 import { lessons } from '../../data/lessons';
 import { RefreshCw, SkipForward, Users, Clock, Timer, Filter, Play, Pause, RotateCcw, CheckCircle } from 'lucide-react';
+import { supabase } from '../../utils/supabase';
 
 const STAGE_LABELS = ['Constructivism', 'Inquiry', 'Questioning', 'Learning Com.', 'Modeling', 'Reflection', 'Assessment'];
 
@@ -68,9 +71,56 @@ export function RealtimeMonitorSection() {
   useEffect(() => {
     setLoading(true);
     refresh();
-    const interval = setInterval(refresh, 5000);
+    const interval = setInterval(refresh, 3000);
     return () => clearInterval(interval);
   }, [refresh]);
+
+  // ── Realtime subscription (instant sync from DB changes) ──
+  useEffect(() => {
+    const channel = supabase
+      .channel(`admin_monitor:${lessonId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'admin_stage_sync',
+          filter: `lesson_id=eq.${lessonId}`,
+        },
+        async (payload) => {
+          const newData = payload.new as Record<string, any> | null;
+          if (newData) {
+            clearSyncCache(lessonId);
+            const sync = await getAdminStageSync(lessonId);
+            setSyncState(sync);
+
+            const timers = await getStageTimers(lessonId);
+            const stageIdx = sync?.current_stage_index ?? 0;
+            const tm = timers.find(t => t.stage_index === stageIdx);
+            const mins = tm?.duration_minutes ?? 0;
+            setTimerMinutes(mins);
+
+            if (sync && sync.session_status !== 'idle') {
+              const { seconds, isExpired, isUnlimited: unlimited, isPaused: paused } = calcTimerRemaining(sync, mins);
+              setTimerRemaining(seconds);
+              setTimerExpired(isExpired);
+              setIsUnlimited(unlimited);
+              setIsPaused(paused);
+            } else {
+              setTimerRemaining(-1);
+              setTimerExpired(false);
+              setIsUnlimited(true);
+              setIsPaused(false);
+            }
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [lessonId]);
 
   const isIdle = !syncState || syncState.session_status === 'idle';
   const isCompleted = syncState?.status === 'completed';
@@ -198,7 +248,7 @@ export function RealtimeMonitorSection() {
               <button
                 onClick={() => {
                   if (window.confirm('Selesaikan Authentic Assessment dan arahkan seluruh siswa ke Posttest?'))
-                    doAction('skip', () => skipToNextStage(lessonId));
+                    doAction('skip', () => skipToNextStage(lessonId, stageCount));
                 }}
                 disabled={actionLoading !== null}
                 className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold bg-[#10B981] text-white shadow-md hover:bg-[#059669] transition-all disabled:opacity-50"
@@ -210,7 +260,7 @@ export function RealtimeMonitorSection() {
               <button
                 onClick={() => {
                   if (window.confirm(`Lanjut ke ${STAGE_LABELS[currentSyncStage + 1]}?`))
-                    doAction('skip', () => skipToNextStage(lessonId));
+                    doAction('skip', () => skipToNextStage(lessonId, stageCount));
                 }}
                 disabled={actionLoading !== null}
                 className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold bg-[#EC4899] text-white shadow-md hover:bg-[#DB2777] transition-all disabled:opacity-50"
