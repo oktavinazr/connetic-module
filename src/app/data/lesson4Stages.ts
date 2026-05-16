@@ -109,6 +109,7 @@ export const lesson4Stages: Stage[] = [
     ],
     constructivismEssay2:
       'Berdasarkan perbandingan IPv4 dan IPv6 yang baru saja kamu susun, jelaskan apa keuntungan terbesar dari beralih ke IPv6 selain sekadar jumlah alamat yang lebih banyak!',
+    conclusionPrompt: 'Berdasarkan aktivitas Story Scramble dan Analogy Sorting tentang keterbatasan IPv4 & kebutuhan IPv6 yang telah kamu lakukan, jelaskan bagaimana kamu mampu menjelaskan konsep dasar IPv6 sebagai solusi keterbatasan ruang alamat IPv4. Tuliskan dengan tepat menggunakan kata-katamu sendiri.',
   },
 
   {
@@ -213,6 +214,7 @@ export const lesson4Stages: Stage[] = [
     ],
     inquiryReflection2:
       'Setelah mempelajari jenis-jenis alamat IPv6, jelaskan mengapa IPv6 tidak memerlukan NAT (Network Address Translation) seperti IPv4! Apa implikasinya bagi koneksi perangkat IoT di masa depan?',
+    conclusionPrompt: 'Berdasarkan eksplorasi materi IPv6 dan aktivitas kompresi alamat yang telah kamu lakukan, jelaskan bagaimana kamu mampu menerapkan tahapan standar EUI-64 untuk membentuk IPv6 Link Local Address dari alamat MAC secara berurutan. Tuliskan secara runtut dengan kata-katamu sendiri.',
   },
 
   {
@@ -305,6 +307,7 @@ export const lesson4Stages: Stage[] = [
           'Ya, IPv6 dirancang dengan dukungan IPsec (enkripsi dan autentikasi) sebagai fitur wajib (bukan opsional seperti di IPv4). Ini membuat komunikasi end-to-end lebih mudah dienkripsi secara standar. Namun implementasinya tetap tergantung pada konfigurasi pengguna.',
       },
     ],
+    conclusionPrompt: 'Berdasarkan analisis skenario inkompatibilitas IPv4-IPv6 dan tanya jawab yang telah kamu lakukan, jelaskan bagaimana kamu mampu menerapkan aturan penyederhanaan IPv6 pada skenario yang diberikan. Tuliskan secara tepat dengan kata-katamu sendiri.',
   },
 
   {
@@ -395,6 +398,7 @@ export const lesson4Stages: Stage[] = [
       discussionPrompt:
         'Diskusikan: Apakah Indonesia harus segera migrasi total ke IPv6, atau tetap menggunakan IPv4 selama mungkin dengan NAT? Apa hambatan terbesar migrasi IPv6 di Indonesia? Berikan vote pada argumen yang paling realistis dan berbasis data.',
     },
+    conclusionPrompt: 'Berdasarkan diskusi kelompok tentang IPv6 untuk IoT dan keamanan yang telah kamu lakukan, jelaskan bagaimana kamu mampu menganalisis setiap langkah proses EUI-64 untuk menentukan kebenaran hasil konversi alamat MAC menjadi IPv6 Link Local Address. Tuliskan secara logis dengan kata-katamu sendiri.',
   },
 
   {
@@ -461,6 +465,7 @@ export const lesson4Stages: Stage[] = [
         interactiveAction: 'Klik "Jalankan Proses" setelah kamu menentukan bentuk paling singkat yang valid.',
       },
     ],
+    conclusionPrompt: 'Berdasarkan simulasi kompresi IPv6 dan pembentukan Link Local yang telah kamu praktikkan, jelaskan bagaimana kamu mampu mensimulasikan proses perencanaan pengalamatan IPv6 Gateway (Global Unicast) pada interface router. Tuliskan secara sistematis dengan kata-katamu sendiri.',
   },
 
   {
@@ -519,6 +524,7 @@ export const lesson4Stages: Stage[] = [
       { id: 'sc4', label: 'Saya dapat membedakan jenis-jenis alamat IPv6 (Global, Link-Local, Loopback).' },
       { id: 'sc5', label: 'Saya memahami perbedaan mendasar antara IPv4 dan IPv6.' },
     ],
+    conclusionPrompt: 'Berdasarkan penyusunan peta konsep perbandingan IPv4 vs IPv6 dan refleksi yang telah kamu lakukan, jelaskan bagaimana kamu mampu menyimpulkan perbedaan karakteristik antara pengalamatan IPv4 dan IPv6 serta kesesuaian penggunaannya dalam konteks jaringan modern. Tuliskan secara tepat dengan kata-katamu sendiri.',
   },
 
   {
@@ -633,5 +639,6 @@ export const lesson4Stages: Stage[] = [
       finalEvaluation:
         'Tunjukkan bahwa kamu mampu menjaga stabilitas operasional sekolah sambil mengadopsi teknologi IPv6 secara bertahap dan terencana. Keputusan teknisi yang baik selalu mempertimbangkan dampak nyata terhadap pengguna, bukan hanya kecanggihan teknologi.',
     },
+    conclusionPrompt: 'Berdasarkan studi kasus bercabang tentang strategi transisi IPv6 di sekolah yang telah kamu analisis, jelaskan bagaimana kamu mampu mengevaluasi keterkaitan TCP dan IP dalam arsitektur model TCP/IP saat proses komunikasi jaringan. Tuliskan secara logis dengan kata-katamu sendiri.',
   },
 ];

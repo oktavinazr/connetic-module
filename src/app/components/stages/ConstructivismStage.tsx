@@ -8,7 +8,7 @@ import { getCurrentUser } from '../../utils/auth';
 import { getLessonProgress, saveStageAttempt } from '../../utils/progress';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
 import { CourierDefinition } from './CourierDefinition';
-import { EssayBox, ContinueActivityButton } from './StageKit';
+import { EssayBox, ContinueActivityButton, ATPConclusionBox } from './StageKit';
 
 // -- Types ----------------------------------------------------------------------
 
@@ -38,6 +38,9 @@ interface ConstructivismStageProps {
   stageIndex: number;
   onComplete: (answer: any) => void;
   isCompleted?: boolean;
+  conclusionPrompt?: string;
+  atpBehavior?: string;
+  objectiveCode?: string;
 }
 
 // -- Helpers -------------------------------------------------------------------

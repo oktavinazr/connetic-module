@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   AlertCircle, CheckCircle, Info, XCircle, RotateCcw, ChevronRight,
-  PenLine, Clock, LockKeyhole, ArrowRight,
+  PenLine, Clock, LockKeyhole, ArrowRight, Trophy, Brain,
 } from 'lucide-react';
 
 // ── Animation class strings ───────────────────────────────────────────────────
@@ -409,6 +409,152 @@ export function SectionDivider({ label, icon }: { label: string; icon?: React.Re
         {label}
       </div>
       <div className="h-px flex-1 bg-gradient-to-l from-[#D5DEEF] to-transparent" />
+    </div>
+  );
+}
+
+// ── ATPConclusionBox ──────────────────────────────────────────────────────────
+// Standardized conclusion box for ALL CTL stages.
+// Forces students to connect their learning back to the ATP objective ("mampu" keyword).
+// Implements the third logical thinking indicator: Penarikan Kesimpulan (Drawing Conclusions).
+export function ATPConclusionBox({
+  atpBehavior,
+  objectiveCode,
+  stageType,
+  onSubmit,
+  defaultValue = '',
+  disabled = false,
+}: {
+  atpBehavior: string;
+  objectiveCode: string;
+  stageType?: string;
+  onSubmit: (text: string) => void;
+  defaultValue?: string;
+  disabled?: boolean;
+}) {
+  const [text, setText] = useState(defaultValue);
+  const [submitted, setSubmitted] = useState(!!defaultValue && disabled);
+  const minWords = 15;
+  const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+  const ready = wordCount >= minWords;
+  const isLocked = disabled || submitted;
+
+  const stageLabels: Record<string, string> = {
+    constructivism: 'Constructivism',
+    inquiry: 'Inquiry',
+    questioning: 'Questioning',
+    'learning-community': 'Learning Community',
+    modeling: 'Modeling',
+    reflection: 'Reflection',
+    'authentic-assessment': 'Authentic Assessment',
+  };
+
+  return (
+    <div className="rounded-2xl border-2 border-[#10B981]/25 bg-gradient-to-br from-[#ECFDF5] to-white shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#10B981]/10 to-transparent border-b border-[#10B981]/15">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#10B981]/15">
+          <CheckCircle className="w-4 h-4 text-[#10B981]" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[9px] font-black uppercase tracking-widest text-[#10B981]/70">
+            Penarikan Kesimpulan — {objectiveCode}
+          </p>
+          <p className="text-xs font-bold text-[#065F46]">
+            {stageType ? stageLabels[stageType] + ': ' : ''}Buktikan Pemahamanmu
+          </p>
+        </div>
+        {isLocked && (
+          <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#10B981] bg-[#10B981]/10 px-3 py-1.5 rounded-full border border-[#10B981]/20">
+            <LockKeyhole className="w-3 h-3" /> Tersimpan
+          </span>
+        )}
+      </div>
+
+      {/* Body */}
+      <div className="p-5">
+        {/* ATP Behavior prompt */}
+        <div className="mb-4 p-4 rounded-xl bg-[#F0FDF4] border border-[#10B981]/20">
+          <div className="flex items-start gap-2.5">
+            <Trophy className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" />
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981] mb-1">
+                Tujuan Pembelajaran (ATP)
+              </p>
+              <p className="text-sm font-bold text-[#065F46] leading-relaxed">
+                Saya {atpBehavior}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Instruction */}
+        <div className="mb-3 flex items-start gap-2.5 p-3 rounded-lg bg-[#F8FAFF] border border-[#D5DEEF]">
+          <Brain className="w-4 h-4 text-[#8B5CF6] shrink-0 mt-0.5" />
+          <div>
+            <p className="text-[11px] font-bold text-[#395886] mb-1">Tunjukkan bahwa kamu telah mencapai tujuan pembelajaran ini:</p>
+            <ol className="space-y-1">
+              <li className="text-[10px] text-[#395886]/70 flex items-start gap-1.5">
+                <span className="font-black text-[#8B5CF6]">1.</span>
+                Jelaskan pemahamanmu berdasarkan aktivitas yang baru saja kamu lakukan.
+              </li>
+              <li className="text-[10px] text-[#395886]/70 flex items-start gap-1.5">
+                <span className="font-black text-[#8B5CF6]">2.</span>
+                Gunakan kata-katamu sendiri untuk membuktikan bahwa kamu benar-benar paham.
+              </li>
+              <li className="text-[10px] text-[#395886]/70 flex items-start gap-1.5">
+                <span className="font-black text-[#8B5CF6]">3.</span>
+                Hubungkan dengan aktivitas interaktif yang telah kamu selesaikan.
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        {/* Textarea */}
+        <textarea
+          value={text}
+          onChange={e => setText(e.target.value)}
+          disabled={isLocked}
+          rows={4}
+          className={`w-full p-4 border-2 rounded-xl text-sm leading-relaxed outline-none transition-all resize-none
+            ${isLocked
+              ? 'border-[#10B981]/20 bg-[#ECFDF5] text-[#065F46] cursor-not-allowed'
+              : 'border-[#D5DEEF] bg-white text-[#395886] focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/5'}`}
+          placeholder={`Tuliskan kesimpulanmu di sini... (minimal ${minWords} kata)`}
+        />
+
+        {/* Stats bar */}
+        <div className="mt-3 px-1 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-1.5 w-20 rounded-full bg-[#EEF2FF] overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 ${ready || isLocked ? 'bg-[#10B981]' : 'bg-[#10B981]/40'}`}
+                style={{ width: `${Math.min(100, (wordCount / minWords) * 100)}%` }}
+              />
+            </div>
+            <span className={`text-[10px] font-bold ${ready || isLocked ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
+              {wordCount} / {minWords} kata{ready || isLocked ? ' ✓' : ''}
+            </span>
+          </div>
+
+          {!isLocked && (
+            <button
+              onClick={() => { if (!ready) return; setSubmitted(true); onSubmit(text.trim()); }}
+              disabled={!ready}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all active:scale-95 shadow-sm
+                ${ready ? 'bg-[#10B981] text-white hover:bg-[#059669]' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
+            >
+              Simpan Kesimpulan <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {!isLocked && !ready && (
+          <p className="text-[10px] text-[#395886]/40 font-medium mt-1 px-1">
+            Minimal {minWords} kata untuk menyimpan kesimpulan.
+          </p>
+        )}
+      </div>
     </div>
   );
 }

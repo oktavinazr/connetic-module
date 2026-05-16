@@ -15,6 +15,7 @@ export interface Stage {
     condition: string;
     degree: string;
   };
+  conclusionPrompt?: string;                       // ATP-aligned conclusion prompt
 
   // ── CONSTRUCTIVISM ──────────────────────────────────────────────────
   apersepsi?: string;                              // Experience-based opening scenario

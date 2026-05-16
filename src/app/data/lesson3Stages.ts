@@ -109,6 +109,7 @@ export const lesson3Stages: Stage[] = [
     ],
     constructivismEssay2:
       'Berdasarkan komponen-komponen IPv4 yang baru saja kamu urutkan, jelaskan mengapa kita perlu Subnet Mask dan apa bedanya Network Address dengan Broadcast Address!',
+    conclusionPrompt: 'Berdasarkan aktivitas Story Scramble dan Analogy Sorting tentang pengalamatan IPv4 yang telah kamu lakukan, jelaskan bagaimana kamu mampu menjelaskan peran Internet Protocol lapisan Network dalam protokol TCP/IP. Tuliskan dengan tepat menggunakan kata-katamu sendiri.',
   },
 
   {
@@ -219,6 +220,7 @@ export const lesson3Stages: Stage[] = [
     ],
     inquiryReflection2:
       'Setelah mengklasifikasikan alamat-alamat IP tersebut, jelaskan pola apa yang membedakan Kelas A, B, dan C! Mengapa semakin tinggi kelas (A→C), semakin sedikit host yang bisa ditampung per jaringan?',
+    conclusionPrompt: 'Berdasarkan eksplorasi materi IPv4 dan aktivitas klasifikasi kelas IP yang telah kamu lakukan, jelaskan bagaimana kamu mampu menguraikan komponen IP Header beserta fungsinya. Tuliskan secara runtut dengan kata-katamu sendiri.',
   },
 
   {
@@ -311,6 +313,7 @@ export const lesson3Stages: Stage[] = [
           'Ya! Dua perangkat di jaringan yang berbeda (Network ID berbeda) bisa menggunakan Host ID yang sama karena alamat penuhnya tetap berbeda. Inilah juga mengapa IP Private (seperti 192.168.x.x) bisa digunakan ulang di jutaan jaringan rumah dan kantor di seluruh dunia.',
       },
     ],
+    conclusionPrompt: 'Berdasarkan analisis skenario IP Address Conflict dan tanya jawab yang telah kamu lakukan, jelaskan bagaimana kamu mampu membedakan struktur alamat IPv4 berdasarkan format penulisannya. Tuliskan secara tepat dengan kata-katamu sendiri.',
   },
 
   {
@@ -401,6 +404,7 @@ export const lesson3Stages: Stage[] = [
       discussionPrompt:
         'Diskusikan: Jika Lab A dan Lab B dipisahkan jaringannya, bagaimana siswa Lab A bisa tetap mengakses server e-learning yang ada di Lab B? Berikan vote pada solusi teknis yang paling realistis.',
     },
+    conclusionPrompt: 'Berdasarkan diskusi kelompok tentang perancangan skema pengalamatan IP yang telah kamu lakukan, jelaskan bagaimana kamu mampu menerapkan pengetahuan kelas IPv4 beserta rentang alamat Private & Public serta konsep range host IPv4. Tuliskan secara logis dengan kata-katamu sendiri.',
   },
 
   {
@@ -467,6 +471,7 @@ export const lesson3Stages: Stage[] = [
         interactiveAction: 'Klik "Jalankan Proses" setelah kamu menentukan posisi bit yang aktif untuk angka 168.',
       },
     ],
+    conclusionPrompt: 'Berdasarkan simulasi konversi desimal ke biner IPv4 yang telah kamu praktikkan, jelaskan bagaimana kamu mampu mensimulasikan proses konversi alamat IPv4 dari format desimal ke biner. Tuliskan secara sistematis dengan kata-katamu sendiri.',
   },
 
   {
@@ -525,6 +530,7 @@ export const lesson3Stages: Stage[] = [
       { id: 'sc4', label: 'Saya dapat menentukan Network ID dan Host ID menggunakan Subnet Mask.' },
       { id: 'sc5', label: 'Saya memahami dampak konflik IP terhadap operasional jaringan.' },
     ],
+    conclusionPrompt: 'Berdasarkan penyusunan peta konsep dan refleksi yang telah kamu lakukan, jelaskan bagaimana kamu mampu menyimpulkan sistem pengalamatan IPv4 sebagai fondasi konfigurasi jaringan yang terstruktur. Tuliskan secara tepat dengan kata-katamu sendiri.',
   },
 
   {
@@ -639,5 +645,6 @@ export const lesson3Stages: Stage[] = [
       finalEvaluation:
         'Tunjukkan bahwa kamu tidak hanya bisa membuat jaringan "bisa jalan", tapi juga bisa merancang jaringan yang rapi, mengikuti standar industri, dan mudah dikelola oleh siapa pun yang meneruskannya.',
     },
+    conclusionPrompt: 'Berdasarkan studi kasus bercabang tentang perancangan IP kedai kopi yang telah kamu analisis, jelaskan bagaimana kamu mampu menganalisis skenario perancangan pengalamatan IPv4 Private & Public pada arsitektur TCP/IP. Tuliskan secara logis dengan kata-katamu sendiri.',
   },
 ];

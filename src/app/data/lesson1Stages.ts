@@ -109,6 +109,7 @@ export const lesson1Stages: Stage[] = [
     ],
     constructivismEssay2:
       'Berdasarkan urutan proses yang baru saja kamu susun, jelaskan bagaimana TCP memastikan data tiba dengan utuh dan berurutan! Tuliskan dengan kata-katamu sendiri.',
+    conclusionPrompt: 'Berdasarkan aktivitas Story Scramble dan Analogy Sorting yang telah kamu lakukan, jelaskan bagaimana kamu mampu mendefinisikan konsep dasar TCP/IP sebagai fondasi komunikasi jaringan komputer. Tuliskan dengan kata-katamu sendiri dan hubungkan dengan pengalaman belajarmu.',
   },
   {
     type: 'inquiry',
@@ -244,6 +245,7 @@ export const lesson1Stages: Stage[] = [
     ],
     inquiryReflection2:
       'Sekarang, jelaskan fungsi tiap layer dengan bahasamu sendiri! Bagaimana setiap layer bekerja sama untuk memastikan data sampai ke tujuan?',
+    conclusionPrompt: 'Berdasarkan eksplorasi materi dan aktivitas penyusunan lapisan TCP/IP yang telah kamu lakukan, jelaskan bagaimana kamu mampu menguraikan susunan lapisan model TCP/IP berdasarkan perbandingan dengan model OSI. Tuliskan secara runtut dengan kata-katamu sendiri.',
   },
   {
     type: 'questioning',
@@ -335,6 +337,7 @@ export const lesson1Stages: Stage[] = [
           'Sequence Number hanya memberi tahu posisi segmen. Kerusakan isi data tetap harus dicek dengan mekanisme integritas seperti checksum.',
       },
     ],
+    conclusionPrompt: 'Berdasarkan analisis kasus data corruption dan tanya jawab yang telah kamu lakukan, jelaskan bagaimana kamu mampu membedakan fungsi setiap lapisan model TCP/IP dalam proses komunikasi jaringan. Tuliskan alasan logismu dengan kata-kata sendiri.',
   },
   {
     type: 'learning-community',
@@ -393,7 +396,8 @@ export const lesson1Stages: Stage[] = [
     groupActivity: {
       groupNames: ['Kelompok 1', 'Kelompok 2', 'Kelompok 3', 'Kelompok 4', 'Kelompok 5', 'Kelompok 6', 'Kelompok 7', 'Kelompok 8'],
       discussionPrompt: 'Diskusikan logika kalian. Berikan vote pada argumen yang menurut kalian paling mendalam dan sesuai dengan fungsi layer.',
-    }
+    },
+    conclusionPrompt: 'Berdasarkan aktivitas papan kolaborasi dan diskusi kelompok tentang enkapsulasi & dekapsulasi yang telah kamu lakukan, jelaskan bagaimana kamu mampu menerapkan proses enkapsulasi sebagai pengirim dan proses dekapsulasi sebagai penerima. Tuliskan secara logis dengan kata-katamu sendiri.',
   },
   {
     type: 'modeling',
@@ -497,6 +501,7 @@ export const lesson1Stages: Stage[] = [
         interactiveAction: 'Amati pesan yang muncul di layar monitor PC B.',
       },
     ],
+    conclusionPrompt: 'Berdasarkan simulasi step-by-step dari PC A ke PC B yang telah kamu lakukan, jelaskan bagaimana kamu mampu mensimulasikan alur transmisi data dari pengirim ke penerima melalui seluruh lapisan TCP/IP. Tuliskan secara sistematis dengan kata-katamu sendiri.',
   },
   {
     type: 'reflection',
@@ -601,6 +606,7 @@ export const lesson1Stages: Stage[] = [
       { id: 'sc9', label: 'Saya mampu menyusun hubungan antar konsep TCP menjadi satu peta konsep.' },
       { id: 'sc10', label: 'Saya mampu mengambil keputusan teknis pada studi kasus TCP secara autentik.' },
     ],
+    conclusionPrompt: 'Berdasarkan penyusunan peta konsep dan refleksi yang telah kamu lakukan, jelaskan bagaimana kamu mampu menyimpulkan model TCP/IP sebagai kerangka komunikasi jaringan yang terstruktur. Tuliskan secara tepat dengan kata-katamu sendiri.',
   },
   {
     type: 'authentic-assessment',
@@ -730,5 +736,6 @@ export const lesson1Stages: Stage[] = [
       finalEvaluation:
         'Gunakan bukti untuk menentukan prioritas, jelaskan alasan teknis, lalu simpulkan solusi TCP yang paling berdampak terhadap layanan.',
     },
+    conclusionPrompt: 'Berdasarkan studi kasus bercabang yang telah kamu analisis, jelaskan bagaimana kamu mampu menganalisis skenario proses transmisi data di setiap lapisan TCP/IP. Tuliskan secara logis dengan kata-katamu sendiri.',
   },
 ];

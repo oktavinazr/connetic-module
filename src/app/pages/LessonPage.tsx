@@ -40,7 +40,7 @@ import { StageAnswerDetail } from '../components/admin/StageDetail';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DragAutoScroll } from '../components/DragAutoScroll';
-import { ActivityGuideBox, EssayBox, StageCompletedOverlay } from '../components/stages/StageKit';
+import { ActivityGuideBox, EssayBox, StageCompletedOverlay, ATPConclusionBox } from '../components/stages/StageKit';
 import { useGlobalStageSync } from '../hooks/useGlobalStageSync';
 
 type StageType =
@@ -777,6 +777,20 @@ export function LessonPage() {
                 <DragAutoScroll />
                 {renderStage()}
               </DndProvider>
+              {(isStageCompleted || pendingReflection !== null) && currentStage.conclusionPrompt && currentStage.atpAbcd?.behavior && (
+                <div className="mt-6">
+                  <ATPConclusionBox
+                    atpBehavior={currentStage.atpAbcd.behavior}
+                    objectiveCode={currentStage.objectiveCode || ''}
+                    stageType={currentStage.type}
+                    onSubmit={(text) => {
+                      handleStageComplete({ conclusion: text });
+                    }}
+                    disabled={true}
+                    defaultValue={currentStageAnswer?.conclusion || ''}
+                  />
+                </div>
+              )}
               {pendingReflection !== null && (
                 <InlineReflectionEssay
                   prompt={

@@ -109,6 +109,7 @@ export const lesson2Stages: Stage[] = [
     ],
     constructivismEssay2:
       'Berdasarkan tahapan Three-Way Handshake yang baru saja kamu urutkan, jelaskan apa yang terjadi jika salah satu tahapan terlewat! Mengapa ketiga langkah itu harus dilakukan secara berurutan?',
+    conclusionPrompt: 'Berdasarkan aktivitas Story Scramble dan Analogy Sorting tentang Three-Way Handshake yang telah kamu lakukan, jelaskan bagaimana kamu mampu mengidentifikasi TCP Header beserta fungsinya pada protokol TCP. Tuliskan dengan tepat menggunakan kata-katamu sendiri.',
   },
 
   {
@@ -214,6 +215,7 @@ export const lesson2Stages: Stage[] = [
     ],
     inquiryReflection2:
       'Setelah mempelajari semua field TCP Header, jelaskan mengapa TCP dianggap protokol yang "andal" (reliable) dibandingkan UDP yang tidak memiliki field Sequence Number, ACK, dan Window Size!',
+    conclusionPrompt: 'Berdasarkan eksplorasi materi TCP Header dan aktivitas penyusunan field yang telah kamu lakukan, jelaskan bagaimana kamu mampu menguraikan mekanisme TCP Sequence Number dalam memastikan urutan pengiriman. Tuliskan secara runtut dengan kata-katamu sendiri.',
   },
 
   {
@@ -306,6 +308,7 @@ export const lesson2Stages: Stage[] = [
           'TCP menomori setiap byte, bukan setiap segmen! Jika ISN=1 dan setiap segmen membawa 500 byte, maka Seq# segmen pertama=1, segmen kedua=501, segmen ketiga=1001. Ini yang membuat rekonstruksi data begitu presisi.',
       },
     ],
+    conclusionPrompt: 'Berdasarkan analisis skenario out-of-order packets dan tanya jawab yang telah kamu lakukan, jelaskan bagaimana kamu mampu membedakan kondisi pengiriman data normal dengan kondisi yang memerlukan error recovery pada TCP berdasarkan nilai Sequence Number. Tuliskan secara tepat dengan kata-katamu sendiri.',
   },
 
   {
@@ -396,6 +399,7 @@ export const lesson2Stages: Stage[] = [
       discussionPrompt:
         'Diskusikan: Apa yang terjadi jika KEDUA masalah (SYN timeout dan Window Size mendekati nol) terjadi bersamaan? Mana yang lebih kritis untuk ditangani lebih dulu? Berikan vote pada argumen teknis terkuat.',
     },
+    conclusionPrompt: 'Berdasarkan diskusi kelompok tentang TCP Handshake dan Flow Control yang telah kamu lakukan, jelaskan bagaimana kamu mampu menerapkan proses TCP Three-Way Handshake untuk menentukan nilai SYN, SYN-ACK, dan ACK pada setiap langkah pembentukan koneksi. Tuliskan secara logis dengan kata-katamu sendiri.',
   },
 
   {
@@ -462,6 +466,7 @@ export const lesson2Stages: Stage[] = [
         interactiveAction: 'Klik "Jalankan Proses" untuk mengirim ACK terakhir dan saksikan koneksi terbuka.',
       },
     ],
+    conclusionPrompt: 'Berdasarkan simulasi Three-Way Handshake yang telah kamu praktikkan, jelaskan bagaimana kamu mampu mensimulasikan mekanisme kerja TCP dari pembentukan koneksi hingga pengiriman data. Tuliskan secara sistematis dengan kata-katamu sendiri.',
   },
 
   {
@@ -520,6 +525,7 @@ export const lesson2Stages: Stage[] = [
       { id: 'sc4', label: 'Saya dapat menjelaskan bagaimana Sequence Number memastikan urutan data.' },
       { id: 'sc5', label: 'Saya memahami mekanisme Flow Control menggunakan Window Size.' },
     ],
+    conclusionPrompt: 'Berdasarkan penyusunan peta konsep dan refleksi yang telah kamu lakukan, jelaskan bagaimana kamu mampu menyimpulkan mekanisme keandalan TCP sebagai satu kesatuan yang utuh. Tuliskan secara tepat dengan kata-katamu sendiri.',
   },
 
   {
@@ -634,5 +640,6 @@ export const lesson2Stages: Stage[] = [
       finalEvaluation:
         'Gunakan pemahamanmu tentang Three-Way Handshake dan Window Size untuk membedakan antara masalah fisik (kabel/hardware) dan masalah logis (resource server/buffer). Argumen teknis yang kuat selalu didasarkan pada bukti data, bukan asumsi.',
     },
+    conclusionPrompt: 'Berdasarkan studi kasus bercabang tentang troubleshooting koneksi TCP yang telah kamu analisis, jelaskan bagaimana kamu mampu menganalisis skenario komunikasi TCP pada setiap langkah koneksi. Tuliskan secara logis dengan kata-katamu sendiri.',
   },
 ];
