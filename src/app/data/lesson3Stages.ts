@@ -6,12 +6,18 @@ export const lesson3Stages: Stage[] = [
     title: 'Constructivism',
     description:
       'Siswa membangun pemahaman awal tentang kebutuhan alamat unik di jaringan melalui analogi sistem pengalamatan surat dan komponen-komponen alamat IPv4.',
-    objectiveCode: 'X.IP.1 & X.IP.2',
+    objectiveCode: 'X.IP.1',
     activityGuide: [
       'Susun 6 potongan cerita tentang bagaimana alamat IP memungkinkan data menemukan tujuannya.',
       'Tulis refleksi: mengapa alamat IP harus unik dan tidak boleh ada duplikasi di jaringan yang sama.',
       'Urutkan komponen-komponen alamat IPv4 sesuai hierarki dari yang paling umum ke paling spesifik.',
     ],
+    atpAbcd: {
+      audience: 'Peserta didik',
+      behavior: 'mampu menjelaskan peran Internet Protocol lapisan Network dalam protokol TCP/IP',
+      condition: 'melalui aktivitas constructivism berupa animasi analogi interaktif pada CONNETIC Module',
+      degree: 'dengan tepat',
+    },
     apersepsi:
       'Bayangkan kamu mengirim surat ke teman, tapi kamu hanya menuliskan nama "Budi" tanpa nomor rumah, nama jalan, atau nama kota. Apakah surat itu akan sampai ke Budi yang tepat? Di internet, miliaran perangkat butuh alamat yang sangat spesifik dan unik agar data tidak salah kirim. Inilah fungsi Internet Protocol (IP)!',
     storyScramble: {
@@ -110,7 +116,7 @@ export const lesson3Stages: Stage[] = [
     title: 'Inquiry',
     description:
       'Siswa mengeksplorasi struktur 32-bit IPv4, komponen IP Header, dan sistem klasifikasi alamat IP (Kelas A, B, C) melalui eksplorasi interaktif.',
-    objectiveCode: 'X.IP.3 & X.IP.4',
+    objectiveCode: 'X.IP.2',
     activityGuide: [
       'Buka dan pelajari struktur IPv4 serta komponen IP Header melalui panel eksplorasi.',
       'Urutkan 5 elemen sistem pengalamatan IPv4 dari lapisan paling dasar ke paling spesifik.',
@@ -127,10 +133,10 @@ export const lesson3Stages: Stage[] = [
       'Guru mendorong siswa menghitung jumlah host maksimal untuk setiap kelas IP menggunakan formula 2^n - 2.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior: 'Mengidentifikasi kelas IPv4 dan menjelaskan struktur serta komponen IP Header.',
-      condition: 'Diberi panel eksplorasi interaktif, Flow Sorter, dan Group Classifier berbasis web.',
-      degree: 'Mampu mengklasifikasikan alamat IP dengan tepat dan menjelaskan alasan berdasarkan oktet pertama.',
+      audience: 'Peserta didik',
+      behavior: 'mampu menguraikan komponen IP Header beserta fungsinya',
+      condition: 'melalui aktivitas inquiry berupa eksplorasi materi rangkai alur pada CONNETIC Module',
+      degree: 'secara runtut',
     },
     material: {
       title: 'Struktur Alamat IPv4 & IP Header',
@@ -220,7 +226,7 @@ export const lesson3Stages: Stage[] = [
     title: 'Questioning',
     description:
       'Siswa menganalisis skenario konflik alamat IP dan mengidentifikasi mekanisme yang paling relevan dalam mendeteksi serta menyelesaikan konflik tersebut.',
-    objectiveCode: 'X.IP.4',
+    objectiveCode: 'X.IP.3',
     activityGuide: [
       'Amati skenario "IP Address Conflict": dua perangkat menggunakan alamat IP yang identik.',
       'Pilih mekanisme atau field yang paling relevan untuk memahami mengapa router kebingungan.',
@@ -235,10 +241,10 @@ export const lesson3Stages: Stage[] = [
       'Guru memancing: "Jika dua perangkat menjawab ARP request yang sama, apa yang terjadi pada tabel routing router?"',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior: 'Menganalisis skenario konflik IP dan menentukan penyebab serta solusi teknis yang tepat.',
-      condition: 'Diberi ilustrasi kasus IP conflict, question bank, hint, dan opsi alasan pada media interaktif.',
-      degree: 'Mampu menjelaskan penyebab konflik dan solusi teknis secara logis.',
+      audience: 'Peserta didik',
+      behavior: 'mampu membedakan struktur alamat IPv4 berdasarkan format penulisannya',
+      condition: 'melalui aktivitas questioning berupa tanya jawab dua arah pada CONNETIC Module',
+      degree: 'secara tepat',
     },
     problemVisual: {
       icon: '!',
@@ -312,7 +318,7 @@ export const lesson3Stages: Stage[] = [
     title: 'Learning Community',
     description:
       'Siswa berkolaborasi dalam kelompok untuk merancang skema pengalamatan IP yang efisien untuk jaringan sekolah berdasarkan kebutuhan nyata.',
-    objectiveCode: 'X.IP.4 & X.IP.9',
+    objectiveCode: 'X.IP.4 & X.IP.5',
     activityGuide: [
       'Baca kebutuhan Lab Komputer: jumlah perangkat, jenis perangkat, dan kebutuhan administrasi.',
       'Analisis Studi Kasus 1 (Desain IP Lab): pilih strategi, tulis argumen, kirim ke kelompok.',
@@ -324,10 +330,10 @@ export const lesson3Stages: Stage[] = [
       'Validasi Komunal: mengevaluasi strategi rekan dan memberikan vote berdasarkan kelayakan teknis.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior: 'Merancang dan mendiskusikan skema pengalamatan IP untuk skenario jaringan nyata.',
-      condition: 'Diberi case study berbasis kebutuhan real, argument board, dan sistem voting kolaboratif.',
-      degree: 'Mampu memberikan argumen teknis yang logis dan dapat diterima komunitas belajar.',
+      audience: 'Peserta didik',
+      behavior: 'mampu menerapkan pengetahuan kelas IPv4 beserta rentang alamat Private & Public serta konsep range host IPv4',
+      condition: 'melalui aktivitas learning community berupa papan kolaborasi studi kasus pada CONNETIC Module',
+      degree: 'secara logis',
     },
     layers5: [
       { id: 'L5', name: 'Application', pdu: 'Data', color: '#8B5CF6', desc: 'Browser siswa mengakses aplikasi e-learning sekolah.' },
@@ -402,7 +408,7 @@ export const lesson3Stages: Stage[] = [
     title: 'Modeling — Konversi Desimal ke Biner IPv4',
     description:
       'Siswa mempraktikkan konversi format IPv4 dari notasi desimal bertitik ke representasi biner 32-bit untuk memahami cara komputer membaca dan memproses alamat IP.',
-    objectiveCode: 'X.IP.3',
+    objectiveCode: 'X.IP.6',
     activityGuide: [
       'Ikuti demonstrasi sistem bobot bit (128, 64, 32, 16, 8, 4, 2, 1) untuk satu oktet.',
       'Praktikkan konversi oktet: ubah angka 192 dan 10 ke bentuk biner 8-bit.',
@@ -418,10 +424,10 @@ export const lesson3Stages: Stage[] = [
       'Guru menunjukkan bahwa 255.255.255.0 sebagai subnet mask berarti: Network ID = 24 bit pertama.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior: 'Mengkonversi oktet IPv4 dari desimal ke biner dan memahami representasi 32-bit.',
-      condition: 'Diberi Interactive Walkthrough dengan demonstrasi dan tantangan praktik mandiri.',
-      degree: 'Mampu mengkonversi minimal 2 oktet dengan benar dan menggabungkannya menjadi alamat 32-bit.',
+      audience: 'Peserta didik',
+      behavior: 'mampu mensimulasikan proses konversi alamat IPv4 dari format desimal ke biner',
+      condition: 'melalui aktivitas modeling berupa simulasi step-by-step pada CONNETIC Module',
+      degree: 'secara sistematis',
     },
     practiceInstructions: {
       forTeacher: [
@@ -468,7 +474,7 @@ export const lesson3Stages: Stage[] = [
     title: 'Reflection',
     description:
       'Siswa menyusun peta konsep menyeluruh yang menghubungkan semua konsep IPv4 yang dipelajari: struktur, kelas, range alamat, komponen header, dan implikasinya.',
-    objectiveCode: 'X.IP.9',
+    objectiveCode: 'X.IP.7',
     activityGuide: [
       'Hubungkan konsep-konsep IPv4 dengan memilih label penghubung yang paling tepat.',
       'Pastikan peta konsepmu mencerminkan hubungan antara format IPv4, Kelas IP, Subnet Mask, dan Range Host.',
@@ -482,10 +488,10 @@ export const lesson3Stages: Stage[] = [
       'Guru menggunakan peta konsep untuk mengevaluasi kedalaman pemahaman siswa tentang hierarki pengalamatan.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior: 'Menyusun peta konsep yang menghubungkan sistem pengalamatan IPv4 secara komprehensif.',
-      condition: 'Diberi Concept Map Builder dan refleksi tertulis pada media interaktif.',
-      degree: 'Mampu menghubungkan minimal 6 konsep IPv4 dengan label tepat dan menulis kesimpulan runtut.',
+      audience: 'Peserta didik',
+      behavior: 'mampu menyimpulkan sistem pengalamatan IPv4 sebagai fondasi konfigurasi jaringan yang terstruktur',
+      condition: 'melalui aktivitas reflection berupa konstruksi rekap materi pada CONNETIC Module',
+      degree: 'secara tepat',
     },
     conceptMapNodes: [
       { id: 'cn1', label: 'IPv4', description: 'Protokol pengalamatan 32-bit di Internet Layer.', colorClass: 'blue' },
@@ -526,7 +532,7 @@ export const lesson3Stages: Stage[] = [
     title: 'Authentic Assessment',
     description:
       'Siswa merancang skema pengalamatan IP untuk jaringan kantor UMKM dan mendiagnosis masalah koneksi berdasarkan pemahaman tentang kelas IP dan range host.',
-    objectiveCode: 'X.IP.10',
+    objectiveCode: 'X.IP.8',
     activityGuide: [
       'Baca data aset UMKM: jumlah perangkat, kebutuhan koneksi, dan segmen jaringan yang tersedia.',
       'Pilih desain pengalamatan IP yang paling logis dan sesuai standar industri.',
@@ -542,10 +548,10 @@ export const lesson3Stages: Stage[] = [
       'Guru mendorong siswa mempertimbangkan skalabilitas: bagaimana jika perangkat bertambah di masa depan?',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior: 'Merancang skema pengalamatan IPv4 untuk skenario jaringan nyata secara terstruktur.',
-      condition: 'Diberi Branching Scenario dengan konteks UMKM yang membutuhkan desain jaringan.',
-      degree: 'Mampu memilih solusi yang benar secara teknis dan menjelaskan alasan sesuai prinsip pengalamatan IP.',
+      audience: 'Peserta didik',
+      behavior: 'mampu menganalisis skenario perancangan pengalamatan IPv4 Private & Public pada arsitektur TCP/IP',
+      condition: 'melalui aktivitas authentic assessment berupa studi kasus bercabang pada CONNETIC Module',
+      degree: 'secara logis',
     },
     branchingScenario: {
       context:

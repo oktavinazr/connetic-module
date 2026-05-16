@@ -6,12 +6,18 @@ export const lesson4Stages: Stage[] = [
     title: 'Constructivism',
     description:
       'Siswa membangun pemahaman awal tentang keterbatasan IPv4 dan kebutuhan IPv6 melalui analogi pertumbuhan perangkat digital yang pesat.',
-    objectiveCode: 'X.IPv6.1 & X.IPv6.2',
+    objectiveCode: 'X.IP.9',
     activityGuide: [
       'Susun 6 potongan cerita tentang mengapa dunia membutuhkan IPv6 menjadi urutan yang logis.',
       'Tulis refleksi: apa yang terjadi jika alamat IPv4 habis sementara perangkat terus bertambah.',
       'Urutkan proses evolusi dari IPv4 ke IPv6 melalui aktivitas Process Chain.',
     ],
+    atpAbcd: {
+      audience: 'Peserta didik',
+      behavior: 'mampu menjelaskan konsep dasar IPv6 sebagai solusi keterbatasan ruang alamat IPv4',
+      condition: 'melalui aktivitas constructivism berupa animasi analogi interaktif pada CONNETIC Module',
+      degree: 'dengan tepat',
+    },
     apersepsi:
       'Pernahkah kamu membayangkan apa yang terjadi jika semua orang di dunia punya 10 gadget yang butuh internet? IPv4 hanya punya sekitar 4,3 miliar alamat. Penduduk bumi saja sudah 8 miliar — belum termasuk jutaan kamera CCTV, sensor rumah pintar, dan kendaraan otonom. Kita butuh sistem pengalamatan yang jauh lebih besar!',
     storyScramble: {
@@ -110,7 +116,7 @@ export const lesson4Stages: Stage[] = [
     title: 'Inquiry',
     description:
       'Siswa mengeksplorasi format penulisan IPv6, aturan kompresi alamat, jenis-jenis alamat IPv6, dan proses pembentukan IPv6 Link Local menggunakan standar EUI-64.',
-    objectiveCode: 'X.IPv6.3 & X.IPv6.4',
+    objectiveCode: 'X.IP.10',
     activityGuide: [
       'Pelajari struktur 128-bit IPv6 dan aturan kompresi (Zero Suppression & Double Colon) melalui panel eksplorasi.',
       'Urutkan 5 langkah proses kompresi alamat IPv6 dari format lengkap ke format paling singkat.',
@@ -127,10 +133,10 @@ export const lesson4Stages: Stage[] = [
       'Guru mendorong siswa mencoba kompresi sendiri sebelum melihat jawabannya di panel eksplorasi.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior: 'Mengidentifikasi format IPv6, menerapkan aturan kompresi, dan membedakan jenis alamat IPv6.',
-      condition: 'Diberi panel eksplorasi interaktif, Flow Sorter, dan Matching Connector berbasis web.',
-      degree: 'Mampu mengompresi alamat IPv6 dengan benar dan mengidentifikasi jenis alamat secara tepat.',
+      audience: 'Peserta didik',
+      behavior: 'mampu menerapkan tahapan standar EUI-64 untuk membentuk IPv6 Link Local Address dari alamat MAC secara berurutan',
+      condition: 'melalui aktivitas inquiry berupa eksplorasi materi rangkai alur pada CONNETIC Module',
+      degree: 'secara runtut',
     },
     material: {
       title: 'Format dan Struktur Alamat IPv6',
@@ -214,7 +220,7 @@ export const lesson4Stages: Stage[] = [
     title: 'Questioning',
     description:
       'Siswa menganalisis tantangan kompatibilitas saat perangkat lama IPv4 dan perangkat baru IPv6 harus berkomunikasi di jaringan yang sama.',
-    objectiveCode: 'X.IPv6.5',
+    objectiveCode: 'X.IP.11',
     activityGuide: [
       'Amati skenario "IPv4-IPv6 Incompatibility": perangkat lama tidak bisa langsung berkomunikasi dengan perangkat IPv6.',
       'Pilih strategi transisi yang paling tepat untuk skenario yang diberikan.',
@@ -229,10 +235,10 @@ export const lesson4Stages: Stage[] = [
       'Guru mendorong siswa berpikir tentang trade-off: kemudahan vs biaya vs risiko setiap strategi.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior: 'Menganalisis skenario transisi IPv4-IPv6 dan menentukan strategi yang paling sesuai konteks.',
-      condition: 'Diberi ilustrasi skenario inkompatibilitas, question bank, dan opsi alasan pada media interaktif.',
-      degree: 'Mampu memilih strategi yang tepat dan menyampaikan justifikasi teknis yang logis.',
+      audience: 'Peserta didik',
+      behavior: 'mampu menerapkan aturan penyederhanaan IPv6 pada skenario yang diberikan',
+      condition: 'melalui aktivitas questioning berupa tanya jawab dua arah pada CONNETIC Module',
+      degree: 'secara tepat',
     },
     problemVisual: {
       icon: '!',
@@ -306,7 +312,7 @@ export const lesson4Stages: Stage[] = [
     title: 'Learning Community',
     description:
       'Siswa berdiskusi dalam kelompok tentang implementasi IPv6 dalam konteks masa depan: IoT, Smart City, dan keamanan jaringan.',
-    objectiveCode: 'X.IPv6.5 & X.IPv6.6',
+    objectiveCode: 'X.IP.12',
     activityGuide: [
       'Baca skenario Smart Agriculture: ribuan sensor IoT yang butuh IP publik unik.',
       'Analisis Studi Kasus 1 (IPv6 untuk IoT): pilih jawaban, tulis argumen, kirim ke kelompok.',
@@ -318,10 +324,10 @@ export const lesson4Stages: Stage[] = [
       'Validasi Komunal: mengevaluasi argumen rekan berdasarkan pemahaman teknis IPv6.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior: 'Menganalisis manfaat IPv6 dalam skenario IoT dan keamanan, serta mendiskusikannya dalam kelompok.',
-      condition: 'Diberi case study berbasis konteks nyata (Smart Agriculture & Banking), argument board, dan voting.',
-      degree: 'Mampu memberikan argumen teknis yang logis dan visioner berdasarkan fitur IPv6.',
+      audience: 'Peserta didik',
+      behavior: 'mampu menganalisis setiap langkah proses EUI-64 untuk menentukan kebenaran hasil konversi alamat MAC menjadi IPv6 Link Local Address',
+      condition: 'melalui aktivitas learning community berupa papan kolaborasi studi kasus pada CONNETIC Module',
+      degree: 'secara logis',
     },
     layers5: [
       { id: 'L5', name: 'Application', pdu: 'Data', color: '#8B5CF6', desc: 'Aplikasi sensor mengirim data kelembapan ke server pertanian cloud.' },
@@ -396,7 +402,7 @@ export const lesson4Stages: Stage[] = [
     title: 'Modeling — Kompresi IPv6 & Pembentukan Link Local',
     description:
       'Siswa mempraktikkan teknik penyederhanaan penulisan IPv6 dan memahami proses pembentukan IPv6 Link Local Address menggunakan standar EUI-64.',
-    objectiveCode: 'X.IPv6.3 & X.IPv6.4',
+    objectiveCode: 'X.IP.13',
     activityGuide: [
       'Ikuti demonstrasi penghapusan leading zeros dari setiap blok IPv6.',
       'Terapkan aturan "::" untuk menyingkat blok nol berurutan terpanjang.',
@@ -411,10 +417,10 @@ export const lesson4Stages: Stage[] = [
       'Guru mendemonstrasikan "flip bit ke-7" dalam EUI-64 sebagai mekanisme untuk membedakan alamat global dari lokal.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior: 'Mengompresi alamat IPv6 sesuai aturan dan membentuk Link Local Address menggunakan EUI-64.',
-      condition: 'Diberi Interactive Walkthrough berbasis web dengan aksi praktik mandiri per langkah.',
-      degree: 'Mampu mengompresi IPv6 dengan benar dan menghasilkan Link Local Address dari MAC Address.',
+      audience: 'Peserta didik',
+      behavior: 'mampu mensimulasikan proses perencanaan pengalamatan IPv6 Gateway (Global Unicast) pada interface router',
+      condition: 'melalui aktivitas modeling berupa simulasi step-by-step pada CONNETIC Module',
+      degree: 'secara sistematis',
     },
     practiceInstructions: {
       forTeacher: [
@@ -462,7 +468,7 @@ export const lesson4Stages: Stage[] = [
     title: 'Reflection',
     description:
       'Siswa menyusun peta konsep menyeluruh yang membandingkan IPv4 dan IPv6 serta menghubungkan semua konsep yang dipelajari dalam Pertemuan 4.',
-    objectiveCode: 'X.IPv6.9',
+    objectiveCode: 'X.IP.14',
     activityGuide: [
       'Hubungkan konsep-konsep IPv6 dan perbandingannya dengan IPv4 menggunakan label yang tepat.',
       'Pastikan peta konsepmu mencerminkan perbedaan format, mekanisme, dan kegunaan IPv4 vs IPv6.',
@@ -476,10 +482,10 @@ export const lesson4Stages: Stage[] = [
       'Guru mengajak siswa membayangkan bagaimana internet akan terlihat jika IPv6 sudah diadopsi 100%.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior: 'Menyusun peta konsep yang membandingkan IPv4 dan IPv6 secara komprehensif.',
-      condition: 'Diberi Concept Map Builder dan refleksi tertulis pada media interaktif.',
-      degree: 'Mampu menghubungkan minimal 6 konsep IPv6 dengan label tepat dan menulis perbandingan IPv4-IPv6 secara lengkap.',
+      audience: 'Peserta didik',
+      behavior: 'mampu menyimpulkan perbedaan karakteristik antara pengalamatan IPv4 dan IPv6 serta kesesuaian penggunaannya dalam konteks jaringan modern',
+      condition: 'melalui aktivitas reflection berupa konstruksi rekap materi pada CONNETIC Module',
+      degree: 'secara tepat',
     },
     conceptMapNodes: [
       { id: 'cn1', label: 'IPv6', description: 'Protokol pengalamatan 128-bit generasi berikutnya.', colorClass: 'blue' },
@@ -520,7 +526,7 @@ export const lesson4Stages: Stage[] = [
     title: 'Authentic Assessment',
     description:
       'Siswa merancang strategi implementasi IPv6 untuk jaringan sekolah dengan mempertimbangkan kompatibilitas perangkat lama dan kebutuhan transisi yang aman.',
-    objectiveCode: 'X.IPv6.10',
+    objectiveCode: 'X.IP.15',
     activityGuide: [
       'Analisis kondisi jaringan sekolah: 50% perangkat IPv4 lama, 50% perangkat baru IPv6-ready.',
       'Pilih metode transisi (Dual Stack, Tunneling, atau langsung IPv6) yang paling aman dan realistis.',
@@ -536,10 +542,10 @@ export const lesson4Stages: Stage[] = [
       'Guru mendorong siswa mempertimbangkan: waktu downtime, biaya, kompetensi staf, dan risiko operasional.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior: 'Merancang strategi transisi IPv6 yang aman, realistis, dan mempertimbangkan kompatibilitas.',
-      condition: 'Diberi Branching Scenario dengan konteks implementasi IPv6 di lingkungan pendidikan.',
-      degree: 'Mampu memilih strategi yang tepat secara teknis dan menjelaskan alasan berdasarkan trade-off yang ada.',
+      audience: 'Peserta didik',
+      behavior: 'mampu mengevaluasi keterkaitan TCP dan IP dalam arsitektur model TCP/IP saat proses komunikasi jaringan',
+      condition: 'melalui aktivitas authentic assessment berupa studi kasus bercabang pada CONNETIC Module',
+      degree: 'secara logis',
     },
     branchingScenario: {
       context:

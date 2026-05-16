@@ -6,7 +6,13 @@ export const lesson1Stages: Stage[] = [
     title: 'Constructivism',
     description:
       'Siswa membangun pemahaman awal tentang TCP dari pengalaman digital sehari-hari melalui Story Scramble dan Analogy Sorting.',
-    objectiveCode: 'X.TCP.1 & X.TCP.2',
+    objectiveCode: 'X.TCP.1',
+    atpAbcd: {
+      audience: 'Peserta didik',
+      behavior: 'mampu mendefinisikan konsep dasar TCP/IP sebagai fondasi komunikasi jaringan komputer',
+      condition: 'melalui aktivitas constructivism berupa animasi analogi interaktif pada CONNETIC Module',
+      degree: 'dengan tepat',
+    },
     activityGuide: [
       'Susun potongan cerita digital menjadi urutan yang logis menggunakan drag & drop.',
       'Setelah urutan cerita selesai disusun, tulis refleksi mandiri berdasarkan hasil pemahamanmu.',
@@ -109,7 +115,7 @@ export const lesson1Stages: Stage[] = [
     title: 'Inquiry',
     description:
       'Siswa mengeksplorasi hierarki 5 lapisan TCP/IP dan memahami fungsi spesifik setiap lapisan secara bertahap.',
-    objectiveCode: 'X.TCP.3 & X.TCP.4',
+    objectiveCode: 'X.TCP.2',
     activityGuide: [
       'Buka dan pelajari tiap lapisan TCP/IP melalui panel eksplorasi interaktif.',
       'Susun 5 lapisan TCP/IP dengan drag & drop, mulai dari Application hingga Physical.',
@@ -126,13 +132,10 @@ export const lesson1Stages: Stage[] = [
       'Guru mendorong siswa untuk meninjau kembali materi eksplorasi jika mengalami kesulitan pada tahap matching.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior:
-        'Mengurutkan 5 lapisan TCP/IP and memasangkan fungsi yang tepat pada setiap lapisan.',
-      condition:
-        'Diberi visual clickable layer stack, Interactive Layer Sorter, dan Matching Connector berbasis web.',
-      degree:
-        'Mampu menyusun urutan layer secara tepat and menjelaskan fungsi setiap layer melalui refleksi tertulis.',
+      audience: 'Peserta didik',
+      behavior: 'mampu menguraikan susunan lapisan model TCP/IP berdasarkan perbandingan dengan model OSI',
+      condition: 'melalui aktivitas inquiry berupa eksplorasi materi rangkai alur pada CONNETIC Module',
+      degree: 'secara runtut',
     },
     material: {
       title: 'Struktur 5 Lapisan TCP/IP',
@@ -247,7 +250,7 @@ export const lesson1Stages: Stage[] = [
     title: 'Questioning',
     description:
       'Siswa mengeksplorasi rasa ingin tahu, memilih solusi teknis, dan membangun argumen logis berdasarkan field TCP Header yang relevan.',
-    objectiveCode: 'X.TCP.5',
+    objectiveCode: 'X.TCP.3',
     activityGuide: [
       'Pelajari Peta Analogi Pizza untuk memahami peran 5 lapisan TCP/IP.',
       'Seret nama lapisan ke kotak gangguan yang sesuai (drag & drop).',
@@ -262,13 +265,10 @@ export const lesson1Stages: Stage[] = [
       'Guru menekankan hubungan antara bukti kasus, field header, dan keputusan teknis siswa.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior:
-        'Menganalisis masalah paket data dan memilih solusi teknis berdasarkan field TCP Header yang relevan.',
-      condition:
-        'Diberi ilustrasi kasus data corruption, bank pertanyaan, hint, dan opsi alasan pada media interaktif.',
-      degree:
-        'Mampu memilih solusi yang tepat dan menyampaikan alasan logis secara tertulis.',
+      audience: 'Peserta didik',
+      behavior: 'mampu membedakan fungsi setiap lapisan model TCP/IP dalam proses komunikasi jaringan',
+      condition: 'melalui aktivitas questioning berupa tanya jawab dua arah pada CONNETIC Module',
+      degree: 'dengan logis',
     },
     problemVisual: {
       icon: '!',
@@ -341,7 +341,7 @@ export const lesson1Stages: Stage[] = [
     title: 'Learning Community',
     description:
       'Berkolaborasi dalam kelompok untuk membangun logika kolektif tentang alur data TCP/IP melalui 4 tahap sistematis.',
-    objectiveCode: 'X.TCP.6 & X.TCP.7',
+    objectiveCode: 'X.TCP.4 & X.TCP.5',
     activityGuide: [
       'Simak Simulasi Interaktif Enkapsulasi & Dekapsulasi sebagai fondasi.',
       'Analisis skenario Enkapsulasi (X.TCP.6): pilih jawaban, tulis argumen, kirim ke kelompok.',
@@ -353,10 +353,10 @@ export const lesson1Stages: Stage[] = [
       'Validasi Komunal: melakukan voting terhadap pemikiran rekan sejawat dalam kelompok.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior: 'Menganalisis, menyusun, dan mendiskusikan urutan proses TCP/IP 5-layer dalam kelompok.',
-      condition: 'Diberi alur terintegrasi dari visualisasi, case study ordering, hingga argument board.',
-      degree: 'Mampu menyusun urutan dengan benar and memberikan argumen logis yang dapat diterima komunitas.',
+      audience: 'Peserta didik',
+      behavior: 'mampu menerapkan proses enkapsulasi sebagai pengirim dan proses dekapsulasi sebagai penerima',
+      condition: 'melalui aktivitas learning community berupa papan kolaborasi studi kasus pada CONNETIC Module',
+      degree: 'secara logis',
     },
     // Data untuk 5 Layer
     layers5: [
@@ -401,7 +401,7 @@ export const lesson1Stages: Stage[] = [
     activityNumber: 8,
     description:
       'Siswa akan mempraktikkan secara langsung proses kerja TCP/IP dari pengirim (PC A) hingga penerima (PC B) melalui alur step-by-step Encapsulation → Transmisi → Decapsulation.',
-    objectiveCode: 'X.TCP.8',
+    objectiveCode: 'X.TCP.6',
     activityGuide: [
       'Ikuti 9 langkah simulasi dari PC A (pengirim) ke PC B (penerima) secara runtut.',
       'Lakukan drag & drop TCP Header, pilih alamat tujuan, dan aktifkan MAC Frame.',
@@ -415,13 +415,10 @@ export const lesson1Stages: Stage[] = [
       'Guru dapat menghentikan simulasi sejenak untuk meminta siswa memprediksi langkah berikutnya.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior:
-        'Menelusuri dan mempraktikkan langkah kerja TCP/IP dari pembuatan data sampai data diterima kembali.',
-      condition:
-        'Diberi Interactive Walkthrough dengan contoh, simulasi, dan aksi praktik mandiri pada media interaktif.',
-      degree:
-        'Mampu menyelesaikan seluruh rangkaian langkah dengan urutan yang benar.',
+      audience: 'Peserta didik',
+      behavior: 'mampu mensimulasikan alur transmisi data dari pengirim ke penerima melalui seluruh lapisan TCP/IP',
+      condition: 'melalui aktivitas modeling berupa simulasi step-by-step pada CONNETIC Module',
+      degree: 'secara sistematis',
     },
     practiceInstructions: {
       forTeacher: [
@@ -506,7 +503,7 @@ export const lesson1Stages: Stage[] = [
     title: 'Reflection',
     description:
       'Siswa menyusun peta konsep and refleksi tertulis untuk merangkum hubungan antar konsep TCP dari encapsulation hingga decapsulation.',
-    objectiveCode: 'X.TCP.9',
+    objectiveCode: 'X.TCP.7',
     activityGuide: [
       'Hubungkan konsep-konsep TCP/IP dengan memilih label penghubung yang tepat.',
       'Tulis ringkasan pemahamanmu sendiri: apa itu TCP dan bagaimana enkapsulasi & dekapsulasi bekerja.',
@@ -520,13 +517,10 @@ export const lesson1Stages: Stage[] = [
       'Guru dapat memakai hasil refleksi untuk menentukan bagian mana yang perlu diperkuat pada pertemuan berikutnya.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior:
-        'Menyusun peta konsep and menuliskan kesimpulan visual tentang hubungan konsep TCP utama.',
-      condition:
-        'Diberi Concept Map Builder, jurnal refleksi, dan lembar penilaian diri pada media interaktif.',
-      degree:
-        'Mampu menghubungkan konsep dengan tepat and menuliskan refleksi yang menunjukkan pemahaman menyeluruh.',
+      audience: 'Peserta didik',
+      behavior: 'mampu menyimpulkan model TCP/IP sebagai kerangka komunikasi jaringan yang terstruktur',
+      condition: 'melalui aktivitas reflection berupa konstruksi rekap materi pada CONNETIC Module',
+      degree: 'secara tepat',
     },
     conceptMapNodes: [
       {
@@ -613,7 +607,7 @@ export const lesson1Stages: Stage[] = [
     title: 'Authentic Assessment',
     description:
       'Siswa menyelesaikan studi kasus bercabang yang menilai analisis, argumentasi, and penarikan kesimpulan pada beberapa masalah pengiriman paket TCP.',
-    objectiveCode: 'X.TCP.10',
+    objectiveCode: 'X.TCP.8',
     activityGuide: [
       'Baca konteks kasus, bukti masalah, dan tiga area fokus gangguan dengan teliti.',
       'Pilih jalur diagnosis, jelaskan alasan teknis, lalu pilih prioritas tindak lanjut.',
@@ -629,13 +623,10 @@ export const lesson1Stages: Stage[] = [
       'Guru menggunakan hasil jalur keputusan untuk melihat apakah siswa mampu membedakan collision, packet loss, and data corruption.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior:
-        'Mendiagnosis masalah pengiriman paket TCP and menentukan prioritas solusi berdasarkan bukti kasus.',
-      condition:
-        'Diberi Branching Troubleshooter dengan kondisi collision, packet loss, and data corruption serta konsekuensi pada setiap keputusan.',
-      degree:
-        'Mampu memilih jalur diagnosis yang logis, menjelaskan alasan, and menyimpulkan prioritas solusi secara tepat.',
+      audience: 'Peserta didik',
+      behavior: 'mampu menganalisis skenario proses transmisi data di setiap lapisan TCP/IP',
+      condition: 'melalui aktivitas authentic assessment berupa studi kasus bercabang pada CONNETIC Module',
+      degree: 'secara logis',
     },
     branchingScenario: {
       context:

@@ -275,190 +275,362 @@ export const stageLearningObjectivesByLesson: Record<string, Partial<Record<Stag
     constructivism: [
       {
         code: 'X.TCP.1',
-        description: 'Mampu mendefinisikan TCP/IP dalam jaringan komputer',
+        description: 'Mampu mendefinisikan konsep dasar TCP/IP sebagai fondasi komunikasi jaringan komputer',
         atpAbcd: {
           audience: 'Peserta didik',
-          behavior: 'mampu mendefinisikan TCP/IP dalam jaringan komputer dan telekomunikasi',
-          condition: 'melalui aktivitas constructivism berupa animasi interaktif dan susun cerita pengiriman pesan pada CONNETIC Module',
-          degree: 'dengan tepat',
-        },
-      },
-      {
-        code: 'X.TCP.2',
-        description: 'Mampu menentukan fungsi utama TCP',
-        atpAbcd: {
-          audience: 'Peserta didik',
-          behavior: 'mampu menentukan fungsi utama TCP/IP dalam proses komunikasi data',
-          condition: 'melalui aktivitas constructivism berupa pengelompokan analogi kurir fisik dan protokol digital pada media CONNETIC Module',
+          behavior: 'mampu mendefinisikan konsep dasar TCP/IP sebagai fondasi komunikasi jaringan komputer',
+          condition: 'melalui aktivitas constructivism berupa animasi analogi interaktif pada CONNETIC Module',
           degree: 'dengan tepat',
         },
       },
     ],
     inquiry: [
       {
-        code: 'X.TCP.3',
-        description: 'Mampu mengurutkan hierarki lapisan TCP/IP dalam proses encapsulation',
+        code: 'X.TCP.2',
+        description: 'Mampu menguraikan susunan lapisan model TCP/IP berdasarkan perbandingan dengan model OSI',
         atpAbcd: {
           audience: 'Peserta didik',
-          behavior: 'mampu mengurutkan hierarki lapisan TCP/IP dalam proses encapsulation',
-          condition: 'melalui aktivitas inquiry berupa eksplorasi visual dan Logic Flow Builder pada media CONNETIC Module',
-          degree: 'dengan tepat',
-        },
-      },
-      {
-        code: 'X.TCP.4',
-        description: 'Mampu mengkategorikan fungsi komponen TCP Header',
-        atpAbcd: {
-          audience: 'Peserta didik',
-          behavior: 'mampu mengkategorikan fungsi komponen TCP Header',
-          condition: 'melalui aktivitas inquiry berupa Drag-and-Drop Labeling pada media CONNETIC Module',
-          degree: 'dengan tepat',
+          behavior: 'mampu menguraikan susunan lapisan model TCP/IP berdasarkan perbandingan dengan model OSI',
+          condition: 'melalui aktivitas inquiry berupa eksplorasi materi rangkai alur pada CONNETIC Module',
+          degree: 'secara runtut',
         },
       },
     ],
     questioning: [
       {
-        code: 'X.TCP.5',
-        description: 'Mampu menganalisis masalah paket data dan memilih solusi berdasarkan TCP Header yang relevan',
+        code: 'X.TCP.3',
+        description: 'Mampu membedakan fungsi setiap lapisan model TCP/IP dalam proses komunikasi jaringan',
         atpAbcd: {
           audience: 'Peserta didik',
-          behavior: 'mampu menganalisis masalah paket data dan memilih solusi berdasarkan TCP Header yang relevan',
-          condition: 'melalui aktivitas questioning berupa analisis kasus data corruption dan argumen logis pada media CONNETIC Module',
-          degree: 'dengan tepat',
+          behavior: 'mampu membedakan fungsi setiap lapisan model TCP/IP dalam proses komunikasi jaringan',
+          condition: 'melalui aktivitas questioning berupa tanya jawab dua arah pada CONNETIC Module',
+          degree: 'dengan logis',
         },
       },
     ],
     'learning-community': [
       {
-        code: 'X.TCP.6',
-        description: 'Mampu menganalisis skenario pengiriman data dan memberikan argumen logis pada proses enkapsulasi',
+        code: 'X.TCP.4',
+        description: 'Mampu menerapkan proses enkapsulasi sebagai pengirim',
         atpAbcd: {
           audience: 'Peserta didik',
-          behavior: 'mampu menganalisis skenario pengiriman data dan memberikan argumen logis pada proses enkapsulasi',
-          condition: 'melalui aktivitas learning community berupa studi kasus terbuka (PC A ke PC B) pada media CONNETIC Module',
-          degree: 'dengan tepat',
+          behavior: 'mampu menerapkan proses enkapsulasi sebagai pengirim',
+          condition: 'melalui aktivitas learning community berupa papan kolaborasi studi kasus pada CONNETIC Module',
+          degree: 'secara logis',
         },
       },
       {
-        code: 'X.TCP.7',
-        description: 'Mampu menganalisis skenario penerimaan data dan memberikan argumen logis pada proses dekapsulasi',
+        code: 'X.TCP.5',
+        description: 'Mampu menerapkan proses dekapsulasi sebagai penerima',
         atpAbcd: {
           audience: 'Peserta didik',
-          behavior: 'mampu menganalisis skenario penerimaan data dan memberikan argumen logis pada proses dekapsulasi',
-          condition: 'melalui aktivitas learning community berupa diskusi kelompok dan voting argumen pada media CONNETIC Module',
-          degree: 'dengan tepat',
+          behavior: 'mampu menerapkan proses dekapsulasi sebagai penerima',
+          condition: 'melalui aktivitas learning community berupa papan kolaborasi studi kasus pada CONNETIC Module',
+          degree: 'secara logis',
         },
       },
     ],
     modeling: [
       {
-        code: 'X.TCP.8',
-        description: 'Mampu mengurutkan proses encapsulation, transmisi, dan decapsulation TCP/IP secara menyeluruh',
+        code: 'X.TCP.6',
+        description: 'Mampu mensimulasikan alur transmisi data dari pengirim ke penerima melalui seluruh lapisan TCP/IP',
         atpAbcd: {
           audience: 'Peserta didik',
-          behavior: 'mampu mengurutkan proses encapsulation, transmisi, dan decapsulation TCP/IP secara menyeluruh',
-          condition: 'melalui aktivitas modeling berupa Interactive Walkthrough dan simulasi langkah demi langkah pada media CONNETIC Module',
-          degree: 'dengan tepat',
+          behavior: 'mampu mensimulasikan alur transmisi data dari pengirim ke penerima melalui seluruh lapisan TCP/IP',
+          condition: 'melalui aktivitas modeling berupa simulasi step-by-step pada CONNETIC Module',
+          degree: 'secara sistematis',
         },
       },
     ],
     reflection: [
       {
-        code: 'X.TCP.9',
-        description: 'Mampu menyusun peta konsep hubungan antar konsep TCP dari encapsulation hingga decapsulation',
+        code: 'X.TCP.7',
+        description: 'Mampu menyimpulkan model TCP/IP sebagai kerangka komunikasi jaringan yang terstruktur',
         atpAbcd: {
           audience: 'Peserta didik',
-          behavior: 'mampu menyusun peta konsep hubungan antar konsep TCP dari encapsulation hingga decapsulation',
-          condition: 'melalui aktivitas reflection berupa penyusunan Concept Map Builder dan jurnal refleksi pada media CONNETIC Module',
-          degree: 'dengan tepat',
+          behavior: 'mampu menyimpulkan model TCP/IP sebagai kerangka komunikasi jaringan yang terstruktur',
+          condition: 'melalui aktivitas reflection berupa konstruksi rekap materi pada CONNETIC Module',
+          degree: 'secara tepat',
         },
       },
     ],
     'authentic-assessment': [
       {
-        code: 'X.TCP.10',
-        description: 'Mampu mendiagnosis masalah pengiriman paket TCP melalui studi kasus bercabang secara autentik',
+        code: 'X.TCP.8',
+        description: 'Mampu menganalisis skenario proses transmisi data di setiap lapisan TCP/IP',
         atpAbcd: {
           audience: 'Peserta didik',
-          behavior: 'mampu mendiagnosis masalah pengiriman paket TCP melalui studi kasus bercabang secara autentik',
-          condition: 'melalui aktivitas authentic assessment berupa Branching Troubleshooter pada media CONNETIC Module',
-          degree: 'dengan tepat',
+          behavior: 'mampu menganalisis skenario proses transmisi data di setiap lapisan TCP/IP',
+          condition: 'melalui aktivitas authentic assessment berupa studi kasus bercabang pada CONNETIC Module',
+          degree: 'secara logis',
         },
       },
     ],
   },
   '2': {
-    inquiry: [
+    constructivism: [
       {
-        code: 'X.TCP.3',
-        description: 'Mampu mengurutkan hierarki lapisan TCP/IP dalam proses encapsulation',
+        code: 'X.TCP.9',
+        description: 'Mampu mengidentifikasi TCP Header beserta fungsinya pada protokol TCP',
         atpAbcd: {
           audience: 'Peserta didik',
-          behavior: 'mampu mengurutkan hierarki lapisan TCP/IP dalam proses encapsulation',
-          condition: 'melalui aktivitas inquiry berupa eksplorasi visual alur data pada media CONNETIC Module',
+          behavior: 'mampu mengidentifikasi TCP Header beserta fungsinya pada protokol TCP',
+          condition: 'melalui aktivitas constructivism berupa animasi analogi interaktif pada CONNETIC Module',
           degree: 'dengan tepat',
         },
       },
+    ],
+    inquiry: [
       {
-        code: 'X.TCP.4',
-        description: 'Mampu mengkategorikan fungsi komponen TCP Header',
+        code: 'X.TCP.10',
+        description: 'Mampu menguraikan mekanisme TCP Sequence Number dalam memastikan urutan pengiriman',
         atpAbcd: {
           audience: 'Peserta didik',
-          behavior: 'mampu mengkategorikan fungsi komponen TCP Header',
-          condition: 'melalui aktivitas inquiry berupa Drag-and-Drop Labeling pada media CONNETIC Module',
-          degree: 'dengan tepat',
+          behavior: 'mampu menguraikan mekanisme TCP Sequence Number dalam memastikan urutan pengiriman',
+          condition: 'melalui aktivitas inquiry berupa eksplorasi materi rangkai alur pada CONNETIC Module',
+          degree: 'secara runtut',
         },
       },
     ],
     questioning: [
       {
-        code: 'X.TCP.5',
-        description: 'Mampu menganalisis masalah paket data dan memilih solusi berdasarkan TCP Header yang relevan',
+        code: 'X.TCP.11',
+        description: 'Mampu membedakan kondisi pengiriman data normal dengan kondisi yang memerlukan error recovery pada TCP berdasarkan nilai Sequence Number',
         atpAbcd: {
           audience: 'Peserta didik',
-          behavior: 'mampu menganalisis masalah paket data dan memilih solusi berdasarkan TCP Header yang relevan',
-          condition: 'melalui aktivitas questioning berupa analisis kasus flow control pada media CONNETIC Module',
-          degree: 'dengan tepat',
+          behavior: 'mampu membedakan kondisi pengiriman data normal dengan kondisi yang memerlukan error recovery pada TCP berdasarkan nilai Sequence Number',
+          condition: 'melalui aktivitas questioning berupa tanya jawab dua arah pada CONNETIC Module',
+          degree: 'secara tepat',
+        },
+      },
+    ],
+    'learning-community': [
+      {
+        code: 'X.TCP.12',
+        description: 'Mampu menerapkan proses TCP Three-Way Handshake untuk menentukan nilai SYN, SYN-ACK, dan ACK pada setiap langkah pembentukan koneksi',
+        atpAbcd: {
+          audience: 'Peserta didik',
+          behavior: 'mampu menerapkan proses TCP Three-Way Handshake untuk menentukan nilai SYN, SYN-ACK, dan ACK pada setiap langkah pembentukan koneksi',
+          condition: 'melalui aktivitas learning community berupa papan kolaboratif studi kasus pada CONNETIC Module',
+          degree: 'secara logis',
         },
       },
     ],
     modeling: [
       {
-        code: 'X.TCP.8',
-        description: 'Mampu mengurutkan proses three-way handshake TCP',
+        code: 'X.TCP.13',
+        description: 'Mampu mensimulasikan mekanisme kerja TCP dari pembentukan koneksi hingga pengiriman data',
         atpAbcd: {
           audience: 'Peserta didik',
-          behavior: 'mampu mengurutkan proses three-way handshake TCP',
-          condition: 'melalui aktivitas modeling berupa Interactive Walkthrough mekanisme sinkronisasi paket pada media CONNETIC Module',
-          degree: 'dengan tepat',
+          behavior: 'mampu mensimulasikan mekanisme kerja TCP dari pembentukan koneksi hingga pengiriman data',
+          condition: 'melalui aktivitas modeling berupa simulasi step-by-step pada CONNETIC Module',
+          degree: 'secara sistematis',
+        },
+      },
+    ],
+    reflection: [
+      {
+        code: 'X.TCP.14',
+        description: 'Mampu menyimpulkan mekanisme keandalan TCP sebagai satu kesatuan yang utuh',
+        atpAbcd: {
+          audience: 'Peserta didik',
+          behavior: 'mampu menyimpulkan mekanisme keandalan TCP sebagai satu kesatuan yang utuh',
+          condition: 'melalui aktivitas reflection berupa konstruksi rekap materi pada CONNETIC Module',
+          degree: 'secara tepat',
+        },
+      },
+    ],
+    'authentic-assessment': [
+      {
+        code: 'X.TCP.15',
+        description: 'Mampu menganalisis skenario komunikasi TCP pada setiap langkah koneksi',
+        atpAbcd: {
+          audience: 'Peserta didik',
+          behavior: 'mampu menganalisis skenario komunikasi TCP pada setiap langkah koneksi',
+          condition: 'melalui aktivitas authentic assessment berupa studi kasus bercabang pada CONNETIC Module',
+          degree: 'secara logis',
         },
       },
     ],
   },
   '3': {
-    inquiry: [
+    constructivism: [
       {
-        code: 'X.IP.3',
-        description: 'Mampu menguraikan struktur dan kelas IPv4',
+        code: 'X.IP.1',
+        description: 'Mampu menjelaskan peran Internet Protocol lapisan Network dalam protokol TCP/IP',
         atpAbcd: {
           audience: 'Peserta didik',
-          behavior: 'mampu menguraikan struktur dan kelas IPv4',
-          condition: 'melalui aktivitas inquiry berupa eksplorasi visual pengalamatan jaringan pada media CONNETIC Module',
+          behavior: 'mampu menjelaskan peran Internet Protocol lapisan Network dalam protokol TCP/IP',
+          condition: 'melalui aktivitas constructivism berupa animasi analogi interaktif pada CONNETIC Module',
           degree: 'dengan tepat',
+        },
+      },
+    ],
+    inquiry: [
+      {
+        code: 'X.IP.2',
+        description: 'Mampu menguraikan komponen IP Header beserta fungsinya',
+        atpAbcd: {
+          audience: 'Peserta didik',
+          behavior: 'mampu menguraikan komponen IP Header beserta fungsinya',
+          condition: 'melalui aktivitas inquiry berupa eksplorasi materi rangkai alur pada CONNETIC Module',
+          degree: 'secara runtut',
+        },
+      },
+    ],
+    questioning: [
+      {
+        code: 'X.IP.3',
+        description: 'Mampu membedakan struktur alamat IPv4 berdasarkan format penulisannya',
+        atpAbcd: {
+          audience: 'Peserta didik',
+          behavior: 'mampu membedakan struktur alamat IPv4 berdasarkan format penulisannya',
+          condition: 'melalui aktivitas questioning berupa tanya jawab dua arah pada CONNETIC Module',
+          degree: 'secara tepat',
+        },
+      },
+    ],
+    'learning-community': [
+      {
+        code: 'X.IP.4',
+        description: 'Mampu menerapkan pengetahuan kelas IPv4 beserta rentang alamat Private & Public berdasarkan nilai oktet pertamanya',
+        atpAbcd: {
+          audience: 'Peserta didik',
+          behavior: 'mampu menerapkan pengetahuan kelas IPv4 beserta rentang alamat Private & Public berdasarkan nilai oktet pertamanya',
+          condition: 'melalui aktivitas learning community berupa papan kolaborasi studi kasus pada CONNETIC Module',
+          degree: 'secara logis',
+        },
+      },
+      {
+        code: 'X.IP.5',
+        description: 'Mampu menerapkan konsep range host IPv4 untuk menghitung alamat-alamat yang tersedia dari sebuah jaringan',
+        atpAbcd: {
+          audience: 'Peserta didik',
+          behavior: 'mampu menerapkan konsep range host IPv4 untuk menghitung alamat-alamat yang tersedia dari sebuah jaringan',
+          condition: 'melalui aktivitas learning community berupa papan kolaborasi studi kasus pada CONNETIC Module',
+          degree: 'secara logis',
+        },
+      },
+    ],
+    modeling: [
+      {
+        code: 'X.IP.6',
+        description: 'Mampu mensimulasikan proses konversi alamat IPv4 dari format desimal ke biner',
+        atpAbcd: {
+          audience: 'Peserta didik',
+          behavior: 'mampu mensimulasikan proses konversi alamat IPv4 dari format desimal ke biner',
+          condition: 'melalui aktivitas modeling berupa simulasi step-by-step pada CONNETIC Module',
+          degree: 'secara sistematis',
+        },
+      },
+    ],
+    reflection: [
+      {
+        code: 'X.IP.7',
+        description: 'Mampu menyimpulkan sistem pengalamatan IPv4 sebagai fondasi konfigurasi jaringan yang terstruktur',
+        atpAbcd: {
+          audience: 'Peserta didik',
+          behavior: 'mampu menyimpulkan sistem pengalamatan IPv4 sebagai fondasi konfigurasi jaringan yang terstruktur',
+          condition: 'melalui aktivitas reflection berupa konstruksi rekap materi pada CONNETIC Module',
+          degree: 'secara tepat',
+        },
+      },
+    ],
+    'authentic-assessment': [
+      {
+        code: 'X.IP.8',
+        description: 'Mampu menganalisis skenario perancangan pengalamatan IPv4 Private & Public pada arsitektur TCP/IP',
+        atpAbcd: {
+          audience: 'Peserta didik',
+          behavior: 'mampu menganalisis skenario perancangan pengalamatan IPv4 Private & Public pada arsitektur TCP/IP',
+          condition: 'melalui aktivitas authentic assessment berupa studi kasus bercabang pada CONNETIC Module',
+          degree: 'secara logis',
         },
       },
     ],
   },
   '4': {
-    'authentic-assessment': [
+    constructivism: [
       {
-        code: 'X.IPv6.10',
-        description: 'Mampu merancang strategi transisi IPv6',
+        code: 'X.IP.9',
+        description: 'Mampu menjelaskan konsep dasar IPv6 sebagai solusi keterbatasan ruang alamat IPv4',
         atpAbcd: {
           audience: 'Peserta didik',
-          behavior: 'mampu merancang strategi transisi IPv6',
-          condition: 'melalui aktivitas authentic assessment berupa studi kasus transisi dual-stack pada media CONNETIC Module',
+          behavior: 'mampu menjelaskan konsep dasar IPv6 sebagai solusi keterbatasan ruang alamat IPv4',
+          condition: 'melalui aktivitas constructivism berupa animasi analogi interaktif pada CONNETIC Module',
           degree: 'dengan tepat',
+        },
+      },
+    ],
+    inquiry: [
+      {
+        code: 'X.IP.10',
+        description: 'Mampu menerapkan tahapan standar EUI-64 untuk membentuk IPv6 Link Local Address dari alamat MAC secara berurutan',
+        atpAbcd: {
+          audience: 'Peserta didik',
+          behavior: 'mampu menerapkan tahapan standar EUI-64 untuk membentuk IPv6 Link Local Address dari alamat MAC secara berurutan',
+          condition: 'melalui aktivitas inquiry berupa eksplorasi materi rangkai alur pada CONNETIC Module',
+          degree: 'secara runtut',
+        },
+      },
+    ],
+    questioning: [
+      {
+        code: 'X.IP.11',
+        description: 'Mampu menerapkan aturan penyederhanaan IPv6 pada skenario yang diberikan',
+        atpAbcd: {
+          audience: 'Peserta didik',
+          behavior: 'mampu menerapkan aturan penyederhanaan IPv6 pada skenario yang diberikan',
+          condition: 'melalui aktivitas questioning berupa tanya jawab dua arah pada CONNETIC Module',
+          degree: 'secara tepat',
+        },
+      },
+    ],
+    'learning-community': [
+      {
+        code: 'X.IP.12',
+        description: 'Mampu menganalisis setiap langkah proses EUI-64 untuk menentukan kebenaran hasil konversi alamat MAC menjadi IPv6 Link Local Address',
+        atpAbcd: {
+          audience: 'Peserta didik',
+          behavior: 'mampu menganalisis setiap langkah proses EUI-64 untuk menentukan kebenaran hasil konversi alamat MAC menjadi IPv6 Link Local Address',
+          condition: 'melalui aktivitas learning community berupa papan kolaborasi studi kasus pada CONNETIC Module',
+          degree: 'secara logis',
+        },
+      },
+    ],
+    modeling: [
+      {
+        code: 'X.IP.13',
+        description: 'Mampu mensimulasikan proses perencanaan pengalamatan IPv6 Gateway (Global Unicast) pada interface router',
+        atpAbcd: {
+          audience: 'Peserta didik',
+          behavior: 'mampu mensimulasikan proses perencanaan pengalamatan IPv6 Gateway (Global Unicast) pada interface router',
+          condition: 'melalui aktivitas modeling berupa simulasi step-by-step pada CONNETIC Module',
+          degree: 'secara sistematis',
+        },
+      },
+    ],
+    reflection: [
+      {
+        code: 'X.IP.14',
+        description: 'Mampu menyimpulkan perbedaan karakteristik antara pengalamatan IPv4 dan IPv6 serta kesesuaian penggunaannya dalam konteks jaringan modern',
+        atpAbcd: {
+          audience: 'Peserta didik',
+          behavior: 'mampu menyimpulkan perbedaan karakteristik antara pengalamatan IPv4 dan IPv6 serta kesesuaian penggunaannya dalam konteks jaringan modern',
+          condition: 'melalui aktivitas reflection berupa konstruksi rekap materi pada CONNETIC Module',
+          degree: 'secara tepat',
+        },
+      },
+    ],
+    'authentic-assessment': [
+      {
+        code: 'X.IP.15',
+        description: 'Mampu mengevaluasi keterkaitan TCP dan IP dalam arsitektur model TCP/IP saat proses komunikasi jaringan',
+        atpAbcd: {
+          audience: 'Peserta didik',
+          behavior: 'mampu mengevaluasi keterkaitan TCP dan IP dalam arsitektur model TCP/IP saat proses komunikasi jaringan',
+          condition: 'melalui aktivitas authentic assessment berupa studi kasus bercabang pada CONNETIC Module',
+          degree: 'secara logis',
         },
       },
     ],

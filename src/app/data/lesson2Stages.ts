@@ -6,12 +6,18 @@ export const lesson2Stages: Stage[] = [
     title: 'Constructivism',
     description:
       'Siswa membangun pemahaman awal tentang cara TCP memastikan data tiba utuh dan berurutan melalui mekanisme handshake dan sequence number.',
-    objectiveCode: 'X.TCP.4 & X.TCP.5',
+    objectiveCode: 'X.TCP.9',
     activityGuide: [
       'Susun 6 potongan cerita tentang pengiriman data TCP menjadi urutan yang logis menggunakan drag & drop.',
       'Tulis refleksi mandiri: mengapa kesiapan kedua pihak harus dipastikan sebelum data dikirim.',
       'Lanjutkan ke aktivitas Process Chain untuk mengurutkan tahapan TCP Three-Way Handshake.',
     ],
+    atpAbcd: {
+      audience: 'Peserta didik',
+      behavior: 'mampu mengidentifikasi TCP Header beserta fungsinya pada protokol TCP',
+      condition: 'melalui aktivitas constructivism berupa animasi analogi interaktif pada CONNETIC Module',
+      degree: 'dengan tepat',
+    },
     apersepsi:
       'Pernahkah kamu menelepon teman, lalu langsung bicara panjang lebar tanpa memastikan dia sudah menjawab "Halo"? Apa yang terjadi jika ternyata dia belum siap mendengarkan? Dalam jaringan, komputer juga harus memastikan "kesiapan" lawan bicaranya sebelum mengirim data penting. Inilah inti dari mekanisme TCP!',
     storyScramble: {
@@ -110,7 +116,7 @@ export const lesson2Stages: Stage[] = [
     title: 'Inquiry',
     description:
       'Siswa mengeksplorasi field-field penting pada TCP Header dan memahami fungsi teknis masing-masing dalam menjaga keandalan pengiriman data.',
-    objectiveCode: 'X.TCP.5 & X.TCP.6',
+    objectiveCode: 'X.TCP.10',
     activityGuide: [
       'Buka dan pelajari tiap field TCP Header melalui panel eksplorasi interaktif.',
       'Urutkan 5 field TCP Header dari yang paling fundamental ke yang paling spesifik.',
@@ -127,10 +133,10 @@ export const lesson2Stages: Stage[] = [
       'Guru mendorong siswa membayangkan kondisi jaringan yang memerlukan setiap flag: SYN saat pembukaan, FIN saat penutupan, RST saat error kritis.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior: 'Mengidentifikasi dan menjelaskan fungsi field-field utama TCP Header.',
-      condition: 'Diberi panel eksplorasi interaktif, Flow Sorter, dan Matching Connector berbasis web.',
-      degree: 'Mampu menyusun urutan field secara tepat dan menjelaskan fungsi setiap field melalui refleksi tertulis.',
+      audience: 'Peserta didik',
+      behavior: 'mampu menguraikan mekanisme TCP Sequence Number dalam memastikan urutan pengiriman',
+      condition: 'melalui aktivitas inquiry berupa eksplorasi materi rangkai alur pada CONNETIC Module',
+      degree: 'secara runtut',
     },
     material: {
       title: 'Anatomi TCP Header',
@@ -215,7 +221,7 @@ export const lesson2Stages: Stage[] = [
     title: 'Questioning',
     description:
       'Siswa menganalisis skenario segmen TCP tiba tidak berurutan dan mengidentifikasi field TCP Header yang paling berperan dalam menanganinya.',
-    objectiveCode: 'X.TCP.5',
+    objectiveCode: 'X.TCP.11',
     activityGuide: [
       'Amati skenario "Out-of-Order Packets": segmen-segmen tiba di penerima dengan urutan yang kacau.',
       'Pilih field TCP Header yang paling bertanggung jawab memastikan data tetap bisa direkonstruksi.',
@@ -230,10 +236,10 @@ export const lesson2Stages: Stage[] = [
       'Guru menekankan bahwa Sequence Number adalah nomor byte, bukan nomor segmen — sehingga penerima tahu persis posisi setiap segmen dalam data asli.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior: 'Menganalisis kondisi out-of-order packets dan menentukan field TCP Header yang paling relevan.',
-      condition: 'Diberi ilustrasi skenario, question bank, hint, dan opsi alasan pada media interaktif.',
-      degree: 'Mampu memilih field yang tepat dan menyampaikan alasan logis secara tertulis.',
+      audience: 'Peserta didik',
+      behavior: 'mampu membedakan kondisi pengiriman data normal dengan kondisi yang memerlukan error recovery pada TCP berdasarkan nilai Sequence Number',
+      condition: 'melalui aktivitas questioning berupa tanya jawab dua arah pada CONNETIC Module',
+      degree: 'secara tepat',
     },
     problemVisual: {
       icon: '!',
@@ -307,7 +313,7 @@ export const lesson2Stages: Stage[] = [
     title: 'Learning Community',
     description:
       'Siswa berdiskusi dalam kelompok tentang pengambilan keputusan teknis dalam mekanisme Three-Way Handshake dan Flow Control TCP.',
-    objectiveCode: 'X.TCP.5 & X.TCP.8',
+    objectiveCode: 'X.TCP.12',
     activityGuide: [
       'Simak visualisasi alur Three-Way Handshake sebagai fondasi diskusi kelompok.',
       'Analisis Studi Kasus 1 (TCP Handshake): pilih strategi, tulis argumen, kirim ke kelompok.',
@@ -319,10 +325,10 @@ export const lesson2Stages: Stage[] = [
       'Validasi Komunal: mengevaluasi argumen rekan dan memberikan vote berdasarkan logika teknis terkuat.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior: 'Menganalisis dan mendiskusikan keputusan teknis dalam skenario TCP Handshake dan Flow Control.',
-      condition: 'Diberi alur terintegrasi dari visualisasi, case study, hingga argument board kolaboratif.',
-      degree: 'Mampu memberikan argumen logis yang dapat diterima komunitas belajar.',
+      audience: 'Peserta didik',
+      behavior: 'mampu menerapkan proses TCP Three-Way Handshake untuk menentukan nilai SYN, SYN-ACK, dan ACK pada setiap langkah pembentukan koneksi',
+      condition: 'melalui aktivitas learning community berupa papan kolaboratif studi kasus pada CONNETIC Module',
+      degree: 'secara logis',
     },
     layers5: [
       { id: 'L5', name: 'Application', pdu: 'Data', color: '#8B5CF6', desc: 'Browser meminta halaman web ke server melalui HTTP.' },
@@ -397,7 +403,7 @@ export const lesson2Stages: Stage[] = [
     title: 'Demonstrasi Three-Way Handshake',
     description:
       'Siswa mempraktikkan secara interaktif proses Three-Way Handshake lengkap dengan nilai Sequence Number dan ACK Number antara Client dan Server hingga koneksi TCP terbuka.',
-    objectiveCode: 'X.TCP.8',
+    objectiveCode: 'X.TCP.13',
     activityGuide: [
       'Ikuti simulasi Three-Way Handshake langkah demi langkah dari Client ke Server secara runtut.',
       'Klik tombol untuk mengirim SYN, balas dengan SYN-ACK, lalu kirim ACK final.',
@@ -413,10 +419,10 @@ export const lesson2Stages: Stage[] = [
       'Guru meminta siswa memprediksi nilai ACK# di setiap langkah sebelum klik tombol.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior: 'Mensimulasikan proses Three-Way Handshake dengan memahami alur Sequence Number dan ACK Number.',
-      condition: 'Diberi Interactive Walkthrough berbasis web dengan aksi praktik mandiri per langkah.',
-      degree: 'Mampu menyelesaikan seluruh rangkaian handshake dengan urutan dan nilai yang benar.',
+      audience: 'Peserta didik',
+      behavior: 'mampu mensimulasikan mekanisme kerja TCP dari pembentukan koneksi hingga pengiriman data',
+      condition: 'melalui aktivitas modeling berupa simulasi step-by-step pada CONNETIC Module',
+      degree: 'secara sistematis',
     },
     practiceInstructions: {
       forTeacher: [
@@ -463,7 +469,7 @@ export const lesson2Stages: Stage[] = [
     title: 'Reflection',
     description:
       'Siswa menyusun peta konsep menyeluruh yang menghubungkan semua mekanisme TCP yang dipelajari: Header, Sequence Number, Three-Way Handshake, dan Flow Control.',
-    objectiveCode: 'X.TCP.9',
+    objectiveCode: 'X.TCP.14',
     activityGuide: [
       'Hubungkan konsep-konsep mekanisme TCP dengan memilih label penghubung yang paling tepat.',
       'Pastikan peta konsepmu mencerminkan hubungan antara TCP Header, Sequence Number, Handshake, dan Flow Control.',
@@ -477,10 +483,10 @@ export const lesson2Stages: Stage[] = [
       'Guru menggunakan peta konsep sebagai jembatan ke pertemuan berikutnya tentang IP Addressing.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior: 'Menyusun peta konsep yang menghubungkan mekanisme-mekanisme TCP secara logis.',
-      condition: 'Diberi Concept Map Builder dan refleksi tertulis pada media interaktif.',
-      degree: 'Mampu menghubungkan minimal 6 konsep TCP dengan label yang tepat dan menuliskan kesimpulan menyeluruh.',
+      audience: 'Peserta didik',
+      behavior: 'mampu menyimpulkan mekanisme keandalan TCP sebagai satu kesatuan yang utuh',
+      condition: 'melalui aktivitas reflection berupa konstruksi rekap materi pada CONNETIC Module',
+      degree: 'secara tepat',
     },
     conceptMapNodes: [
       { id: 'cn1', label: 'TCP', description: 'Protokol Transport Layer yang andal dan connection-oriented.', colorClass: 'blue' },
@@ -521,7 +527,7 @@ export const lesson2Stages: Stage[] = [
     title: 'Authentic Assessment',
     description:
       'Siswa mendiagnosis masalah koneksi TCP pada jaringan laboratorium sekolah menggunakan pemahaman tentang Three-Way Handshake dan Flow Control.',
-    objectiveCode: 'X.TCP.10',
+    objectiveCode: 'X.TCP.15',
     activityGuide: [
       'Baca konteks kasus: jaringan lab dengan gejala SYN yang terus dikirim ulang dan Window Size mendekati nol.',
       'Pilih jalur diagnosis awal berdasarkan bukti teknis yang tersedia.',
@@ -537,10 +543,10 @@ export const lesson2Stages: Stage[] = [
       'Guru menggunakan hasil jalur keputusan untuk melihat pemahaman siswa tentang mekanisme TCP vs masalah infrastruktur.',
     ],
     atpAbcd: {
-      audience: 'Peserta didik kelas X.',
-      behavior: 'Mendiagnosis masalah koneksi TCP dan menentukan prioritas solusi berdasarkan bukti mekanisme protokol.',
-      condition: 'Diberi Branching Troubleshooter dengan skenario nyata gangguan Three-Way Handshake dan Window Size.',
-      degree: 'Mampu memilih jalur diagnosis yang logis, menjelaskan alasan teknis, dan menyimpulkan solusi prioritas.',
+      audience: 'Peserta didik',
+      behavior: 'mampu menganalisis skenario komunikasi TCP pada setiap langkah koneksi',
+      condition: 'melalui aktivitas authentic assessment berupa studi kasus bercabang pada CONNETIC Module',
+      degree: 'secara logis',
     },
     branchingScenario: {
       context:
