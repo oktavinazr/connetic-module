@@ -170,7 +170,6 @@ const stageReflectionPrompts: Record<StageType, string> = {
 };
 
 const stageNeedsExternalReflection = (type: StageType, lid: string): boolean => {
-  if (type === 'constructivism') return false;
   if (type === 'inquiry' && lid === '1') return false;
   if (type === 'questioning' && lid === '1') return false;
   return true;
@@ -224,6 +223,7 @@ export function LessonPage() {
     return 0; // Mulai dari awal, sync admin akan menyesuaikan
   });
   const [stageInitDone, setStageInitDone] = useState(false);
+  const [trackerPhase, setTrackerPhase] = useState<'consistency' | 'arguing' | 'conclusion'>('consistency');
   const [showStageSummary, setShowStageSummary] = useState(false);
   // Activity guide is always open
   const [pendingReflection, setPendingReflection] = useState<{ stageAnswer: unknown } | null>(null);
@@ -288,6 +288,7 @@ export function LessonPage() {
 
   useEffect(() => {
     setPendingReflection(null);
+    setTrackerPhase('consistency');
   }, [currentStageIndex]);
 
   // Sync to admin stage when session is active
@@ -374,6 +375,7 @@ export function LessonPage() {
         return (
           <ConstructivismStage
             {...commonProps}
+            onTrackerPhase={setTrackerPhase}
             apersepsi={currentStage.apersepsi}
             question={currentStage.question ?? ''}
             options={currentStage.options ?? []}
@@ -569,7 +571,7 @@ export function LessonPage() {
           </div>
 
           <div className={`relative overflow-hidden rounded-2xl border-2 shadow-sm transition-colors duration-500 ${guide.borderColor} ${guide.bgColor}`}>
-            <div className="p-5 sm:p-6 space-y-4">
+            <div className="p-6 sm:p-8 space-y-5">
               <div className="flex items-start gap-4">
                 <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ${guide.accentColor}`}>
                   {guide.icon}
@@ -679,6 +681,7 @@ export function LessonPage() {
               </div>
             </div>
           ) : (
+            <div className="w-full max-w-4xl mx-auto space-y-5">
             <>
               {/* Pause — full overlay to block interaction, ALWAYS visible */}
               {globalSync.isPaused && (
@@ -702,22 +705,23 @@ export function LessonPage() {
                 </div>
               )}
 
-              {/* Activity guide — hide during pause */}
-              {!globalSync.isPaused && !isStageCompleted && stageGuideSteps.length > 0 && (
-                <ActivityGuideBox steps={stageGuideSteps} />
+              {/* Logical Thinking Tracker — tepat di atas aktivitas */}
+              {!globalSync.isPaused && (
+                <div className="flex justify-center pt-2 pb-1">
+                  <LogicalThinkingTracker
+                    activePhase={
+                      isStageCompleted || pendingReflection !== null ? 'conclusion' : trackerPhase
+                    }
+                    isStageCompleted={isStageCompleted || pendingReflection !== null}
+                  />
+                </div>
               )}
 
-              {/* Logical Thinking Progress Tracker */}
-              {!globalSync.isPaused && (
-                <LogicalThinkingTracker
-                  progressPercent={
-                    isStageCompleted || pendingReflection !== null ? 100
-                    : currentStageAnswer ? 50
-                    : globalSync.sync?.session_status === 'active' ? 25
-                    : 0
-                  }
-                  isStageCompleted={isStageCompleted || pendingReflection !== null}
-                />
+              {/* Activity guide — hide during pause */}
+              {!globalSync.isPaused && !isStageCompleted && stageGuideSteps.length > 0 && (
+                <div className="pt-2">
+                  <ActivityGuideBox steps={stageGuideSteps} />
+                </div>
               )}
 
               {/* Stage content — only show when not paused */}
@@ -817,26 +821,25 @@ export function LessonPage() {
             </div>
           ) : (
             <div className="w-full">
-              {/* Stage content — no timer display for students */}
               <DndProvider backend={HTML5Backend}>
                 <DragAutoScroll />
                 {renderStage()}
               </DndProvider>
-              {(isStageCompleted || pendingReflection !== null) && currentStage.conclusionPrompt && currentStage.atpAbcd?.behavior && (
+              {(pendingReflection !== null) && currentStage.conclusionPrompt && currentStage.atpAbcd?.behavior && (
                 <div className="mt-6">
                   <ATPConclusionBox
                     atpBehavior={currentStage.atpAbcd.behavior}
                     objectiveCode={currentStage.objectiveCode || ''}
                     stageType={currentStage.type}
                     onSubmit={(text) => {
-                      handleStageComplete({ conclusion: text });
+                      handleStageComplete({ ...(pendingReflection.stageAnswer as object || {}), conclusion: text });
                     }}
-                    disabled={true}
-                    defaultValue={currentStageAnswer?.conclusion || ''}
+                    disabled={!!(currentStageAnswer?.conclusion)}
+                    defaultValue={(pendingReflection.stageAnswer as any)?.conclusion || currentStageAnswer?.conclusion || ''}
                   />
                 </div>
               )}
-              {pendingReflection !== null && (
+              {pendingReflection !== null && !currentStage.conclusionPrompt && (
                 <InlineReflectionEssay
                   prompt={
                     (currentStage.type === 'reflection' && (currentStage as any).essayReflection?.materialSummaryPrompt)
@@ -850,6 +853,7 @@ export function LessonPage() {
           )}
               </>}
             </>
+            </div>
           )}
         </main>
       </div>

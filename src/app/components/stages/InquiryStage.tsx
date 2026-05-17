@@ -216,7 +216,7 @@ function DragDropLayerSorter({ flowItems, lessonId, stageIndex, onComplete, onNe
   const isDone = validated && (isCorrectOrder || attempts >= 3);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 animate-in fade-in duration-700">
+    <div className="w-full space-y-4 animate-in fade-in duration-700">
       <div className="bg-white rounded-2xl border-2 border-[#10B981]/25 shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#10B981]/10 to-[#628ECB]/5 border-b border-[#10B981]/15">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#10B981]/15">
@@ -290,7 +290,7 @@ function ExplorePhase({ explorationSections, onNext }: { explorationSections: Ex
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in duration-700">
+    <div className="w-full space-y-6 animate-in fade-in duration-700">
       <div className="bg-white rounded-[2.5rem] border-2 border-[#D5DEEF] shadow-sm p-8 sm:p-10 text-center">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 text-left">
           <div className="flex items-center gap-4">
@@ -503,7 +503,7 @@ function MatchingPhase({ pairs, lessonId, stageIndex, onComplete, onNext, shuffl
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-700">
+    <div className="w-full space-y-6 animate-in fade-in duration-700">
       <div className="bg-white rounded-[2rem] border-2 border-[#628ECB]/20 shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-6 py-4 bg-[#628ECB]/5 border-b-2 border-[#628ECB]/10">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#628ECB]/15">
@@ -628,7 +628,7 @@ function MaterialViewer({ material, onNext }: { material: InquiryStageProps['mat
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
+    <div className="w-full space-y-6 animate-in fade-in duration-500">
       {/* Header card */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#10B981] to-[#059669] p-6 text-white shadow-lg">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
@@ -940,7 +940,7 @@ function GroupClassifier({ groups, groupItems, initialData, onComplete, onNext }
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 animate-in fade-in duration-700">
+    <div className="w-full space-y-4 animate-in fade-in duration-700">
       <div className="bg-white rounded-2xl border-2 border-[#10B981]/25 shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#10B981]/10 to-[#628ECB]/5 border-b border-[#10B981]/15">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#10B981]/15">
@@ -1106,7 +1106,7 @@ export function InquiryStage(props: InquiryStageProps) {
     return (
       <div className="space-y-8 animate-in fade-in duration-500">
          <Ipv4Analyzer />
-         <div className="max-w-4xl mx-auto flex justify-center">
+         <div className="w-full flex justify-center">
             <button 
               onClick={() => {
                 setPhase('activities');

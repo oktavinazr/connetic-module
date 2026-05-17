@@ -42,6 +42,7 @@ interface ConstructivismStageProps {
   conclusionPrompt?: string;
   atpBehavior?: string;
   objectiveCode?: string;
+  onTrackerPhase?: (phase: 'consistency' | 'arguing' | 'conclusion') => void;
 }
 
 // -- Helpers -------------------------------------------------------------------
@@ -248,7 +249,7 @@ function StoryScramblePhase({
   const isTerminal = validated && (isCorrectOrder || attempts >= 3);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-5">
+    <div className="w-full space-y-5">
       {/* Tahukah Kamu? — Visual TCP/IP context */}
       <div className="bg-white rounded-2xl border-2 border-[#628ECB]/15 shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-5 py-3 bg-amber-50/60 border-b border-amber-100">
@@ -601,15 +602,15 @@ function OrderedProcessChain({ items, essayPrompt, lessonId, stageIndex, onCompl
   const isTerminal = validated && (isCorrectOrder || attempts >= 3);
 
   return (
-    <div className="max-w-5xl mx-auto space-y-5">
+    <div className="w-full space-y-5">
       <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-5 py-3 bg-[#628ECB]/8 border-b border-[#628ECB]/20">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#628ECB]/15">
             <BookOpen className="w-4 h-4 text-[#628ECB]" />
           </div>
           <div className="flex-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Aktivitas 2 - Analogy Sorting (X.TCP.2)</p>
-            <h3 className="text-sm font-bold text-[#395886]">Urutkan: Tugas Kurir & Fungsi TCP</h3>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Kemampuan Berargumen</p>
+            <h3 className="text-sm font-bold text-[#395886]">Urutkan Tahapan Proses Data</h3>
           </div>
           <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-bold
             ${attempts >= 3 ? 'border-red-200 bg-red-50 text-red-500' : 'border-[#628ECB]/20 bg-white text-[#628ECB]'}`}>
@@ -745,7 +746,7 @@ function OrderedProcessChain({ items, essayPrompt, lessonId, stageIndex, onCompl
       )}
 
       {showEssay && essayPrompt && (
-        <EssayBox prompt={essayPrompt} objectiveLabel="X.TCP.2" submitLabel="Submit & Lanjutkan" onSubmit={(text) => onComplete(text)} />
+        <EssayBox prompt={essayPrompt} objectiveLabel="X.TCP.1" submitLabel="Simpan Argumen" headerLabel="Argumen Logis" onSubmit={(text) => onComplete(text)} />
       )}
       {showEssay && !essayPrompt && (
         <button onClick={() => onComplete(undefined)} className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm">
@@ -877,15 +878,15 @@ function GroupBucketContent({
   const progress = items.length > 0 ? Object.keys(placement).length / items.length : 0;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-5">
+    <div className="w-full space-y-5">
       <div className="bg-white rounded-2xl border-2 border-[#F59E0B]/20 shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-5 py-3 bg-[#F59E0B]/8 border-b border-[#F59E0B]/20">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#F59E0B]/15">
             <BookOpen className="w-4 h-4 text-[#F59E0B]" />
           </div>
           <div className="flex-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">Aktivitas 2 - Analogy Sorting (X.TCP.2)</p>
-            <h3 className="text-sm font-bold text-[#395886]">Kelompokkan: Tugas Kurir vs Fungsi TCP</h3>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">Kemampuan Berargumen</p>
+            <h3 className="text-sm font-bold text-[#395886]">Kelompokkan Peran TCP vs Peran IP</h3>
           </div>
           <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-bold
             ${attempts >= 3 ? 'border-red-200 bg-red-50 text-red-500' : 'border-[#F59E0B]/20 bg-white text-[#F59E0B]'}`}>
@@ -966,7 +967,7 @@ function GroupBucketContent({
         )}
 
         {showEssay && essayPrompt && (
-          <EssayBox prompt={essayPrompt} objectiveLabel="X.TCP.2" submitLabel="Submit & Lanjutkan" onSubmit={(text) => onComplete(text)} />
+          <EssayBox prompt={essayPrompt} objectiveLabel="X.TCP.1" submitLabel="Simpan Argumen" headerLabel="Argumen Logis" onSubmit={(text) => onComplete(text)} />
         )}
         {showExplanation && !essayPrompt && (
           <button onClick={() => onComplete(undefined)} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm transition-all">
@@ -1043,7 +1044,7 @@ function MCQPhase({
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4">
+    <div className="w-full space-y-4">
       <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-5 py-3 bg-[#628ECB]/8 border-b border-[#628ECB]/20">
           <PlayCircle className="w-4 h-4 text-[#628ECB]" />
@@ -1140,7 +1141,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
     storyScramble, analogySortGroups, analogySortItems,
     lessonId, stageIndex, onComplete,
     constructivismEssay1, constructivismEssay2,
-    videoUrl, apersepsi, isCompleted,
+    videoUrl, apersepsi, isCompleted, onTrackerPhase,
   } = props;
   const tracker = useActivityTracker({
     lessonId,
@@ -1166,6 +1167,12 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
   const [pendingNextPhase, setPendingNextPhase] = useState<'analogy' | 'mcq' | null>(null);
 
   const hasEssayFlow = !!(constructivismEssay1 || constructivismEssay2);
+
+  // Report tracker phase to parent
+  useEffect(() => {
+    if (phase === 'scramble') onTrackerPhase?.('consistency');
+    else if (phase === 'analogy') onTrackerPhase?.('arguing');
+  }, [phase, onTrackerPhase]);
 
   useEffect(() => {
     if (!tracker.isLoading && tracker.session?.latestSnapshot && !isRestored) {
@@ -1306,7 +1313,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
               setPendingNextPhase(null);
               setPhase(next);
             }}
-            label={pendingNextPhase === 'analogy' ? 'Lanjutkan ke Aktivitas 2 — Analogy Sorting (X.TCP.2)' : 'Lanjutkan ke Konteks Pembelajaran'}
+            label={pendingNextPhase === 'analogy' ? 'Lanjutkan ke Kemampuan Berargumen' : 'Lanjutkan ke Aktivitas Berikutnya'}
           />
         )}
 

@@ -84,7 +84,7 @@ export const lesson1Stages: Stage[] = [
       },
     ],
     constructivismEssay2:
-      'Setelah mengelompokkan analogi TCP dan IP, jelaskan dengan kata-katamu sendiri:\n\n1. Apa perbedaan mendasar antara TCP dan IP?\n2. Apa peran TCP dalam komunikasi jaringan?\n3. Apa peran IP dalam komunikasi jaringan?\n4. Mengapa keduanya harus bekerja sama?\n\nTuliskan jawabanmu secara lengkap dan logis!',
+      'Mengapa kamu mengelompokkan kartu-kartu tersebut sebagai peran TCP atau peran IP? Jelaskan hubungan TCP dan IP dalam komunikasi jaringan.',
     conclusionPrompt: 'Berdasarkan animasi perjalanan paket data dan aktivitas pengelompokan TCP vs IP yang telah kamu lakukan, jelaskan bagaimana kamu mampu mendefinisikan konsep dasar TCP/IP sebagai fondasi komunikasi jaringan komputer. Tuliskan dengan kata-katamu sendiri dan hubungkan dengan pengalaman belajarmu.',
   },
   {

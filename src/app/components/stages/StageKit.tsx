@@ -159,10 +159,12 @@ export function InstructionBox({
 export function EssayBox({
   prompt, objectiveLabel, submitLabel, onSubmit, minChars = 30, minWords = 20,
   disabled = false, defaultValue = '', locked = false,
+  headerLabel = 'Refleksi Mandiri',
 }: {
   prompt: string; objectiveLabel: string; submitLabel: string;
   onSubmit: (text: string) => void; minChars?: number; minWords?: number;
   disabled?: boolean; defaultValue?: string; locked?: boolean;
+  headerLabel?: string;
 }) {
   const [text, setText] = useState(defaultValue);
   const [submitted, setSubmitted] = useState(!!defaultValue && (disabled || locked));
@@ -182,9 +184,9 @@ export function EssayBox({
         </div>
         <div className="flex-1 min-w-0 text-left">
           <p className="text-left text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60">
-            Refleksi Mandiri — {objectiveLabel}
+            {headerLabel} — {objectiveLabel}
           </p>
-          <p className="text-left text-xs font-bold text-[#395886]">Tulis pemahamanmu dengan kata-katamu sendiri</p>
+          <p className="text-left text-xs font-bold text-[#395886]">{headerLabel === 'Argumen Logis' ? 'Jelaskan alasan dan argumenmu' : 'Tulis pemahamanmu dengan kata-katamu sendiri'}</p>
         </div>
         {(isLocked || (!isLocked && submitted)) && (
           <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#10B981] bg-[#10B981]/10 px-3 py-1.5 rounded-full border border-[#10B981]/20">
@@ -208,7 +210,7 @@ export function EssayBox({
             ${isLocked
               ? 'border-[#10B981]/20 bg-[#ECFDF5] text-[#065F46] cursor-not-allowed'
               : 'border-[#D5DEEF] bg-white text-[#395886] focus:border-[#628ECB] focus:ring-4 focus:ring-[#628ECB]/5'}`}
-          placeholder={`Tuliskan jawabanmu di sini... (minimal ${minWords} kata)`}
+          placeholder={`Tuliskan ${headerLabel === 'Argumen Logis' ? 'argumenmu' : 'jawabanmu'} di sini... (minimal ${minWords} kata)`}
         />
 
         {/* Stats bar */}
@@ -678,100 +680,48 @@ const TRACKER_STEPS: TrackerStep[] = [
 ];
 
 export function LogicalThinkingTracker({
-  progressPercent = 0,
+  activePhase = 'consistency',
   isStageCompleted = false,
 }: {
-  progressPercent?: number;
+  activePhase?: 'consistency' | 'arguing' | 'conclusion';
   isStageCompleted?: boolean;
 }) {
-  // Determine which step is active
-  // 0-35%: consistency active, 35-70%: arguing active, 70%+: conclusion active
   const getStepStatus = (stepIndex: number): 'pending' | 'active' | 'done' => {
     if (isStageCompleted) return 'done';
-    if (stepIndex === 0) {
-      if (progressPercent < 35) return 'active';
-      return 'done';
-    }
-    if (stepIndex === 1) {
-      if (progressPercent < 35) return 'pending';
-      if (progressPercent < 70) return 'active';
-      return 'done';
-    }
-    if (stepIndex === 2) {
-      if (progressPercent < 70) return 'pending';
-      if (progressPercent < 95) return 'active';
-      return 'done';
-    }
+    const phases: Record<string, number> = { consistency: 0, arguing: 1, conclusion: 2 };
+    const currentIdx = phases[activePhase] ?? 0;
+    if (stepIndex < currentIdx) return 'done';
+    if (stepIndex === currentIdx) return 'active';
     return 'pending';
   };
 
   return (
-    <div className="rounded-xl border border-[#D5DEEF]/60 bg-white/80 backdrop-blur-sm px-4 py-3 shadow-sm">
-      <div className="flex items-center gap-1 sm:gap-2">
-        {TRACKER_STEPS.map((step, idx) => {
-          const status = getStepStatus(idx);
-          const isLast = idx === TRACKER_STEPS.length - 1;
-
-          return (
-            <div key={step.key} className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
-              {/* Step indicator */}
-              <div
-                className={`flex items-center gap-2 px-2.5 py-2 rounded-lg flex-1 min-w-0 transition-all duration-500 ${
-                  status === 'done'
-                    ? 'bg-[#ECFDF5] border border-[#10B981]/20'
-                    : status === 'active'
-                    ? 'bg-[#EEF4FF] border border-[#628ECB]/30 shadow-sm'
-                    : 'bg-[#F8FAFD] border border-[#D5DEEF]/30'
-                }`}
-              >
-                {/* Status icon */}
-                <div
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-all duration-500 ${
-                    status === 'done'
-                      ? 'bg-[#10B981] text-white'
-                      : status === 'active'
-                      ? 'bg-[#628ECB] text-white'
-                      : 'bg-[#D5DEEF] text-[#395886]/30'
-                  }`}
-                >
-                  {status === 'done' ? (
-                    <CheckCircle className="w-3.5 h-3.5" />
-                  ) : (
-                    step.icon
-                  )}
-                </div>
-
-                {/* Label */}
-                <div className="flex-1 min-w-0 hidden sm:block">
-                  <p
-                    className={`text-[10px] font-bold leading-tight truncate transition-colors duration-500 ${
-                      status === 'done'
-                        ? 'text-[#065F46]'
-                        : status === 'active'
-                        ? 'text-[#395886]'
-                        : 'text-[#395886]/30'
-                    }`}
-                  >
-                    {step.label}
-                  </p>
-                  <p className={`text-[8px] leading-tight truncate transition-colors duration-500 ${
-                    status === 'done' ? 'text-[#10B981]/60' : status === 'active' ? 'text-[#628ECB]/60' : 'text-[#395886]/20'
-                  }`}>
-                    {status === 'done' ? 'Selesai' : status === 'active' ? step.description : 'Menunggu'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Connector line */}
-              {!isLast && (
-                <div className={`hidden sm:block h-px w-4 shrink-0 transition-colors duration-500 ${
-                  status === 'done' ? 'bg-[#10B981]/40' : 'bg-[#D5DEEF]'
-                }`} />
+    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-[#D5DEEF]/60 shadow-sm">
+      {TRACKER_STEPS.map((step, idx) => {
+        const status = getStepStatus(idx);
+        const isLast = idx === TRACKER_STEPS.length - 1;
+        return (
+          <div key={step.key} className="flex items-center gap-2">
+            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors ${
+              status === 'done' ? 'text-[#10B981]' : status === 'active' ? 'text-[#628ECB] bg-[#EEF4FF]' : 'text-[#395886]/25'
+            }`}>
+              {status === 'done' ? (
+                <CheckCircle className="w-3.5 h-3.5" />
+              ) : status === 'active' ? (
+                <div className="w-3.5 h-3.5 flex items-center justify-center">{step.icon}</div>
+              ) : (
+                <div className="w-3.5 h-3.5 flex items-center justify-center opacity-30">{step.icon}</div>
               )}
+              <span className={`text-[10px] font-bold ${status === 'done' ? '' : status === 'active' ? '' : 'opacity-30'}`}>
+                {step.label}
+              </span>
             </div>
-          );
-        })}
-      </div>
+            {!isLast && (
+              <span className={`text-[10px] ${status === 'done' ? 'text-[#10B981]/40' : 'text-[#D5DEEF]'}`}>›</span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

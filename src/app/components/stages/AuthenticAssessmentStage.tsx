@@ -84,7 +84,7 @@ export function AuthenticAssessmentStage({
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4">
+    <div className="mx-auto w-full space-y-4">
       {/* Header */}
       <div className="flex flex-col items-center gap-4 rounded-lg border-2 border-[#F43F5E]/20 bg-white p-4 shadow-sm md:flex-row">
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-[#F43F5E] text-white shadow-md">

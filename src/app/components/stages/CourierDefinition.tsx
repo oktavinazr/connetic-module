@@ -287,6 +287,8 @@ export function CourierDefinition({ onComplete }: { onComplete?: () => void }) {
   const [availableWords, setAvailableWords] = useState<string[]>(() => [...DEFINITION_WORDS].sort(() => Math.random() - 0.5));
   const [arrangedWords, setArrangedWords] = useState<string[]>([]);
   const [definitionResult, setDefinitionResult] = useState<string | null>(null);
+  const [definitionAttempts, setDefinitionAttempts] = useState(0);
+  const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
 
   const handleNext = useCallback(() => {
     if (currentStep < 5) {
@@ -313,9 +315,12 @@ export function CourierDefinition({ onComplete }: { onComplete?: () => void }) {
     setCurrentStep(0);
     setShowCards(false);
     setFinished(false);
+    setConfirmed(false);
     setAvailableWords([...DEFINITION_WORDS].sort(() => Math.random() - 0.5));
     setArrangedWords([]);
     setDefinitionResult(null);
+    setDefinitionAttempts(0);
+    setShowCorrectAnswer(false);
   }, []);
 
   const moveToArranged = (word: string) => {
@@ -332,7 +337,13 @@ export function CourierDefinition({ onComplete }: { onComplete?: () => void }) {
 
   const checkDefinition = () => {
     if (arrangedWords.length === 0) return;
-    setDefinitionResult(arrangedWords.join(' '));
+    const result = arrangedWords.join(' ');
+    setDefinitionResult(result);
+    const newAttempts = definitionAttempts + 1;
+    setDefinitionAttempts(newAttempts);
+    if (result !== CORRECT_DEFINITION && newAttempts >= 3) {
+      setShowCorrectAnswer(true);
+    }
   };
 
   const isCorrect = definitionResult === CORRECT_DEFINITION;
@@ -824,9 +835,21 @@ export function CourierDefinition({ onComplete }: { onComplete?: () => void }) {
                           </p>
                         )}
                         {!isCorrect && (
-                          <p className="mt-2 text-xs text-[#395886]/45">
-                            Coba susun ulang kata-katanya agar membentuk definisi yang tepat.
-                          </p>
+                          <>
+                            {showCorrectAnswer ? (
+                              <div className="mt-3 p-3 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20">
+                                <p className="text-xs font-black text-[#10B981] mb-1">✅ Definisi yang Benar:</p>
+                                <p className="text-sm font-bold text-[#065F46]">&ldquo;{CORRECT_DEFINITION}&rdquo;</p>
+                                <p className="mt-2 text-xs text-[#065F46]/70">
+                                  <strong>TCP/IP</strong> adalah sekumpulan protokol komunikasi yang mengatur pengiriman data melalui beberapa lapisan (enkapsulasi) agar data sampai utuh dan terstruktur ke tujuan.
+                                </p>
+                              </div>
+                            ) : (
+                              <p className="mt-2 text-xs text-[#395886]/50">
+                                Percobaan {definitionAttempts}/3. Susun ulang kata-katanya.
+                              </p>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -876,7 +899,7 @@ export function CourierDefinition({ onComplete }: { onComplete?: () => void }) {
                     </div>
                   </div>
                   <span className="text-sm text-[#395886]/70 font-medium leading-relaxed">
-                    Saya sudah memahami proses enkapsulasi data melalui animasi di atas
+                    Saya sudah memahami proses enkapsulasi data melalui animasi di atas{showCorrectAnswer ? ' dan definisi yang benar' : ''}
                   </span>
                 </label>
 

@@ -114,7 +114,7 @@ function ConceptMapBuilder({
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500">
+    <div className="w-full space-y-6 animate-in fade-in duration-500">
       {/* Header — CTL style */}
       <div className="bg-white rounded-lg border-2 border-[#D5DEEF] shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-5 py-3 bg-[#6366F1]/5 border-b-2 border-[#6366F1]/10">

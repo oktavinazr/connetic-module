@@ -359,7 +359,7 @@ export function ModelingStage({
 
   if (showIntro) {
     return (
-      <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="w-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm overflow-hidden">
           <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-[#628ECB]/10 to-transparent border-b border-[#628ECB]/20">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#628ECB]/15">
@@ -952,7 +952,7 @@ export function ModelingStage({
   const inst2 = STEP_INSTRUCTIONS[step];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 animate-in fade-in duration-500">
+    <div className="w-full space-y-4 animate-in fade-in duration-500">
 
       {/* ── Journey Progress Tracker (U-Shape) ── */}
       {(() => {

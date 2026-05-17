@@ -508,7 +508,7 @@ function QuestioningLesson1({ lessonId, stageIndex, onComplete }: QuestioningSta
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-16">
+    <div className="w-full space-y-8 pb-16">
       <div className="flex flex-col md:flex-row items-center gap-6 rounded-lg border-2 border-[#8B5CF6]/20 bg-white p-6 shadow-sm">
         <div className="w-20 h-20 shrink-0 rounded-lg bg-[#8B5CF6] flex items-center justify-center text-white shadow-md">
           <User className="w-12 h-12" strokeWidth={2.5} />
@@ -637,7 +637,7 @@ function QuestioningOriginal({
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="w-full space-y-6">
       <div className="bg-white p-6 rounded-2xl border-2 border-[#D5DEEF] shadow-sm flex flex-col md:flex-row items-start gap-6">
         <div className="w-16 h-16 shrink-0 rounded-2xl bg-[#EEF2FF] flex items-center justify-center text-[#628ECB]"><HelpCircle className="w-8 h-8" /></div>
         <div className="flex-1">
