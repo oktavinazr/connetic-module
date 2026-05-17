@@ -746,12 +746,16 @@ export function LessonPage() {
                 </div>
               </div>
 
-              {/* Ringkasan Jawaban — always visible after completion */}
+              {/* Hasil Refleksi — only show the reflection card */}
               {currentStageAnswer && (
                 <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm overflow-hidden">
-                  <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#628ECB]/8 to-transparent border-b border-[#628ECB]/10">
-                    <Eye className="w-4 h-4 text-[#628ECB]" />
-                    <p className="text-xs font-bold text-[#395886]">Ringkasan Jawaban Kamu</p>
+                  <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#10B981]/8 to-transparent border-b border-[#10B981]/10">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#10B981]/15">
+                      <svg className="w-3.5 h-3.5 text-[#10B981]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                      </svg>
+                    </div>
+                    <p className="text-xs font-bold text-[#065F46]">Hasil Refleksi Kamu</p>
                   </div>
                   <div className="p-5">
                     <StageAnswerDetail stage={currentStage} answer={currentStageAnswer} />
