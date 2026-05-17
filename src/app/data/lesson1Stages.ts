@@ -91,22 +91,23 @@ export const lesson1Stages: Stage[] = [
     type: 'inquiry',
     title: 'Inquiry',
     description:
-      'Siswa mengeksplorasi hierarki 5 lapisan TCP/IP dan memahami fungsi spesifik setiap lapisan secara bertahap.',
+      'Siswa mengeksplorasi hierarki 5 lapisan TCP/IP dan perbandingannya dengan model OSI melalui aktivitas interaktif.',
     objectiveCode: 'X.TCP.2',
     activityGuide: [
-      'Buka dan pelajari tiap lapisan TCP/IP melalui panel eksplorasi interaktif.',
-      'Susun 5 lapisan TCP/IP dengan drag & drop, mulai dari Application hingga Physical.',
-      'Cocokkan setiap lapisan dengan fungsi teknisnya menggunakan klik-pasangkan.',
-      'Tulis refleksi untuk memperkuat pemahaman konsep.',
+      'Buka dan pelajari materi perbandingan model OSI dengan TCP/IP.',
+      'Eksplorasi tiap lapisan TCP/IP melalui panel interaktif.',
+      'Susun 5 lapisan TCP/IP dengan drag & drop sambil melihat perbandingan OSI.',
+      'Lanjutkan ke aktivitas analogi: cocokkan contoh keseharian ke lapisan TCP/IP.',
+      'Tulis argumen tentang hubungan OSI dan TCP/IP serta alasan urutan lapisan.',
     ],
     logicalThinkingIndicators: [
-      'Keruntutan Berpikir: menata hierarki 5 lapisan TCP/IP secara logis.',
-      'Analisis Fungsi: menghubungkan peran teknis dengan lapisan yang sesuai.',
-      'Refleksi Konsep: menjelaskan kembali struktur dan fungsi dengan bahasa sendiri.',
+      'Keruntutan Berpikir: menata hierarki 5 lapisan TCP/IP secara logis berdasarkan perbandingan OSI.',
+      'Kemampuan Berargumen: menjelaskan alasan urutan lapisan dan hubungan OSI-TCP/IP melalui analogi.',
+      'Penarikan Kesimpulan: menyimpulkan lapisan TCP/IP dan perbandingannya dengan OSI.',
     ],
     facilitatorNotes: [
-      'Guru memastikan siswa memahami perbedaan antara lapisan atas (software-oriented) dan lapisan bawah (hardware-oriented).',
-      'Guru mendorong siswa untuk meninjau kembali materi eksplorasi jika mengalami kesulitan pada tahap matching.',
+      'Guru memastikan siswa memahami hubungan model OSI (7 layer) dengan TCP/IP (5 layer).',
+      'Guru mendorong siswa untuk membandingkan dan mencari tahu mengapa beberapa layer OSI digabung di TCP/IP.',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
@@ -115,18 +116,28 @@ export const lesson1Stages: Stage[] = [
       degree: 'secara runtut',
     },
     material: {
-      title: 'Struktur 5 Lapisan TCP/IP',
+      title: 'Model OSI vs TCP/IP — Perbandingan Lapisan Jaringan',
       content: [
-        'TCP/IP adalah sekumpulan protokol yang digunakan untuk komunikasi data dalam jaringan komputer.',
-        'Model TCP/IP terdiri dari 5 lapisan hierarki yang bekerja sama untuk mengirimkan data dari pengirim ke penerima.',
-        'Setiap lapisan menambahkan informasi kontrol (header) ke data yang akan dikirim, proses ini disebut Enkapsulasi.',
+        'Model OSI (Open Systems Interconnection) adalah standar referensi internasional yang membagi komunikasi jaringan menjadi 7 lapisan.',
+        'Model TCP/IP lebih sederhana dengan 5 lapisan, dikembangkan berdasarkan protokol yang sudah ada di internet.',
+        'Tiga lapisan atas OSI — Application, Presentation, dan Session — digabungkan menjadi satu Application Layer di TCP/IP.',
+        'Empat lapisan bawah kedua model saling bersesuaian: Transport, Network, Data Link, dan Physical.',
       ],
       examples: [
-        'Application Layer: HTTP, HTTPS, SMTP, FTP.',
-        'Transport Layer: TCP, UDP.',
-        'Internet Layer: IP, ICMP.',
-        'Data Link Layer: Ethernet, Wi-Fi.',
-        'Physical Layer: Kabel UTP, Serat Optik.',
+        'OSI Layer 7,6,5 (Application, Presentation, Session) → TCP/IP Application Layer (HTTP, SMTP, FTP).',
+        'OSI Layer 4 (Transport) → TCP/IP Transport Layer (TCP, UDP).',
+        'OSI Layer 3 (Network) → TCP/IP Internet Layer (IP, ICMP).',
+        'OSI Layer 2 (Data Link) → TCP/IP Data Link Layer (Ethernet, Wi-Fi).',
+        'OSI Layer 1 (Physical) → TCP/IP Physical Layer (Kabel UTP, Serat Optik).',
+      ],
+      osiLayers: [
+        { name: 'Application', number: 7, mapsTo: 'Application', desc: 'Antarmuka aplikasi pengguna' },
+        { name: 'Presentation', number: 6, mapsTo: 'Application', desc: 'Format & enkripsi data' },
+        { name: 'Session', number: 5, mapsTo: 'Application', desc: 'Manajemen sesi komunikasi' },
+        { name: 'Transport', number: 4, mapsTo: 'Transport', desc: 'Pengiriman end-to-end' },
+        { name: 'Network', number: 3, mapsTo: 'Internet', desc: 'Routing & pengalamatan IP' },
+        { name: 'Data Link', number: 2, mapsTo: 'Data Link', desc: 'Frame & MAC Address' },
+        { name: 'Physical', number: 1, mapsTo: 'Physical', desc: 'Transmisi bit & sinyal' },
       ],
     },
     explorationSections: [
@@ -134,45 +145,45 @@ export const lesson1Stages: Stage[] = [
         id: 'e1',
         title: 'Application Layer (Lapisan 5)',
         content:
-          'Lapisan paling atas yang berinteraksi langsung dengan pengguna. Di sinilah protokol seperti HTTP (web), SMTP (email), dan FTP (file) bekerja untuk menghasilkan data yang akan dikirim.',
+          'Lapisan paling atas yang berinteraksi langsung dengan pengguna. Di sinilah protokol seperti HTTP (web), SMTP (email), dan FTP (file) bekerja untuk menghasilkan data yang akan dikirim. Dalam model OSI, fungsi Application, Presentation, dan Session digabung di sini.',
         example:
-          'Saat kamu mengetik pesan di WhatsApp atau membuka website di Chrome, kamu sedang berada di Application Layer.',
+          'Saat kamu mengetik pesan di WhatsApp atau membuka website di Chrome, kamu sedang berada di Application Layer — ini mencakup tampilan (Presentation) dan koneksi (Session) dalam model OSI.',
       },
       {
         id: 'e2',
         title: 'Transport Layer (Lapisan 4)',
         content:
-          'Bertanggung jawab untuk komunikasi end-to-end. Di sini data dipecah menjadi potongan kecil (segmen) dan diberikan nomor urut agar bisa disusun kembali dengan benar di tujuan.',
+          'Bertanggung jawab untuk komunikasi end-to-end. Di sini data dipecah menjadi potongan kecil (segmen) dan diberikan nomor urut agar bisa disusun kembali dengan benar di tujuan. Layer ini sama persis dengan Transport Layer di OSI.',
         example:
-          'TCP bekerja di sini untuk memastikan semua potongan data sampai tanpa ada yang hilang atau rusak.',
+          'TCP bekerja di sini untuk memastikan semua potongan data sampai tanpa ada yang hilang atau rusak — seperti petugas yang mengecek setiap halaman buku sebelum dijilid.',
       },
       {
         id: 'e3',
         title: 'Internet Layer / Network Layer (Lapisan 3)',
         content:
-          'Menentukan jalur terbaik (routing) untuk mengirimkan paket data melalui jaringan. Lapisan ini menambahkan alamat IP sumber dan tujuan pada setiap paket.',
+          'Menentukan jalur terbaik (routing) untuk mengirimkan paket data melalui jaringan. Lapisan ini menambahkan alamat IP sumber dan tujuan pada setiap paket. Padanan di OSI adalah Network Layer.',
         example:
-          'Seperti kantor pos yang menentukan rute tercepat berdasarkan alamat yang tertulis di amplop surat.',
+          'Seperti kantor pos yang menentukan rute tercepat berdasarkan alamat yang tertulis di amplop surat. Router bekerja di lapisan ini.',
       },
       {
         id: 'e4',
         title: 'Data Link Layer (Lapisan 2)',
         content:
-          'Mengatur bagaimana data dikirimkan melalui media fisik (kabel atau wireless). Di sini paket dibungkus menjadi "Frame" dan ditambahkan alamat fisik (MAC Address).',
+          'Mengatur bagaimana data dikirimkan melalui media fisik (kabel atau wireless). Di sini paket dibungkus menjadi "Frame" dan ditambahkan alamat fisik (MAC Address). Sama dengan Data Link Layer di OSI.',
         example:
-          'Memastikan data terkirim dengan aman dari satu perangkat ke perangkat berikutnya dalam satu jaringan lokal.',
+          'Memastikan data terkirim dengan aman dari satu perangkat ke perangkat berikutnya dalam satu jaringan lokal, seperti switch dan access point.',
       },
       {
         id: 'e5',
         title: 'Physical Layer (Lapisan 1)',
         content:
-          'Lapisan terbawah yang menangani pengiriman bit (0 dan 1) dalam bentuk sinyal listrik, cahaya, atau gelombang radio melalui media transmisi.',
+          'Lapisan terbawah yang menangani pengiriman bit (0 dan 1) dalam bentuk sinyal listrik, cahaya, atau gelombang radio melalui media transmisi. Identik dengan Physical Layer di model OSI.',
         example:
-          'Kabel LAN (UTP), serat optik, atau sinyal Wi-Fi adalah bagian dari Physical Layer.',
+          'Kabel LAN (UTP), serat optik, atau sinyal Wi-Fi adalah bagian dari Physical Layer — lapisan yang benar-benar "menyentuh" dunia fisik.',
       },
     ],
     flowInstruction:
-      'Susun "The Layer Sorting": Urutkan 5 lapisan TCP/IP mulai dari yang paling atas (dekat dengan pengguna) ke yang paling bawah (fisik).',
+      'Susun "The Layer Sorting": Urutkan 5 lapisan TCP/IP mulai dari yang paling atas (dekat dengan pengguna) ke yang paling bawah (fisik). Perhatikan panel perbandingan OSI di sebelah kiri sebagai panduan.',
     flowItems: [
       {
         id: 'fl1',
@@ -211,17 +222,27 @@ export const lesson1Stages: Stage[] = [
       },
     ],
     inquiryReflection1:
-      'Jelaskan pemahamanmu tentang urutan 5 lapisan TCP/IP tersebut. Mengapa data harus melewati urutan tersebut dari atas ke bawah saat dikirim?',
-    matchingPairs: [
-      { left: 'Application Layer', right: 'Antarmuka pengguna dan pembuatan data awal.' },
-      { left: 'Transport Layer', right: 'Segmentasi data dan kontrol kesalahan (TCP).' },
-      { left: 'Internet Layer', right: 'Pengalamatan logis (IP) dan penentuan rute paket.' },
-      { left: 'Data Link Layer', right: 'Kontrol akses media dan pengalamatan fisik (MAC).' },
-      { left: 'Physical Layer', right: 'Transmisi bit data melalui media fisik jaringan.' },
+      'Berdasarkan aktivitas mengurutkan lapisan dan mencocokkan analogi yang telah kamu lakukan, jelaskan: (1) Mengapa urutan lapisan TCP/IP disusun dari Application hingga Physical? (2) Bagaimana hubungan antara model OSI (7 layer) dengan TCP/IP (5 layer) — mengapa tiga layer atas OSI digabung menjadi satu di TCP/IP?',
+    groups: [
+      { id: 'application', label: 'Application Layer', colorClass: 'purple' },
+      { id: 'transport', label: 'Transport Layer', colorClass: 'blue' },
+      { id: 'internet', label: 'Internet Layer', colorClass: 'green' },
+      { id: 'datalink', label: 'Data Link Layer', colorClass: 'amber' },
+      { id: 'physical', label: 'Physical Layer', colorClass: 'pink' },
     ],
-    inquiryReflection2:
-      'Sekarang, jelaskan fungsi tiap layer dengan bahasamu sendiri! Bagaimana setiap layer bekerja sama untuk memastikan data sampai ke tujuan?',
-    conclusionPrompt: 'Berdasarkan eksplorasi materi dan aktivitas penyusunan lapisan TCP/IP yang telah kamu lakukan, jelaskan bagaimana kamu mampu menguraikan susunan lapisan model TCP/IP berdasarkan perbandingan dengan model OSI. Tuliskan secara runtut dengan kata-katamu sendiri.',
+    groupItems: [
+      { id: 'an1', text: 'Menulis pesan di WhatsApp dan mengirimnya', correctGroup: 'application' },
+      { id: 'an2', text: 'Memastikan semua potongan data sampai utuh dan berurutan', correctGroup: 'transport' },
+      { id: 'an3', text: 'Mencari rute terbaik ke server tujuan lewat IP Address', correctGroup: 'internet' },
+      { id: 'an4', text: 'Mengirim data antar perangkat dalam satu jaringan lokal via MAC Address', correctGroup: 'datalink' },
+      { id: 'an5', text: 'Mengubah data digital menjadi sinyal listrik atau cahaya di kabel', correctGroup: 'physical' },
+      { id: 'an6', text: 'Membuka browser Chrome dan mengetik alamat website', correctGroup: 'application' },
+      { id: 'an7', text: 'Memberi nomor urut pada setiap segmen data agar tidak tertukar', correctGroup: 'transport' },
+      { id: 'an8', text: 'Menentukan alamat IP pengirim dan penerima di header paket', correctGroup: 'internet' },
+      { id: 'an9', text: 'Membungkus paket data menjadi Frame untuk dikirim lewat Ethernet', correctGroup: 'datalink' },
+      { id: 'an10', text: 'Mentransmisikan bit 0 dan 1 melalui kabel UTP atau serat optik', correctGroup: 'physical' },
+    ],
+    conclusionPrompt: 'Berdasarkan eksplorasi materi, penyusunan lapisan, dan aktivitas analogi yang telah kamu lakukan, jelaskan bagaimana kamu mampu menguraikan susunan lapisan model TCP/IP berdasarkan perbandingan dengan model OSI. Tuliskan secara runtut dengan kata-katamu sendiri.',
   },
   {
     type: 'questioning',

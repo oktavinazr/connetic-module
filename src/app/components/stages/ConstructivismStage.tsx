@@ -1151,7 +1151,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
 
   const [courierCompleted, setCourierCompleted] = useState(false);
 
-  const [phase, setPhase] = useState<'scramble' | 'analogy' | 'mcq'>(() => {
+  const [phase, setPhase] = useState<'scramble' | 'analogy' | 'mcq' | 'conclusion'>(() => {
     if (lessonId === '1' && !courierCompleted) return 'scramble'; // CourierDefinition first
     if (storyScramble) return 'scramble';
     if (analogySortGroups?.length) return 'analogy';
@@ -1159,12 +1159,14 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
   });
 
   const [essay1Text, setEssay1Text] = useState('');
+  const [essay2Text, setEssay2Text] = useState('');
   const [scrambleData, setScrambleData] = useState<any>(null);
   const [analogyData, setAnalogyData] = useState<any>(null);
   const [mcqData, setMcqData] = useState<any>(null);
   const [isRestored, setIsRestored] = useState(false);
   const [scrambleEssayVisible, setScrambleEssayVisible] = useState(false);
   const [pendingNextPhase, setPendingNextPhase] = useState<'analogy' | 'mcq' | null>(null);
+  const [conclusionText, setConclusionText] = useState('');
 
   const hasEssayFlow = !!(constructivismEssay1 || constructivismEssay2);
 
@@ -1172,6 +1174,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
   useEffect(() => {
     if (phase === 'scramble') onTrackerPhase?.('consistency');
     else if (phase === 'analogy') onTrackerPhase?.('arguing');
+    else if (phase === 'conclusion') onTrackerPhase?.('conclusion');
   }, [phase, onTrackerPhase]);
 
   useEffect(() => {
@@ -1180,9 +1183,11 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
       if (snap.phase) setPhase(snap.phase);
       if (snap.pendingNextPhase) setPendingNextPhase(snap.pendingNextPhase);
       if (snap.essay1Text) setEssay1Text(snap.essay1Text);
+      if (snap.essay2Text) setEssay2Text(snap.essay2Text);
       if (snap.scrambleData) setScrambleData(snap.scrambleData);
       if (snap.analogyData) setAnalogyData(snap.analogyData);
       if (snap.mcqData) setMcqData(snap.mcqData);
+      if (snap.conclusionText) setConclusionText(snap.conclusionText);
       setIsRestored(true);
     } else if (!tracker.isLoading) {
       setIsRestored(true);
@@ -1191,22 +1196,24 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
 
   useEffect(() => {
     if (!isRestored) return;
-    const progressMap = { scramble: 20, analogy: 55, mcq: 80 } as const;
+    const progressMap = { scramble: 20, analogy: 55, mcq: 80, conclusion: 90 } as const;
     void tracker.saveImmediate(
       {
         phase,
         pendingNextPhase,
         essay1Text,
+        essay2Text,
         scrambleData,
         analogyData,
         mcqData,
+        conclusionText,
         hasStoryScramble: !!storyScramble,
         hasAnalogy: !!analogySortGroups?.length,
         hasEssayFlow,
       },
       { progressPercent: progressMap[phase] },
     );
-  }, [analogyData, analogySortGroups?.length, essay1Text, hasEssayFlow, isRestored, mcqData, pendingNextPhase, phase, scrambleData, storyScramble, tracker]);
+  }, [analogyData, analogySortGroups?.length, essay1Text, essay2Text, conclusionText, hasEssayFlow, isRestored, mcqData, pendingNextPhase, phase, scrambleData, storyScramble, tracker]);
 
   const SkipButton = ({ targetPhase, nextLabel }: { targetPhase?: 'analogy' | 'mcq' | 'complete'; nextLabel: string }) => {
     if (!isCompleted) return null;
@@ -1339,6 +1346,13 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
             if (currentState !== undefined) setAnalogyData({ ...currentState, validated: true });
 
             if (essayText !== undefined) {
+              // Lesson 1: transition to conclusion phase instead of completing
+              if (lessonId === '1' && constructivismEssay2) {
+                setEssay2Text(essayText);
+                void tracker.trackEvent('constructivism_analogy_completed', { hasEssay: true }, { progressPercent: 75 });
+                setPhase('conclusion');
+                return;
+              }
               if (hasEssayFlow || !props.options?.length || !!storyScramble) {
                 const finalAnswer = { essay1: essay1Text, essay2: essayText, summary: essayText };
                 void tracker.complete(finalAnswer, { phase: 'analogy', finalAnswer });
@@ -1364,6 +1378,36 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
           targetPhase={props.options?.length ? 'mcq' : 'complete'}
           nextLabel={props.options?.length ? 'Lanjut ke Pertanyaan' : 'Submit Aktivitas'}
         />
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // PHASE: CONCLUSION (Penarikan Kesimpulan) — Lesson 1 only
+  // ═══════════════════════════════════════════════════════════════════
+  if (phase === 'conclusion') {
+    return (
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+        <ATPConclusionBox
+          atpBehavior={props.atpBehavior || 'mampu mendefinisikan konsep dasar TCP/IP sebagai fondasi komunikasi jaringan komputer'}
+          objectiveCode={props.objectiveCode || 'X.TCP.1'}
+          stageType="constructivism"
+          defaultValue={conclusionText}
+          disabled={!!conclusionText}
+          onSubmit={(text) => {
+            setConclusionText(text);
+            const finalAnswer = { essay1: essay1Text, essay2: essay2Text, conclusion: text, summary: text };
+            void tracker.complete(finalAnswer, { phase: 'conclusion', finalAnswer });
+            onComplete(finalAnswer);
+          }}
+        />
+
+        {conclusionText && (
+          <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20 animate-in fade-in zoom-in-95 duration-300">
+            <CheckCircle className="w-5 h-5 text-[#10B981]" />
+            <span className="text-sm font-black text-[#065F46]">Kesimpulan tersimpan — Tahap Constructivism selesai!</span>
+          </div>
+        )}
       </div>
     );
   }

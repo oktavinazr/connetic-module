@@ -91,25 +91,27 @@ const normalizeSession = (row: Record<string, any>): CTLActivitySession => ({
   updatedAt: row.updated_at ?? null,
 });
 
-const defaultSession = (
+export function defaultSession(
   userId: string,
   lessonId: string,
   stageIndex: number,
   stageType: CTLStageType,
-): CTLActivitySession => ({
-  userId,
-  lessonId,
-  stageIndex,
-  stageType,
-  status: 'not_started',
-  progressPercent: 0,
-  latestSnapshot: {},
-  totalAttempts: 0,
-  totalErrors: 0,
-  correctCount: 0,
-  wrongCount: 0,
-  totalDurationSec: 0,
-});
+): CTLActivitySession {
+  return {
+    userId,
+    lessonId,
+    stageIndex,
+    stageType,
+    status: 'not_started',
+    progressPercent: 0,
+    latestSnapshot: {},
+    totalAttempts: 0,
+    totalErrors: 0,
+    correctCount: 0,
+    wrongCount: 0,
+    totalDurationSec: 0,
+  };
+}
 
 export async function getCurrentSession(
   userId: string,

@@ -170,8 +170,9 @@ const stageReflectionPrompts: Record<StageType, string> = {
 };
 
 const stageNeedsExternalReflection = (type: StageType, lid: string): boolean => {
-  if (type === 'inquiry' && lid === '1') return false;
   if (type === 'questioning' && lid === '1') return false;
+  if (type === 'inquiry' && lid === '1') return false;
+  if (type === 'constructivism' && lid === '1') return false;
   return true;
 };
 
@@ -387,6 +388,9 @@ export function LessonPage() {
             analogySortItems={currentStage.analogySortItems}
             constructivismEssay1={currentStage.constructivismEssay1}
             constructivismEssay2={currentStage.constructivismEssay2}
+            conclusionPrompt={currentStage.conclusionPrompt}
+            atpBehavior={currentStage.atpAbcd?.behavior}
+            objectiveCode={currentStage.objectiveCode}
           />
         );
       case 'inquiry':
@@ -405,6 +409,8 @@ export function LessonPage() {
             matchingPairs={currentStage.matchingPairs}
             inquiryReflection1={currentStage.inquiryReflection1}
             inquiryReflection2={currentStage.inquiryReflection2}
+            conclusionPrompt={currentStage.conclusionPrompt}
+            onTrackerPhase={(phase) => setTrackerPhase(phase as 'consistency' | 'arguing' | 'conclusion')}
           />
         );
       case 'questioning':

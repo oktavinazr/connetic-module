@@ -5,6 +5,7 @@ import {
   getCurrentSession,
   trackActivityEvent,
   upsertActivitySnapshot,
+  defaultSession,
   type CTLActivitySession,
   type CTLActivityStatus,
   type CTLStageType,
@@ -37,18 +38,25 @@ export function useActivityTracker({ lessonId, stageIndex, stageType }: TrackerO
         setIsLoading(false);
         return;
       }
-      const data = await getCurrentSession(user.id, lessonId, stageIndex, stageType);
-      setSession(data);
-      if (data.latestSnapshot) {
-        lastSnapshotKeyRef.current = JSON.stringify({
-          snapshot: data.latestSnapshot,
-          progressPercent: data.progressPercent,
-          status: data.status,
-          completed: data.status === 'completed',
-        });
+      try {
+        const data = await getCurrentSession(user.id, lessonId, stageIndex, stageType);
+        setSession(data);
+        if (data.latestSnapshot) {
+          lastSnapshotKeyRef.current = JSON.stringify({
+            snapshot: data.latestSnapshot,
+            progressPercent: data.progressPercent,
+            status: data.status,
+            completed: data.status === 'completed',
+          });
+        }
+        setIsLoading(false);
+        void trackEvent('stage_opened', { stageType });
+      } catch (err) {
+        console.error('[useActivityTracker] load failed:', err);
+        // Set default session so UI can render
+        setSession(defaultSession(user.id, lessonId, stageIndex, stageType));
+        setIsLoading(false);
       }
-      setIsLoading(false);
-      void trackEvent('stage_opened', { stageType });
     }
     load();
   }, [lessonId, stageIndex, stageType, user?.id]);

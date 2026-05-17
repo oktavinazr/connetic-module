@@ -24,6 +24,7 @@ interface InquiryStageProps {
     title: string;
     content: string[];
     examples?: string[];
+    osiLayers?: Array<{ name: string; number: number; mapsTo: string; desc: string }>;
   };
   explorationSections?: ExplorationSection[];
   groups?: Group[];
@@ -31,12 +32,17 @@ interface InquiryStageProps {
   flowItems?: FlowItem[];
   flowInstruction?: string;
   matchingPairs?: MatchingPair[];
+  question?: string;
+  labelingSlots?: any;
+  labelingLabels?: any;
   inquiryReflection1?: string;
   inquiryReflection2?: string;
+  conclusionPrompt?: string;
   lessonId: string;
   stageIndex: number;
   onComplete: (answer: any) => void;
   isCompleted?: boolean;
+  onTrackerPhase?: (phase: 'consistency' | 'arguing' | 'conclusion') => void;
 }
 
 // -- Color maps -----------------------------------------------------------------
@@ -272,7 +278,7 @@ function DragDropLayerSorter({ flowItems, lessonId, stageIndex, onComplete, onNe
 
 // -- Explore Phase ------------------------------------------------------------
 
-function ExplorePhase({ explorationSections, onNext }: { explorationSections: ExplorationSection[]; onNext: () => void }) {
+function ExplorePhase({ explorationSections, onNext, onBackToMaterial }: { explorationSections: ExplorationSection[]; onNext: () => void; onBackToMaterial?: () => void }) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [openedIds, setOpenedIds] = useState<Set<string>>(new Set());
   const handleToggle = (id: string) => {
@@ -398,7 +404,15 @@ function ExplorePhase({ explorationSections, onNext }: { explorationSections: Ex
           )}
         </div>
 
-        <div className="mt-12">
+        <div className="mt-12 space-y-3">
+          {onBackToMaterial && (
+            <button
+              onClick={onBackToMaterial}
+              className="w-full py-3.5 rounded-[1.5rem] font-black text-sm transition-all flex items-center justify-center gap-2 border-2 border-[#628ECB]/30 bg-[#628ECB]/5 text-[#628ECB] hover:bg-[#628ECB]/10 active:scale-95"
+            >
+              <BookOpen className="w-4 h-4" /> Lihat Materi Lagi
+            </button>
+          )}
           <button
             onClick={onNext}
             disabled={!allOpened}
@@ -609,14 +623,14 @@ function MatchingPhase({ pairs, lessonId, stageIndex, onComplete, onNext, shuffl
   );
 }
 
-// -- Material Viewer (Redesigned - modern, visual, interactive) -------------
+// -- Material Viewer (Redesigned - modern, visual, interactive, with OSI comparison) --
 
-function MaterialViewer({ material, onNext }: { material: InquiryStageProps['material'], onNext: () => void }) {
+function MaterialViewer({ material, onNext, onBackToMaterial }: { material: InquiryStageProps['material'], onNext: () => void; onBackToMaterial?: () => void }) {
   if (!material) return null;
 
-  // Split content into logical segments if there are multiple paragraphs
   const mainConcepts = material.content.slice(0, Math.ceil(material.content.length / 2));
   const details = material.content.slice(Math.ceil(material.content.length / 2));
+  const osiLayers = material.osiLayers ?? [];
 
   const conceptIcons = [
     { icon: <Database className="w-5 h-5" />, bg: 'bg-[#628ECB]/10', text: 'text-[#628ECB]' },
@@ -626,6 +640,15 @@ function MaterialViewer({ material, onNext }: { material: InquiryStageProps['mat
     { icon: <Lightbulb className="w-5 h-5" />, bg: 'bg-[#EC4899]/10', text: 'text-[#EC4899]' },
     { icon: <ShieldCheck className="w-5 h-5" />, bg: 'bg-[#6366F1]/10', text: 'text-[#6366F1]' },
   ];
+
+  // Build TCP/IP layer color map for OSI panel
+  const tcpColorMap: Record<string, { bg: string; text: string; border: string }> = {
+    'Application': { bg: 'bg-[#8B5CF6]/10', text: 'text-[#8B5CF6]', border: 'border-[#8B5CF6]/30' },
+    'Transport':   { bg: 'bg-[#628ECB]/10', text: 'text-[#628ECB]', border: 'border-[#628ECB]/30' },
+    'Internet':    { bg: 'bg-[#10B981]/10', text: 'text-[#10B981]', border: 'border-[#10B981]/30' },
+    'Data Link':   { bg: 'bg-[#F59E0B]/10', text: 'text-[#F59E0B]', border: 'border-[#F59E0B]/30' },
+    'Physical':    { bg: 'bg-[#EC4899]/10', text: 'text-[#EC4899]', border: 'border-[#EC4899]/30' },
+  };
 
   return (
     <div className="w-full space-y-6 animate-in fade-in duration-500">
@@ -706,6 +729,58 @@ function MaterialViewer({ material, onNext }: { material: InquiryStageProps['mat
         </div>
       )}
 
+      {/* ── OSI vs TCP/IP Comparison Panel ── */}
+      {osiLayers.length > 0 && (
+        <div className="rounded-2xl border-2 border-[#8B5CF6]/20 bg-gradient-to-br from-purple-50 to-white p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-5">
+            <Layers className="w-5 h-5 text-[#8B5CF6]" />
+            <p className="text-xs font-black uppercase tracking-widest text-[#8B5CF6]">Perbandingan OSI (7 Layer) → TCP/IP (5 Layer)</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* OSI Column */}
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#8B5CF6]/50 mb-3 text-center">Model OSI</p>
+              <div className="space-y-1.5">
+                {osiLayers.map((l, i) => {
+                  const tcp = tcpColorMap[l.mapsTo] ?? tcpColorMap['Application'];
+                  return (
+                    <div key={i} className={`flex items-center gap-3 px-3 py-2 rounded-xl border ${tcp.border} ${tcp.bg} transition-all hover:shadow-sm`}>
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-xs font-black text-[#8B5CF6]">{l.number}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-[#395886]">{l.name}</p>
+                        <p className="text-[9px] text-[#395886]/50">{l.desc}</p>
+                      </div>
+                      <ArrowRight className="w-3 h-3 text-[#395886]/25 shrink-0" />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            {/* TCP/IP Column */}
+            <div className="flex flex-col justify-center">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981]/50 mb-3 text-center">TCP/IP</p>
+              <div className="space-y-3">
+                {['Application', 'Transport', 'Internet', 'Data Link', 'Physical'].map((name, i) => {
+                  const c = tcpColorMap[name] ?? tcpColorMap['Application'];
+                  const osiMapped = osiLayers.filter(l => l.mapsTo === name).map(l => l.name).join(' + ');
+                  return (
+                    <div key={i} className={`rounded-xl border-2 ${c.border} ${c.bg} p-3 text-center`}>
+                      <p className={`text-xs font-black ${c.text}`}>{name} Layer</p>
+                      <p className="text-[9px] text-[#395886]/50 mt-0.5">← {osiMapped}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 p-3 rounded-xl bg-amber-50/60 border border-amber-100 text-center">
+            <p className="text-[10px] font-bold text-amber-800">
+              💡 TCP/IP menyederhanakan 7 layer OSI menjadi 5 layer dengan menggabungkan Application, Presentation, dan Session menjadi satu Application Layer.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* CTA button */}
       <button
         onClick={onNext}
@@ -718,31 +793,45 @@ function MaterialViewer({ material, onNext }: { material: InquiryStageProps['mat
   );
 }
 
-// -- Inquiry Lesson 1 Flow -----------------------------------------------------
+// -- Inquiry Lesson 1 Flow (New: 3-phase with OSI comparison & analogy) --
 
 function InquiryLesson1Page(props: InquiryStageProps) {
-  const { material, explorationSections, flowItems, matchingPairs, inquiryReflection1, inquiryReflection2, lessonId, stageIndex, onComplete, isCompleted } = props;
+  const { material, explorationSections, flowItems, groups, groupItems, inquiryReflection1, lessonId, stageIndex, onComplete, isCompleted, onTrackerPhase } = props;
   const tracker = useActivityTracker({ lessonId, stageIndex, stageType: 'inquiry' });
 
-  const [phase, setPhase] = useState<'material' | 'explore' | 'activities' | 'activities2'>('material');
-  const [activityStep, setActivityStep] = useState<number>(1); // 1: Sorting, 2: Essay1, 3: Next Page (X.TCP.4)
-  const [reflection1, setReflection1] = useState('');
-  const [matchingAnswers, setMatchingAnswers] = useState<Record<string, string>>({});
-  const [reflection2, setReflection2] = useState('');
+  // Phase: 'consistency' (Keruntutan Berpikir), 'arguing' (Kemampuan Berargumen), or 'conclusion' (Penarikan Kesimpulan)
+  const [phase, setPhase] = useState<'consistency' | 'arguing' | 'conclusion'>('consistency');
+  // Sub-phase within consistency: material → explore → sorting
+  const [consistencyStep, setConsistencyStep] = useState<'material' | 'explore' | 'sorting'>('material');
+  // Sorting data
   const [flowData, setFlowData] = useState<any>(null);
+  const [sortingValidated, setSortingValidated] = useState(false);
+  // Analogy data (Kemampuan Berargumen)
+  const [analogyData, setAnalogyData] = useState<any>(null);
+  const [analogyStep, setAnalogyStep] = useState<number>(1); // 1=analogy, 2=essay
+  const [essay1Text, setEssay1Text] = useState('');
+  const [conclusionText, setConclusionText] = useState('');
+  // Restoration
   const [isRestored, setIsRestored] = useState(false);
-  const [pendingNextActivity, setPendingNextActivity] = useState(false);
+  const [pendingNextPhase, setPendingNextPhase] = useState(false);
+
+  // Report tracker phase
+  useEffect(() => {
+    onTrackerPhase?.(phase);
+  }, [phase, onTrackerPhase]);
 
   useEffect(() => {
     if (!tracker.isLoading && tracker.session?.latestSnapshot && !isRestored) {
       const snap = tracker.session.latestSnapshot;
       if (snap.phase) setPhase(snap.phase);
-      if (snap.activityStep) setActivityStep(snap.activityStep);
-      if (snap.reflection1) setReflection1(snap.reflection1);
-      if (snap.matchingAnswers) setMatchingAnswers(snap.matchingAnswers);
-      if (snap.reflection2) setReflection2(snap.reflection2);
+      if (snap.consistencyStep) setConsistencyStep(snap.consistencyStep);
       if (snap.flowData) setFlowData(snap.flowData);
-      if (snap.pendingNextActivity) setPendingNextActivity(snap.pendingNextActivity);
+      if (snap.sortingValidated) setSortingValidated(snap.sortingValidated);
+      if (snap.analogyData) setAnalogyData(snap.analogyData);
+      if (snap.analogyStep) setAnalogyStep(snap.analogyStep);
+      if (snap.essay1Text) setEssay1Text(snap.essay1Text);
+      if (snap.pendingNextPhase) setPendingNextPhase(snap.pendingNextPhase);
+      if (snap.conclusionText) setConclusionText(snap.conclusionText);
       setIsRestored(true);
     } else if (!tracker.isLoading) {
       setIsRestored(true);
@@ -751,19 +840,18 @@ function InquiryLesson1Page(props: InquiryStageProps) {
 
   useEffect(() => {
     if (!isRestored) return;
-    const progressMap = { material: 10, explore: 30, activities: 55, activities2: 85 } as const;
-    void tracker.saveSnapshot({
-      phase, activityStep, reflection1, matchingAnswers, reflection2, flowData, pendingNextActivity,
-    }, { progressPercent: progressMap[phase] });
-  }, [activityStep, flowData, isRestored, matchingAnswers, pendingNextActivity, phase, reflection1, reflection2, tracker]);
+    const progressMap: Record<string, number> = {
+      'consistency-material': 15, 'consistency-explore': 30, 'consistency-sorting': 50,
+      'arguing': 70,
+      'conclusion': 90,
+    };
+    void tracker.saveSnapshot(
+      { phase, consistencyStep, flowData, sortingValidated, analogyData, analogyStep, essay1Text, conclusionText, pendingNextPhase },
+      { progressPercent: progressMap[`${phase}-${consistencyStep}`] ?? progressMap[phase] ?? 50 },
+    );
+  }, [analogyData, analogyStep, consistencyStep, essay1Text, conclusionText, flowData, isRestored, pendingNextPhase, phase, sortingValidated, tracker]);
 
-  if (isCompleted) return (
-    <div className="flex justify-center py-8">
-      <button onClick={() => onComplete({})} className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-[#10B981] text-white font-black shadow-lg hover:scale-105 transition-all">
-        Submit Aktivitas <ArrowRight className="w-5 h-5" />
-      </button>
-    </div>
-  );
+  // Completed state is handled externally by LessonPage overlay
 
   if (tracker.isLoading || !isRestored) return (
     <div className="flex flex-col items-center justify-center py-20 space-y-4">
@@ -772,74 +860,269 @@ function InquiryLesson1Page(props: InquiryStageProps) {
     </div>
   );
 
-  if (phase === 'material') return <MaterialViewer material={material} onNext={() => setPhase('explore')} />;
-  if (phase === 'explore') return <ExplorePhase explorationSections={explorationSections ?? []} onNext={() => setPhase('activities')} />;
+  // ═══════════════════════════════════════════════════════════════════
+  // PHASE 1: CONSISTENCY (Keruntutan Berpikir)
+  // ═══════════════════════════════════════════════════════════════════
+  if (phase === 'consistency') {
+    // Sub-phase: Material
+    if (consistencyStep === 'material') {
+      // Safety: show fallback if material data is missing
+      if (!material) {
+        return (
+          <div className="w-full space-y-6 animate-in fade-in duration-500">
+            <div className="rounded-2xl border-2 border-[#F59E0B]/20 bg-gradient-to-br from-amber-50 to-white p-6 text-center shadow-sm">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <AlertCircle className="w-5 h-5 text-amber-500" />
+                <p className="text-sm font-bold text-amber-800">Data materi belum tersedia</p>
+              </div>
+              <p className="text-xs text-[#395886]/60">Silakan lanjutkan ke eksplorasi konsep.</p>
+              <button
+                onClick={() => setConsistencyStep('explore')}
+                className="mt-4 px-6 py-2.5 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] transition-all"
+              >
+                Lanjut ke Eksplorasi Konsep <ArrowRight className="w-4 h-4 ml-1 inline" />
+              </button>
+            </div>
+          </div>
+        );
+      }
+      return <MaterialViewer material={material} onNext={() => setConsistencyStep('explore')} />;
+    }
 
-  if (phase === 'activities') {
-    return (
-      <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-20 text-center">
-        <DragDropLayerSorter
-          flowItems={flowItems ?? []}
-          lessonId={lessonId}
-          stageIndex={stageIndex}
-          initialData={flowData}
-          onComplete={(slots) => setFlowData({ slots })}
-          onNext={() => { setFlowData((prev: any) => ({ ...prev, validated: true })); setActivityStep(2); }}
+    // Sub-phase: Explore
+    if (consistencyStep === 'explore') {
+      return (
+        <ExplorePhase
+          explorationSections={explorationSections ?? []}
+          onNext={() => setConsistencyStep('sorting')}
+          onBackToMaterial={() => setConsistencyStep('material')}
         />
+      );
+    }
 
-        {activityStep >= 2 && (
-          <InquiryEssayBox
-            objectiveLabel="X.TCP.3"
-            prompt={inquiryReflection1 ?? '...'}
-            submitLabel="Submit Refleksi X.TCP.3"
-            minWords={20}
-            defaultValue={reflection1}
-            disabled={!!reflection1}
-            onSubmit={(text) => {
-              setReflection1(text);
-              setPendingNextActivity(true);
+    // Sub-phase: Sorting (with OSI comparison panel as reference)
+    if (consistencyStep === 'sorting') {
+      const osiLayers = material?.osiLayers ?? [];
+      const tcpColorMap: Record<string, { bg: string; text: string; border: string }> = {
+        'Application': { bg: 'bg-[#8B5CF6]/10', text: 'text-[#8B5CF6]', border: 'border-[#8B5CF6]/30' },
+        'Transport':   { bg: 'bg-[#628ECB]/10', text: 'text-[#628ECB]', border: 'border-[#628ECB]/30' },
+        'Internet':    { bg: 'bg-[#10B981]/10', text: 'text-[#10B981]', border: 'border-[#10B981]/30' },
+        'Data Link':   { bg: 'bg-[#F59E0B]/10', text: 'text-[#F59E0B]', border: 'border-[#F59E0B]/30' },
+        'Physical':    { bg: 'bg-[#EC4899]/10', text: 'text-[#EC4899]', border: 'border-[#EC4899]/30' },
+      };
+
+      return (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
+          {/* Back to material button */}
+          <button
+            onClick={() => setConsistencyStep('material')}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-[#628ECB]/20 bg-[#628ECB]/5 text-[#628ECB] text-xs font-bold hover:bg-[#628ECB]/10 transition-all"
+          >
+            <BookOpen className="w-3.5 h-3.5" /> Lihat Materi Lagi
+          </button>
+
+          {/* OSI-TCP/IP Reference Panel (always visible during sorting) */}
+          {osiLayers.length > 0 && (
+            <div className="rounded-2xl border-2 border-[#8B5CF6]/15 bg-gradient-to-br from-purple-50/50 to-white p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <Layers className="w-4 h-4 text-[#8B5CF6]" />
+                <h4 className="text-xs font-black uppercase tracking-widest text-[#8B5CF6]">Panduan: OSI (7 Layer) → TCP/IP (5 Layer)</h4>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {/* OSI Column */}
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#8B5CF6]/50 mb-2 text-center">OSI (7 Layer)</p>
+                  <div className="space-y-1">
+                    {osiLayers.map((l, i) => {
+                      const tcp = tcpColorMap[l.mapsTo] ?? tcpColorMap['Application'];
+                      return (
+                        <div key={i} className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border ${tcp.border} ${tcp.bg}`}>
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-white text-[10px] font-black text-[#8B5CF6]">{l.number}</span>
+                          <span className="text-[11px] font-bold text-[#395886]">{l.name}</span>
+                          <ArrowRight className="w-3 h-3 text-[#395886]/20 shrink-0 ml-auto" />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                {/* TCP/IP Column */}
+                <div className="flex flex-col justify-center">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981]/50 mb-2 text-center">TCP/IP (5 Layer)</p>
+                  <div className="space-y-2">
+                    {['Application', 'Transport', 'Internet', 'Data Link', 'Physical'].map((name) => {
+                      const c = tcpColorMap[name] ?? tcpColorMap['Application'];
+                      return (
+                        <div key={name} className={`rounded-lg border-2 ${c.border} ${c.bg} py-2 px-3 text-center`}>
+                          <p className={`text-[11px] font-black ${c.text}`}>{name} Layer</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Sorting Activity */}
+          <DragDropLayerSorter
+            flowItems={flowItems ?? []}
+            lessonId={lessonId}
+            stageIndex={stageIndex}
+            initialData={flowData}
+            onComplete={(slots) => setFlowData({ slots })}
+            onNext={() => {
+              setFlowData((prev: any) => ({ ...prev, validated: true }));
+              setSortingValidated(true);
+            }}
+          />
+
+          {/* OSI-TCP/IP Comparison Explanation (appears after sorting validated) */}
+          {sortingValidated && osiLayers.length > 0 && (
+            <div className="rounded-2xl border-2 border-[#10B981]/25 bg-gradient-to-br from-[#ECFDF5] to-white p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <CheckCircle className="w-5 h-5 text-[#10B981]" />
+                <h4 className="text-sm font-black text-[#065F46]">Hubungan OSI & TCP/IP</h4>
+              </div>
+              <p className="text-xs text-[#395886]/80 mb-4 leading-relaxed">
+                TCP/IP menyederhanakan 7 layer OSI menjadi 5 layer. Tiga layer atas OSI — <strong>Application, Presentation, dan Session</strong> — digabungkan menjadi satu <strong>Application Layer</strong> di TCP/IP karena ketiganya menangani fungsi yang berkaitan langsung dengan aplikasi pengguna. Empat layer bawah lainnya bersesuaian langsung antara kedua model.
+              </p>
+              <div className="mt-4 p-3 rounded-xl bg-amber-50/60 border border-amber-100 text-center">
+                <p className="text-[10px] font-bold text-amber-800">
+                  💡 <strong>Kunci:</strong> OSI adalah model referensi konseptual (7 layer), sedangkan TCP/IP adalah model praktis yang digunakan di internet sesungguhnya (5 layer). OSI membantu memahami konsep, TCP/IP adalah implementasi nyatanya.
+                </p>
+              </div>
+
+              {/* Submit button to move to next phase */}
+              <button
+                onClick={() => {
+                  void tracker.trackEvent('inquiry_consistency_completed', {}, { progressPercent: 55 });
+                  setPhase('arguing');
+                }}
+                className="mt-5 w-full py-3 rounded-xl bg-[#10B981] text-white font-bold text-sm hover:bg-[#059669] shadow-sm transition-all flex items-center justify-center gap-2"
+              >
+                <CheckCircle className="w-4 h-4" /> Lanjut ke Kemampuan Berargumen
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // PHASE 2: ARGUING (Kemampuan Berargumen)
+  // ═══════════════════════════════════════════════════════════════════
+  if (phase === 'arguing') {
+    return (
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+        {/* Analogy Activity Header */}
+        <div className="bg-white rounded-2xl border-2 border-[#F59E0B]/20 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-3 bg-[#F59E0B]/8 border-b border-[#F59E0B]/20">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#F59E0B]/15">
+              <Tag className="w-4 h-4 text-[#F59E0B]" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">Kemampuan Berargumen</p>
+              <h3 className="text-sm font-bold text-[#395886]">Cocokkan Contoh Keseharian ke Lapisan TCP/IP</h3>
+            </div>
+          </div>
+          <div className="px-5 py-4 bg-gradient-to-br from-[#F59E0B]/5 to-transparent">
+            <p className="text-sm text-[#395886]/80 leading-relaxed">
+              Seret setiap kartu contoh ke lapisan TCP/IP yang sesuai. Aktivitas ini membantu kamu memahami <strong>peran setiap lapisan</strong> dalam kehidupan sehari-hari.
+            </p>
+          </div>
+        </div>
+
+        {/* Group Classifier for Analogy */}
+        {groups && groupItems && (
+          <GroupClassifier
+            groups={groups as Group[]}
+            groupItems={groupItems as GroupItem[]}
+            initialData={analogyData}
+            onComplete={(data) => {
+              setAnalogyData(data);
+              setAnalogyStep(2);
             }}
           />
         )}
 
-        {reflection1 && pendingNextActivity && (
+        {/* Argument Essay Box (appears after analogy done) */}
+        {analogyStep >= 2 && inquiryReflection1 && (
+          <InquiryEssayBox
+            objectiveLabel="X.TCP.2"
+            prompt={inquiryReflection1}
+            submitLabel="Simpan Argumen"
+            minWords={20}
+            defaultValue={essay1Text}
+            disabled={!!essay1Text}
+            onSubmit={(text) => {
+              setEssay1Text(text);
+              setPendingNextPhase(true);
+            }}
+          />
+        )}
+
+        {/* Submit & transition to conclusion phase */}
+        {essay1Text && pendingNextPhase && (
           <ContinueActivityButton
-            onClick={() => { setPendingNextActivity(false); setPhase('activities2'); setActivityStep(1); }}
-            label="Lanjutkan ke Aktivitas X.TCP.4 — Cocokkan Fungsi Layer"
+            onClick={() => {
+              void tracker.trackEvent('inquiry_arguing_completed', {}, { progressPercent: 80 });
+              setPhase('conclusion');
+            }}
+            label="Lanjutkan ke Penarikan Kesimpulan"
           />
         )}
       </div>
     );
   }
 
-  if (phase === 'activities2') {
-    return (
-      <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-20 text-center">
-         <MatchingPhase
-            pairs={matchingPairs ?? []}
-            lessonId={lessonId}
-            stageIndex={stageIndex}
-            shuffleRight
-            onComplete={(m) => {
-              setMatchingAnswers(m);
-              setActivityStep(2);
-            }}
-          />
+  // ═══════════════════════════════════════════════════════════════════
+  // PHASE 3: CONCLUSION (Penarikan Kesimpulan)
+  // ═══════════════════════════════════════════════════════════════════
+  if (phase === 'conclusion') {
+    const prompt = props.conclusionPrompt || 'Berdasarkan eksplorasi materi, penyusunan lapisan, dan aktivitas analogi yang telah kamu lakukan, jelaskan bagaimana kamu mampu menguraikan susunan lapisan model TCP/IP berdasarkan perbandingan dengan model OSI. Tuliskan secara runtut dengan kata-katamu sendiri.';
 
-          {activityStep >= 2 && (
-            <InquiryEssayBox
-              objectiveLabel="X.TCP.4"
-              prompt={inquiryReflection2 ?? '...'}
-              submitLabel="Submit Aktivitas"
-              minWords={20}
-              onSubmit={(text) => {
-                setReflection2(text);
-                const finalAnswer = { reflection1, reflection2: text, matchingAnswers, type: 'lesson1_format', summary: text };
-                void tracker.complete(finalAnswer, { phase: 'activities2', activityStep: 2, reflection1, reflection2: text, matchingAnswers, finalAnswer });
-                onComplete(finalAnswer);
-              }}
-            />
-          )}
+    return (
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+        {/* Phase Header */}
+        <div className="bg-white rounded-2xl border-2 border-[#10B981]/25 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#10B981]/10 to-[#628ECB]/5 border-b border-[#10B981]/15">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#10B981]/15">
+              <CheckCircle className="w-5 h-5 text-[#10B981]" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#10B981]">Penarikan Kesimpulan</p>
+              <h3 className="text-sm font-bold text-[#395886]">Simpulkan Hasil Inquiry-mu</h3>
+            </div>
+          </div>
+          <div className="px-5 py-3 bg-gradient-to-br from-[#10B981]/3 to-transparent">
+            <p className="text-xs text-[#395886]/70 leading-relaxed">
+              Fokus refleksi: simpulkan lapisan model TCP/IP beserta perbandingannya dengan model OSI menggunakan bahasamu sendiri.
+            </p>
+          </div>
+        </div>
+
+        <InquiryEssayBox
+          objectiveLabel="X.TCP.2"
+          prompt={prompt}
+          submitLabel="Simpan Kesimpulan & Selesaikan Tahap"
+          minWords={25}
+          defaultValue={conclusionText}
+          disabled={!!conclusionText}
+          onSubmit={(text) => {
+            setConclusionText(text);
+            const finalAnswer = { flowData, analogyData, essay1: essay1Text, conclusion: text, summary: text };
+            void tracker.complete(finalAnswer, { phase: 'conclusion', finalAnswer });
+            onComplete(finalAnswer);
+          }}
+        />
+
+        {conclusionText && (
+          <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20 animate-in fade-in zoom-in-95 duration-300">
+            <CheckCircle className="w-5 h-5 text-[#10B981]" />
+            <span className="text-sm font-black text-[#065F46]">Kesimpulan tersimpan — Tahap Inquiry selesai!</span>
+          </div>
+        )}
       </div>
     );
   }
@@ -1029,15 +1312,20 @@ function GroupClassifier({ groups, groupItems, initialData, onComplete, onNext }
 
 // -- Main InquiryStage Router --------------------------------------------------
 
+/** Thin wrapper for lesson 1 — no router tracker to avoid double-tracker conflict */
+function InquiryStageForLesson1(props: InquiryStageProps) {
+  return <InquiryLesson1Page {...props} />;
+}
+
 export function InquiryStage(props: InquiryStageProps) {
-  const { lessonId, stageIndex, onComplete } = props;
+  const { lessonId, stageIndex, onComplete, onTrackerPhase } = props;
+
+  // Always call hooks unconditionally (React rule)
   const tracker = useActivityTracker({
     lessonId,
     stageIndex,
     stageType: 'inquiry',
   });
-
-  if (lessonId === '1') return <InquiryLesson1Page {...props} />;
 
   const [phase, setPhase] = useState<'material' | 'explore' | 'analyzer' | 'activities'>('material');
   const [subPhase, setSubPhase] = useState<'flow' | 'group' | 'matching'>('flow');
@@ -1049,6 +1337,9 @@ export function InquiryStage(props: InquiryStageProps) {
   const [reflection2, setReflection2] = useState('');
   const [isRestored, setIsRestored] = useState(false);
   const [pendingNextSubPhase, setPendingNextSubPhase] = useState<'group' | 'matching' | null>(null);
+
+  // Lesson 1 uses its own InquiryLesson1Page with internal tracker (router tracker is unused)
+  if (lessonId === '1') return <InquiryStageForLesson1 {...props} />;
 
   useEffect(() => {
     if (!tracker.isLoading && tracker.session?.latestSnapshot && !isRestored) {

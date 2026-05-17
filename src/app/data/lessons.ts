@@ -35,7 +35,7 @@ export interface Stage {
   groups?: Array<{                                 // Drop-zone categories for grouping
     id: string;
     label: string;
-    colorClass: 'blue' | 'green' | 'purple' | 'amber';
+    colorClass: 'blue' | 'green' | 'purple' | 'amber' | 'pink';
   }>;
   groupItems?: Array<{                             // Items to drag into groups
     id: string;
@@ -159,6 +159,7 @@ export interface Stage {
     title: string;
     content: string[];
     examples?: string[];
+    osiLayers?: Array<{ name: string; number: number; mapsTo: string; desc: string }>;
   };
 
   // ── QUESTIONING (extended) ──────────────────────────────────────────────
