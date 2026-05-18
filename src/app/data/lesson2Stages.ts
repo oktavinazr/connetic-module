@@ -5,12 +5,21 @@ export const lesson2Stages: Stage[] = [
     type: 'constructivism',
     title: 'Constructivism',
     description:
-      'Siswa membangun pemahaman awal tentang cara TCP memastikan data tiba utuh dan berurutan melalui mekanisme handshake dan sequence number.',
+      'Siswa membangun pemahaman awal tentang struktur TCP Header dan fungsi setiap komponennya melalui aktivitas menyusun cerita dan mencocokkan fungsi komponen.',
     objectiveCode: 'X.TCP.9',
     activityGuide: [
-      'Susun 6 potongan cerita tentang pengiriman data TCP menjadi urutan yang logis menggunakan drag & drop.',
-      'Tulis refleksi mandiri: mengapa kesiapan kedua pihak harus dipastikan sebelum data dikirim.',
-      'Lanjutkan ke aktivitas Process Chain untuk mengurutkan tahapan TCP Three-Way Handshake.',
+      'Susun 6 potongan cerita tentang struktur TCP Header menjadi urutan yang logis menggunakan drag & drop.',
+      'Tulis refleksi mandiri: mengapa setiap komponen TCP Header memiliki peran yang berbeda dalam pengiriman data.',
+      'Lanjutkan ke aktivitas Process Chain untuk mencocokkan komponen TCP Header dengan fungsinya secara runtut.',
+    ],
+    logicalThinkingIndicators: [
+      'Keruntutan Berpikir: menyusun cerita tentang struktur TCP Header dan mencocokkan komponen dengan fungsinya secara runtut.',
+      'Kemampuan Berargumen: menjelaskan alasan mengapa komponen tertentu memiliki fungsi tertentu dalam proses komunikasi TCP.',
+      'Penarikan Kesimpulan: menyimpulkan apa yang telah dipelajari tentang TCP Header dan fungsi komponennya.',
+    ],
+    facilitatorNotes: [
+      'Guru mendorong siswa memahami bahwa TCP Header adalah "amplop pintar" yang membawa informasi kontrol penting.',
+      'Guru menekankan peran setiap komponen: Port untuk identitas aplikasi, Sequence Number untuk urutan, Checksum untuk verifikasi.',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
@@ -19,97 +28,112 @@ export const lesson2Stages: Stage[] = [
       degree: 'dengan tepat',
     },
     apersepsi:
-      'Pernahkah kamu menelepon teman, lalu langsung bicara panjang lebar tanpa memastikan dia sudah menjawab "Halo"? Apa yang terjadi jika ternyata dia belum siap mendengarkan? Dalam jaringan, komputer juga harus memastikan "kesiapan" lawan bicaranya sebelum mengirim data penting. Inilah inti dari mekanisme TCP!',
+      'Pernahkah kamu mengirim paket lewat jasa ekspedisi? Di label paket ada informasi penting: alamat pengirim, alamat penerima, nomor resi, kode keamanan, dan jenis layanan. Tanpa label itu, kurir tidak tahu ke mana paket harus diantar! Nah, di dunia jaringan, TCP juga punya "label pintar" yang disebut TCP Header — berisi informasi penting agar data sampai dengan selamat dan berurutan.',
     storyScramble: {
+      visualIntro: {
+        title: 'Tahukah Kamu? — Anatomi TCP Header',
+        description:
+          'Setiap kali data dikirim melalui TCP, data tersebut tidak dikirim "telanjang". TCP membungkusnya dengan TCP Header — sebuah "amplop pintar" yang berisi informasi kontrol penting. Ibarat label di paket kiriman, TCP Header memberitahu: dari aplikasi mana data ini berasal, ke aplikasi mana tujuannya, berapa nomor urutnya, dan apakah data masih utuh atau rusak di perjalanan.',
+        footer:
+          'Inilah struktur <strong class="text-[#395886]">TCP Header</strong> — identitas dan "KTP" setiap segmen data dalam jaringan.',
+        cards: [
+          { icon: 'port',       label: 'Port — identitas aplikasi',         color: 'purple' },
+          { icon: 'sequence',   label: 'Sequence — nomor urut byte',        color: 'blue' },
+          { icon: 'ack',        label: 'ACK — konfirmasi penerimaan',       color: 'green' },
+          { icon: 'flags',      label: 'Flags — status koneksi',            color: 'amber' },
+          { icon: 'window',     label: 'Window — pengatur kecepatan',       color: 'blue' },
+          { icon: 'checksum',   label: 'Checksum — verifikasi keutuhan',    color: 'purple' },
+        ],
+      },
       instruction:
-        'Sebuah komputer ingin mengirim file video besar ke server melalui jaringan internet. Bagaimana TCP memastikan seluruh bagian file sampai dengan utuh dan berurutan? Susun 6 potongan cerita berikut menjadi alur yang logis.',
+        'Ketika sebuah komputer mengirim data melalui TCP, setiap potongan data (segmen) dilengkapi dengan TCP Header. Apa saja sih isi TCP Header itu, dan bagaimana setiap komponen bekerja sama agar data sampai dengan benar? Susun 6 potongan cerita berikut menjadi alur yang logis!',
       fragments: [
         {
           id: 'f1',
-          text: 'Komputer pengirim (Client) memulai koneksi dengan mengirim sinyal SYN kepada server tujuan untuk memastikan server siap menerima data.',
+          text: 'TCP Header dimulai dengan Source Port dan Destination Port — dua "nomor loket" yang memberi tahu dari aplikasi mana data berasal dan ke aplikasi mana data harus disampaikan.',
           order: 1,
         },
         {
           id: 'f2',
-          text: 'Server menerima SYN dan menjawab dengan sinyal SYN-ACK sebagai tanda bahwa ia siap terhubung dan siap menerima data.',
+          text: 'Di bagian tengah header terdapat Sequence Number — nomor urut yang memberi tahu posisi byte data ini dalam keseluruhan file. Berkat nomor ini, penerima bisa menyusun kembali data meskipun segmen tiba dalam urutan yang berbeda.',
           order: 2,
         },
         {
           id: 'f3',
-          text: 'Client mengirim sinyal ACK terakhir untuk mengkonfirmasi, sehingga koneksi TCP resmi terbuka — Three-Way Handshake selesai.',
+          text: 'Berpasangan dengan Sequence Number, ada Acknowledgment Number — nomor konfirmasi yang memberi tahu pengirim "byte berikutnya yang aku harapkan adalah nomor ini". Ini adalah cara penerima mengatakan "data sampai nomor sekian sudah aku terima".',
           order: 3,
         },
         {
           id: 'f4',
-          text: 'File video dipecah menjadi banyak segmen; setiap segmen diberi Sequence Number agar penerima bisa menyusun kembali data dengan urutan yang benar.',
+          text: 'Selanjutnya ada TCP Flags — sederetan "bendera" kecil (SYN, ACK, FIN, RST) yang menandakan status koneksi: apakah ini permintaan koneksi baru, konfirmasi data, permintaan tutup koneksi, atau sinyal darurat.',
           order: 4,
         },
         {
           id: 'f5',
-          text: 'Setiap kali segmen berhasil diterima, server mengirim ACK (Acknowledgment) untuk mengonfirmasi nomor segmen berikutnya yang diharapkan.',
+          text: 'Window Size adalah komponen yang mengatur "kuota" — berapa banyak data yang boleh dikirim sekaligus sebelum menunggu konfirmasi. Ini mencegah pengirim membanjiri penerima yang prosesornya lebih lambat.',
           order: 5,
         },
         {
           id: 'f6',
-          text: 'Jika ada segmen yang tidak mendapat ACK dalam batas waktu tertentu, TCP secara otomatis mengirim ulang segmen tersebut hingga terkonfirmasi.',
+          text: 'Di akhir header terdapat Checksum — "sidik jari digital" dari seluruh isi segmen. Penerima menghitung ulang checksum dan membandingkannya. Jika berbeda, artinya data rusak di perjalanan dan harus dikirim ulang.',
           order: 6,
         },
       ],
       successMessage:
-        'Tepat! Inilah cara TCP bekerja: Three-Way Handshake membuka koneksi, Sequence Number menjaga urutan, dan ACK memastikan tidak ada data yang hilang.',
+        'Tepat! TCP Header adalah "KTP" setiap segmen data — lengkap dengan identitas pengirim/penerima (Port), nomor urut (Sequence Number), konfirmasi (ACK), status koneksi (Flags), pengatur kecepatan (Window Size), dan pemeriksa keutuhan (Checksum).',
     },
     constructivismEssay1:
-      'Berdasarkan alur cerita yang baru saja kamu susun, jelaskan mengapa TCP harus melakukan "jabat tangan" (Three-Way Handshake) sebelum mengirim data! Tulis dengan kata-katamu sendiri.',
+      'Berdasarkan alur cerita tentang struktur TCP Header yang baru saja kamu susun, jelaskan mengapa setiap komponen TCP Header (Port, Sequence Number, ACK, Flags, Window Size, Checksum) memiliki peran yang berbeda! Mengapa tidak bisa hanya satu komponen saja yang menangani semuanya?',
     analogySortGroups: [
-      { id: 'twh', label: 'Tahapan Three-Way Handshake TCP', colorClass: 'blue' },
+      { id: 'hdr', label: 'Komponen TCP Header dan Fungsinya', colorClass: 'blue' },
     ],
     analogySortItems: [
       {
         id: 'ap1',
-        text: 'Client mengirim paket SYN dengan Sequence Number acak (ISN) untuk memulai koneksi.',
-        courierAnalogy: 'Seperti kamu menelepon teman: "Halo, bisa dengar aku? Percakapan dimulai dari nomor ini."',
-        correctGroup: 'twh',
+        text: 'Source Port & Destination Port — mengidentifikasi aplikasi pengirim dan penerima (nilai 0–65535).',
+        courierAnalogy: 'Seperti nomor loket di kantor pos: loket 80 untuk surat biasa (HTTP), loket 443 untuk surat rahasia (HTTPS). Port memastikan data masuk ke aplikasi yang tepat.',
+        correctGroup: 'hdr',
         correctOrder: 1,
       },
       {
         id: 'ap2',
-        text: 'Server membalas dengan SYN-ACK: mengkonfirmasi ISN Client dan mengirim ISN miliknya sendiri.',
-        courierAnalogy: 'Teman menjawab: "Ya, aku dengar kamu. Ini giliran aku, sambungan dari nomor ini."',
-        correctGroup: 'twh',
+        text: 'Sequence Number — nomor urut byte pertama dalam segmen. Memungkinkan penerima menyusun ulang data meskipun tiba tidak berurutan.',
+        courierAnalogy: 'Seperti nomor halaman di buku: jika halaman 1, 3, 5, 2, 4 tiba dalam urutan kacau, berkat nomor halaman, kamu tetap bisa menyusunnya kembali dengan urutan yang benar.',
+        correctGroup: 'hdr',
         correctOrder: 2,
       },
       {
         id: 'ap3',
-        text: 'Client mengirim ACK untuk mengkonfirmasi ISN server, dan koneksi TCP resmi terbuka (ESTABLISHED).',
-        courierAnalogy: 'Kamu balas: "Oke, aku juga dengar kamu. Siap, kita bisa mulai bicara sekarang!"',
-        correctGroup: 'twh',
+        text: 'Acknowledgment Number — nomor byte berikutnya yang diharapkan. Memberi tahu pengirim "semua byte sebelum nomor ini sudah diterima".',
+        courierAnalogy: 'Seperti tanda terima paket: "Paket #1 sampai #10 sudah saya terima dengan selamat. Tolong kirim paket #11 berikutnya." Ini mencegah pengiriman ganda dan memastikan tidak ada yang terlewat.',
+        correctGroup: 'hdr',
         correctOrder: 3,
       },
       {
         id: 'ap4',
-        text: 'Data mulai dikirim dalam segmen-segmen dengan Sequence Number yang meningkat; penerima mengkonfirmasi setiap segmen dengan ACK.',
-        courierAnalogy: 'Percakapan dimulai: kamu bicara poin demi poin, teman mengkonfirmasi setiap poin yang dipahami.',
-        correctGroup: 'twh',
+        text: 'TCP Flags (SYN, ACK, FIN, RST) — bit-bit penanda status koneksi. SYN=mulai koneksi, ACK=konfirmasi, FIN=tutup koneksi, RST=hentikan darurat.',
+        courierAnalogy: 'Seperti isyarat tangan dalam rapat: Angkat tangan (SYN) = "Saya mau mulai bicara", Anggukan (ACK) = "Saya paham", Lambaian (FIN) = "Saya sudah selesai", Tanda stop (RST) = "Hentikan, ada masalah!"',
+        correctGroup: 'hdr',
         correctOrder: 4,
       },
       {
         id: 'ap5',
-        text: 'Jika ada segmen yang timeout tanpa mendapat ACK, TCP mengirim ulang segmen tersebut secara otomatis.',
-        courierAnalogy: 'Jika teman tiba-tiba diam dan tidak konfirmasi, kamu ulangi apa yang kamu katakan sebelumnya.',
-        correctGroup: 'twh',
+        text: 'Window Size — mengatur jumlah data yang boleh dikirim sekaligus sebelum menunggu ACK. Mencegah pengirim membanjiri penerima.',
+        courierAnalogy: 'Seperti kasir yang bilang: "Saya hanya bisa terima 10 barang dulu, sisanya tunggu sampai saya selesai memproses yang ini." Jika nampan penuh, Window Size = 0 artinya "berhenti dulu, jangan kirim lagi!"',
+        correctGroup: 'hdr',
         correctOrder: 5,
       },
       {
         id: 'ap6',
-        text: 'Setelah semua data terkirim, koneksi ditutup dengan proses FIN-ACK secara bertahap dan aman.',
-        courierAnalogy: 'Percakapan diakhiri dengan sopan: "Oke, semuanya sudah. Kita tutup sambungan. Sampai jumpa!"',
-        correctGroup: 'twh',
+        text: 'Checksum — nilai yang dihitung dari seluruh isi segmen. Penerima memverifikasi ulang untuk mendeteksi kerusakan data selama perjalanan.',
+        courierAnalogy: 'Seperti segel keamanan di paket kiriman: jika segelnya rusak atau berbeda saat diterima, kamu tahu isinya mungkin sudah berubah atau rusak di perjalanan dan perlu kirim ulang.',
+        correctGroup: 'hdr',
         correctOrder: 6,
       },
     ],
     constructivismEssay2:
-      'Berdasarkan tahapan Three-Way Handshake yang baru saja kamu urutkan, jelaskan apa yang terjadi jika salah satu tahapan terlewat! Mengapa ketiga langkah itu harus dilakukan secara berurutan?',
-    conclusionPrompt: 'Berdasarkan aktivitas Story Scramble dan Analogy Sorting tentang Three-Way Handshake yang telah kamu lakukan, jelaskan bagaimana kamu mampu mengidentifikasi TCP Header beserta fungsinya pada protokol TCP. Tuliskan dengan tepat menggunakan kata-katamu sendiri.',
+      'Berdasarkan komponen TCP Header yang baru saja kamu cocokkan dengan fungsinya, jelaskan mengapa Sequence Number dan Acknowledgment Number harus bekerja berpasangan! Apa yang terjadi pada pengiriman data jika salah satunya hilang atau rusak?',
+    conclusionPrompt: 'Berdasarkan aktivitas Story Scramble tentang struktur TCP Header dan Analogy Sorting tentang pencocokan fungsi komponen yang telah kamu lakukan, jelaskan bagaimana kamu mampu mengidentifikasi TCP Header beserta fungsinya pada protokol TCP. Tuliskan dengan tepat menggunakan kata-katamu sendiri.',
   },
 
   {

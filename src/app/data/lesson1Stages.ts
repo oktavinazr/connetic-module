@@ -358,8 +358,8 @@ export const lesson1Stages: Stage[] = [
     objectiveCode: 'X.TCP.4 & X.TCP.5',
     activityGuide: [
       'Simak Simulasi Interaktif Enkapsulasi & Dekapsulasi sebagai fondasi.',
-      'Analisis skenario Enkapsulasi (X.TCP.6): pilih jawaban, tulis argumen, kirim ke kelompok.',
-      'Analisis skenario Dekapsulasi (X.TCP.7): pilih jawaban, tulis argumen, kirim ke kelompok.',
+      'Analisis skenario Enkapsulasi (X.TCP.4): pilih jawaban, tulis argumen, kirim ke kelompok.',
+      'Analisis skenario Dekapsulasi (X.TCP.5): pilih jawaban, tulis argumen, kirim ke kelompok.',
       'Diskusikan dan beri vote pada argumen terbaik di papan diskusi kelompok.',
     ],
     logicalThinkingIndicators: [

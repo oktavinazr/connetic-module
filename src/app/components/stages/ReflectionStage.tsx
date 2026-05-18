@@ -783,26 +783,31 @@ export function ReflectionStage({
     markPhaseComplete(1);
   };
 
+  // Phase indices depend on whether evaluation criteria exist
+  const hasEval = (selfEvaluationCriteria || []).length > 0;
+  const ARGUING_PHASE = hasEval ? 3 : 2;
+  const EVAL_PHASE = hasEval ? 2 : -1;
+  const CONCLUSION_PHASE = hasEval ? 4 : 3;
+
   const handleArgumentSave = (text: string) => {
     setArgumentText(text);
-    markPhaseComplete(2);
+    markPhaseComplete(ARGUING_PHASE);
   };
 
   const handleEvaluationSave = (checked: Record<string, boolean>) => {
     setEvaluationData(checked);
-    markPhaseComplete(3);
+    markPhaseComplete(EVAL_PHASE);
   };
 
   const handleConclusionSave = (text: string) => {
     setConclusionText(text);
-    markPhaseComplete(4);
-    // All phases complete, submit to parent
+    markPhaseComplete(CONCLUSION_PHASE);
     const finalAnswer = {
       mapData,
-      argumentText: text === conclusionText ? argumentText : argumentText,
+      argumentText,
       evaluationData,
       conclusionText: text,
-      completedPhases: Array.from(new Set([...completedPhases, 4])),
+      completedPhases: Array.from(new Set([...completedPhases, CONCLUSION_PHASE])),
     };
     void tracker.trackEvent('reflection_completed', {
       mapCorrectCount: mapData?.correctCount,
@@ -869,7 +874,7 @@ export function ReflectionStage({
                 onClick={advancePhase}
                 className="flex items-center gap-2 px-8 py-3 rounded-xl bg-[#6366F1] text-white font-black text-sm shadow-lg hover:bg-[#4F46E5] active:scale-95 transition-all"
               >
-                {evalCriteria.length > 0 ? 'Lanjut ke Evaluasi Diri' : 'Lanjut ke Argumen'}
+                {hasEval ? 'Lanjut ke Evaluasi Diri' : 'Lanjut ke Argumen'}
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -878,7 +883,7 @@ export function ReflectionStage({
       )}
 
       {/* Phase 2: Self-Evaluation */}
-      {activePhase === 2 && evalCriteria.length > 0 && (
+      {activePhase === EVAL_PHASE && hasEval && (
         <>
           <SelfEvaluationPhase
             criteria={evalCriteria}
@@ -886,7 +891,7 @@ export function ReflectionStage({
             onSave={handleEvaluationSave}
             disabled={false}
           />
-          {completedPhases.has(2) && (
+          {completedPhases.has(EVAL_PHASE) && (
             <div className="flex justify-center mt-6">
               <button
                 onClick={advancePhase}
@@ -901,14 +906,14 @@ export function ReflectionStage({
       )}
 
       {/* Phase 2 or 3: Arguing Ability */}
-      {activePhase === (evalCriteria.length > 0 ? 3 : 2) && (
+      {activePhase === ARGUING_PHASE && (
         <>
           <ArguingPhase
             initialText={argumentText}
             onSave={handleArgumentSave}
             disabled={false}
           />
-          {completedPhases.has(evalCriteria.length > 0 ? 3 : 2) && (
+          {completedPhases.has(ARGUING_PHASE) && (
             <div className="flex justify-center mt-6">
               <button
                 onClick={advancePhase}
@@ -923,7 +928,7 @@ export function ReflectionStage({
       )}
 
       {/* Phase 3 or 4: Final Conclusion */}
-      {activePhase === (evalCriteria.length > 0 ? 4 : 3) && (
+      {activePhase === CONCLUSION_PHASE && (
         <>
           <FinalConclusionPhase
             initialText={conclusionText}

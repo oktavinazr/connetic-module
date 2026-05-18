@@ -275,15 +275,17 @@ export function LessonPage() {
     }
 
     if (!stageInitDone && globalSync.loaded && progressLoaded) {
+      const maxIdx = lesson.stages.length - 1;
       if (!globalSync.isIdle && globalSync.sync?.current_stage_index !== undefined) {
-        // Sesi aktif → ikuti tahap admin
-        setCurrentStageIndex(globalSync.sync.current_stage_index);
+        // Sesi aktif → ikuti tahap admin (clamp to valid range)
+        const syncIdx = globalSync.sync.current_stage_index;
+        setCurrentStageIndex(Math.max(0, Math.min(syncIdx, maxIdx)));
       } else {
         // Sesi idle → cari tahap pertama yang belum selesai
         const firstIncomplete = lesson.stages.findIndex(
           (_, index) => !progress.completedStages.includes(index),
         );
-        setCurrentStageIndex(firstIncomplete !== -1 ? firstIncomplete : lesson.stages.length - 1);
+        setCurrentStageIndex(firstIncomplete !== -1 ? Math.min(firstIncomplete, maxIdx) : maxIdx);
       }
       setStageInitDone(true);
     }
@@ -296,27 +298,30 @@ export function LessonPage() {
 
   // Sync to admin stage when session is active
   useEffect(() => {
-    if (!globalSync.loaded || globalSync.isIdle || currentStageIndex === null) return;
+    if (!globalSync.loaded || globalSync.isIdle || currentStageIndex === null || !lesson) return;
     const syncStage = globalSync.sync?.current_stage_index;
     if (syncStage !== undefined && syncStage !== currentStageIndex) {
+      const maxStage = lesson.stages.length - 1;
+      // Clamp syncStage to valid range
+      const clampedStage = Math.max(0, Math.min(syncStage, maxStage));
       // Admin advanced → follow
-      if (syncStage > currentStageIndex) {
-        if (syncStage >= (lesson?.stages.length ?? 0) || globalSync.sync?.status === 'completed') {
+      if (clampedStage > currentStageIndex) {
+        if (syncStage >= lesson.stages.length || globalSync.sync?.status === 'completed') {
           navigate(`/evaluation/${lessonId}`);
         } else {
-          setCurrentStageIndex(syncStage);
+          setCurrentStageIndex(clampedStage);
           window.scrollTo(0, 0);
         }
       }
       // Student got ahead (e.g. refresh) → pull back to admin stage
-      else if (syncStage < currentStageIndex) {
-        setCurrentStageIndex(syncStage);
+      else if (clampedStage < currentStageIndex) {
+        setCurrentStageIndex(clampedStage);
         window.scrollTo(0, 0);
       }
     }
   }, [globalSync.sync?.current_stage_index, globalSync.sync?.status, globalSync.loaded, globalSync.isIdle, currentStageIndex]);
 
-  if (!lesson || currentStageIndex === null) return null;
+  if (!lesson || currentStageIndex === null || !lesson.stages[currentStageIndex]) return null;
 
   const currentStage = lesson.stages[currentStageIndex];
   const currentStageAnswer = progress.answers[`stage_${currentStageIndex}`] ?? progress.answers[currentStageIndex];

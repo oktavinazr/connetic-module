@@ -136,6 +136,12 @@ export interface Stage {
     successMessage: string;
     reflection?: string;
     reflectionAnswer?: string;
+    visualIntro?: {
+      title: string;
+      description: string;
+      footer?: string;
+      cards: Array<{ icon: string; label: string; color: 'purple' | 'blue' | 'green' | 'amber' }>;
+    };
   };
   analogySortGroups?: Array<{ id: string; label: string; colorClass: 'blue' | 'green' | 'purple' | 'amber' }>;
   analogySortItems?: Array<{ id: string; text: string; correctGroup: string; correctOrder?: number; courierAnalogy?: string }>;
@@ -1599,7 +1605,7 @@ export const lessons: Record<string, Lesson> = {
     description: 'Mekanisme kerja TCP seperti TCP Header, TCP Sequence Number, dan TCP Three-Way Handshake',
     objectives: ['X.TCP.9', 'X.TCP.10', 'X.TCP.11', 'X.TCP.12', 'X.TCP.13', 'X.TCP.14', 'X.TCP.15'],
     initialCompetencies: ['Konsep dasar TCP', 'Komponen TCP Header'],
-    materials: ['Three-Way Handshake', 'Flow Control (Windowing)', 'Congestion Control'],
+    materials: ['TCP Header', 'TCP Sequence Number', 'Three-Way Handshake'],
     pretest: {
       questions: [
         {

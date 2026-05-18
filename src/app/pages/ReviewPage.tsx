@@ -26,6 +26,7 @@ import { getLessonProgress, LessonProgress } from '../utils/progress';
 import { FormattedQuestion } from '../components/stages/StageKit';
 import { Logo } from '../components/layout/Logo';
 import { StageAnswerDetail, CTL_META } from '../components/admin/StageDetail';
+import { lessons, getStageDisplayTitle } from '../data/lessons';
 import { getLessonActivitySessions, type CTLActivitySession } from '../utils/activityTracking';
 
 type ReviewSection = 'pretest' | 'ctl' | 'posttest' | string;

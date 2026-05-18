@@ -1145,7 +1145,7 @@ function GroupClassifier({ groups, groupItems, initialData, onComplete, onNext }
           </div>
           <div className="flex-1 text-left">
             <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#10B981]">Aktivitas Klasifikasi</p>
-            <h3 className="text-sm font-bold text-[#395886]">Kelompokkan Alamat IP ke Kelas yang Tepat</h3>
+            <h3 className="text-sm font-bold text-[#395886]">Kelompokkan Analogi Fungsi yang Tepat</h3>
           </div>
           {validated && (
             <span className="flex items-center gap-1 text-[10px] font-bold text-[#10B981] bg-[#10B981]/10 px-2 py-1 rounded-full">

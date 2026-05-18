@@ -30,6 +30,7 @@ interface ConstructivismStageProps {
     successMessage: string;
     reflection?: string;
     reflectionAnswer?: string;
+    visualIntro?: StoryScrambleVisual;
   };
   analogySortGroups?: AnalogyGroup[];
   analogySortItems?: AnalogyItem[];
@@ -142,6 +143,26 @@ function StoryDropSlot({ slotNum, fragment, validated, onDrop, onReturn }: {
   );
 }
 
+interface StoryScrambleVisual {
+  title: string;
+  description: string;
+  footer?: string;
+  cards: Array<{ icon: string; label: string; color: 'purple' | 'blue' | 'green' | 'amber' }>;
+}
+
+const VISUAL_ICON_MAP: Record<string, React.ReactNode> = {
+  'port':       <Network className="w-6 h-6 text-purple-500" />,
+  'sequence':   <Package className="w-6 h-6 text-blue-500" />,
+  'ack':        <CheckCircle className="w-6 h-6 text-green-500" />,
+  'flags':      <BookOpen className="w-6 h-6 text-amber-500" />,
+  'window':     <Shield className="w-6 h-6 text-blue-500" />,
+  'checksum':   <FileImage className="w-6 h-6 text-purple-500" />,
+  'split':      <FileImage className="w-6 h-6 text-purple-500" />,
+  'number':     <Package className="w-6 h-6 text-blue-500" />,
+  'route':      <MapPin className="w-6 h-6 text-green-500" />,
+  'reassemble': <Shield className="w-6 h-6 text-amber-500" />,
+};
+
 function StoryScramblePhase({
   storyScramble, lessonId, stageIndex, onComplete, onScrambleDone, initialData,
 }: {
@@ -248,41 +269,44 @@ function StoryScramblePhase({
 
   const isTerminal = validated && (isCorrectOrder || attempts >= 3);
 
+  const visualIntro = storyScramble.visualIntro;
+  const colorMap: Record<string, { bg: string; border: string; text: string }> = {
+    purple: { bg: 'bg-purple-50', border: 'border-purple-100', text: 'text-purple-600' },
+    blue:   { bg: 'bg-blue-50',   border: 'border-blue-100',   text: 'text-blue-600' },
+    green:  { bg: 'bg-green-50',  border: 'border-green-100',  text: 'text-green-600' },
+    amber:  { bg: 'bg-amber-50',  border: 'border-amber-100',  text: 'text-amber-600' },
+  };
+
   return (
     <div className="w-full space-y-5">
-      {/* Tahukah Kamu? — Visual TCP/IP context */}
+      {/* Tahukah Kamu? — Visual context */}
       <div className="bg-white rounded-2xl border-2 border-[#628ECB]/15 shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-5 py-3 bg-amber-50/60 border-b border-amber-100">
           <Lightbulb className="w-4 h-4 text-amber-500" />
-          <h3 className="text-sm font-bold text-[#395886]">Tahukah Kamu?</h3>
+          <h3 className="text-sm font-bold text-[#395886]">{visualIntro?.title || 'Tahukah Kamu?'}</h3>
         </div>
         <div className="px-5 py-5">
           <p className="text-sm text-[#395886]/75 leading-relaxed mb-4">
-            Setiap kali kamu mengirim pesan, foto, atau video melalui internet, data tersebut tidak
-            dikirim sekaligus. Data dipecah menjadi potongan-potongan kecil, diberi nomor urut, dan
-            dikirim melalui jaringan komputer. Di sisi penerima, potongan-potongan
-            itu disusun kembali agar pesanmu sampai dengan utuh dan berurutan.
+            {visualIntro?.description || 'Setiap kali kamu mengirim pesan, foto, atau video melalui internet, data tersebut tidak dikirim sekaligus. Data dipecah menjadi potongan-potongan kecil, diberi nomor urut, dan dikirim melalui jaringan komputer. Di sisi penerima, potongan-potongan itu disusun kembali agar pesanmu sampai dengan utuh dan berurutan.'}
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-purple-50 border border-purple-100">
-              <FileImage className="w-6 h-6 text-purple-500" />
-              <span className="text-[10px] font-bold text-purple-600 text-center leading-tight">Data dipecah jadi segmen</span>
-            </div>
-            <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-blue-50 border border-blue-100">
-              <Package className="w-6 h-6 text-blue-500" />
-              <span className="text-[10px] font-bold text-blue-600 text-center leading-tight">Diberi nomor urut (TCP)</span>
-            </div>
-            <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-green-50 border border-green-100">
-              <MapPin className="w-6 h-6 text-green-500" />
-              <span className="text-[10px] font-bold text-green-600 text-center leading-tight">Dikirim via internet (IP)</span>
-            </div>
-            <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-amber-50 border border-amber-100">
-              <Shield className="w-6 h-6 text-amber-500" />
-              <span className="text-[10px] font-bold text-amber-600 text-center leading-tight">Disusun ulang & dicek</span>
-            </div>
+          <div className={`grid gap-3 ${(visualIntro?.cards?.length || 4) <= 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3'}`}>
+            {(visualIntro?.cards || [
+              { icon: 'split', label: 'Data dipecah jadi segmen', color: 'purple' as const },
+              { icon: 'number', label: 'Diberi nomor urut (TCP)', color: 'blue' as const },
+              { icon: 'route', label: 'Dikirim via internet (IP)', color: 'green' as const },
+              { icon: 'reassemble', label: 'Disusun ulang & dicek', color: 'amber' as const },
+            ]).map((card, idx) => {
+              const cm = colorMap[card.color] || colorMap.blue;
+              return (
+                <div key={idx} className={`flex flex-col items-center gap-1.5 p-3 rounded-xl ${cm.bg} border ${cm.border}`}>
+                  {VISUAL_ICON_MAP[card.icon] || <Info className="w-6 h-6 text-purple-500" />}
+                  <span className={`text-[10px] font-bold ${cm.text} text-center leading-tight`}>{card.label}</span>
+                </div>
+              );
+            })}
           </div>
           <p className="mt-4 text-xs text-[#628ECB] font-semibold">
-            Proses inilah yang diatur oleh <strong className="text-[#395886]">TCP/IP</strong> — sekumpulan aturan komunikasi data dalam jaringan.
+            {visualIntro?.footer || <>Proses inilah yang diatur oleh <strong className="text-[#395886]">TCP/IP</strong> — sekumpulan aturan komunikasi data dalam jaringan.</>}
           </p>
         </div>
       </div>
@@ -1264,7 +1288,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
     }
 
     if (!storyScramble) {
-      // No story scramble but courier is done → go to analogy
+      // No story scramble → go to analogy
       if (analogySortGroups?.length) {
         setPhase('analogy');
         return null;
@@ -1347,7 +1371,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
 
             if (essayText !== undefined) {
               // Lesson 1: transition to conclusion phase instead of completing
-              if (lessonId === '1' && constructivismEssay2) {
+              if ((lessonId === '1' || lessonId === '2') && constructivismEssay2) {
                 setEssay2Text(essayText);
                 void tracker.trackEvent('constructivism_analogy_completed', { hasEssay: true }, { progressPercent: 75 });
                 setPhase('conclusion');
