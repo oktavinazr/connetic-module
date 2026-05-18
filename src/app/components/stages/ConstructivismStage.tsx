@@ -37,6 +37,7 @@ interface ConstructivismStageProps {
   analogySortItems?: AnalogyItem[];
   constructivismEssay1?: string;
   constructivismEssay2?: string;
+  constructivismMatching?: Array<{ id: string; left: string; right: string }>;
   lessonId: string;
   stageIndex: number;
   onComplete: (answer: any) => void;
@@ -1161,11 +1162,276 @@ function MCQPhase({
   );
 }
 
+// -- Matching Lines Activity (Tarik Garis) ------------------------------------
+
+function MatchingLinesActivity({
+  pairs, essayPrompt, lessonId, stageIndex, onComplete, initialData, skipEssay,
+}: {
+  pairs: Array<{ id: string; left: string; right: string }>;
+  essayPrompt?: string;
+  lessonId: string;
+  stageIndex: number;
+  onComplete: (essayText?: string, state?: any) => void;
+  initialData?: any;
+  skipEssay?: boolean;
+}) {
+  const user = getCurrentUser();
+  const [shuffledRight] = useState(() => {
+    const arr = pairs.map(p => ({ id: p.id, text: p.right }));
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  });
+
+  const [matches, setMatches] = useState<Record<string, string>>(initialData?.matches || {});
+  const [validated, setValidated] = useState(initialData?.validated || false);
+  const [attempts, setAttempts] = useState(0);
+  const [showEssay, setShowEssay] = useState(false);
+  const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
+
+  useEffect(() => {
+    getLessonProgress(user!.id, lessonId).then((p) => {
+      setAttempts(p.stageAttempts[`stage_${stageIndex}_matching`] || 0);
+    });
+  }, []);
+
+  const matchedLeftIds = new Set(Object.values(matches));
+  const allMatched = matchedLeftIds.size === pairs.length;
+
+  const handleLeftClick = (leftId: string) => {
+    if (validated) return;
+    if (matches[leftId]) {
+      // Undo this match
+      setMatches(prev => { const n = { ...prev }; delete n[leftId]; return n; });
+      return;
+    }
+    setSelectedLeft(leftId);
+  };
+
+  const handleRightClick = (rightId: string) => {
+    if (validated || !selectedLeft) return;
+    // Remove any existing match for this right
+    const existingLeft = Object.entries(matches).find(([_, v]) => v === rightId);
+    const next = { ...matches };
+    if (existingLeft) delete next[existingLeft[0]];
+    next[selectedLeft] = rightId;
+    setMatches(next);
+    setSelectedLeft(null);
+  };
+
+  const isCorrect = allMatched && pairs.every(p => matches[p.id] === p.id);
+
+  const handleValidate = async () => {
+    const ok = allMatched && pairs.every(p => matches[p.id] === p.id);
+    const newA = await saveStageAttempt(user!.id, lessonId, stageIndex, ok, `stage_${stageIndex}_matching`);
+    setAttempts(newA);
+    setValidated(true);
+    onComplete(undefined, { matches, validated: true });
+    if (!skipEssay && (ok || newA >= 3)) setShowEssay(true);
+  };
+
+  const handleRetry = () => {
+    const next = { ...matches };
+    pairs.forEach(p => { if (matches[p.id] !== p.id) delete next[p.id]; });
+    setMatches(next);
+    setValidated(false);
+  };
+
+  const isTerminal = validated && (isCorrect || attempts >= 3);
+  const correctCount = validated ? pairs.filter(p => matches[p.id] === p.id).length : 0;
+
+  return (
+    <div className="w-full space-y-5">
+      {/* Header */}
+      <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 px-5 py-3 bg-[#628ECB]/8 border-b border-[#628ECB]/20">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#628ECB]/15">
+            <BookOpen className="w-4 h-4 text-[#628ECB]" />
+          </div>
+          <div className="flex-1">
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Keruntutan Berpikir</p>
+            <h3 className="text-sm font-bold text-[#395886]">Pasangkan Komponen dengan Fungsinya</h3>
+          </div>
+          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-bold
+            ${attempts >= 3 ? 'border-red-200 bg-red-50 text-red-500' : 'border-[#628ECB]/20 bg-white text-[#628ECB]'}`}>
+            <AlertCircle className="w-3 h-3" />
+            {attempts >= 3 ? 'Habis' : `${3 - attempts} percobaan`}
+          </div>
+        </div>
+        <div className="px-5 py-4 bg-gradient-to-br from-[#628ECB]/5 to-transparent">
+          <div className="flex items-start gap-3">
+            <Lightbulb className="w-4 h-4 text-[#628ECB] mt-0.5 shrink-0" />
+            <p className="text-sm text-[#395886]/80 leading-relaxed">
+              Klik salah satu komponen di kolom <strong>kiri</strong>, lalu klik fungsinya di kolom <strong>kanan</strong> untuk memasangkan. Klik ulang pasangan yang sudah terhubung untuk membatalkan.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Matching Area */}
+      <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-5">
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Left Column — Component Names */}
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/50 mb-3">
+              Komponen TCP Header
+            </p>
+            <div className="space-y-2">
+              {pairs.map(p => {
+                const matched = !!matches[p.id];
+                const isCorrectMatch = validated && matches[p.id] === p.id;
+                const isWrongMatch = validated && matches[p.id] && matches[p.id] !== p.id;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => handleLeftClick(p.id)}
+                    disabled={validated}
+                    className={`w-full text-left px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all ${
+                      selectedLeft === p.id
+                        ? 'border-[#628ECB] bg-[#628ECB]/10 ring-2 ring-[#628ECB]/20'
+                        : isCorrectMatch
+                          ? 'border-[#10B981] bg-[#ECFDF5]'
+                          : isWrongMatch
+                            ? 'border-red-300 bg-red-50'
+                            : matched
+                              ? 'border-[#628ECB]/40 bg-[#EEF4FF]'
+                              : 'border-[#D5DEEF] bg-white hover:border-[#628ECB]/30'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className={isWrongMatch ? 'text-red-700' : 'text-[#395886]'}>{p.left}</span>
+                      {validated && isCorrectMatch && <CheckCircle className="w-4 h-4 text-[#10B981]" />}
+                      {validated && isWrongMatch && <XCircle className="w-4 h-4 text-red-400" />}
+                      {!validated && matched && (
+                        <span className="text-[8px] font-bold text-[#628ECB]/60">terhubung</span>
+                      )}
+                      {!validated && !matched && selectedLeft === p.id && (
+                        <span className="text-[8px] font-bold text-[#628ECB]">pilih fungsi →</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Right Column — Functions */}
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/50 mb-3">
+              Fungsi Komponen
+            </p>
+            <div className="space-y-2">
+              {shuffledRight.map(r => {
+                const matchedLeft = Object.entries(matches).find(([_, v]) => v === r.id);
+                const isMatched = !!matchedLeft;
+                const isCorrectMatch = validated && matchedLeft && matchedLeft[0] === r.id;
+                const isWrongMatch = validated && matchedLeft && matchedLeft[0] !== r.id;
+                return (
+                  <button
+                    key={r.id}
+                    onClick={() => handleRightClick(r.id)}
+                    disabled={validated}
+                    className={`w-full text-left px-4 py-3 rounded-xl border-2 text-xs font-medium transition-all leading-relaxed ${
+                      isMatched && !isWrongMatch
+                        ? isCorrectMatch
+                          ? 'border-[#10B981] bg-[#ECFDF5]'
+                          : 'border-[#628ECB]/40 bg-[#EEF4FF]'
+                        : isWrongMatch
+                          ? 'border-red-300 bg-red-50'
+                          : 'border-[#D5DEEF] bg-white hover:border-[#628ECB]/30'
+                    } ${selectedLeft && !isMatched ? 'hover:border-[#10B981]/50 hover:bg-[#ECFDF5] cursor-pointer' : ''}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className={isWrongMatch ? 'text-red-700' : 'text-[#395886]'}>{r.text}</span>
+                      {validated && isCorrectMatch && <CheckCircle className="w-4 h-4 text-[#10B981] shrink-0 ml-2" />}
+                      {validated && isWrongMatch && <XCircle className="w-4 h-4 text-red-400 shrink-0 ml-2" />}
+                      {!validated && isMatched && (
+                        <span className="text-[8px] font-bold text-[#628ECB]/60 shrink-0 ml-2">← terhubung</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="mt-5 flex items-center gap-3">
+          <div className="flex-1 h-1.5 bg-[#EEF2FF] rounded-full overflow-hidden">
+            <div className="h-1.5 rounded-full transition-all duration-500"
+              style={{ width: `${(matchedLeftIds.size / pairs.length) * 100}%`, background: allMatched ? 'linear-gradient(90deg,#10B981,#059669)' : 'linear-gradient(90deg,#628ECB,#395886)' }} />
+          </div>
+          <span className={`text-[10px] font-bold shrink-0 ${allMatched ? 'text-[#10B981]' : 'text-[#395886]/50'}`}>
+            {matchedLeftIds.size}/{pairs.length}
+          </span>
+        </div>
+
+        {/* Action buttons */}
+        <div className="mt-4 space-y-3">
+          {!validated && (
+            <button onClick={handleValidate} disabled={!allMatched}
+              className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${allMatched ? 'bg-[#628ECB] text-white hover:bg-[#395886] shadow-sm' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}>
+              {allMatched ? 'Periksa Pasangan' : `Pasangkan ${pairs.length - matchedLeftIds.size} fungsi lagi...`}
+            </button>
+          )}
+          {validated && !isCorrect && attempts < 3 && (
+            <button onClick={handleRetry} className="w-full py-2.5 rounded-xl font-bold text-sm bg-red-50 text-red-600 border-2 border-red-200 hover:bg-red-100 flex items-center justify-center gap-2">
+              <RotateCcw className="w-4 h-4" /> Perbaiki Pasangan
+            </button>
+          )}
+        </div>
+
+        {/* Validation result */}
+        {validated && (
+          <div className={`mt-4 p-4 rounded-xl border-2 ${isCorrect ? 'bg-[#ECFDF5] border-[#10B981]/30' : attempts < 3 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'}`}>
+            <div className="flex items-start gap-3">
+              {isCorrect ? <CheckCircle className="w-5 h-5 text-[#10B981] shrink-0 mt-0.5" /> : attempts < 3 ? <XCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" /> : <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />}
+              <p className={`text-sm font-bold ${isCorrect ? 'text-[#065F46]' : attempts < 3 ? 'text-red-800' : 'text-amber-800'}`}>
+                {isCorrect ? `Sempurna! Semua ${pairs.length} pasangan benar.` : attempts < 3 ? `${correctCount}/${pairs.length} pasangan benar. Sisa ${3 - attempts} percobaan.` : 'Pelajari pasangan yang benar di bawah.'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Answer key */}
+        {isTerminal && !isCorrect && (
+          <div className="mt-4 p-4 rounded-xl bg-amber-50 border-2 border-amber-200">
+            <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 mb-3">Kunci Jawaban:</p>
+            <div className="space-y-1.5">
+              {pairs.map(p => (
+                <div key={p.id} className="flex items-center gap-2 text-xs text-amber-800 p-2 rounded-lg bg-white/60">
+                  <span className="font-black text-[#628ECB]">{p.left}</span>
+                  <span className="text-amber-400">→</span>
+                  <span className="text-[#10B981] font-medium">{p.right}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Essay prompt */}
+      {showEssay && essayPrompt && (
+        <EssayBox prompt={essayPrompt} objectiveLabel="X.TCP.9" submitLabel="Simpan Argumen" headerLabel="Argumen Logis" onSubmit={(text) => onComplete(text)} />
+      )}
+      {showEssay && !essayPrompt && (
+        <button onClick={() => onComplete(undefined)} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm">
+          Submit Aktivitas <ChevronRight className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function ConstructivismStage(props: ConstructivismStageProps) {
   const {
     storyScramble, analogySortGroups, analogySortItems,
     lessonId, stageIndex, onComplete,
     constructivismEssay1, constructivismEssay2,
+    constructivismMatching,
     videoUrl, apersepsi, isCompleted, onTrackerPhase,
   } = props;
   const tracker = useActivityTracker({
@@ -1228,6 +1494,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
         pendingNextPhase,
         essay1Text,
         essay2Text,
+        matchingData: analogyData,
         scrambleData,
         analogyData,
         mcqData,
@@ -1280,7 +1547,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
         <div className="space-y-4">
           <CourierDefinition onComplete={() => {
             setCourierCompleted(true);
-            if (analogySortGroups?.length) {
+            if (analogySortGroups?.length || constructivismMatching?.length) {
               setPhase('analogy');
             }
           }} />
@@ -1294,7 +1561,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
         <div className="space-y-4">
           <TcpHeaderIntro onComplete={() => {
             setCourierCompleted(true);
-            if (analogySortGroups?.length) {
+            if (analogySortGroups?.length || constructivismMatching?.length) {
               setPhase('analogy');
             }
           }} />
@@ -1367,6 +1634,39 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
           targetPhase={analogySortGroups?.length ? 'analogy' : props.options?.length ? 'mcq' : 'complete'}
           nextLabel={analogySortGroups?.length ? 'Lanjut ke Process Chain' : props.options?.length ? 'Lanjut ke Pertanyaan' : 'Submit Aktivitas'}
         />
+      </div>
+    );
+  }
+
+  // Matching Lines phase (tarik garis) — for constructivismMatching data
+  if (phase === 'analogy' && constructivismMatching?.length) {
+    return (
+      <div className="space-y-4">
+        <MatchingLinesActivity
+          pairs={constructivismMatching}
+          essayPrompt={lessonId === '2' ? undefined : constructivismEssay2}
+          lessonId={lessonId}
+          stageIndex={stageIndex}
+          initialData={analogyData}
+          skipEssay={lessonId === '2'}
+          onComplete={(essayText, currentState) => {
+            if (currentState !== undefined) {
+              setAnalogyData({ ...currentState, validated: true });
+              // Lesson 2: go directly to conclusion after matching is validated
+              if (currentState.validated && lessonId === '2') {
+                void tracker.trackEvent('constructivism_matching_completed', {}, { progressPercent: 75 });
+                setPhase('conclusion');
+                return;
+              }
+            }
+            if (essayText !== undefined) {
+              const finalAnswer = { essay1: essay1Text, essay2: essayText, summary: essayText };
+              void tracker.complete(finalAnswer, { phase: 'analogy', finalAnswer });
+              onComplete(finalAnswer);
+            }
+          }}
+        />
+        <SkipButton targetPhase="complete" nextLabel="Submit Aktivitas" />
       </div>
     );
   }

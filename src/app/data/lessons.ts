@@ -147,6 +147,7 @@ export interface Stage {
   analogySortItems?: Array<{ id: string; text: string; correctGroup: string; correctOrder?: number; courierAnalogy?: string }>;
   constructivismEssay1?: string;
   constructivismEssay2?: string;
+  constructivismMatching?: Array<{ id: string; left: string; right: string }>;
 
   // ── INQUIRY (extended) ──────────────────────────────────────────────────
   flowItems?: Array<{

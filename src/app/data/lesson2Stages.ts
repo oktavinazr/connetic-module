@@ -9,8 +9,8 @@ export const lesson2Stages: Stage[] = [
     objectiveCode: 'X.TCP.9',
     activityGuide: [
       'Jelajahi animasi interaktif tentang komponen TCP Header secara bertahap.',
-      'Cocokkan setiap komponen TCP Header dengan fungsinya secara runtut menggunakan drag & drop.',
-      'Tulis argumen logis tentang fungsi komponen TCP Header dan mengapa setiap komponen memiliki peran unik.',
+      'Pasangkan setiap komponen TCP Header dengan fungsinya menggunakan klik kiri-kanan (tarik garis).',
+      'Tulis argumen logis tentang fungsi komponen TCP Header berdasarkan pasangan yang telah kamu buat.',
     ],
     logicalThinkingIndicators: [
       'Keruntutan Berpikir: mengeksplorasi komponen TCP Header melalui animasi interaktif dan mencocokkan komponen dengan fungsinya secara runtut.',
@@ -31,78 +31,61 @@ export const lesson2Stages: Stage[] = [
       'Pernahkah kamu mengirim paket lewat jasa ekspedisi? Di label paket ada informasi penting: alamat pengirim, alamat penerima, nomor resi, kode keamanan, dan jenis layanan. Tanpa label itu, kurir tidak tahu ke mana paket harus diantar! Nah, di dunia jaringan, TCP juga punya "label pintar" yang disebut TCP Header — berisi informasi penting agar data sampai dengan selamat dan berurutan.',
     constructivismEssay1:
       'Berdasarkan eksplorasi animasi TCP Header yang baru saja kamu pelajari, menurutmu mengapa setiap komponen TCP Header (Port, Sequence Number, ACK, Flags, Window Size, Checksum) memiliki peran yang berbeda? Mengapa tidak bisa hanya satu komponen saja yang menangani semuanya?',
-    analogySortGroups: [
-      { id: 'hdr', label: 'Komponen TCP Header dan Fungsinya', colorClass: 'blue' },
-    ],
-    analogySortItems: [
+    constructivismMatching: [
       {
-        id: 'ap1',
-        text: 'Source Port & Destination Port — mengidentifikasi aplikasi pengirim dan penerima (nilai 0–65535).',
-        courierAnalogy: 'Seperti nomor loket di kantor pos: loket 80 untuk surat biasa (HTTP), loket 443 untuk surat rahasia (HTTPS). Port memastikan data masuk ke aplikasi yang tepat.',
-        correctGroup: 'hdr',
-        correctOrder: 1,
+        id: 'm1',
+        left: 'Source Port & Destination Port',
+        right: 'Mengidentifikasi aplikasi pengirim dan penerima. Port memastikan data masuk ke aplikasi yang tepat (nilai 0–65535).',
       },
       {
-        id: 'ap2',
-        text: 'Sequence Number — nomor urut byte pertama dalam segmen. Memungkinkan penerima menyusun ulang data meskipun tiba tidak berurutan.',
-        courierAnalogy: 'Seperti nomor halaman di buku: jika halaman 1, 3, 5, 2, 4 tiba dalam urutan kacau, berkat nomor halaman, kamu tetap bisa menyusunnya kembali dengan urutan yang benar.',
-        correctGroup: 'hdr',
-        correctOrder: 2,
+        id: 'm2',
+        left: 'Sequence Number',
+        right: 'Nomor urut byte pertama dalam segmen. Memungkinkan penerima menyusun ulang data meskipun segmen tiba tidak berurutan.',
       },
       {
-        id: 'ap3',
-        text: 'Acknowledgment Number — nomor byte berikutnya yang diharapkan. Memberi tahu pengirim "semua byte sebelum nomor ini sudah diterima".',
-        courierAnalogy: 'Seperti tanda terima paket: "Paket #1 sampai #10 sudah saya terima dengan selamat. Tolong kirim paket #11 berikutnya." Ini mencegah pengiriman ganda dan memastikan tidak ada yang terlewat.',
-        correctGroup: 'hdr',
-        correctOrder: 3,
+        id: 'm3',
+        left: 'Acknowledgment Number',
+        right: 'Nomor byte berikutnya yang diharapkan penerima. Memberi tahu pengirim bahwa semua byte sebelum nomor ini sudah diterima.',
       },
       {
-        id: 'ap4',
-        text: 'TCP Flags (SYN, ACK, FIN, RST) — bit-bit penanda status koneksi. SYN=mulai koneksi, ACK=konfirmasi, FIN=tutup koneksi, RST=hentikan darurat.',
-        courierAnalogy: 'Seperti isyarat tangan dalam rapat: Angkat tangan (SYN) = "Saya mau mulai bicara", Anggukan (ACK) = "Saya paham", Lambaian (FIN) = "Saya sudah selesai", Tanda stop (RST) = "Hentikan, ada masalah!"',
-        correctGroup: 'hdr',
-        correctOrder: 4,
+        id: 'm4',
+        left: 'TCP Flags (SYN, ACK, FIN, RST)',
+        right: 'Bit-bit penanda status koneksi. SYN=memulai koneksi, ACK=mengkonfirmasi data, FIN=menutup koneksi, RST=menghentikan darurat.',
       },
       {
-        id: 'ap5',
-        text: 'Window Size — mengatur jumlah data yang boleh dikirim sekaligus sebelum menunggu ACK. Mencegah pengirim membanjiri penerima.',
-        courierAnalogy: 'Seperti kasir yang bilang: "Saya hanya bisa terima 10 barang dulu, sisanya tunggu sampai saya selesai memproses yang ini." Jika nampan penuh, Window Size = 0 artinya "berhenti dulu, jangan kirim lagi!"',
-        correctGroup: 'hdr',
-        correctOrder: 5,
+        id: 'm5',
+        left: 'Window Size',
+        right: 'Mengatur jumlah data yang boleh dikirim sekaligus sebelum menunggu ACK. Mencegah pengirim membanjiri penerima (Flow Control).',
       },
       {
-        id: 'ap6',
-        text: 'Checksum — nilai yang dihitung dari seluruh isi segmen. Penerima memverifikasi ulang untuk mendeteksi kerusakan data selama perjalanan.',
-        courierAnalogy: 'Seperti segel keamanan di paket kiriman: jika segelnya rusak atau berbeda saat diterima, kamu tahu isinya mungkin sudah berubah atau rusak di perjalanan dan perlu kirim ulang.',
-        correctGroup: 'hdr',
-        correctOrder: 6,
+        id: 'm6',
+        left: 'Checksum',
+        right: 'Nilai verifikasi yang dihitung dari seluruh isi segmen. Penerima menghitung ulang untuk mendeteksi kerusakan data selama perjalanan.',
       },
     ],
-    constructivismEssay2:
-      'Berdasarkan aktivitas mencocokkan komponen TCP Header dengan fungsinya, jelaskan alasanmu: mengapa Sequence Number dan Acknowledgment Number harus bekerja berpasangan? Apa yang terjadi pada pengiriman data jika Checksum mendeteksi kerusakan? Jelaskan argumenmu secara logis!',
-    conclusionPrompt: 'Berdasarkan eksplorasi animasi TCP Header dan aktivitas pencocokan fungsi komponen yang telah kamu lakukan, jelaskan bagaimana kamu mampu mengidentifikasi TCP Header beserta fungsinya pada protokol TCP. Tuliskan dengan tepat menggunakan kata-katamu sendiri.',
+    conclusionPrompt: 'Berdasarkan eksplorasi animasi TCP Header dan aktivitas memasangkan fungsi komponen yang telah kamu lakukan, jelaskan bagaimana kamu mampu mengidentifikasi TCP Header beserta fungsinya pada protokol TCP. Jelaskan juga mengapa Sequence Number dan Acknowledgment Number harus bekerja berpasangan, serta apa yang terjadi jika Checksum mendeteksi kerusakan data. Tuliskan dengan tepat menggunakan kata-katamu sendiri.',
   },
 
   {
     type: 'inquiry',
     title: 'Inquiry',
     description:
-      'Siswa mengeksplorasi field-field penting pada TCP Header dan memahami fungsi teknis masing-masing dalam menjaga keandalan pengiriman data.',
+      'Siswa mengeksplorasi mekanisme TCP Sequence Number secara mendalam dan memahami bagaimana Sequence Number memastikan urutan pengiriman data yang andal.',
     objectiveCode: 'X.TCP.10',
     activityGuide: [
-      'Buka dan pelajari tiap field TCP Header melalui panel eksplorasi interaktif.',
-      'Urutkan 5 field TCP Header dari yang paling fundamental ke yang paling spesifik.',
-      'Cocokkan setiap TCP Flag dengan fungsi teknisnya menggunakan klik-pasangkan.',
-      'Tulis refleksi untuk memperkuat pemahaman tentang peran setiap field.',
+      'Buka dan pelajari materi tentang TCP Sequence Number melalui panel eksplorasi interaktif.',
+      'Urutkan 5 tahapan proses pengiriman data menggunakan Sequence Number dengan drag & drop.',
+      'Tulis argumen logis tentang pentingnya Sequence Number dalam menjaga urutan data.',
+      'Tulis kesimpulan tentang mekanisme TCP Sequence Number yang telah dipelajari.',
     ],
     logicalThinkingIndicators: [
-      'Keruntutan Berpikir: mengurutkan field TCP Header berdasarkan peran fungsionalnya dalam siklus komunikasi.',
-      'Analisis Fungsi: menghubungkan setiap flag TCP dengan kondisi jaringan yang memerlukannya.',
-      'Refleksi Konsep: menjelaskan mengapa TCP Header lebih kompleks dibanding protokol tanpa mekanisme keandalan.',
+      'Keruntutan Berpikir: mengurutkan tahapan proses Sequence Number dalam siklus pengiriman data TCP secara runtut.',
+      'Kemampuan Berargumen: menjelaskan alasan mengapa Sequence Number penting dalam memastikan data diterima secara berurutan.',
+      'Penarikan Kesimpulan: menyimpulkan bagaimana mekanisme TCP Sequence Number bekerja dalam menjaga urutan pengiriman data.',
     ],
     facilitatorNotes: [
-      'Guru menekankan perbedaan antara field pengalamatan (Port) dan field kontrol aliran (Window Size, Flags).',
-      'Guru mendorong siswa membayangkan kondisi jaringan yang memerlukan setiap flag: SYN saat pembukaan, FIN saat penutupan, RST saat error kritis.',
+      'Guru menekankan bahwa TCP menomori setiap byte, bukan setiap segmen — ini kunci pemahaman Sequence Number.',
+      'Guru mendorong siswa membandingkan pengiriman data dengan dan tanpa Sequence Number untuk memahami pentingnya mekanisme ini.',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
@@ -111,82 +94,76 @@ export const lesson2Stages: Stage[] = [
       degree: 'secara runtut',
     },
     material: {
-      title: 'Anatomi TCP Header',
+      title: 'Mekanisme TCP Sequence Number',
       content: [
-        'TCP Header adalah "amplop pintar" yang membungkus setiap segmen data. Di dalamnya terdapat informasi yang memungkinkan komunikasi andal, berurutan, dan terkontrol antara dua perangkat.',
-        'Setiap field dalam TCP Header punya peran khusus: ada yang mengidentifikasi aplikasi (Port), ada yang menjaga urutan (Sequence Number), dan ada yang mengontrol aliran data (Window Size, Flags).',
+        'Sequence Number adalah komponen penting dalam TCP Header yang berfungsi sebagai "nomor urut" untuk setiap byte data yang dikirim. Dengan Sequence Number, penerima dapat menyusun kembali data yang tiba tidak berurutan menjadi urutan yang benar.',
+        'TCP tidak menomori segmen, melainkan menomori setiap byte data. Jika ISN (Initial Sequence Number) = 1000 dan segmen pertama membawa 500 byte, maka segmen kedua dimulai dari Sequence Number 1500. Inilah yang membuat TCP sangat presisi dalam melacak data.',
+        'Sequence Number bekerja berpasangan dengan Acknowledgment Number. Penerima mengirim ACK Number yang berisi byte berikutnya yang diharapkan. Jika ACK = 1501, artinya semua byte hingga nomor 1500 sudah diterima dengan benar.',
       ],
       examples: [
-        'Source Port & Destination Port: Mengidentifikasi aplikasi pengirim dan penerima (nilai 0–65535).',
-        'Sequence Number: Nomor urut byte pertama dalam segmen ini.',
-        'Acknowledgment Number: Nomor byte berikutnya yang diharapkan penerima.',
-        'Flags (SYN/ACK/FIN/RST): Bit penanda fase dan status koneksi.',
-        'Window Size: Jumlah byte yang boleh dikirim sebelum menunggu ACK (Flow Control).',
+        'ISN (Initial Sequence Number): Nomor awal yang dipilih secara acak saat koneksi dimulai. Misal: ISN = 1000.',
+        'Penomoran per byte: Segmen 1 (Seq=1000, 500 byte) → Segmen 2 (Seq=1500, 500 byte) → Segmen 3 (Seq=2000, 500 byte).',
+        'ACK sebagai konfirmasi: Setelah terima byte 1000–1499, penerima kirim ACK=1500. Setelah byte 1500–1999, kirim ACK=2000.',
+        'Deteksi kehilangan: Jika penerima menerima Seq=1000 lalu Seq=2000 (tanpa Seq=1500), ia tahu segmen tengah hilang dan meminta pengiriman ulang.',
+        'Rekonstruksi data: Meskipun segmen tiba dengan urutan Seq=2000, Seq=1000, Seq=1500, penerima tetap bisa menyusun ulang berdasarkan Sequence Number.',
       ],
     },
     explorationSections: [
       {
         id: 'e1',
-        title: 'Source Port & Destination Port',
+        title: 'Apa itu Sequence Number?',
         content:
-          'Source Port (16-bit) adalah nomor port aplikasi pengirim, sedangkan Destination Port adalah nomor port aplikasi penerima. Port membedakan koneksi ke aplikasi yang berbeda di perangkat yang sama. Port 80 untuk HTTP, 443 untuk HTTPS, 22 untuk SSH.',
+          'Sequence Number adalah field 32-bit dalam TCP Header yang berisi nomor urut byte pertama dalam segmen data. Berbeda dengan penomoran halaman buku, TCP menomori setiap byte — bukan setiap segmen. Ini memberikan presisi tingkat byte dalam melacak data yang dikirim dan diterima.',
         example:
-          'Bayangkan browser membuka dua tab ke server yang sama. Port memastikan respons tab pertama tidak masuk ke tab kedua — setiap tab punya "nomor loket" sendiri.',
+          'Bayangkan kamu mengirim novel 5000 kata. TCP tidak memberi nomor per bab, tapi per KATA. Jadi kamu tahu persis kata ke berapa yang hilang — bukan hanya bab mana yang bermasalah.',
       },
       {
         id: 'e2',
-        title: 'Sequence Number (Nomor Urut)',
+        title: 'Bagaimana Sequence Number Ditetapkan?',
         content:
-          'Sequence Number adalah nomor urut byte pertama dalam segmen ini. TCP tidak menomori segmen, melainkan menomori setiap byte. Jika ISN=1000 dan segmen membawa 500 byte, segmen berikutnya dimulai dari Seq#=1500.',
+          'Saat koneksi TCP dibuka (Three-Way Handshake), pengirim dan penerima saling bertukar ISN (Initial Sequence Number) — nomor awal yang dipilih secara acak. ISN tidak dimulai dari 0 atau 1 demi alasan keamanan, agar pihak luar tidak mudah menebak nomor urut koneksi.',
         example:
-          'Seperti mengirim buku 1000 halaman via email: "Ini halaman 1–50", "Ini halaman 51–100". Penerima tahu persis cara menyusun semua halaman kembali meski tiba tidak berurutan.',
+          'Client memilih ISN = 4500 secara acak, mengirim SYN dengan Seq=4500. Server membalas dengan SYN-ACK, Seq=8200 (ISN server), ACK=4501. Mulai saat ini, nomor urut dihitung dari ISN masing-masing.',
       },
       {
         id: 'e3',
-        title: 'Acknowledgment Number (Nomor Konfirmasi)',
+        title: 'Bagaimana Sequence Number Memastikan Urutan?',
         content:
-          'ACK Number adalah nomor byte berikutnya yang diharapkan penerima. Jika penerima mendapat byte 1–500 dengan benar, ia mengirim ACK=501, artinya "Kirim byte 501 berikutnya." Ini adalah konfirmasi bertahap TCP.',
+          'Setiap byte data yang dikirim mendapat nomor urut yang meningkat secara berurutan. Jika segmen tiba tidak sesuai urutan (out-of-order), penerima menyimpannya di buffer dan menunggu segmen yang hilang. Setelah segmen hilang tiba, semua data disusun ulang berdasarkan Sequence Number.',
         example:
-          'Seperti kasir yang berteriak: "Nomor 47 selesai, silakan nomor 48!" — penerima memberi tahu pengirim tepat di mana harus melanjutkan.',
+          'Penerima menerima: Seq=1000 (byte 1000–1499), lalu Seq=2000 (byte 2000–2499). Data disimpan di buffer. Penerima tahu byte 1500–1999 belum tiba. Saat akhirnya Seq=1500 tiba, ketiga segmen langsung disusun: 1000→1500→2000 — urutan sempurna!',
       },
       {
         id: 'e4',
-        title: 'TCP Flags (SYN, ACK, FIN, RST)',
+        title: 'Sequence Number & Acknowledgment Number',
         content:
-          'Flags adalah bit-bit kecil (1-bit per flag) yang menandai jenis segmen. SYN=1 saat pembukaan koneksi, ACK=1 sebagai konfirmasi, FIN=1 untuk menutup koneksi secara aman, RST=1 untuk menghentikan koneksi mendadak karena error kritis.',
+          'ACK Number adalah "nomor konfirmasi" yang dikirim penerima. Nilainya adalah Sequence Number berikutnya yang diharapkan. Jika penerima sudah menerima byte hingga Seq=1499, maka ACK=1500. Dengan ACK, pengirim tahu persis data mana yang sudah sampai dan mana yang perlu dikirim ulang.',
         example:
-          'Flags seperti sinyal tangan saat meeting: Angkat tangan (SYN) = ingin mulai, Angguk (ACK) = mengerti, Lambaikan tangan (FIN) = selesai dan pamit, Acungkan stop (RST) = hentikan sekarang!',
+          'Seperti percakapan telepon: Pengirim: "Aku kirim data 1–500." Penerima: "Diterima. Kirim 501." (ACK=501). Pengirim: "Data 501–1000." Penerima: "Diterima. Kirim 1001." — setiap bagian dikonfirmasi satu per satu, tidak bisa ada yang terlewat.',
       },
       {
         id: 'e5',
-        title: 'Window Size & Flow Control',
+        title: 'Apa yang Terjadi Jika Sequence Number Hilang?',
         content:
-          'Window Size adalah jumlah byte yang boleh dikirim pengirim sebelum harus menunggu ACK. Ini adalah mekanisme Flow Control TCP. Jika penerima kewalahan, ia mengecilkan Window Size atau mengatur ke 0 (zero window) untuk meminta pengirim berhenti sementara.',
+          'Jika segmen dengan Sequence Number tertentu tidak kunjung mendapat ACK dalam batas waktu (timeout), TCP menganggap segmen tersebut hilang. Pengirim secara otomatis mengirim ulang segmen tersebut — mekanisme ini disebut retransmission. Tanpa Sequence Number, tidak mungkin tahu segmen mana yang hilang dan perlu dikirim ulang.',
         example:
-          'Seperti nampan kasir: "Aku hanya bisa terima 10 barang sekaligus." Kalau nampan penuh, kasir bilang "Tunggu dulu, jangan tambah lagi!" — Window Size=0 berarti "nampan penuh total."',
+          'Pengirim mengirim Seq=1000, Seq=1500, Seq=2000. ACK untuk Seq=1500 tidak kunjung datang. Setelah timeout, pengirim mengirim ulang Seq=1500. Begitu sampai, penerima mengirim ACK=2500 — artinya semua data hingga byte 2499 sudah lengkap!',
       },
     ],
     flowInstruction:
-      'Urutkan 5 field TCP Header berikut berdasarkan perannya dalam siklus komunikasi TCP, dari field yang paling pertama diperlukan saat koneksi dimulai hingga yang mengatur aliran data aktif.',
+      'Urutkan 5 tahapan proses pengiriman data menggunakan Sequence Number berikut, mulai dari pemilihan ISN hingga rekonstruksi data di sisi penerima.',
     flowItems: [
-      { id: 'fl1', text: 'Source & Destination Port', correctOrder: 1, description: 'Mengidentifikasi aplikasi pengirim dan penerima.', colorClass: 'purple' },
-      { id: 'fl2', text: 'Sequence Number', correctOrder: 2, description: 'Menomori byte data agar bisa disusun ulang.', colorClass: 'blue' },
-      { id: 'fl3', text: 'Acknowledgment Number', correctOrder: 3, description: 'Mengkonfirmasi byte berikutnya yang diharapkan.', colorClass: 'green' },
-      { id: 'fl4', text: 'TCP Flags (SYN/ACK/FIN)', correctOrder: 4, description: 'Menandai fase koneksi: buka, konfirmasi, tutup.', colorClass: 'amber' },
-      { id: 'fl5', text: 'Window Size', correctOrder: 5, description: 'Mengontrol kecepatan pengiriman (Flow Control).', colorClass: 'pink' },
+      { id: 'fl1', text: 'Client dan Server bertukar ISN (Initial Sequence Number) saat Three-Way Handshake — nomor awal dipilih acak untuk keamanan.', correctOrder: 1, description: 'ISN ditetapkan saat koneksi dibuka.', colorClass: 'purple' },
+      { id: 'fl2', text: 'Data dipecah menjadi segmen-segmen. Setiap segmen diberi Sequence Number berdasarkan posisi byte pertamanya (misal: Seq=1000 untuk byte ke-1000).', correctOrder: 2, description: 'Setiap byte data diberi nomor urut.', colorClass: 'blue' },
+      { id: 'fl3', text: 'Segmen dikirim satu per satu. Penerima menyimpan setiap segmen di buffer dan memeriksa Sequence Number-nya.', correctOrder: 3, description: 'Segmen dikirim dan diperiksa urutannya.', colorClass: 'green' },
+      { id: 'fl4', text: 'Penerima mengirim ACK Number (nomor byte berikutnya yang diharapkan) untuk mengkonfirmasi data yang sudah diterima dengan benar.', correctOrder: 4, description: 'ACK mengkonfirmasi penerimaan data.', colorClass: 'amber' },
+      { id: 'fl5', text: 'Jika ada segmen hilang (timeout tanpa ACK), TCP mengirim ulang segmen tersebut. Setelah semua segmen lengkap, data disusun ulang sesuai Sequence Number menjadi data utuh.', correctOrder: 5, description: 'Data hilang dikirim ulang, lalu disusun ulang.', colorClass: 'pink' },
     ],
     inquiryReflection1:
-      'Jelaskan pemahamanmu tentang urutan peran 5 field TCP Header tersebut. Mengapa Sequence Number harus ditetapkan terlebih dahulu sebelum data bisa mengalir?',
-    matchingPairs: [
-      { left: 'SYN', right: 'Memulai sinkronisasi koneksi baru (Three-Way Handshake).' },
-      { left: 'ACK', right: 'Mengkonfirmasi penerimaan data atau sinyal dari pihak lain.' },
-      { left: 'FIN', right: 'Meminta penutupan koneksi secara aman dan bertahap.' },
-      { left: 'RST', right: 'Menghentikan koneksi mendadak karena kondisi error kritis.' },
-      { left: 'Window Size = 0', right: 'Meminta pengirim berhenti sementara karena buffer penuh.' },
-    ],
+      'Berdasarkan urutan tahapan Sequence Number yang baru saja kamu susun, jelaskan mengapa Sequence Number sangat penting dalam memastikan data diterima secara berurutan! Apa yang akan terjadi jika TCP tidak memiliki mekanisme Sequence Number? Jelaskan argumenmu secara logis.',
     inquiryReflection2:
-      'Setelah mempelajari semua field TCP Header, jelaskan mengapa TCP dianggap protokol yang "andal" (reliable) dibandingkan UDP yang tidak memiliki field Sequence Number, ACK, dan Window Size!',
-    conclusionPrompt: 'Berdasarkan eksplorasi materi TCP Header dan aktivitas penyusunan field yang telah kamu lakukan, jelaskan bagaimana kamu mampu menguraikan mekanisme TCP Sequence Number dalam memastikan urutan pengiriman. Tuliskan secara runtut dengan kata-katamu sendiri.',
+      'Setelah mengeksplorasi seluruh materi tentang TCP Sequence Number, jelaskan bagaimana mekanisme Sequence Number dan Acknowledgment Number bekerja sama dalam menjaga keandalan pengiriman data. Berikan contoh konkret dengan nilai Sequence Number tertentu untuk memperjelas penjelasanmu.',
+    conclusionPrompt: 'Berdasarkan eksplorasi materi dan aktivitas penyusunan tahapan Sequence Number yang telah kamu lakukan, jelaskan bagaimana kamu mampu menguraikan mekanisme TCP Sequence Number dalam memastikan urutan pengiriman. Tuliskan secara runtut dengan kata-katamu sendiri.',
   },
 
   {

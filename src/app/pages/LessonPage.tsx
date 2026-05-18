@@ -170,11 +170,11 @@ const stageReflectionPrompts: Record<StageType, string> = {
 };
 
 const stageNeedsExternalReflection = (type: StageType, lid: string): boolean => {
-  // Reflection stage handles its own conclusion internally
+  // Stages that handle their own conclusion internally
   if (type === 'reflection') return false;
+  if (type === 'constructivism' && (lid === '1' || lid === '2')) return false;
   if (type === 'questioning' && lid === '1') return false;
   if (type === 'inquiry' && lid === '1') return false;
-  if (type === 'constructivism' && lid === '1') return false;
   return true;
 };
 
@@ -395,6 +395,7 @@ export function LessonPage() {
             analogySortItems={currentStage.analogySortItems}
             constructivismEssay1={currentStage.constructivismEssay1}
             constructivismEssay2={currentStage.constructivismEssay2}
+            constructivismMatching={currentStage.constructivismMatching}
             conclusionPrompt={currentStage.conclusionPrompt}
             atpBehavior={currentStage.atpAbcd?.behavior}
             objectiveCode={currentStage.objectiveCode}
