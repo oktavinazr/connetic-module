@@ -9,6 +9,7 @@ import { getCurrentUser } from '../../utils/auth';
 import { getLessonProgress, saveStageAttempt } from '../../utils/progress';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
 import { CourierDefinition } from './CourierDefinition';
+import { TcpHeaderIntro } from './TcpHeaderIntro';
 import { EssayBox, ContinueActivityButton, ATPConclusionBox } from './StageKit';
 
 // -- Types ----------------------------------------------------------------------
@@ -1176,7 +1177,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
   const [courierCompleted, setCourierCompleted] = useState(false);
 
   const [phase, setPhase] = useState<'scramble' | 'analogy' | 'mcq' | 'conclusion'>(() => {
-    if (lessonId === '1' && !courierCompleted) return 'scramble'; // CourierDefinition first
+    if ((lessonId === '1' || lessonId === '2') && !courierCompleted) return 'scramble'; // Interactive intro first
     if (storyScramble) return 'scramble';
     if (analogySortGroups?.length) return 'analogy';
     return 'mcq';
@@ -1273,11 +1274,25 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
   }
 
   if (phase === 'scramble') {
-    // Lesson 1: show CourierDefinition first, then proceed to analogy
+    // Lesson 1: show CourierDefinition first, then proceed
     if (lessonId === '1' && !courierCompleted) {
       return (
         <div className="space-y-4">
           <CourierDefinition onComplete={() => {
+            setCourierCompleted(true);
+            if (analogySortGroups?.length) {
+              setPhase('analogy');
+            }
+          }} />
+        </div>
+      );
+    }
+
+    // Lesson 2: show TcpHeaderIntro first, then proceed to analogy
+    if (lessonId === '2' && !courierCompleted) {
+      return (
+        <div className="space-y-4">
+          <TcpHeaderIntro onComplete={() => {
             setCourierCompleted(true);
             if (analogySortGroups?.length) {
               setPhase('analogy');

@@ -5,16 +5,16 @@ export const lesson2Stages: Stage[] = [
     type: 'constructivism',
     title: 'Constructivism',
     description:
-      'Siswa membangun pemahaman awal tentang struktur TCP Header dan fungsi setiap komponennya melalui aktivitas menyusun cerita dan mencocokkan fungsi komponen.',
+      'Siswa membangun pemahaman awal tentang struktur TCP Header dan fungsi setiap komponennya melalui eksplorasi animasi interaktif dan aktivitas mencocokkan fungsi komponen.',
     objectiveCode: 'X.TCP.9',
     activityGuide: [
-      'Susun 6 potongan cerita tentang struktur TCP Header menjadi urutan yang logis menggunakan drag & drop.',
-      'Tulis refleksi mandiri: mengapa setiap komponen TCP Header memiliki peran yang berbeda dalam pengiriman data.',
-      'Lanjutkan ke aktivitas Process Chain untuk mencocokkan komponen TCP Header dengan fungsinya secara runtut.',
+      'Jelajahi animasi interaktif tentang komponen TCP Header secara bertahap.',
+      'Cocokkan setiap komponen TCP Header dengan fungsinya secara runtut menggunakan drag & drop.',
+      'Tulis argumen logis tentang fungsi komponen TCP Header dan mengapa setiap komponen memiliki peran unik.',
     ],
     logicalThinkingIndicators: [
-      'Keruntutan Berpikir: menyusun cerita tentang struktur TCP Header dan mencocokkan komponen dengan fungsinya secara runtut.',
-      'Kemampuan Berargumen: menjelaskan alasan mengapa komponen tertentu memiliki fungsi tertentu dalam proses komunikasi TCP.',
+      'Keruntutan Berpikir: mengeksplorasi komponen TCP Header melalui animasi interaktif dan mencocokkan komponen dengan fungsinya secara runtut.',
+      'Kemampuan Berargumen: menjelaskan alasan dan argumen tentang fungsi tiap komponen TCP Header dalam proses komunikasi data.',
       'Penarikan Kesimpulan: menyimpulkan apa yang telah dipelajari tentang TCP Header dan fungsi komponennya.',
     ],
     facilitatorNotes: [
@@ -29,61 +29,8 @@ export const lesson2Stages: Stage[] = [
     },
     apersepsi:
       'Pernahkah kamu mengirim paket lewat jasa ekspedisi? Di label paket ada informasi penting: alamat pengirim, alamat penerima, nomor resi, kode keamanan, dan jenis layanan. Tanpa label itu, kurir tidak tahu ke mana paket harus diantar! Nah, di dunia jaringan, TCP juga punya "label pintar" yang disebut TCP Header — berisi informasi penting agar data sampai dengan selamat dan berurutan.',
-    storyScramble: {
-      visualIntro: {
-        title: 'Tahukah Kamu? — Anatomi TCP Header',
-        description:
-          'Setiap kali data dikirim melalui TCP, data tersebut tidak dikirim "telanjang". TCP membungkusnya dengan TCP Header — sebuah "amplop pintar" yang berisi informasi kontrol penting. Ibarat label di paket kiriman, TCP Header memberitahu: dari aplikasi mana data ini berasal, ke aplikasi mana tujuannya, berapa nomor urutnya, dan apakah data masih utuh atau rusak di perjalanan.',
-        footer:
-          'Inilah struktur <strong class="text-[#395886]">TCP Header</strong> — identitas dan "KTP" setiap segmen data dalam jaringan.',
-        cards: [
-          { icon: 'port',       label: 'Port — identitas aplikasi',         color: 'purple' },
-          { icon: 'sequence',   label: 'Sequence — nomor urut byte',        color: 'blue' },
-          { icon: 'ack',        label: 'ACK — konfirmasi penerimaan',       color: 'green' },
-          { icon: 'flags',      label: 'Flags — status koneksi',            color: 'amber' },
-          { icon: 'window',     label: 'Window — pengatur kecepatan',       color: 'blue' },
-          { icon: 'checksum',   label: 'Checksum — verifikasi keutuhan',    color: 'purple' },
-        ],
-      },
-      instruction:
-        'Ketika sebuah komputer mengirim data melalui TCP, setiap potongan data (segmen) dilengkapi dengan TCP Header. Apa saja sih isi TCP Header itu, dan bagaimana setiap komponen bekerja sama agar data sampai dengan benar? Susun 6 potongan cerita berikut menjadi alur yang logis!',
-      fragments: [
-        {
-          id: 'f1',
-          text: 'TCP Header dimulai dengan Source Port dan Destination Port — dua "nomor loket" yang memberi tahu dari aplikasi mana data berasal dan ke aplikasi mana data harus disampaikan.',
-          order: 1,
-        },
-        {
-          id: 'f2',
-          text: 'Di bagian tengah header terdapat Sequence Number — nomor urut yang memberi tahu posisi byte data ini dalam keseluruhan file. Berkat nomor ini, penerima bisa menyusun kembali data meskipun segmen tiba dalam urutan yang berbeda.',
-          order: 2,
-        },
-        {
-          id: 'f3',
-          text: 'Berpasangan dengan Sequence Number, ada Acknowledgment Number — nomor konfirmasi yang memberi tahu pengirim "byte berikutnya yang aku harapkan adalah nomor ini". Ini adalah cara penerima mengatakan "data sampai nomor sekian sudah aku terima".',
-          order: 3,
-        },
-        {
-          id: 'f4',
-          text: 'Selanjutnya ada TCP Flags — sederetan "bendera" kecil (SYN, ACK, FIN, RST) yang menandakan status koneksi: apakah ini permintaan koneksi baru, konfirmasi data, permintaan tutup koneksi, atau sinyal darurat.',
-          order: 4,
-        },
-        {
-          id: 'f5',
-          text: 'Window Size adalah komponen yang mengatur "kuota" — berapa banyak data yang boleh dikirim sekaligus sebelum menunggu konfirmasi. Ini mencegah pengirim membanjiri penerima yang prosesornya lebih lambat.',
-          order: 5,
-        },
-        {
-          id: 'f6',
-          text: 'Di akhir header terdapat Checksum — "sidik jari digital" dari seluruh isi segmen. Penerima menghitung ulang checksum dan membandingkannya. Jika berbeda, artinya data rusak di perjalanan dan harus dikirim ulang.',
-          order: 6,
-        },
-      ],
-      successMessage:
-        'Tepat! TCP Header adalah "KTP" setiap segmen data — lengkap dengan identitas pengirim/penerima (Port), nomor urut (Sequence Number), konfirmasi (ACK), status koneksi (Flags), pengatur kecepatan (Window Size), dan pemeriksa keutuhan (Checksum).',
-    },
     constructivismEssay1:
-      'Berdasarkan alur cerita tentang struktur TCP Header yang baru saja kamu susun, jelaskan mengapa setiap komponen TCP Header (Port, Sequence Number, ACK, Flags, Window Size, Checksum) memiliki peran yang berbeda! Mengapa tidak bisa hanya satu komponen saja yang menangani semuanya?',
+      'Berdasarkan eksplorasi animasi TCP Header yang baru saja kamu pelajari, menurutmu mengapa setiap komponen TCP Header (Port, Sequence Number, ACK, Flags, Window Size, Checksum) memiliki peran yang berbeda? Mengapa tidak bisa hanya satu komponen saja yang menangani semuanya?',
     analogySortGroups: [
       { id: 'hdr', label: 'Komponen TCP Header dan Fungsinya', colorClass: 'blue' },
     ],
@@ -132,8 +79,8 @@ export const lesson2Stages: Stage[] = [
       },
     ],
     constructivismEssay2:
-      'Berdasarkan komponen TCP Header yang baru saja kamu cocokkan dengan fungsinya, jelaskan mengapa Sequence Number dan Acknowledgment Number harus bekerja berpasangan! Apa yang terjadi pada pengiriman data jika salah satunya hilang atau rusak?',
-    conclusionPrompt: 'Berdasarkan aktivitas Story Scramble tentang struktur TCP Header dan Analogy Sorting tentang pencocokan fungsi komponen yang telah kamu lakukan, jelaskan bagaimana kamu mampu mengidentifikasi TCP Header beserta fungsinya pada protokol TCP. Tuliskan dengan tepat menggunakan kata-katamu sendiri.',
+      'Berdasarkan aktivitas mencocokkan komponen TCP Header dengan fungsinya, jelaskan alasanmu: mengapa Sequence Number dan Acknowledgment Number harus bekerja berpasangan? Apa yang terjadi pada pengiriman data jika Checksum mendeteksi kerusakan? Jelaskan argumenmu secara logis!',
+    conclusionPrompt: 'Berdasarkan eksplorasi animasi TCP Header dan aktivitas pencocokan fungsi komponen yang telah kamu lakukan, jelaskan bagaimana kamu mampu mengidentifikasi TCP Header beserta fungsinya pada protokol TCP. Tuliskan dengan tepat menggunakan kata-katamu sendiri.',
   },
 
   {
