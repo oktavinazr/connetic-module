@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronRight, CheckCircle, XCircle, Users, Link as LinkIcon, FileSearch,
   MessageSquare, Info, RotateCcw, AlertCircle, ThumbsUp, ArrowUpDown, GripVertical,
   Zap, Database, Cpu, Cable, Network, ShieldCheck, PlayCircle, Eye, ArrowRight,
   Vote, Award, Sparkles, Monitor, PenLine, BookOpen, GraduationCap, Lightbulb,
-  Clock
+  Clock, Server
 } from 'lucide-react';
 import { getCurrentUser } from '../../utils/auth';
 import {
@@ -72,13 +73,271 @@ function GroupMembersList({ members, submissions = [] }: { members: { user_id: s
   );
 }
 
+// -- Three-Way Handshake Animation (Lesson 2 simulasi phase) -------------------
+
+const TWH_ANIM_STEPS = [
+  {
+    id: 'syn',
+    dir: 'ltr' as const,
+    stepLabel: 'Langkah 1 / 3',
+    title: 'Client → Kirim SYN',
+    packet: { name: 'SYN', flags: 'SYN = 1', seq: 'Seq = 1000', ack: null, color: '#628ECB' },
+    clientStatus: 'SYN_SENT',
+    serverStatus: 'LISTEN',
+    explanation: 'Client memulai koneksi dengan memilih ISN (Initial Sequence Number) = 1000 secara acak, lalu mengirim paket SYN. Status Client berubah: CLOSED → SYN_SENT.',
+    insight: 'ISN dipilih acak untuk keamanan — agar pihak luar tidak mudah menebak nomor urut koneksi aktif.',
+  },
+  {
+    id: 'synack',
+    dir: 'rtl' as const,
+    stepLabel: 'Langkah 2 / 3',
+    title: 'Server → Balas SYN-ACK',
+    packet: { name: 'SYN-ACK', flags: 'SYN=1, ACK=1', seq: 'Seq = 5000', ack: 'Ack = 1001', color: '#8B5CF6' },
+    clientStatus: 'SYN_SENT',
+    serverStatus: 'SYN_RECEIVED',
+    explanation: 'Server menerima SYN dari Client. Server memilih ISN-nya sendiri = 5000, lalu membalas dengan dua flag sekaligus: SYN+ACK. Ack=1001 karena ISN Client (1000) + 1. Status Server: SYN_RECEIVED.',
+    insight: 'SYN-ACK adalah satu-satunya paket dengan DUA flag aktif sekaligus — efisiensi desain protokol TCP.',
+  },
+  {
+    id: 'ack',
+    dir: 'ltr' as const,
+    stepLabel: 'Langkah 3 / 3',
+    title: 'Client → Kirim ACK Final',
+    packet: { name: 'ACK', flags: 'ACK = 1', seq: 'Seq = 1001', ack: 'Ack = 5001', color: '#10B981' },
+    clientStatus: 'ESTABLISHED',
+    serverStatus: 'ESTABLISHED',
+    explanation: 'Client mengkonfirmasi SYN Server dengan Ack=5001 (ISN Server + 1). Sekarang KEDUA pihak berstatus ESTABLISHED — koneksi TCP terbuka penuh dan data siap mengalir!',
+    insight: 'Setelah ACK ini, tidak ada SYN tambahan. Segmen data nyata mulai mengalir dengan Sequence Number = 1001.',
+  },
+] as const;
+
+const STATUS_COLOR: Record<string, string> = {
+  CLOSED: '#9CA3AF',
+  LISTEN: '#F59E0B',
+  SYN_SENT: '#628ECB',
+  SYN_RECEIVED: '#8B5CF6',
+  ESTABLISHED: '#10B981',
+};
+
+function TwhAnimationSection() {
+  const [step, setStep] = useState(-1);
+  const [packetIdx, setPacketIdx] = useState<number | null>(null);
+  const [advancing, setAdvancing] = useState(false);
+
+  const completedStep = step >= 0 ? TWH_ANIM_STEPS[step] : null;
+  const clientStatus = completedStep ? completedStep.clientStatus : 'CLOSED';
+  const serverStatus = completedStep ? completedStep.serverStatus : 'LISTEN';
+  const allDone = step === TWH_ANIM_STEPS.length - 1;
+  const flyingPacket = packetIdx !== null ? TWH_ANIM_STEPS[packetIdx] : null;
+
+  const advance = () => {
+    if (advancing || allDone) return;
+    const nextIdx = step + 1;
+    setAdvancing(true);
+    setPacketIdx(nextIdx);
+    setTimeout(() => {
+      setStep(nextIdx);
+      setPacketIdx(null);
+      setAdvancing(false);
+    }, 950);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Diagram card */}
+      <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#628ECB]/10 to-transparent border-b border-[#D5DEEF]">
+          <div className="h-8 w-8 rounded-xl bg-[#628ECB]/15 flex items-center justify-center">
+            <Network className="w-4 h-4 text-[#628ECB]" />
+          </div>
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#628ECB]">Animasi Interaktif</p>
+            <h3 className="text-sm font-bold text-[#395886]">Three-Way Handshake TCP</h3>
+          </div>
+          <div className="ml-auto flex gap-1">
+            {TWH_ANIM_STEPS.map((_, i) => (
+              <div key={i} className={`rounded-full transition-all duration-400 ${i <= step ? 'w-5 h-2 bg-[#10B981]' : 'w-2 h-2 bg-[#D5DEEF]'}`} />
+            ))}
+          </div>
+        </div>
+
+        {/* Node + packet lane */}
+        <div className="px-5 py-6">
+          <div className="flex items-center gap-3">
+            {/* Client node */}
+            <div className="flex flex-col items-center gap-2 w-[90px]">
+              <div className="h-12 w-12 rounded-2xl bg-[#628ECB]/10 flex items-center justify-center shadow-sm border-2 border-[#628ECB]/20">
+                <Monitor className="w-6 h-6 text-[#628ECB]" />
+              </div>
+              <span className="text-[10px] font-black text-[#395886] uppercase tracking-wide">CLIENT</span>
+              <motion.span
+                key={clientStatus}
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="px-2.5 py-1 rounded-full text-[9px] font-black text-white"
+                style={{ backgroundColor: STATUS_COLOR[clientStatus] }}
+              >
+                {clientStatus}
+              </motion.span>
+            </div>
+
+            {/* Packet animation lane */}
+            <div className="flex-1 relative h-14 flex items-center justify-center overflow-hidden">
+              {/* Base dashed line */}
+              <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-[#D5DEEF]" />
+
+              <AnimatePresence>
+                {flyingPacket && (
+                  <motion.div
+                    key={flyingPacket.id}
+                    initial={{ x: flyingPacket.dir === 'ltr' ? '-130%' : '130%', opacity: 0 }}
+                    animate={{ x: '0%', opacity: 1 }}
+                    exit={{ x: flyingPacket.dir === 'ltr' ? '130%' : '-130%', opacity: 0 }}
+                    transition={{ duration: 0.7, ease: 'easeInOut' }}
+                    className="relative z-10 px-3 py-1.5 rounded-full text-white text-[10px] font-black shadow-lg whitespace-nowrap"
+                    style={{ backgroundColor: flyingPacket.packet.color }}
+                  >
+                    {flyingPacket.packet.name}
+                    {' '}({flyingPacket.packet.seq}{flyingPacket.packet.ack ? `, ${flyingPacket.packet.ack}` : ''})
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Direction arrow overlay */}
+              {flyingPacket && (
+                <div className={`absolute bottom-0.5 w-full flex ${flyingPacket.dir === 'ltr' ? 'justify-end pr-2' : 'justify-start pl-2'}`}>
+                  <ArrowRight className={`w-3.5 h-3.5 text-[#628ECB]/50 ${flyingPacket.dir === 'rtl' ? 'rotate-180' : ''}`} />
+                </div>
+              )}
+
+              {/* Completed arrow for current step (static) */}
+              {!flyingPacket && completedStep && !allDone && (
+                <div className={`absolute bottom-0.5 w-full flex ${completedStep.dir === 'ltr' ? 'justify-end pr-2' : 'justify-start pl-2'}`}>
+                  <ArrowRight className={`w-3.5 h-3.5 text-[#10B981]/50 ${completedStep.dir === 'rtl' ? 'rotate-180' : ''}`} />
+                </div>
+              )}
+            </div>
+
+            {/* Server node */}
+            <div className="flex flex-col items-center gap-2 w-[90px]">
+              <div className="h-12 w-12 rounded-2xl bg-[#8B5CF6]/10 flex items-center justify-center shadow-sm border-2 border-[#8B5CF6]/20">
+                <Server className="w-6 h-6 text-[#8B5CF6]" />
+              </div>
+              <span className="text-[10px] font-black text-[#395886] uppercase tracking-wide">SERVER</span>
+              <motion.span
+                key={serverStatus}
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="px-2.5 py-1 rounded-full text-[9px] font-black text-white"
+                style={{ backgroundColor: STATUS_COLOR[serverStatus] }}
+              >
+                {serverStatus}
+              </motion.span>
+            </div>
+          </div>
+
+          {/* ESTABLISHED banner */}
+          <AnimatePresence>
+            {allDone && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#10B981]/10 border-2 border-[#10B981]/25"
+              >
+                <CheckCircle className="w-4 h-4 text-[#10B981]" />
+                <span className="text-xs font-black text-[#065F46]">Koneksi TCP Berhasil Terbentuk — ESTABLISHED!</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Step detail panel */}
+      <AnimatePresence mode="wait">
+        {completedStep && (
+          <motion.div
+            key={completedStep.id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white rounded-2xl border-2 shadow-sm overflow-hidden"
+            style={{ borderColor: `${completedStep.packet.color}40` }}
+          >
+            <div className="flex items-center gap-3 px-4 py-3 border-b"
+              style={{ backgroundColor: `${completedStep.packet.color}10`, borderColor: `${completedStep.packet.color}20` }}>
+              <div className="h-8 w-8 rounded-xl flex items-center justify-center text-white text-xs font-black"
+                style={{ backgroundColor: completedStep.packet.color }}>
+                {step + 1}
+              </div>
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: completedStep.packet.color }}>{completedStep.stepLabel}</p>
+                <p className="text-sm font-bold text-[#395886]">{completedStep.title}</p>
+              </div>
+            </div>
+            <div className="p-4 space-y-3">
+              {/* Packet values badges */}
+              <div className="flex flex-wrap gap-1.5">
+                {[completedStep.packet.flags, completedStep.packet.seq, completedStep.packet.ack].filter(Boolean).map((v, i) => (
+                  <span key={i} className="px-2.5 py-1 rounded-full text-[10px] font-black text-[#395886] bg-[#F0F3FA] border border-[#D5DEEF]">
+                    {v as string}
+                  </span>
+                ))}
+              </div>
+              <p className="text-xs text-[#395886]/70 leading-relaxed">{completedStep.explanation}</p>
+              <div className="flex items-start gap-2 p-2.5 bg-[#FFFBEB] rounded-xl border border-[#F59E0B]/20">
+                <Lightbulb className="w-3.5 h-3.5 text-[#F59E0B] shrink-0 mt-0.5" />
+                <p className="text-[11px] text-[#78350F] leading-relaxed">{completedStep.insight}</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Initial hint */}
+      {step < 0 && (
+        <div className="flex items-start gap-3 p-4 bg-[#EEF4FF] rounded-2xl border border-[#628ECB]/20">
+          <Info className="w-4 h-4 text-[#628ECB] shrink-0 mt-0.5" />
+          <p className="text-xs text-[#395886]/70 leading-relaxed">
+            Status awal: <strong>Client = CLOSED</strong>, <strong>Server = LISTEN</strong>.
+            Klik tombol di bawah untuk memulai simulasi Three-Way Handshake langkah demi langkah.
+          </p>
+        </div>
+      )}
+
+      {/* Advance button */}
+      {!allDone && (
+        <button
+          onClick={advance}
+          disabled={advancing}
+          className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-black text-sm transition-all active:scale-95 shadow-sm
+            ${advancing
+              ? 'bg-[#D5DEEF] text-[#395886]/40 cursor-wait'
+              : 'bg-gradient-to-r from-[#395886] to-[#628ECB] text-white hover:opacity-90 shadow-[#628ECB]/15'}`}
+        >
+          {advancing
+            ? <><RotateCcw className="w-4 h-4 animate-spin" /> Mengirim Paket...</>
+            : step < 0
+              ? <>Mulai Simulasi <ChevronRight className="w-4 h-4" /></>
+              : <>Langkah Berikutnya ({step + 2} / {TWH_ANIM_STEPS.length}) <ChevronRight className="w-4 h-4" /></>
+          }
+        </button>
+      )}
+    </div>
+  );
+}
+
 // -- Phase 1: Concept -----------------------------------------------------------
 
 function ConceptPhase({
-  title, concept, layers, isEncapsulation, onNext,
+  lessonId, title, concept, layers, isEncapsulation, onNext,
 }: {
-  title: string; concept: string; layers: any[]; isEncapsulation: boolean; onNext: () => void;
+  lessonId: string; title: string; concept: string; layers: any[]; isEncapsulation: boolean; onNext: () => void;
 }) {
+  const isTcpHandshakeModule = lessonId === '2' && isEncapsulation;
+  const isTcpFlowModule = lessonId === '2' && !isEncapsulation;
+
   return (
     <div className={`space-y-6 ${anim.fadeUp}`}>
       <ActivityCard
@@ -94,23 +353,82 @@ function ConceptPhase({
           <p className="text-sm font-medium text-[#395886]/80 leading-relaxed">
             {concept}
           </p>
-          
-          <SectionDivider label="Struktur Lapisan" icon={<Database className="w-3 h-3" />} />
-          
-          <div className="flex flex-col gap-2 max-w-sm mx-auto w-full">
-            {layers.map((layer, idx) => (
-              <div key={idx} className={`flex items-center gap-4 p-4 rounded-2xl border-2 border-[#D5DEEF] bg-[#F8FAFD] hover:border-[#628ECB]/30 transition-all`}>
-                <div className="h-8 w-8 rounded-xl bg-[#395886] text-white flex items-center justify-center font-black text-xs shadow-sm">
-                  {isEncapsulation ? idx + 1 : layers.length - idx}
-                </div>
-                <span className="text-sm font-bold text-[#395886]">{layer.name || layer}</span>
-              </div>
-            ))}
-          </div>
 
-          <InstructionBox accent="text-[#10B981]">
-            Data akan diproses secara berurutan {isEncapsulation ? 'dari atas ke bawah (Enkapsulasi)' : 'dari bawah ke atas (Dekapsulasi)'}.
-          </InstructionBox>
+          {/* Lesson 2 Module 1: Three-Way Handshake reference steps */}
+          {isTcpHandshakeModule && (
+            <>
+              <SectionDivider label="Alur Three-Way Handshake" icon={<Network className="w-3 h-3" />} />
+              <div className="flex flex-col gap-2">
+                {[
+                  { step: 1, label: 'Client → SYN', color: '#628ECB', detail: 'SYN=1, Seq=1000 | Status: CLOSED → SYN_SENT' },
+                  { step: 2, label: 'Server → SYN-ACK', color: '#8B5CF6', detail: 'SYN=1, ACK=1, Seq=5000, Ack=1001 | Status: SYN_RECEIVED' },
+                  { step: 3, label: 'Client → ACK', color: '#10B981', detail: 'ACK=1, Seq=1001, Ack=5001 | Status: ESTABLISHED' },
+                ].map(s => (
+                  <div key={s.step} className="flex items-center gap-3 p-3 rounded-xl bg-white border-2 border-[#D5DEEF]">
+                    <div className="h-8 w-8 shrink-0 rounded-xl flex items-center justify-center text-white text-xs font-black"
+                      style={{ backgroundColor: s.color }}>
+                      {s.step}
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-[#395886]">{s.label}</p>
+                      <p className="text-[10px] text-[#395886]/50 font-medium">{s.detail}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <InstructionBox accent="text-[#628ECB]">
+                Gunakan pemahaman alur Three-Way Handshake di atas untuk menganalisis studi kasus berikut bersama kelompok.
+              </InstructionBox>
+            </>
+          )}
+
+          {/* Lesson 2 Module 2: Flow Control reference */}
+          {isTcpFlowModule && (
+            <>
+              <SectionDivider label="Mekanisme Flow Control" icon={<Zap className="w-3 h-3" />} />
+              <div className="flex flex-col gap-2">
+                {[
+                  { label: 'Window Size = 65535', desc: 'Buffer penerima kosong — dapat menerima data penuh.', color: '#10B981' },
+                  { label: 'Window Size = 8192', desc: 'Buffer mulai terisi — pengirim harus mulai melambat.', color: '#F59E0B' },
+                  { label: 'Window Size ≈ 0', desc: 'Buffer penuh — pengirim harus berhenti mengirim (pause).', color: '#EF4444' },
+                ].map((row, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white border-2 border-[#D5DEEF]">
+                    <div className="h-8 w-8 shrink-0 rounded-xl flex items-center justify-center text-white text-[9px] font-black"
+                      style={{ backgroundColor: row.color }}>
+                      {i + 1}
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-[#395886]">{row.label}</p>
+                      <p className="text-[10px] text-[#395886]/50 font-medium">{row.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <InstructionBox accent="text-[#628ECB]">
+                Window Size mencerminkan ruang kosong di buffer penerima. Gunakan pemahaman ini untuk menganalisis studi kasus berikut.
+              </InstructionBox>
+            </>
+          )}
+
+          {/* Lesson 1 (generic): TCP/IP Layer list */}
+          {lessonId !== '2' && (
+            <>
+              <SectionDivider label="Struktur Lapisan" icon={<Database className="w-3 h-3" />} />
+              <div className="flex flex-col gap-2 max-w-sm mx-auto w-full">
+                {layers.map((layer, idx) => (
+                  <div key={idx} className="flex items-center gap-4 p-4 rounded-2xl border-2 border-[#D5DEEF] bg-[#F8FAFD] hover:border-[#628ECB]/30 transition-all">
+                    <div className="h-8 w-8 rounded-xl bg-[#395886] text-white flex items-center justify-center font-black text-xs shadow-sm">
+                      {isEncapsulation ? idx + 1 : layers.length - idx}
+                    </div>
+                    <span className="text-sm font-bold text-[#395886]">{layer.name || layer}</span>
+                  </div>
+                ))}
+              </div>
+              <InstructionBox accent="text-[#10B981]">
+                Data akan diproses secara berurutan {isEncapsulation ? 'dari atas ke bawah (Enkapsulasi)' : 'dari bawah ke atas (Dekapsulasi)'}.
+              </InstructionBox>
+            </>
+          )}
         </div>
       </ActivityCard>
 
@@ -631,7 +949,7 @@ function ModuleFlow({
   return (
     <div className="w-full space-y-6">
       <StepTracker steps={steps} current={currentStep} />
-      {phase === 'concept' && <ConceptPhase title={title} concept={concept} layers={layers} isEncapsulation={isEncapsulation} onNext={() => setPhase('case')} />}
+      {phase === 'concept' && <ConceptPhase lessonId={lessonId} title={title} concept={concept} layers={layers} isEncapsulation={isEncapsulation} onNext={() => setPhase('case')} />}
       {phase === 'case' && <CasePhase study={study} isSubmitted={isSubmitted} submitError={submitError} onNext={handleCaseSubmit} />}
       {phase === 'discussion' && <DiscussionPhase lessonId={lessonId} moduleId={moduleId} groupName={groupName} onNext={finalizeModule} />}
       {phase === 'result' && <ResultPhase moduleId={moduleId} discussions={discussions} onDone={handleResultDone} />}
@@ -641,7 +959,8 @@ function ModuleFlow({
 
 // -- Overall Group Result -------------------------------------------------------
 
-function OverallGroupResult({ module1Data, module2Data, groupName, onNext }: { module1Data: any; module2Data: any; groupName: string; onNext: () => void }) {
+function OverallGroupResult({ lessonId, module1Data, module2Data, groupName, onNext }: { lessonId: string; module1Data: any; module2Data: any; groupName: string; onNext: () => void }) {
+  const isLesson2 = lessonId === '2';
   return (
     <div className={`space-y-6 ${anim.zoomIn} w-full`}>
       <ActivityCard
@@ -657,12 +976,14 @@ function OverallGroupResult({ module1Data, module2Data, groupName, onNext }: { m
           <p className="text-sm font-bold text-[#395886]/60 leading-relaxed px-4">
             Berikut adalah poin-poin kesepakatan terbaik kelompok <span className="text-[#628ECB] font-black">{groupName}</span> untuk setiap aktivitas.
           </p>
-          
+
           <div className="grid md:grid-cols-2 gap-6 text-left">
             <div className="p-5 rounded-2xl border-2 border-[#10B981]/20 bg-[#F0FDF4]/30 space-y-3">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-[#10B981]" />
-                <p className="text-[10px] font-black text-[#10B981] uppercase tracking-widest">Enkapsulasi (X.TCP.6)</p>
+                <p className="text-[10px] font-black text-[#10B981] uppercase tracking-widest">
+                  {isLesson2 ? 'Studi Kasus 1: TCP Handshake' : 'Enkapsulasi (X.TCP.6)'}
+                </p>
               </div>
               <p className="text-xs font-bold text-[#395886]/80 leading-relaxed italic bg-white/80 p-3.5 rounded-xl border border-[#10B981]/10">
                 "{module1Data?.bestArgument?.argument || 'Hasil belum tersedia'}"
@@ -671,7 +992,9 @@ function OverallGroupResult({ module1Data, module2Data, groupName, onNext }: { m
             <div className="p-5 rounded-2xl border-2 border-[#628ECB]/20 bg-[#EEF4FF]/30 space-y-3">
               <div className="flex items-center gap-2">
                 <PlayCircle className="w-4 h-4 text-[#628ECB]" />
-                <p className="text-[10px] font-black text-[#628ECB] uppercase tracking-widest">Dekapsulasi (X.TCP.7)</p>
+                <p className="text-[10px] font-black text-[#628ECB] uppercase tracking-widest">
+                  {isLesson2 ? 'Studi Kasus 2: Flow Control' : 'Dekapsulasi (X.TCP.7)'}
+                </p>
               </div>
               <p className="text-xs font-bold text-[#395886]/80 leading-relaxed italic bg-white/80 p-3.5 rounded-xl border border-[#628ECB]/10">
                 "{module2Data?.bestArgument?.argument || 'Hasil belum tersedia'}"
@@ -730,32 +1053,44 @@ export function LearningCommunityStage({
     </div>
   );
 
+  const isLesson2 = lessonId === '2';
+
   if (subStage === 'simulasi') return (
     <div className={`w-full space-y-6 ${anim.fadeUp}`}>
-       <div className="bg-white rounded-lg border-2 border-[#628ECB]/20 p-5 shadow-sm overflow-hidden">
-          <div className="flex items-center gap-4 mb-8 text-left border-b border-[#D5DEEF]/60 pb-5">
-             <div className="h-12 w-12 rounded-xl bg-[#628ECB]/10 text-[#628ECB] flex items-center justify-center shadow-sm"><Monitor className="w-6 h-6" /></div>
+       <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 p-5 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-4 mb-6 text-left border-b border-[#D5DEEF]/60 pb-5">
+             <div className="h-12 w-12 rounded-xl bg-[#628ECB]/10 text-[#628ECB] flex items-center justify-center shadow-sm">
+               {isLesson2 ? <Network className="w-6 h-6" /> : <Monitor className="w-6 h-6" />}
+             </div>
              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Tahap Simulasi</p>
-                <h2 className="text-lg font-black text-[#395886]">Visualisasi Interaktif Enkapsulasi & Dekapsulasi</h2>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Tahap Simulasi — Fondasi Diskusi</p>
+                <h2 className="text-base font-black text-[#395886]">
+                  {isLesson2 ? 'Animasi Three-Way Handshake TCP' : 'Visualisasi Interaktif Enkapsulasi & Dekapsulasi'}
+                </h2>
+                {isLesson2 && (
+                  <p className="text-xs text-[#395886]/60 mt-0.5">Pahami alur SYN → SYN-ACK → ACK sebelum menganalisis studi kasus bersama kelompok.</p>
+                )}
              </div>
           </div>
-          
-          <TcpIpInteractive />
 
-          <div className={`mt-8 p-4 rounded-lg border-2 transition-all text-left flex items-start gap-3 ${understood ? 'border-[#10B981] bg-[#F0FDF4]/50' : 'border-[#D5DEEF] bg-[#F8FAFD]'}`}>
+          {isLesson2 ? <TwhAnimationSection /> : <TcpIpInteractive />}
+
+          <div className={`mt-6 p-4 rounded-xl border-2 transition-all text-left flex items-start gap-3 ${understood ? 'border-[#10B981] bg-[#F0FDF4]/50' : 'border-[#D5DEEF] bg-[#F8FAFD]'}`}>
              <button onClick={() => setUnderstood(!understood)} className={`mt-1 h-6 w-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all ${understood ? 'bg-[#10B981] border-[#10B981]' : 'bg-white border-[#D5DEEF]'}`}>
                 {understood && <CheckCircle className="w-4 h-4 text-white" />}
              </button>
              <label className="text-sm font-bold text-[#395886] leading-relaxed cursor-pointer select-none">
-                Saya sudah memahami proses Enkapsulasi & Dekapsulasi melalui simulasi di atas dan siap menganalisis skenario bersama kelompok <span className="text-[#628ECB] font-black">{groupName}</span>.
+                {isLesson2
+                  ? <>Saya sudah memahami alur <strong>Three-Way Handshake</strong> (SYN → SYN-ACK → ACK) dan siap menganalisis studi kasus bersama kelompok <span className="text-[#628ECB] font-black">{groupName}</span>.</>
+                  : <>Saya sudah memahami proses Enkapsulasi & Dekapsulasi melalui simulasi di atas dan siap menganalisis skenario bersama kelompok <span className="text-[#628ECB] font-black">{groupName}</span>.</>
+                }
              </label>
           </div>
 
-          <button 
-            onClick={() => setSubPhase('x_tcp_6')} 
-            disabled={!understood} 
-            className={`w-full mt-6 py-3.5 rounded-lg font-black text-sm shadow-md transition-all active:scale-95 flex items-center justify-center gap-2
+          <button
+            onClick={() => setSubPhase('x_tcp_6')}
+            disabled={!understood}
+            className={`w-full mt-5 py-3.5 rounded-xl font-black text-sm shadow-md transition-all active:scale-95 flex items-center justify-center gap-2
               ${understood ? 'bg-[#395886] text-white hover:bg-[#2A4468]' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
           >
              Mulai Aktivitas Kelompok <ChevronRight className="w-5 h-5" />
@@ -765,41 +1100,42 @@ export function LearningCommunityStage({
   );
 
   if (subStage === 'x_tcp_6') return (
-    <ModuleFlow 
+    <ModuleFlow
       key="x_tcp_6"
-      lessonId={lessonId} 
-      moduleId={encapsulationCase?.id || 'X.TCP.6'} 
-      groupName={groupName} 
-      title={encapsulationCase?.title || 'Aktivitas Enkapsulasi'} 
-      concept={encapsulationCase?.concept || 'Enkapsulasi adalah proses pembungkusan data.'} 
-      layers={layers5} 
-      study={encapsulationCase!} 
-      isEncapsulation={true} 
-      onModuleDone={d => { setModule1Data(d); setSubPhase('x_tcp_7'); }} 
+      lessonId={lessonId}
+      moduleId={encapsulationCase?.id || 'X.TCP.6'}
+      groupName={groupName}
+      title={encapsulationCase?.title || 'Aktivitas Enkapsulasi'}
+      concept={encapsulationCase?.concept || 'Enkapsulasi adalah proses pembungkusan data.'}
+      layers={layers5}
+      study={encapsulationCase!}
+      isEncapsulation={true}
+      onModuleDone={d => { setModule1Data(d); setSubPhase('x_tcp_7'); }}
     />
   );
 
   if (subStage === 'x_tcp_7') return (
-    <ModuleFlow 
+    <ModuleFlow
       key="x_tcp_7"
-      lessonId={lessonId} 
-      moduleId={decapsulationCase?.id || 'X.TCP.7'} 
-      groupName={groupName} 
-      title={decapsulationCase?.title || 'Aktivitas Dekapsulasi'} 
-      concept={decapsulationCase?.concept || 'Dekapsulasi adalah proses pembukaan data.'} 
-      layers={[...layers5].reverse()} 
-      study={decapsulationCase!} 
-      isEncapsulation={false} 
-      onModuleDone={d => { setModule2Data(d); setSubPhase('group_result'); }} 
+      lessonId={lessonId}
+      moduleId={decapsulationCase?.id || 'X.TCP.7'}
+      groupName={groupName}
+      title={decapsulationCase?.title || 'Aktivitas Dekapsulasi'}
+      concept={decapsulationCase?.concept || 'Dekapsulasi adalah proses pembukaan data.'}
+      layers={isLesson2 ? layers5 : [...layers5].reverse()}
+      study={decapsulationCase!}
+      isEncapsulation={false}
+      onModuleDone={d => { setModule2Data(d); setSubPhase('group_result'); }}
     />
   );
 
   if (subStage === 'group_result') return (
-    <OverallGroupResult 
-      module1Data={module1Data} 
-      module2Data={module2Data} 
-      groupName={groupName} 
-      onNext={() => setSubPhase('individual_summary')} 
+    <OverallGroupResult
+      lessonId={lessonId}
+      module1Data={module1Data}
+      module2Data={module2Data}
+      groupName={groupName}
+      onNext={() => setSubPhase('individual_summary')}
     />
   );
 
@@ -818,10 +1154,14 @@ export function LearningCommunityStage({
           <InstructionBox accent="text-[#10B981]">
             Selesaikan tahap Learning Community dengan menuliskan pemahaman pribadimu berdasarkan hasil kolaborasi kelompok.
           </InstructionBox>
-          
-          <EssayBox 
+
+          <EssayBox
             objectiveLabel={moduleId}
-            prompt="Berdasarkan hasil diskusi kelompokmu, simpulkan mengapa pemahaman alur enkapsulasi dan dekapsulasi sangat penting bagi seorang teknisi jaringan dalam melakukan troubleshooting?"
+            prompt={
+              isLesson2
+                ? 'Berdasarkan hasil diskusi kelompokmu tentang TCP Three-Way Handshake dan Flow Control, simpulkan: (1) Mengapa Three-Way Handshake diperlukan sebelum data dikirim? (2) Apa hubungan antara Window Size dan kemampuan server dalam menerima data?'
+                : 'Berdasarkan hasil diskusi kelompokmu, simpulkan mengapa pemahaman alur enkapsulasi dan dekapsulasi sangat penting bagi seorang teknisi jaringan dalam melakukan troubleshooting?'
+            }
             submitLabel="Submit Aktivitas"
             onSubmit={essay => {
               const finalAnswer = { module1Data, module2Data, finalConclusion: essay };
