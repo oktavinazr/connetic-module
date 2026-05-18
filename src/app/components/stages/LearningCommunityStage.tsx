@@ -7,12 +7,12 @@ import {
   Clock
 } from 'lucide-react';
 import { getCurrentUser } from '../../utils/auth';
-import { 
-  createGroupDiscussion, 
-  getGroupDiscussions, 
-  toggleGroupDiscussionVote, 
-  getGroupMembers, 
-  type GroupDiscussion 
+import {
+  upsertGroupDiscussion,
+  getGroupDiscussions,
+  toggleGroupDiscussionVote,
+  getGroupMembers,
+  type GroupDiscussion
 } from '../../utils/groups';
 import { supabase } from '../../utils/supabase';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
@@ -123,19 +123,12 @@ function ConceptPhase({
 
 // -- Phase 2: Case Study + Argument Input --------------------------------------
 
-function CasePhase({ study, isSubmitted, submitError, checkingSubmission, onNext }: { study: CaseStudy; isSubmitted?: boolean; submitError?: string | null; checkingSubmission?: boolean; onNext: (choiceId: string, choiceText: string, argument: string) => void }) {
+function CasePhase({ study, isSubmitted, submitError, onNext }: { study: CaseStudy; isSubmitted?: boolean; submitError?: string | null; onNext: (choiceId: string, choiceText: string, argument: string) => void }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [argument, setArgument] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const wordCount = argument.trim() ? argument.trim().split(/\s+/).length : 0;
   const ready = selected && wordCount >= 20;
-
-  if (checkingSubmission) return (
-    <div className="flex flex-col items-center justify-center py-16 space-y-3">
-      <RotateCcw className="w-8 h-8 text-[#F59E0B] animate-spin" />
-      <p className="text-xs font-bold text-[#395886]/50">Memeriksa status pengiriman...</p>
-    </div>
-  );
 
   return (
     <div className={`space-y-6 ${anim.zoomIn}`}>
@@ -171,7 +164,8 @@ function CasePhase({ study, isSubmitted, submitError, checkingSubmission, onNext
             ))}
           </div>
 
-          {(selected || isSubmitted) && (
+          {/* Argument box: only visible after student actively selects an option */}
+          {selected !== null && (
             <div className={`space-y-3 p-5 rounded-2xl bg-[#F8FAFD] border-2 border-[#D5DEEF]/60 ${anim.fadeUp}`}>
               <div className="flex items-center gap-2">
                 <PenLine className="w-4 h-4 text-[#395886]/60" />
@@ -180,7 +174,7 @@ function CasePhase({ study, isSubmitted, submitError, checkingSubmission, onNext
               <textarea
                 value={argument}
                 readOnly={isSubmitted}
-                onChange={e => setArgument(e.target.value)}
+                onChange={e => !isSubmitted && setArgument(e.target.value)}
                 rows={3}
                 className={`w-full p-4 border-2 border-[#D5DEEF] rounded-xl text-sm text-[#395886] focus:border-[#F59E0B] focus:ring-4 focus:ring-[#F59E0B]/5 outline-none transition-all resize-none ${isSubmitted ? 'bg-[#F1F5F9] border-dashed cursor-not-allowed' : 'bg-white'}`}
                 placeholder="Jelaskan alasan teknismu di sini..."
@@ -201,6 +195,14 @@ function CasePhase({ study, isSubmitted, submitError, checkingSubmission, onNext
                   </>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Status when student already submitted (returning session) but hasn't re-selected */}
+          {isSubmitted && selected === null && (
+            <div className={`p-4 rounded-xl bg-[#10B981]/10 border-2 border-[#10B981]/20 flex items-center gap-3 ${anim.fadeUp}`}>
+              <CheckCircle className="w-5 h-5 text-[#10B981] shrink-0" />
+              <p className="text-sm font-bold text-[#065F46]">Argumenmu sudah terkirim ke kelompok. Menunggu anggota lain menyelesaikan pengiriman...</p>
             </div>
           )}
 
@@ -575,45 +577,22 @@ function ResultPhase({ moduleId, discussions, onDone }: { moduleId: string; disc
 
 // -- Generic Module Flow Component ----------------------------------------------
 
-function ModuleFlow({ 
-  lessonId, moduleId, groupName, title, concept, layers, study, isEncapsulation, onModuleDone 
-}: { 
-  lessonId: string; moduleId: string; groupName: string; title: string; concept: string; layers: any[]; study: CaseStudy; isEncapsulation: boolean; onModuleDone: (data: any) => void 
+function ModuleFlow({
+  lessonId, moduleId, groupName, title, concept, layers, study, isEncapsulation, onModuleDone
+}: {
+  lessonId: string; moduleId: string; groupName: string; title: string; concept: string; layers: any[]; study: CaseStudy; isEncapsulation: boolean; onModuleDone: (data: any) => void
 }) {
   const [phase, setPhase] = useState<'concept' | 'case' | 'discussion' | 'result'>('concept');
   const [discussions, setDiscussions] = useState<GroupDiscussion[]>([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [checkingSubmission, setCheckingSubmission] = useState(true);
   const user = getCurrentUser();
 
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // ── One-time submission guard: check if user already submitted ──
-  useEffect(() => {
-    let cancelled = false;
-    getGroupDiscussions(lessonId, moduleId, groupName).then(existing => {
-      if (cancelled) return;
-      const alreadySubmitted = existing.some(d => d.user_id === user!.id);
-      if (alreadySubmitted) {
-        setIsSubmitted(true);
-        // If all members have submitted, jump straight to discussion
-        getGroupMembers(groupName).then(members => {
-          const submissions = existing.map(d => d.user_id);
-          const allDone = members.length > 0 && members.every(m => submissions.includes(m.user_id));
-          if (allDone) {
-            setPhase('discussion');
-          }
-        });
-      }
-      setCheckingSubmission(false);
-    });
-    return () => { cancelled = true; };
-  }, []);
-
   const handleCaseSubmit = async (choiceId: string, choiceText: string, argument: string) => {
     setSubmitError(null);
     try {
-      await createGroupDiscussion({
+      await upsertGroupDiscussion({
         lesson_id: lessonId,
         module_id: moduleId,
         group_name: groupName,
@@ -653,7 +632,7 @@ function ModuleFlow({
     <div className="w-full space-y-6">
       <StepTracker steps={steps} current={currentStep} />
       {phase === 'concept' && <ConceptPhase title={title} concept={concept} layers={layers} isEncapsulation={isEncapsulation} onNext={() => setPhase('case')} />}
-      {phase === 'case' && <CasePhase study={study} isSubmitted={isSubmitted} submitError={submitError} checkingSubmission={checkingSubmission} onNext={handleCaseSubmit} />}
+      {phase === 'case' && <CasePhase study={study} isSubmitted={isSubmitted} submitError={submitError} onNext={handleCaseSubmit} />}
       {phase === 'discussion' && <DiscussionPhase lessonId={lessonId} moduleId={moduleId} groupName={groupName} onNext={finalizeModule} />}
       {phase === 'result' && <ResultPhase moduleId={moduleId} discussions={discussions} onDone={handleResultDone} />}
     </div>

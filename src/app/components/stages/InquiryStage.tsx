@@ -1224,17 +1224,16 @@ function GroupClassifier({ groups, groupItems, initialData, onComplete, onNext }
   );
 }
 
-// -- Main InquiryStage Router --------------------------------------------------
-
-/** Thin wrapper for lesson 1 — no router tracker to avoid double-tracker conflict */
-function InquiryStageForLesson1(props: InquiryStageProps) {
-  return <InquiryLesson1Page {...props} />;
-}
+// -- Main InquiryStage Router (pure router — no hooks) -------------------------
 
 export function InquiryStage(props: InquiryStageProps) {
+  if (props.lessonId === '1') return <InquiryLesson1Page {...props} />;
+  return <InquiryStageGeneric {...props} />;
+}
+
+function InquiryStageGeneric(props: InquiryStageProps) {
   const { lessonId, stageIndex, onComplete, onTrackerPhase } = props;
 
-  // Always call hooks unconditionally (React rule)
   const tracker = useActivityTracker({
     lessonId,
     stageIndex,
@@ -1251,9 +1250,6 @@ export function InquiryStage(props: InquiryStageProps) {
   const [reflection2, setReflection2] = useState('');
   const [isRestored, setIsRestored] = useState(false);
   const [pendingNextSubPhase, setPendingNextSubPhase] = useState<'group' | 'matching' | null>(null);
-
-  // Lesson 1 uses its own InquiryLesson1Page with internal tracker (router tracker is unused)
-  if (lessonId === '1') return <InquiryStageForLesson1 {...props} />;
 
   useEffect(() => {
     if (!tracker.isLoading && tracker.session?.latestSnapshot && !isRestored) {

@@ -623,21 +623,21 @@ export const lesson1Stages: Stage[] = [
     type: 'authentic-assessment',
     title: 'Authentic Assessment',
     description:
-      'Siswa menyelesaikan studi kasus bercabang yang menilai analisis, argumentasi, and penarikan kesimpulan pada beberapa masalah pengiriman paket TCP.',
+      'Siswa menganalisis proses transmisi data melalui 5 lapisan TCP/IP menggunakan studi kasus bercabang tentang pengiriman file.',
     objectiveCode: 'X.TCP.8',
     activityGuide: [
-      'Baca konteks kasus, bukti masalah, dan tiga area fokus gangguan dengan teliti.',
-      'Pilih jalur diagnosis, jelaskan alasan teknis, lalu pilih prioritas tindak lanjut.',
-      'Ikuti cabang kasus hingga akhir dan simpulkan langkah perbaikan paling berdampak.',
+      'Baca konteks kasus: Alya mengirim file presentasi melalui email.',
+      'Pilih urutan proses lapisan TCP/IP yang paling tepat untuk menggambarkan alur transmisi data.',
+      'Tulis alasan logismu, lalu pilih jawaban pada pertanyaan tindak lanjut.',
     ],
     logicalThinkingIndicators: [
-      'Keruntutan Berpikir: menentukan urutan diagnosis yang paling masuk akal.',
-      'Kemampuan Berargumen: memberi alasan teknis pada tiap keputusan bercabang.',
-      'Penarikan Kesimpulan: memilih prioritas tindakan berdasarkan bukti kasus.',
+      'Keruntutan Berpikir: menentukan urutan lapisan TCP/IP yang logis dalam proses transmisi data.',
+      'Kemampuan Berargumen: menjelaskan alasan di balik urutan lapisan dan peran TCP vs IP.',
+      'Penarikan Kesimpulan: memilih penjelasan yang tepat berdasarkan pemahaman fungsi setiap lapisan.',
     ],
     facilitatorNotes: [
-      'Guru memosisikan diri sebagai fasilitator yang menanyakan alasan prioritas tindakan siswa.',
-      'Guru menggunakan hasil jalur keputusan untuk melihat apakah siswa mampu membedakan collision, packet loss, and data corruption.',
+      'Guru memosisikan diri sebagai fasilitator yang menanyakan alasan pemilihan urutan lapisan oleh siswa.',
+      'Guru mendorong siswa menghubungkan kasus dengan materi enkapsulasi dan fungsi lapisan TCP/IP yang telah dipelajari.',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
@@ -647,105 +647,106 @@ export const lesson1Stages: Stage[] = [
     },
     branchingScenario: {
       context:
-        'Kamu menjadi teknisi jaringan pada studio pembelajaran daring sekolah. Menjelang siaran kelas live, sistem monitoring menunjukkan tiga gejala sekaligus: collision burst pada segmen lama yang masih memakai hub, packet loss tinggi pada uplink internet, and data corruption pada beberapa segmen yang melewati patch cord yang mulai rusak.',
+        'Alya sedang mengirim file presentasi kelompok berukuran 5MB melalui email dari laptopnya yang terhubung ke WiFi sekolah. File ini harus melewati 5 lapisan TCP/IP sebelum sampai ke server email gurunya. Setiap lapisan memiliki peran penting dalam memastikan file tersebut terkirim dengan benar dan utuh.',
       initialQuestion:
-        'Langkah awal mana yang paling profesional untuk memulai diagnosis masalah pengiriman paket TCP ini?',
-      focusAreas: ['Collision', 'Packet Loss', 'Data Corruption'],
+        'Manakah urutan proses yang paling tepat menggambarkan perjalanan data file Alya melalui lapisan TCP/IP dari laptop pengirim ke server email?',
+      focusAreas: ['Urutan Lapisan', 'Enkapsulasi Data', 'Peran TCP vs IP'],
       choices: [
         {
           id: 'c1',
           text:
-            'Analisis log TCP and topologi jaringan lebih dulu untuk memetakan pola collision, packet loss, and checksum error.',
+            'Data diproses dari lapisan atas ke bawah: Application → Transport → Network → Data Link → Physical. Dimulai dari aplikasi email menyiapkan data, Transport memecah dan menjamin keutuhan, Network menambahkan alamat IP tujuan, Data Link membungkus untuk pengiriman lokal, dan Physical mengirim sebagai sinyal WiFi.',
           isOptimal: true,
           consequence:
-            'Pilihanmu tepat. Dari log ditemukan collision burst pada segmen yang masih memakai hub, packet loss 28% pada uplink utama, and checksum error 11% pada jalur yang memakai patch cord rusak.',
+            'Tepat! Ini adalah proses enkapsulasi yang benar. Data "dibungkus" lapis demi lapis dari Application hingga Physical — seperti mengemas kado: barang dibungkus bubble wrap (Transport), dimasukkan ke kotak (Network), diberi label alamat (Data Link), lalu diserahkan ke kurir (Physical). Setiap lapisan menambahkan informasi penting sebelum data benar-benar dikirim.',
           followUpQuestion:
-            'Masalah mana yang harus diprioritaskan lebih dulu agar kualitas live class paling cepat stabil untuk semua pengguna?',
+            'Berdasarkan alur enkapsulasi tersebut, apa perbedaan peran antara TCP (Transport Layer) dan IP (Network Layer) dalam pengiriman file Alya?',
           followUpChoices: [
             {
               id: 'f1a',
               text:
-                'Packet loss pada uplink internet, karena kehilangan paket tinggi langsung menurunkan kualitas layanan untuk seluruh pengguna.',
+                'TCP bertugas memecah file 5MB menjadi segmen-segmen kecil dan memastikan semua bagian sampai dengan utuh ke penerima. IP bertugas memberikan alamat tujuan dan mencari rute terbaik menuju server email guru.',
               isCorrect: true,
               explanation:
-                'Prioritas ini paling logis karena packet loss 28% memukul seluruh aliran data utama. Setelah throughput stabil, collision pada segmen hub and data corruption karena kabel rusak dapat ditangani bertahap.',
+                'Sangat tepat! TCP seperti petugas yang memotong kue besar menjadi potongan kecil agar mudah dibawa, lalu memeriksa setiap potongan sampai dengan selamat. IP seperti GPS yang menentukan rute perjalanan berdasarkan alamat yang tertulis. Keduanya bekerja sama: TCP menjaga isi, IP menjaga arah.',
             },
             {
               id: 'f1b',
               text:
-                'Collision pada segmen hub, karena collision selalu lebih penting daripada masalah lain.',
+                'TCP dan IP memiliki peran yang sama — keduanya mengubah data menjadi sinyal WiFi agar bisa terkirim melalui udara ke server.',
               isCorrect: false,
               explanation:
-                'Collision memang harus ditangani, tetapi dampak packet loss pada uplink utama lebih luas and lebih cepat merusak layanan live for semua pengguna.',
+                'Kurang tepat. TCP dan IP bekerja di lapisan yang berbeda dengan tugas yang berbeda. Mengubah data menjadi sinyal adalah tugas Physical Layer, bukan TCP atau IP. TCP ada di Transport Layer (menjaga keutuhan data), IP ada di Network Layer (mengurus pengalamatan dan rute).',
             },
             {
               id: 'f1c',
               text:
-                'Data corruption karena patch cord rusak, karena integritas data harus selalu ditangani pertama kali.',
+                'IP yang memecah file menjadi bagian-bagian kecil, sedangkan TCP yang menuliskan alamat email guru sebagai tujuan pengiriman.',
               isCorrect: false,
               explanation:
-                'Data corruption perlu diperbaiki, tetapi pada kasus ini packet loss pada jalur utama lebih mendesak karena memengaruhi lebih banyak trafik secara langsung.',
+                'Terbalik. Justru TCP-lah yang memecah data menjadi segmen-segmen kecil di Transport Layer — ini adalah salah satu fungsi utamanya. IP bekerja di Network Layer untuk menambahkan alamat IP (bukan alamat email) dan menentukan rute pengiriman.',
             },
           ],
         },
         {
           id: 'c2',
-          text: 'Restart semua perangkat jaringan and server streaming agar koneksi TCP dimulai ulang.',
+          text:
+            'Data diproses dari lapisan bawah ke atas: Physical → Data Link → Network → Transport → Application. Data harus dikirim dulu sebagai sinyal WiFi, baru setiap lapisan di atasnya menambahkan informasi satu per satu.',
           isOptimal: false,
           consequence:
-            'Restart menghabiskan waktu, tetapi akar masalah belum terlihat. Setelah sistem kembali hidup, collision, packet loss, and checksum error masih tetap muncul.',
+            'Urutan ini sebenarnya adalah proses dekapsulasi yang terjadi di sisi penerima, bukan di sisi pengirim! Di sisi pengirim (Alya), data justru mengalir dari atas ke bawah (Application → Physical) melalui proses enkapsulasi. Di sisi penerima (server email guru), data diterima dari bawah ke atas (Physical → Application) melalui proses dekapsulasi. Kamu perlu membedakan keduanya.',
           followUpQuestion:
-            'Setelah restart gagal, langkah apa yang seharusnya dilakukan untuk mendapatkan bukti teknis yang jelas?',
+            'Lalu, di sisi manakah proses dari bawah ke atas (Physical → Application) yang kamu pilih itu sebenarnya terjadi?',
           followUpChoices: [
             {
               id: 'f2a',
               text:
-                'Analisis log TCP and topologi untuk melihat pola kehilangan ACK, collision, and checksum error.',
+                'Proses dari bawah ke atas (Physical → Application) terjadi di sisi penerima, yaitu server email guru. Di sini data dibuka lapis demi lapis: sinyal WiFi diterima → frame dibuka → alamat IP diperiksa → segmen disusun ulang → email utuh ditampilkan. Ini disebut dekapsulasi.',
               isCorrect: true,
               explanation:
-                'Langkah ini memberi bukti teknis yang dapat dipakai untuk menentukan prioritas penanganan secara objektif.',
+                'Benar! Kamu sudah bisa membedakan enkapsulasi (atas ke bawah, di pengirim) dan dekapsulasi (bawah ke atas, di penerima). Di sisi Alya: Application → Physical (enkapsulasi). Di sisi server guru: Physical → Application (dekapsulasi). Dua proses yang berlawanan arah dan saling melengkapi!',
             },
             {
               id: 'f2b',
               text:
-                'Menunggu beberapa menit sambil berharap masalah hilang sendiri setelah restart.',
+                'Proses dari bawah ke atas sama-sama terjadi di laptop Alya, karena data harus bolak-balik diproses sebelum benar-benar dikirim.',
               isCorrect: false,
               explanation:
-                'Menunggu pasif tidak memberi bukti baru and tidak membantu membedakan sumber masalah jaringan.',
+                'Tidak. Di laptop Alya (pengirim), data hanya mengalir satu arah: dari Application turun ke Physical. Data tidak "bolak-balik". Proses dari bawah ke atas (Physical → Application) hanya terjadi di perangkat penerima saat data diterima dan "dibuka bungkusnya".',
             },
           ],
         },
         {
           id: 'c3',
           text:
-            'Langsung mengganti patch cord yang rusak tanpa memeriksa log karena data corruption terlihat paling berbahaya.',
+            'Data hanya perlu diproses oleh Application Layer (email) dan Physical Layer (WiFi) saja. Lapisan Transport, Network, dan Data Link tidak terlalu diperlukan karena email sudah memiliki alamat tujuan.',
           isOptimal: false,
           consequence:
-            'Mengganti kabel memang berpotensi mengurangi checksum error, tetapi collision burst and packet loss pada uplink utama tetap belum terpetakan sehingga layanan masih tidak stabil.',
+            'Ini adalah pemahaman yang kurang tepat tentang model TCP/IP. Setiap lapisan memiliki fungsi yang tidak bisa dilewati. Application Layer hanya menyiapkan data mentah — tanpa Transport Layer, data 5MB tidak dipecah dan berisiko rusak. Tanpa Network Layer, data tidak tahu harus ke server yang mana. Tanpa Data Link Layer, data tidak bisa dikirim ke router WiFi terdekat.',
           followUpQuestion:
-            'Jika kabel sudah diganti tetapi siaran tetap tersendat, data tambahan apa yang paling perlu diperiksa selanjutnya?',
+            'Coba pikirkan: apa yang akan terjadi pada file 5MB Alya jika tidak ada Transport Layer yang memecahnya menjadi segmen-segmen kecil?',
           followUpChoices: [
             {
               id: 'f3a',
               text:
-                'Periksa log TCP and topologi untuk membedakan collision lokal dari packet loss pada uplink utama.',
+                'File 5MB yang besar akan dikirim sebagai satu potongan utuh. Jika terjadi gangguan sedikit saja di tengah jalan, seluruh file harus dikirim ulang dari awal. Tanpa Transport Layer, tidak ada yang memverifikasi apakah data sampai dengan utuh atau tidak.',
               isCorrect: true,
               explanation:
-                'Langkah ini membantumu melihat bahwa masalah tidak hanya satu. Packet loss pada uplink utama harus diprioritaskan, lalu collision lokal ditangani dengan mengganti hub menjadi switch.',
+                'Tepat! Inilah mengapa Transport Layer dengan TCP sangat penting. Dengan memecah file menjadi segmen kecil, jika satu segmen gagal, hanya segmen itu yang dikirim ulang — bukan seluruh file 5MB. TCP juga memverifikasi setiap segmen sampai dengan selamat. Tanpa ini, pengiriman data besar seperti file, video, atau gambar akan sangat tidak efisien.',
             },
             {
               id: 'f3b',
               text:
-                'Fokus pada pergantian kabel lain secara acak sampai layanan terasa membaik.',
+                'Tidak ada masalah. File 5MB tetap bisa dikirim dengan lancar karena WiFi sekolah sudah cukup cepat untuk mengirim file sebesar itu dalam satu kali kirim.',
               isCorrect: false,
               explanation:
-                'Pergantian acak tidak sistematis and tidak menjawab kemungkinan masalah lain seperti collision and packet loss.',
+                'Kecepatan WiFi bukan satu-satunya faktor. Tanpa Transport Layer, tidak ada yang memecah file, tidak ada yang memverifikasi keutuhan, dan tidak ada yang memastikan urutan data. Bahkan dengan WiFi tercepat sekalipun, data tetap memerlukan mekanisme TCP untuk menjamin pengiriman yang andal dan utuh.',
             },
           ],
         },
       ],
       finalEvaluation:
-        'Gunakan bukti untuk menentukan prioritas, jelaskan alasan teknis, lalu simpulkan solusi TCP yang paling berdampak terhadap layanan.',
+        'Kamu telah menganalisis perjalanan data melalui 5 lapisan TCP/IP. Pahami bahwa setiap lapisan memiliki peran unik: Application menyiapkan data, Transport menjaga keutuhan, Network mengarahkan perjalanan, Data Link menangani pengiriman lokal, dan Physical mengirimkan sinyal. Kelima lapisan ini bekerja dalam urutan yang logis dan tidak bisa dilewati.',
     },
     conclusionPrompt: 'Berdasarkan studi kasus bercabang yang telah kamu analisis, jelaskan bagaimana kamu mampu menganalisis skenario proses transmisi data di setiap lapisan TCP/IP. Tuliskan secara logis dengan kata-katamu sendiri.',
   },

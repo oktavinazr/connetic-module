@@ -166,6 +166,50 @@ export async function createGroupDiscussion(
   } as GroupDiscussion;
 }
 
+// Upsert: update existing row for this user+module, or insert if none exists.
+// Preserves existing votes when updating.
+export async function upsertGroupDiscussion(
+  payload: Omit<GroupDiscussion, 'id' | 'created_at' | 'updated_at' | 'votes'> & { votes?: string[] },
+): Promise<GroupDiscussion> {
+  const { data: existingRows } = await supabase
+    .from('group_discussions')
+    .select('id')
+    .eq('lesson_id', payload.lesson_id)
+    .eq('module_id', payload.module_id)
+    .eq('group_name', payload.group_name)
+    .eq('user_id', payload.user_id)
+    .order('created_at', { ascending: true })
+    .limit(1);
+
+  const existing = existingRows?.[0] ?? null;
+
+  if (existing?.id) {
+    const { data, error } = await supabase
+      .from('group_discussions')
+      .update({
+        argument: payload.argument,
+        choice_id: payload.choice_id,
+        choice_text: payload.choice_text,
+        user_name: payload.user_name,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existing.id)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('[upsertGroupDiscussion:update]', error.message);
+      throw new Error(`Gagal menyimpan argumen: ${error.message}`);
+    }
+    return {
+      ...data,
+      votes: Array.isArray(data.votes) ? data.votes : [],
+    } as GroupDiscussion;
+  }
+
+  return createGroupDiscussion(payload);
+}
+
 export async function toggleGroupDiscussionVote(discussionId: string, userId: string): Promise<void> {
   const { data, error } = await supabase
     .from('group_discussions')

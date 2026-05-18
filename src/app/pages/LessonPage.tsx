@@ -170,6 +170,8 @@ const stageReflectionPrompts: Record<StageType, string> = {
 };
 
 const stageNeedsExternalReflection = (type: StageType, lid: string): boolean => {
+  // Reflection stage handles its own conclusion internally
+  if (type === 'reflection') return false;
   if (type === 'questioning' && lid === '1') return false;
   if (type === 'inquiry' && lid === '1') return false;
   if (type === 'constructivism' && lid === '1') return false;
@@ -465,7 +467,24 @@ export function LessonPage() {
           />
         );
       }
-      case 'reflection':
+      case 'reflection': {
+        // Build previous stage results from progress answers
+        const previousStageResults = lesson.stages.slice(0, currentStageIndex).map((stage, idx) => {
+          const answer = progress.answers[`stage_${idx}`] ?? progress.answers[idx];
+          const conclusion =
+            (answer && typeof answer === 'object' && 'conclusion' in (answer as Record<string, unknown>))
+              ? (answer as Record<string, unknown>).conclusion as string
+              : (typeof answer === 'string' ? answer : '');
+          return {
+            stageIndex: idx,
+            stageType: stage.type,
+            stageTitle: getStageDisplayTitle(stage.type),
+            objectiveCode: stage.objectiveCode || '',
+            conclusion: conclusion || '',
+            hasData: !!conclusion,
+          };
+        });
+
         return (
           <ReflectionStage
             {...commonProps}
@@ -473,8 +492,13 @@ export function LessonPage() {
             conceptMapNodes={currentStage.conceptMapNodes}
             conceptMapConnections={currentStage.conceptMapConnections}
             conceptMapTitle={`Hubungkan Antar Konsep ${lesson.topic}`}
+            essayReflection={currentStage.essayReflection}
+            selfEvaluationCriteria={currentStage.selfEvaluationCriteria}
+            previousStageResults={previousStageResults}
+            conclusionPrompt={currentStage.conclusionPrompt}
           />
         );
+      }
       case 'authentic-assessment':
         return (
           <AuthenticAssessmentStage
