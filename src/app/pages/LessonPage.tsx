@@ -300,26 +300,21 @@ export function LessonPage() {
   useEffect(() => {
     if (!globalSync.loaded || globalSync.isIdle || currentStageIndex === null || !lesson) return;
     const syncStage = globalSync.sync?.current_stage_index;
-    if (syncStage !== undefined && syncStage !== currentStageIndex) {
-      const maxStage = lesson.stages.length - 1;
-      // Clamp syncStage to valid range
-      const clampedStage = Math.max(0, Math.min(syncStage, maxStage));
-      // Admin advanced → follow
-      if (clampedStage > currentStageIndex) {
-        if (syncStage >= lesson.stages.length) {
-          navigate(`/evaluation/${lessonId}`);
-        } else {
-          setCurrentStageIndex(clampedStage);
-          window.scrollTo(0, 0);
-        }
-      }
-      // Student got ahead (e.g. refresh) → pull back to admin stage
-      else if (clampedStage < currentStageIndex) {
-        setCurrentStageIndex(clampedStage);
-        window.scrollTo(0, 0);
-      }
+    if (syncStage === undefined || syncStage === currentStageIndex) return;
+
+    // Session completed → navigate all students to posttest immediately
+    if (syncStage >= lesson.stages.length) {
+      navigate(`/evaluation/${lessonId}`);
+      return;
     }
-  }, [globalSync.sync?.current_stage_index, globalSync.sync?.status, globalSync.loaded, globalSync.isIdle, currentStageIndex]);
+
+    const maxStage = lesson.stages.length - 1;
+    const clampedStage = Math.max(0, Math.min(syncStage, maxStage));
+    if (clampedStage > currentStageIndex || clampedStage < currentStageIndex) {
+      setCurrentStageIndex(clampedStage);
+      window.scrollTo(0, 0);
+    }
+  }, [globalSync.sync?.current_stage_index, globalSync.sync?.status, globalSync.loaded, globalSync.isIdle, currentStageIndex, lesson, lessonId, navigate]);
 
   if (!lesson || currentStageIndex === null || !lesson.stages[currentStageIndex]) return null;
 
