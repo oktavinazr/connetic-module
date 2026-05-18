@@ -222,7 +222,7 @@ export const lesson1Stages: Stage[] = [
       },
     ],
     inquiryReflection1:
-      'Berdasarkan aktivitas mengurutkan lapisan dan mencocokkan analogi yang telah kamu lakukan, jelaskan: (1) Mengapa urutan lapisan TCP/IP disusun dari Application hingga Physical? (2) Bagaimana hubungan antara model OSI (7 layer) dengan TCP/IP (5 layer) — mengapa tiga layer atas OSI digabung menjadi satu di TCP/IP?',
+      'Berdasarkan aktivitas mengurutkan lapisan dan mencocokkan analogi yang telah kamu lakukan, jelaskan mengapa urutan lapisan TCP/IP disusun dari Application hingga Physical?',
     groups: [
       { id: 'application', label: 'Application Layer', colorClass: 'purple' },
       { id: 'transport', label: 'Transport Layer', colorClass: 'blue' },

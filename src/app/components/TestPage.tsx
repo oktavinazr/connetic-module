@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import { FormattedQuestion } from '../components/stages/StageKit';
-import { lessons } from '../data/lessons';
+import { lessons, type TestQuestion } from '../data/lessons';
 import { clearAssessmentDraft, getAssessmentDraft, getLessonProgress, saveAssessmentDraft } from '../utils/progress';
 import { getCurrentUser } from '../utils/auth';
 import { LessonFlowSidebar } from './LessonFlowSidebar';

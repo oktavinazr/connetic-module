@@ -122,20 +122,10 @@ export function StageAnswerDetail({ stage, answer }: { stage: Stage; answer: any
   const a = answer as any;
   const conclusionText = a.conclusion || a.summary;
 
-  // Only show the reflection card — no other activity details
+  // Only show the reflection content — no wrapper so callers can style it appropriately
   if (conclusionText && typeof conclusionText === 'string') {
     return (
-      <div className="bg-gradient-to-br from-[#ECFDF5] to-white rounded-xl border-2 border-[#10B981]/25 p-5 shadow-sm">
-        <div className="flex items-center gap-2.5 mb-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#10B981]/15">
-            <svg className="w-4 h-4 text-[#10B981]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-            </svg>
-          </div>
-          <p className="text-xs font-black text-[#065F46] uppercase tracking-widest">Hasil Refleksi Kamu</p>
-        </div>
-        <p className="text-sm text-[#065F46] leading-relaxed font-medium">"{conclusionText}"</p>
-      </div>
+      <p className="text-sm text-[#065F46] leading-relaxed font-medium">"{conclusionText}"</p>
     );
   }
 

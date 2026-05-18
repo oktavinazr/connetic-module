@@ -6,6 +6,7 @@ import { Header } from '../../components/layout/Header';
 import { getAllStudents, getCurrentUser, logout, type User } from '../../utils/auth';
 import { FormattedQuestion } from '../../components/stages/StageKit';
 import { getGlobalTestProgress, getLessonProgress } from '../../utils/progress';
+import { globalPretest, globalPosttest, lessons, type TestQuestion } from '../../data/lessons';
 
 type TestType = 'global-pretest' | 'global-posttest' | 'lesson-pretest' | 'lesson-posttest';
 

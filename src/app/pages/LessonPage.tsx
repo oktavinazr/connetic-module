@@ -41,7 +41,7 @@ import { StageAnswerDetail } from '../components/admin/StageDetail';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DragAutoScroll } from '../components/DragAutoScroll';
-import { ActivityGuideBox, EssayBox, StageCompletedOverlay, ATPConclusionBox, LogicalThinkingTracker } from '../components/stages/StageKit';
+import { ActivityGuideBox, EssayBox, ATPConclusionBox, LogicalThinkingTracker } from '../components/stages/StageKit';
 import { useGlobalStageSync } from '../hooks/useGlobalStageSync';
 
 type StageType =
@@ -746,18 +746,21 @@ export function LessonPage() {
                 </div>
               </div>
 
-              {/* Hasil Refleksi — only show the reflection card */}
+              {/* Hasil Refleksi — single clean card */}
               {currentStageAnswer && (
-                <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm overflow-hidden">
-                  <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#10B981]/8 to-transparent border-b border-[#10B981]/10">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#10B981]/15">
-                      <svg className="w-3.5 h-3.5 text-[#10B981]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                <div className="rounded-2xl border-2 border-[#10B981]/25 bg-gradient-to-br from-[#ECFDF5] to-white shadow-sm overflow-hidden">
+                  <div className="flex items-center gap-3 px-5 py-3.5 border-b border-[#10B981]/15">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#10B981]/15">
+                      <svg className="w-4 h-4 text-[#10B981]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                       </svg>
                     </div>
-                    <p className="text-xs font-bold text-[#065F46]">Hasil Refleksi Kamu</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-black text-[#065F46] uppercase tracking-widest">Hasil Refleksi Kamu</p>
+                      <p className="text-[10px] text-[#10B981]/60 font-medium mt-0.5">Jawabanmu telah tersimpan dengan aman</p>
+                    </div>
                   </div>
-                  <div className="p-5">
+                  <div className="px-5 py-4">
                     <StageAnswerDetail stage={currentStage} answer={currentStageAnswer} />
                   </div>
                 </div>
