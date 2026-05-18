@@ -248,20 +248,22 @@ export const lesson1Stages: Stage[] = [
     type: 'questioning',
     title: 'Questioning',
     description:
-      'Siswa mengeksplorasi rasa ingin tahu, memilih solusi teknis, dan membangun argumen logis berdasarkan field TCP Header yang relevan.',
+      'Siswa membedakan fungsi setiap lapisan TCP/IP melalui aktivitas pencocokan fungsi, studi kasus analogi, tanya jawab interaktif, dan penarikan kesimpulan.',
     objectiveCode: 'X.TCP.3',
     activityGuide: [
-      'Pelajari Peta Analogi Pizza untuk memahami peran 5 lapisan TCP/IP.',
-      'Seret nama lapisan ke kotak gangguan yang sesuai (drag & drop).',
-      'Tulis refleksi: mengapa urutan lapisan harus baku dalam pengiriman data.',
+      'Cocokkan deskripsi fungsi ke lapisan TCP/IP yang tepat (drag & drop).',
+      'Pelajari Peta Analogi Pizza lalu analisis skenario gangguan jaringan.',
+      'Lakukan tanya jawab interaktif tentang perbedaan fungsi setiap lapisan.',
+      'Tulis argumen logis dan kesimpulan tentang fungsi lapisan TCP/IP.',
     ],
     logicalThinkingIndicators: [
-      'Kemampuan Berargumen: memilih alasan teknis yang tepat dan menjelaskannya secara logis.',
-      'Penarikan Kesimpulan: menyimpulkan field TCP Header yang paling relevan dari bukti kasus.',
+      'Keruntutan Berpikir: mencocokkan fungsi setiap lapisan TCP/IP secara logis dan berurutan.',
+      'Kemampuan Berargumen: menganalisis kasus gangguan jaringan dan menjawab pertanyaan interaktif tentang fungsi lapisan.',
+      'Penarikan Kesimpulan: menyimpulkan perbedaan fungsi setiap lapisan TCP/IP dalam komunikasi jaringan.',
     ],
     facilitatorNotes: [
-      'Guru memancing pertanyaan siswa tentang mengapa segmen bisa rusak dan bagaimana TCP merespons.',
-      'Guru menekankan hubungan antara bukti kasus, field header, dan keputusan teknis siswa.',
+      'Guru mendampingi siswa dalam mencocokkan fungsi setiap lapisan dan mendiskusikan alasan pemilihan.',
+      'Guru mendorong siswa menghubungkan analogi pizza dengan fungsi nyata tiap lapisan TCP/IP.',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
@@ -317,24 +319,36 @@ export const lesson1Stages: Stage[] = [
     questionBank: [
       {
         id: 'q1',
-        text: 'Apa fungsi checksum pada TCP?',
+        text: 'Apa fungsi utama Transport Layer dalam TCP/IP?',
         response:
-          'Checksum membantu penerima memverifikasi apakah isi segmen yang datang masih utuh atau sudah berubah selama transmisi.',
+          'Transport Layer memecah data menjadi segmen kecil, memberi nomor urut, dan memverifikasi integritas pengiriman menggunakan checksum. Protokol utamanya adalah TCP (andal, terjamin) dan UDP (cepat, tanpa jaminan).',
       },
       {
         id: 'q2',
-        text: 'Mengapa segmen rusak bisa memicu retransmission?',
+        text: 'Apa perbedaan Network Layer dengan Data Link Layer?',
         response:
-          'Segmen yang gagal diverifikasi tidak dianggap berhasil diterima. Akibatnya pengirim tidak mendapat konfirmasi yang valid and akan mengirim ulang segmen tersebut.',
+          'Network Layer mengurus routing antar jaringan berbeda menggunakan IP Address, sedangkan Data Link Layer hanya mengurus pengiriman dalam satu jaringan lokal menggunakan MAC Address dan membungkus data menjadi Frame.',
       },
       {
         id: 'q3',
-        text: 'Mengapa sequence number belum cukup untuk kasus ini?',
+        text: 'Mengapa Application Layer disebut lapisan "terdekat dengan pengguna"?',
         response:
-          'Sequence Number hanya memberi tahu posisi segmen. Kerusakan isi data tetap harus dicek dengan mekanisme integritas seperti checksum.',
+          'Application Layer adalah tempat protokol yang langsung berinteraksi dengan aplikasi pengguna — seperti HTTP untuk web browser, SMTP untuk email, dan FTP untuk transfer file. Lapisan ini menghasilkan dan memproses data, bukan mengurus pengirimannya.',
+      },
+      {
+        id: 'q4',
+        text: 'Apa fungsi Physical Layer dan hubungannya dengan Data Link Layer?',
+        response:
+          'Physical Layer mengirimkan bit (0 dan 1) dalam bentuk sinyal fisik melalui kabel UTP, serat optik, atau Wi-Fi. Data Link Layer bekerja tepat di atasnya — membungkus data menjadi Frame dan memastikan Frame dikirim ke perangkat yang tepat sebelum Physical Layer mengirim bitnya.',
+      },
+      {
+        id: 'q5',
+        text: 'Mengapa urutan lapisan TCP/IP tidak bisa diubah sembarangan?',
+        response:
+          'Setiap lapisan memiliki fungsi spesifik yang saling melengkapi: Application menghasilkan data → Transport memecah dan memverifikasi → Network menentukan rute → Data Link membungkus untuk jaringan lokal → Physical mengirim bit. Mengubah urutan ini akan memutus alur enkapsulasi yang logis.',
       },
     ],
-    conclusionPrompt: 'Berdasarkan analisis kasus data corruption dan tanya jawab yang telah kamu lakukan, jelaskan bagaimana kamu mampu membedakan fungsi setiap lapisan model TCP/IP dalam proses komunikasi jaringan. Tuliskan alasan logismu dengan kata-kata sendiri.',
+    conclusionPrompt: 'Berdasarkan aktivitas pencocokan fungsi, studi kasus analogi, dan tanya jawab yang telah kamu lakukan, jelaskan bagaimana kamu mampu membedakan fungsi setiap lapisan model TCP/IP dalam proses komunikasi jaringan. Tuliskan secara logis dengan kata-katamu sendiri.',
   },
   {
     type: 'learning-community',

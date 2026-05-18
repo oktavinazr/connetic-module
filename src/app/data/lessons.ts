@@ -1327,19 +1327,133 @@ export const lessons: Record<string, Lesson> = {
     pretest: {
       questions: [
         {
-          question: 'Apa kepanjangan dari TCP?',
-          options: ['Transmission Control Protocol', 'Transfer Control Protocol', 'Technical Control Protocol', 'Transport Control Protocol'],
+          question:
+            'Perhatikan pernyataan berikut tentang TCP/IP.\n' +
+            '1. TCP/IP adalah perangkat keras jaringan yang menghubungkan komputer secara fisik.\n' +
+            '2. TCP bertugas memastikan data terkirim secara andal, berurutan, dan lengkap antar proses aplikasi.\n' +
+            '3. IP bertugas memberikan alamat logis pada setiap perangkat dan menentukan jalur pengiriman paket.\n' +
+            '4. TCP/IP hanya berlaku untuk jaringan publik dan tidak dapat digunakan pada jaringan lokal (LAN).\n' +
+            'Pernyataan yang BENAR tentang TCP/IP adalah ...',
+          options: ['1 dan 2', '1 dan 4', '2 dan 4', '2 dan 3', '3 dan 4'],
+          correctAnswer: 3,
+        },
+        {
+          question:
+            'Perhatikan urutan lapisan berikut:\n' +
+            '1. Application\n' +
+            '2. Transport\n' +
+            '3. Network\n' +
+            '4. Data Link\n' +
+            '5. Physical\n' +
+            'Seorang siswa diminta menyusun lapisan model TCP/IP dari atas ke bawah secara berurutan. Susunan yang benar adalah ...',
+          options: [
+            '(1) Physical - (2) Data Link - (3) Network - (4) Transport - (5) Application',
+            '(1) Transport - (2) Application - (3) Data Link - (4) Physical - (5) Network',
+            '(1) Application - (2) Transport - (3) Network - (4) Data Link - (5) Physical',
+            '(1) Application - (2) Network - (3) Transport - (4) Physical - (5) Data Link',
+            '(1) Application - (2) Transport - (3) Data Link - (4) Network - (5) Physical',
+          ],
+          correctAnswer: 2,
+        },
+        {
+          question:
+            'Ketika pengguna mengakses sebuah situs web, data perlu melewati semua lapisan TCP/IP. Perhatikan lima pernyataan fungsi lapisan berikut:\n' +
+            '1. Application Layer berfungsi sebagai antarmuka antara pengguna dan jaringan.\n' +
+            '2. Transport Layer berfungsi menyediakan alamat logis untuk routing.\n' +
+            '3. Network Layer berfungsi memecah data menjadi segmen dan menjamin pengiriman.\n' +
+            '4. Data Link Layer berfungsi mengatur pengiriman data melalui media jaringan (Frame).\n' +
+            '5. Physical Layer berfungsi mengatur pengiriman sinyal fisik melalui media transmisi.\n' +
+            'Pasangan lapisan dan analisis fungsi yang benar adalah ...',
+          options: [
+            'Pernyataan 1, 4, dan 5 benar; sedangkan 2 dan 3 salah total tanpa alasan',
+            'Pernyataan 2 dan 3 benar; sedangkan 1, 4, dan 5 salah karena fungsinya tertukar',
+            'Pernyataan 1, 2, dan 3 benar; sedangkan hanya 4 dan 5 yang salah',
+            'Pernyataan 1 dan 3 benar; sedangkan 2, 4, dan 5 salah karena fungsi Transport tertukar dengan Physical',
+            'Pernyataan 1, 4, dan 5 benar; pernyataan 2 salah karena itu fungsi Network Layer, dan pernyataan 3 salah karena itu fungsi Transport Layer.',
+          ],
+          correctAnswer: 4,
+        },
+        {
+          question:
+            'Email sudah dipecah menjadi Segmen oleh lapisan Transport tetapi tidak bisa dikirim ke server di jaringan berbeda. Dua rekan memberikan saran:\n' +
+            'Saran X – "Tambahkan MAC Address tujuan langsung ke Segmen."\n' +
+            'Saran Y – "Bungkus Segmen ke dalam Paket dengan IP Header berisi alamat IP pengirim dan penerima."\n' +
+            'Berdasarkan kedua saran tersebut, manakah analisis enkapsulasi yang tepat?',
+          options: [
+            'Saran X benar; MAC Address diperlukan agar Router bisa membaca tujuan paket',
+            'Saran Y benar; IP Header memberikan informasi rute yang dibutuhkan Router, sedangkan Saran X salah karena MAC Address bukan yang dibutuhkan Router dan tidak bisa ditambahkan langsung ke Segmen',
+            'Kedua saran benar; MAC Address dan IP Address harus ditambahkan bersamaan',
+            'Kedua saran salah; yang harus dilakukan adalah mengembalikan Segmen ke lapisan Application',
+            'Saran X benar karena MAC Address lebih penting dari IP Address dalam pengiriman antar jaringan',
+          ],
+          correctAnswer: 1,
+        },
+        {
+          question:
+            'Log dekapsulasi pada komputer penerima menunjukkan tahapan berikut:\n' +
+            '1. Frame data diterima melalui media fisik jaringan.\n' +
+            '2. Lapisan Data Link melepas Frame Header dan Trailer sehingga Paket diperoleh.\n' +
+            '3. Lapisan Network melepas Network Header sehingga Segmen diperoleh. Teknisi berhenti di sini karena bingung.\n' +
+            'Langkah yang seharusnya dilakukan berikutnya pada lapisan Transport adalah ...',
+          options: [
+            'Mengirimkan kembali Segmen data menuju lapisan Network untuk memvalidasi ulang alamat IP asal sebelum seluruh data aplikasi diproses lebih lanjut.',
+            'Mengakumulasikan dan menggabungkan seluruh Segmen data yang masuk menjadi satu berkas besar sebelum memproses pelepasan komponen Transport Header.',
+            'Melepaskan Transport Header dari Segmen untuk mengambil data murni aplikasi, lalu meneruskannya ke lapisan Application sesuai dengan nomor port tujuan.',
+            'Menghentikan proses dekapsulasi secara sepihak dan membuang Segmen data tersebut jika struktur komponen Transport Header terindikasi tidak valid.',
+            'Meneruskan Segmen data secara langsung menuju lapisan Application tanpa membuka atau memeriksa informasi port yang ada di dalam Transport Header.',
+          ],
+          correctAnswer: 2,
+        },
+        {
+          question:
+            'Tim siswa SMK mensimulasikan tahapan perjalanan data di jaringan. Urutan proses tersebut diacak sebagai berikut:\n' +
+            '1. Frame dikirimkan berupa sinyal fisik melalui media transmisi.\n' +
+            '2. Aplikasi membuat data permintaan dan menyerahkan ke lapisan Transport.\n' +
+            '3. Lapisan Network membungkus Segmen menjadi Paket dengan IP Header.\n' +
+            '4. Lapisan Transport memecah data menjadi Segmen dengan nomor port.\n' +
+            '5. Di sisi penerima, proses dekapsulasi berlangsung hingga lapisan Application.\n' +
+            '6. Lapisan Data Link membungkus Paket menjadi Frame dengan MAC Header.\n' +
+            'Urutan yang BENAR untuk memetakan alur enkapsulasi di sisi pengirim saja adalah ...',
+          options: [
+            '2 - 4 - 3 - 6 - 1',
+            '4 - 2 - 3 - 1 - 6',
+            '2 - 3 - 4 - 6 - 1',
+            '1 - 6 - 3 - 4 - 2',
+            '2 - 4 - 6 - 3 - 1',
+          ],
           correctAnswer: 0,
         },
         {
-          question: 'TCP bekerja pada lapisan mana dalam model TCP/IP?',
-          options: ['Network Access Layer', 'Internet Layer', 'Transport Layer', 'Application Layer'],
-          correctAnswer: 2,
+          question:
+            'Rina melakukan serangkaian pengujian transmisi data. Ia menemukan tiga pola hubungan sebab-akibat sebagai berikut:\n' +
+            '1. Tanpa koneksi Physical (kabel), data tidak memiliki "jalan" untuk bergerak.\n' +
+            '2. Tanpa alamat Network (IP), data memiliki jalan tetapi tidak memiliki "peta" sehingga tersesat.\n' +
+            '3. Tanpa kontrol Transport (segmentasi), data sampai ke tujuan tetapi "hancur" karena ukurannya tidak mampu diproses oleh penerima.\n' +
+            'Berdasarkan seluruh catatan jurnal Rina, kesimpulan manakah yang tepat mengenai hubungan antar lapisan TCP/IP dalam proses pengiriman data?',
+          options: [
+            'Lapisan-lapisan TCP/IP bekerja sebagai satu kesatuan hierarkis di mana setiap lapisan menjamin aspek yang berbeda (eksistensi, ketepatan, dan keutuhan) agar data dapat digunakan.',
+            'Keberhasilan pengiriman data ditentukan oleh lapisan paling atas, sedangkan lapisan di bawahnya hanya bersifat sebagai pendukung opsional.',
+            'Setiap lapisan bekerja secara mandiri tanpa memengaruhi kualitas data, sehingga kegagalan di satu lapisan tidak akan merusak isi informasi.',
+            'Lapisan fisik dan jaringan bertanggung jawab atas isi data, sedangkan lapisan transportasi bertanggung jawab atas ketersediaan perangkat keras.',
+            'Proses enkapsulasi di setiap lapisan memiliki fungsi yang sama, sehingga kegagalan di satu lapisan dapat diperbaiki secara otomatis oleh lapisan lainnya.',
+          ],
+          correctAnswer: 0,
         },
         {
-          question: 'Field TCP Header manakah yang digunakan untuk mendeteksi kerusakan data?',
-          options: ['Sequence Number', 'Window Size', 'Checksum', 'Source Port'],
-          correctAnswer: 2,
+          question:
+            'Pak Rizky adalah teknisi jaringan di sebuah perusahaan. Ia menerima laporan bahwa komputer di ruang administrasi tidak bisa mengakses server. Ia kemudian melakukan pemeriksaan:\n' +
+            '1. Kabel terpasang dengan benar dan lampu indikator NIC menyala hijau. → Pak Rizky memutuskan untuk lanjut memeriksa lapisan berikutnya.\n' +
+            '2. Perintah ping ke IP server mengembalikan pesan "Destination Unreachable" meskipun IP tujuan sudah diisi dengan benar. → Pak Rizky menduga ada masalah di sini, namun tetap memeriksa lapisan berikutnya untuk memastikan.\n' +
+            '3. Koneksi TCP ke port server berhasil terbentuk (handshake sukses), namun data yang diterima server selalu tidak lengkap dan tidak bisa disusun ulang.\n' +
+            'Berdasarkan hasil pemeriksaan berlapis tersebut, manakah kesimpulan analisis yang tepat?',
+          options: [
+            'Masalah utama ada di Lapisan Fisik karena NIC hanya menampilkan indikator lampu tanpa membuktikan data benar-benar mengalir.',
+            'Pemeriksaan 2 dan 3 tidak perlu dilakukan karena pesan "Destination Unreachable" sudah cukup membuktikan bahwa seluruh jaringan bermasalah.',
+            'Masalah sepenuhnya ada di Lapisan Transport karena handshake TCP yang sukses membuktikan bahwa Lapisan Network sudah pasti berfungsi normal.',
+            'Terdapat dua lapisan yang bermasalah secara bersamaan: Network (Pemeriksaan 2) dan Transport (Pemeriksaan 3), sehingga kedua lapisan harus diperbaiki agar data dapat terkirim utuh.',
+            'Jaringan berfungsi normal secara keseluruhan karena Lapisan Fisik dan Transport sama-sama menunjukkan aktivitas yang berhasil.',
+          ],
+          correctAnswer: 3,
         },
       ],
     },
@@ -1347,24 +1461,133 @@ export const lessons: Record<string, Lesson> = {
     posttest: {
       questions: [
         {
-          question: 'Manakah yang merupakan karakteristik utama TCP?',
-          options: ['Connectionless', 'Connection-oriented', 'Stateless', 'Best-effort delivery'],
-          correctAnswer: 1,
+          question:
+            'Perhatikan pernyataan berikut tentang TCP/IP.\n' +
+            '1. TCP/IP adalah perangkat keras jaringan yang menghubungkan komputer secara fisik.\n' +
+            '2. TCP bertugas memastikan data terkirim secara andal, berurutan, dan lengkap antar proses aplikasi.\n' +
+            '3. IP bertugas memberikan alamat logis pada setiap perangkat dan menentukan jalur pengiriman paket.\n' +
+            '4. TCP/IP hanya berlaku untuk jaringan publik dan tidak dapat digunakan pada jaringan lokal (LAN).\n' +
+            'Pernyataan yang BENAR tentang TCP/IP adalah ...',
+          options: ['1 dan 2', '1 dan 4', '2 dan 4', '2 dan 3', '3 dan 4'],
+          correctAnswer: 3,
         },
         {
-          question: 'Urutan lapisan TCP/IP dari atas ke bawah dalam proses encapsulation adalah...',
+          question:
+            'Perhatikan urutan lapisan berikut:\n' +
+            '1. Application\n' +
+            '2. Transport\n' +
+            '3. Network\n' +
+            '4. Data Link\n' +
+            '5. Physical\n' +
+            'Seorang siswa diminta menyusun lapisan model TCP/IP dari atas ke bawah secara berurutan. Susunan yang benar adalah ...',
           options: [
-            'Network Access → Internet → Transport → Application',
-            'Application → Transport → Internet → Network Access',
-            'Transport → Application → Network Access → Internet',
-            'Internet → Transport → Application → Network Access',
+            '(1) Physical - (2) Data Link - (3) Network - (4) Transport - (5) Application',
+            '(1) Transport - (2) Application - (3) Data Link - (4) Physical - (5) Network',
+            '(1) Application - (2) Transport - (3) Network - (4) Data Link - (5) Physical',
+            '(1) Application - (2) Network - (3) Transport - (4) Physical - (5) Data Link',
+            '(1) Application - (2) Transport - (3) Data Link - (4) Network - (5) Physical',
+          ],
+          correctAnswer: 2,
+        },
+        {
+          question:
+            'Ketika pengguna mengakses sebuah situs web, data perlu melewati semua lapisan TCP/IP. Perhatikan lima pernyataan fungsi lapisan berikut:\n' +
+            '1. Application Layer berfungsi sebagai antarmuka antara pengguna dan jaringan.\n' +
+            '2. Transport Layer berfungsi menyediakan alamat logis untuk routing.\n' +
+            '3. Network Layer berfungsi memecah data menjadi segmen dan menjamin pengiriman.\n' +
+            '4. Data Link Layer berfungsi mengatur pengiriman data melalui media jaringan (Frame).\n' +
+            '5. Physical Layer berfungsi mengatur pengiriman sinyal fisik melalui media transmisi.\n' +
+            'Pasangan lapisan dan analisis fungsi yang benar adalah ...',
+          options: [
+            'Pernyataan 1, 4, dan 5 benar; sedangkan 2 dan 3 salah total tanpa alasan',
+            'Pernyataan 2 dan 3 benar; sedangkan 1, 4, dan 5 salah karena fungsinya tertukar',
+            'Pernyataan 1, 2, dan 3 benar; sedangkan hanya 4 dan 5 yang salah',
+            'Pernyataan 1 dan 3 benar; sedangkan 2, 4, dan 5 salah karena fungsi Transport tertukar dengan Physical',
+            'Pernyataan 1, 4, dan 5 benar; pernyataan 2 salah karena itu fungsi Network Layer, dan pernyataan 3 salah karena itu fungsi Transport Layer.',
+          ],
+          correctAnswer: 4,
+        },
+        {
+          question:
+            'Email sudah dipecah menjadi Segmen oleh lapisan Transport tetapi tidak bisa dikirim ke server di jaringan berbeda. Dua rekan memberikan saran:\n' +
+            'Saran X – "Tambahkan MAC Address tujuan langsung ke Segmen."\n' +
+            'Saran Y – "Bungkus Segmen ke dalam Paket dengan IP Header berisi alamat IP pengirim dan penerima."\n' +
+            'Berdasarkan kedua saran tersebut, manakah analisis enkapsulasi yang tepat?',
+          options: [
+            'Saran X benar; MAC Address diperlukan agar Router bisa membaca tujuan paket',
+            'Saran Y benar; IP Header memberikan informasi rute yang dibutuhkan Router, sedangkan Saran X salah karena MAC Address bukan yang dibutuhkan Router dan tidak bisa ditambahkan langsung ke Segmen',
+            'Kedua saran benar; MAC Address dan IP Address harus ditambahkan bersamaan',
+            'Kedua saran salah; yang harus dilakukan adalah mengembalikan Segmen ke lapisan Application',
+            'Saran X benar karena MAC Address lebih penting dari IP Address dalam pengiriman antar jaringan',
           ],
           correctAnswer: 1,
         },
         {
-          question: 'Field TCP Header yang berperan dalam menyusun ulang segmen yang tiba tidak berurutan adalah...',
-          options: ['Checksum', 'Window Size', 'Sequence Number', 'Destination Port'],
+          question:
+            'Log dekapsulasi pada komputer penerima menunjukkan tahapan berikut:\n' +
+            '1. Frame data diterima melalui media fisik jaringan.\n' +
+            '2. Lapisan Data Link melepas Frame Header dan Trailer sehingga Paket diperoleh.\n' +
+            '3. Lapisan Network melepas Network Header sehingga Segmen diperoleh. Teknisi berhenti di sini karena bingung.\n' +
+            'Langkah yang seharusnya dilakukan berikutnya pada lapisan Transport adalah ...',
+          options: [
+            'Mengirimkan kembali Segmen data menuju lapisan Network untuk memvalidasi ulang alamat IP asal sebelum seluruh data aplikasi diproses lebih lanjut.',
+            'Mengakumulasikan dan menggabungkan seluruh Segmen data yang masuk menjadi satu berkas besar sebelum memproses pelepasan komponen Transport Header.',
+            'Melepaskan Transport Header dari Segmen untuk mengambil data murni aplikasi, lalu meneruskannya ke lapisan Application sesuai dengan nomor port tujuan.',
+            'Menghentikan proses dekapsulasi secara sepihak dan membuang Segmen data tersebut jika struktur komponen Transport Header terindikasi tidak valid.',
+            'Meneruskan Segmen data secara langsung menuju lapisan Application tanpa membuka atau memeriksa informasi port yang ada di dalam Transport Header.',
+          ],
           correctAnswer: 2,
+        },
+        {
+          question:
+            'Tim siswa SMK mensimulasikan tahapan perjalanan data di jaringan. Urutan proses tersebut diacak sebagai berikut:\n' +
+            '1. Frame dikirimkan berupa sinyal fisik melalui media transmisi.\n' +
+            '2. Aplikasi membuat data permintaan dan menyerahkan ke lapisan Transport.\n' +
+            '3. Lapisan Network membungkus Segmen menjadi Paket dengan IP Header.\n' +
+            '4. Lapisan Transport memecah data menjadi Segmen dengan nomor port.\n' +
+            '5. Di sisi penerima, proses dekapsulasi berlangsung hingga lapisan Application.\n' +
+            '6. Lapisan Data Link membungkus Paket menjadi Frame dengan MAC Header.\n' +
+            'Urutan yang BENAR untuk memetakan alur enkapsulasi di sisi pengirim saja adalah ...',
+          options: [
+            '2 - 4 - 3 - 6 - 1',
+            '4 - 2 - 3 - 1 - 6',
+            '2 - 3 - 4 - 6 - 1',
+            '1 - 6 - 3 - 4 - 2',
+            '2 - 4 - 6 - 3 - 1',
+          ],
+          correctAnswer: 0,
+        },
+        {
+          question:
+            'Rina melakukan serangkaian pengujian transmisi data. Ia menemukan tiga pola hubungan sebab-akibat sebagai berikut:\n' +
+            '1. Tanpa koneksi Physical (kabel), data tidak memiliki "jalan" untuk bergerak.\n' +
+            '2. Tanpa alamat Network (IP), data memiliki jalan tetapi tidak memiliki "peta" sehingga tersesat.\n' +
+            '3. Tanpa kontrol Transport (segmentasi), data sampai ke tujuan tetapi "hancur" karena ukurannya tidak mampu diproses oleh penerima.\n' +
+            'Berdasarkan seluruh catatan jurnal Rina, kesimpulan manakah yang tepat mengenai hubungan antar lapisan TCP/IP dalam proses pengiriman data?',
+          options: [
+            'Lapisan-lapisan TCP/IP bekerja sebagai satu kesatuan hierarkis di mana setiap lapisan menjamin aspek yang berbeda (eksistensi, ketepatan, dan keutuhan) agar data dapat digunakan.',
+            'Keberhasilan pengiriman data ditentukan oleh lapisan paling atas, sedangkan lapisan di bawahnya hanya bersifat sebagai pendukung opsional.',
+            'Setiap lapisan bekerja secara mandiri tanpa memengaruhi kualitas data, sehingga kegagalan di satu lapisan tidak akan merusak isi informasi.',
+            'Lapisan fisik dan jaringan bertanggung jawab atas isi data, sedangkan lapisan transportasi bertanggung jawab atas ketersediaan perangkat keras.',
+            'Proses enkapsulasi di setiap lapisan memiliki fungsi yang sama, sehingga kegagalan di satu lapisan dapat diperbaiki secara otomatis oleh lapisan lainnya.',
+          ],
+          correctAnswer: 0,
+        },
+        {
+          question:
+            'Pak Rizky adalah teknisi jaringan di sebuah perusahaan. Ia menerima laporan bahwa komputer di ruang administrasi tidak bisa mengakses server. Ia kemudian melakukan pemeriksaan:\n' +
+            '1. Kabel terpasang dengan benar dan lampu indikator NIC menyala hijau. → Pak Rizky memutuskan untuk lanjut memeriksa lapisan berikutnya.\n' +
+            '2. Perintah ping ke IP server mengembalikan pesan "Destination Unreachable" meskipun IP tujuan sudah diisi dengan benar. → Pak Rizky menduga ada masalah di sini, namun tetap memeriksa lapisan berikutnya untuk memastikan.\n' +
+            '3. Koneksi TCP ke port server berhasil terbentuk (handshake sukses), namun data yang diterima server selalu tidak lengkap dan tidak bisa disusun ulang.\n' +
+            'Berdasarkan hasil pemeriksaan berlapis tersebut, manakah kesimpulan analisis yang tepat?',
+          options: [
+            'Masalah utama ada di Lapisan Fisik karena NIC hanya menampilkan indikator lampu tanpa membuktikan data benar-benar mengalir.',
+            'Pemeriksaan 2 dan 3 tidak perlu dilakukan karena pesan "Destination Unreachable" sudah cukup membuktikan bahwa seluruh jaringan bermasalah.',
+            'Masalah sepenuhnya ada di Lapisan Transport karena handshake TCP yang sukses membuktikan bahwa Lapisan Network sudah pasti berfungsi normal.',
+            'Terdapat dua lapisan yang bermasalah secara bersamaan: Network (Pemeriksaan 2) dan Transport (Pemeriksaan 3), sehingga kedua lapisan harus diperbaiki agar data dapat terkirim utuh.',
+            'Jaringan berfungsi normal secara keseluruhan karena Lapisan Fisik dan Transport sama-sama menunjukkan aktivitas yang berhasil.',
+          ],
+          correctAnswer: 3,
         },
       ],
     },
@@ -1372,26 +1595,127 @@ export const lessons: Record<string, Lesson> = {
   '2': {
     id: '2',
     title: 'Pertemuan 2',
-    topic: 'Mekanisme TCP',
-    description: 'Mekanisme kerja TCP seperti TCP Header, TCP Sequence Number, dan TCP Theree-Way Handshake',
-    objectives: ['X.TCP.4', 'X.TCP.5', 'X.TCP.8', 'X.TCP.9', 'X.TCP.10'],
+    topic: 'Mekanisme Transmission Control Protocol (TCP)',
+    description: 'Mekanisme kerja TCP seperti TCP Header, TCP Sequence Number, dan TCP Three-Way Handshake',
+    objectives: ['X.TCP.9', 'X.TCP.10', 'X.TCP.11', 'X.TCP.12', 'X.TCP.13', 'X.TCP.14', 'X.TCP.15'],
     initialCompetencies: ['Konsep dasar TCP', 'Komponen TCP Header'],
     materials: ['Three-Way Handshake', 'Flow Control (Windowing)', 'Congestion Control'],
     pretest: {
       questions: [
         {
-          question: 'Proses pembukaan koneksi pada TCP disebut...',
-          options: ['Two-way handshake', 'Three-way handshake', 'Four-way handshake', 'Direct connection'],
+          question:
+            'Perhatikan komponen TCP Header: Source Port, Destination Port, Sequence Number, Acknowledgment Number, Urgent Pointer, dan Window Size. ' +
+            'Seorang siswa mengklaim komponen Urgent Pointer berfungsi untuk flow control (mengontrol jumlah data yang boleh dikirim).\n\n' +
+            'Berdasarkan daftar komponen TCP Header di atas, manakah komponen yang SEBENARNYA berfungsi untuk flow control ' +
+            '(mengontrol jumlah data yang boleh dikirim sebelum mendapat konfirmasi dari penerima)?',
+          options: [
+            'Source Port',
+            'Window Size',
+            'Sequence Number',
+            'Acknowledgment Number',
+            'Urgent Pointer',
+          ],
           correctAnswer: 1,
         },
         {
-          question: 'Flag TCP mana yang digunakan untuk memulai sinkronisasi nomor urut?',
-          options: ['ACK', 'FIN', 'SYN', 'PSH'],
+          question:
+            'Video dikirim dari Server ke Klien via TCP. Data dipecah menjadi tiga segmen: Seq=1 (1000 byte), Seq=1001 (1000 byte), Seq=2001 (1000 byte). ' +
+            'Segmen tiba di Klien dalam urutan: Seq=2001, Seq=1, Seq=1001.\n\n' +
+            'Mekanisme Sequence Number memastikan ...',
+          options: [
+            'Klien memainkan video sesuai urutan kedatangan segmen tanpa penyusunan ulang',
+            'Klien menggunakan nilai Sequence Number untuk menyusun ulang menjadi Seq=1 → 1001 → 2001 sehingga video ditampilkan benar meski datang tidak berurutan',
+            'Server mengirim ulang semua segmen karena urutan acak menandakan jaringan tidak stabil',
+            'Klien membuang segmen yang tidak datang pertama karena TCP hanya memproses yang pertama tiba',
+            'Klien menunggu instruksi Server sebelum menyusun ulang segmen',
+          ],
+          correctAnswer: 1,
+        },
+        {
+          question:
+            'Skenario Normal: Server kirim Seq=1000 (500 byte), Klien balas ACK=1500. Server kirim Seq=1500, Klien balas ACK=2000.\n' +
+            'Skenario Error: Server kirim Seq=2000 (500 byte), Klien balas ACK=2000 (Duplicate ACK). Server kirim Seq=2000 lagi, Klien balas ACK=2000 (masih sama).\n' +
+            'Seorang siswa menyatakan \'Duplicate ACK menandakan Klien berhasil menerima Seq=2000.\'\n\n' +
+            'Perbedaan kedua kondisi tersebut beserta argumen yang paling tepat adalah ...',
+          options: [
+            'Kondisi 1 dan Kondisi 2 tidak berbeda; ACK yang sama menandakan penerima selalu siap menerima data berikutnya.',
+            'Kondisi 1 adalah pengiriman normal karena nilai ACK terus meningkat sesuai data yang berhasil diterima, sedangkan Kondisi 2 menunjukkan kehilangan segmen karena nilai ACK tidak meningkat meskipun server terus mengirim.',
+            'Kondisi 1 menunjukkan koneksi TCP yang bermasalah karena ACK terus berubah, sedangkan Kondisi 2 menunjukkan kondisi normal karena ACK yang tetap berarti tidak ada perubahan.',
+            'Kondisi 2 lebih efisien dari Kondisi 1 karena penerima tidak perlu membalas setiap segmen dengan ACK yang berbeda.',
+            'Kedua kondisi sama-sama normal; perbedaan nilai ACK hanya bergantung pada ukuran segmen yang dikirimkan.',
+          ],
+          correctAnswer: 1,
+        },
+        {
+          question:
+            'Server Web (SEQ=750) mengirim SYN ke Database Server. Database Server balas SYN-ACK (SEQ=2000, ACK_NUM=751). ' +
+            'Kemudian Web Server balas ACK (SEQ=751, ACK_NUM=2001). ' +
+            'Seorang siswa mengklaim \'SEQ=751 pada paket ketiga salah; seharusnya SEQ=752 karena Web Server harus menambah 1 dari ACK_NUM yang diterima (751+1=752).\'\n\n' +
+            'Berdasarkan klaim tersebut, manakah analisis yang benar tentang nilai SEQ pada paket ketiga Three-Way Handshake?',
+          options: [
+            'Benar; SEQ=752 adalah nilai yang benar berdasarkan aturan Three-Way Handshake',
+            'Benar; ACK_NUM yang diterima selalu menjadi dasar SEQ berikutnya ditambah 1',
+            'Salah; pada paket ACK ketiga, nilai SEQ menggunakan ACK_NUM yang dikirimkan sebelumnya oleh Web Server sendiri (751), bukan ditambah 1 lagi. Aturan +1 hanya berlaku untuk merespons SYN, bukan untuk paket ACK murni',
+            'Benar; nilai 752 benar karena Three-Way Handshake selalu menambah 1 pada setiap SEQ',
+            'Salah; SEQ paket ketiga harus sama dengan SEQ paket pertama (750) untuk konsistensi',
+          ],
           correctAnswer: 2,
         },
         {
-          question: 'Field Window Size digunakan untuk tujuan...',
-          options: ['Routing paket', 'Deteksi error', 'Mengatur aliran data (Flow Control)', 'Enkripsi data'],
+          question:
+            'Diagram mekanisme kerja TCP (diacak):\n' +
+            '1. Klien kirim SYN.\n' +
+            '2. Server balas SYN-ACK.\n' +
+            '3. Klien balas ACK; koneksi terbentuk.\n' +
+            '4. Klien kirim data Seq=1 (1000 byte).\n' +
+            '5. Server balas ACK=1001.\n' +
+            '6. Klien kirim Seq=1001; hilang di jaringan.\n' +
+            '7. Server kirim Duplicate ACK=1001.\n' +
+            '8. Klien mendeteksi dan kirim ulang Seq=1001.\n' +
+            '9. Server balas ACK=2001.\n' +
+            '10. Klien kirim FIN.\n\n' +
+            'Urutan BENAR adalah ...',
+          options: [
+            '1 – 2 – 3 – 4 – 5 – 6 – 7 – 8 – 9 – 10',
+            '3 – 1 – 2 – 4 – 5 – 6 – 7 – 8 – 9 – 10',
+            '1 – 2 – 3 – 4 – 6 – 5 – 7 – 8 – 9 – 10',
+            '1 – 2 – 3 – 6 – 4 – 5 – 7 – 8 – 9 – 10',
+            '1 – 2 – 3 – 4 – 5 – 7 – 6 – 8 – 9 – 10',
+          ],
+          correctAnswer: 0,
+        },
+        {
+          question:
+            'Dua mahasiswa berdebat tentang keandalan TCP.\n' +
+            'Mhs A: \'Three-Way Handshake dan Retransmission saja sudah cukup; Sequence Number dan ACK hanya redundan.\'\n' +
+            'Mhs B: \'Keempat mekanisme bekerja bersama membentuk sistem berlapis yang tidak bisa dikurangi.\'\n\n' +
+            'Berdasarkan kedua pendapat tersebut, manakah analisis yang tepat tentang mekanisme keandalan TCP?',
+          options: [
+            'Pendapat A benar; Three-Way Handshake dan Retransmission memang sudah cukup',
+            'Pendapat B benar; keempat mekanisme saling melengkapi: Handshake menjamin kesiapan, Sequence Number menjamin urutan, ACK menjamin konfirmasi, Retransmission menjamin pemulihan – tanpa salah satu, sistem keandalan menjadi tidak lengkap',
+            'Pendapat A benar sebagian; Sequence Number memang redundan tetapi ACK diperlukan',
+            'Kedua pendapat benar karena menggambarkan dua aspek berbeda',
+            'Pendapat A benar; tanpa Three-Way Handshake dan Retransmission, TCP tidak bisa bekerja',
+          ],
+          correctAnswer: 1,
+        },
+        {
+          question:
+            'Log komunikasi TCP:\n' +
+            '[08:00:01] SYN-SYN-ACK-ACK, koneksi terbentuk.\n' +
+            '[08:00:02] A kirim Seq=100 (300 byte); B balas ACK=400.\n' +
+            '[08:00:03] A kirim Seq=400; timeout 20 detik, tidak ada ACK.\n' +
+            '[08:00:23] A kirim ulang Seq=400; B balas ACK=700.\n' +
+            '[08:00:24] A kirim Seq=700; B balas ACK=1000.\n' +
+            '[08:00:30] FIN-FIN-ACK-FIN-FIN-ACK, koneksi ditutup.\n\n' +
+            'Analisis paling tepat adalah ...',
+          options: [
+            'Komunikasi gagal; timeout di [08:00:03] membuktikan koneksi TCP terputus permanen',
+            'Nilai ACK=400 setelah Seq=100 (300 byte) tidak valid; seharusnya ACK=101',
+            'Keseluruhan komunikasi berhasil; timeout di [08:00:03] diselesaikan retransmission dan semua data terkirim. Penutupan koneksi Four-Way di [08:00:30] menandakan sesi berakhir dengan benar',
+            'Penutupan koneksi di [08:00:30] tidak valid; FIN hanya boleh dikirim segera setelah timeout',
+            'Mekanisme retransmission gagal karena timeout 20 detik terlalu lama untuk jaringan lokal',
+          ],
           correctAnswer: 2,
         },
       ],
@@ -1400,24 +1724,120 @@ export const lessons: Record<string, Lesson> = {
     posttest: {
       questions: [
         {
-          question: 'Urutan paket yang benar dalam three-way handshake adalah...',
-          options: ['SYN, SYN-ACK, ACK', 'SYN, ACK, SYN-ACK', 'ACK, SYN, SYN-ACK', 'SYN, SYN, ACK'],
-          correctAnswer: 0,
-        },
-        {
-          question: 'Apa arti dari nilai Window Size = 0 dalam paket TCP?',
+          question:
+            'Perhatikan komponen TCP Header: Source Port, Destination Port, Sequence Number, Acknowledgment Number, Urgent Pointer, dan Window Size. ' +
+            'Seorang siswa mengklaim komponen Urgent Pointer berfungsi untuk flow control (mengontrol jumlah data yang boleh dikirim).\n\n' +
+            'Berdasarkan daftar komponen TCP Header di atas, manakah komponen yang SEBENARNYA berfungsi untuk flow control ' +
+            '(mengontrol jumlah data yang boleh dikirim sebelum mendapat konfirmasi dari penerima)?',
           options: [
-            'Koneksi terputus',
-            'Penerima tidak sanggup menerima data lagi sementara waktu',
-            'Pengiriman data telah selesai',
-            'Data yang dikirim rusak',
+            'Source Port',
+            'Window Size',
+            'Sequence Number',
+            'Acknowledgment Number',
+            'Urgent Pointer',
           ],
           correctAnswer: 1,
         },
         {
-          question: 'Mekanisme Slow Start digunakan dalam tahap...',
-          options: ['Error Detection', 'Congestion Control', 'Handshake', 'Decapsulation'],
+          question:
+            'Video dikirim dari Server ke Klien via TCP. Data dipecah menjadi tiga segmen: Seq=1 (1000 byte), Seq=1001 (1000 byte), Seq=2001 (1000 byte). ' +
+            'Segmen tiba di Klien dalam urutan: Seq=2001, Seq=1, Seq=1001.\n\n' +
+            'Mekanisme Sequence Number memastikan ...',
+          options: [
+            'Klien memainkan video sesuai urutan kedatangan segmen tanpa penyusunan ulang',
+            'Klien menggunakan nilai Sequence Number untuk menyusun ulang menjadi Seq=1 → 1001 → 2001 sehingga video ditampilkan benar meski datang tidak berurutan',
+            'Server mengirim ulang semua segmen karena urutan acak menandakan jaringan tidak stabil',
+            'Klien membuang segmen yang tidak datang pertama karena TCP hanya memproses yang pertama tiba',
+            'Klien menunggu instruksi Server sebelum menyusun ulang segmen',
+          ],
           correctAnswer: 1,
+        },
+        {
+          question:
+            'Skenario Normal: Server kirim Seq=1000 (500 byte), Klien balas ACK=1500. Server kirim Seq=1500, Klien balas ACK=2000.\n' +
+            'Skenario Error: Server kirim Seq=2000 (500 byte), Klien balas ACK=2000 (Duplicate ACK). Server kirim Seq=2000 lagi, Klien balas ACK=2000 (masih sama).\n' +
+            'Seorang siswa menyatakan \'Duplicate ACK menandakan Klien berhasil menerima Seq=2000.\'\n\n' +
+            'Perbedaan kedua kondisi tersebut beserta argumen yang paling tepat adalah ...',
+          options: [
+            'Kondisi 1 dan Kondisi 2 tidak berbeda; ACK yang sama menandakan penerima selalu siap menerima data berikutnya.',
+            'Kondisi 1 adalah pengiriman normal karena nilai ACK terus meningkat sesuai data yang berhasil diterima, sedangkan Kondisi 2 menunjukkan kehilangan segmen karena nilai ACK tidak meningkat meskipun server terus mengirim.',
+            'Kondisi 1 menunjukkan koneksi TCP yang bermasalah karena ACK terus berubah, sedangkan Kondisi 2 menunjukkan kondisi normal karena ACK yang tetap berarti tidak ada perubahan.',
+            'Kondisi 2 lebih efisien dari Kondisi 1 karena penerima tidak perlu membalas setiap segmen dengan ACK yang berbeda.',
+            'Kedua kondisi sama-sama normal; perbedaan nilai ACK hanya bergantung pada ukuran segmen yang dikirimkan.',
+          ],
+          correctAnswer: 1,
+        },
+        {
+          question:
+            'Server Web (SEQ=750) mengirim SYN ke Database Server. Database Server balas SYN-ACK (SEQ=2000, ACK_NUM=751). ' +
+            'Kemudian Web Server balas ACK (SEQ=751, ACK_NUM=2001). ' +
+            'Seorang siswa mengklaim \'SEQ=751 pada paket ketiga salah; seharusnya SEQ=752 karena Web Server harus menambah 1 dari ACK_NUM yang diterima (751+1=752).\'\n\n' +
+            'Berdasarkan klaim tersebut, manakah analisis yang benar tentang nilai SEQ pada paket ketiga Three-Way Handshake?',
+          options: [
+            'Benar; SEQ=752 adalah nilai yang benar berdasarkan aturan Three-Way Handshake',
+            'Benar; ACK_NUM yang diterima selalu menjadi dasar SEQ berikutnya ditambah 1',
+            'Salah; pada paket ACK ketiga, nilai SEQ menggunakan ACK_NUM yang dikirimkan sebelumnya oleh Web Server sendiri (751), bukan ditambah 1 lagi. Aturan +1 hanya berlaku untuk merespons SYN, bukan untuk paket ACK murni',
+            'Benar; nilai 752 benar karena Three-Way Handshake selalu menambah 1 pada setiap SEQ',
+            'Salah; SEQ paket ketiga harus sama dengan SEQ paket pertama (750) untuk konsistensi',
+          ],
+          correctAnswer: 2,
+        },
+        {
+          question:
+            'Diagram mekanisme kerja TCP (diacak):\n' +
+            '1. Klien kirim SYN.\n' +
+            '2. Server balas SYN-ACK.\n' +
+            '3. Klien balas ACK; koneksi terbentuk.\n' +
+            '4. Klien kirim data Seq=1 (1000 byte).\n' +
+            '5. Server balas ACK=1001.\n' +
+            '6. Klien kirim Seq=1001; hilang di jaringan.\n' +
+            '7. Server kirim Duplicate ACK=1001.\n' +
+            '8. Klien mendeteksi dan kirim ulang Seq=1001.\n' +
+            '9. Server balas ACK=2001.\n' +
+            '10. Klien kirim FIN.\n\n' +
+            'Urutan BENAR adalah ...',
+          options: [
+            '1 – 2 – 3 – 4 – 5 – 6 – 7 – 8 – 9 – 10',
+            '3 – 1 – 2 – 4 – 5 – 6 – 7 – 8 – 9 – 10',
+            '1 – 2 – 3 – 4 – 6 – 5 – 7 – 8 – 9 – 10',
+            '1 – 2 – 3 – 6 – 4 – 5 – 7 – 8 – 9 – 10',
+            '1 – 2 – 3 – 4 – 5 – 7 – 6 – 8 – 9 – 10',
+          ],
+          correctAnswer: 0,
+        },
+        {
+          question:
+            'Dua mahasiswa berdebat tentang keandalan TCP.\n' +
+            'Mhs A: \'Three-Way Handshake dan Retransmission saja sudah cukup; Sequence Number dan ACK hanya redundan.\'\n' +
+            'Mhs B: \'Keempat mekanisme bekerja bersama membentuk sistem berlapis yang tidak bisa dikurangi.\'\n\n' +
+            'Berdasarkan kedua pendapat tersebut, manakah analisis yang tepat tentang mekanisme keandalan TCP?',
+          options: [
+            'Pendapat A benar; Three-Way Handshake dan Retransmission memang sudah cukup',
+            'Pendapat B benar; keempat mekanisme saling melengkapi: Handshake menjamin kesiapan, Sequence Number menjamin urutan, ACK menjamin konfirmasi, Retransmission menjamin pemulihan – tanpa salah satu, sistem keandalan menjadi tidak lengkap',
+            'Pendapat A benar sebagian; Sequence Number memang redundan tetapi ACK diperlukan',
+            'Kedua pendapat benar karena menggambarkan dua aspek berbeda',
+            'Pendapat A benar; tanpa Three-Way Handshake dan Retransmission, TCP tidak bisa bekerja',
+          ],
+          correctAnswer: 1,
+        },
+        {
+          question:
+            'Log komunikasi TCP:\n' +
+            '[08:00:01] SYN-SYN-ACK-ACK, koneksi terbentuk.\n' +
+            '[08:00:02] A kirim Seq=100 (300 byte); B balas ACK=400.\n' +
+            '[08:00:03] A kirim Seq=400; timeout 20 detik, tidak ada ACK.\n' +
+            '[08:00:23] A kirim ulang Seq=400; B balas ACK=700.\n' +
+            '[08:00:24] A kirim Seq=700; B balas ACK=1000.\n' +
+            '[08:00:30] FIN-FIN-ACK-FIN-FIN-ACK, koneksi ditutup.\n\n' +
+            'Analisis paling tepat adalah ...',
+          options: [
+            'Komunikasi gagal; timeout di [08:00:03] membuktikan koneksi TCP terputus permanen',
+            'Nilai ACK=400 setelah Seq=100 (300 byte) tidak valid; seharusnya ACK=101',
+            'Keseluruhan komunikasi berhasil; timeout di [08:00:03] diselesaikan retransmission dan semua data terkirim. Penutupan koneksi Four-Way di [08:00:30] menandakan sesi berakhir dengan benar',
+            'Penutupan koneksi di [08:00:30] tidak valid; FIN hanya boleh dikirim segera setelah timeout',
+            'Mekanisme retransmission gagal karena timeout 20 detik terlalu lama untuk jaringan lokal',
+          ],
+          correctAnswer: 2,
         },
       ],
     },

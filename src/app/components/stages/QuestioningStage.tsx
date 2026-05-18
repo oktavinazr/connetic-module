@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import {
   AlertCircle, CheckCircle, ChevronRight, Clock, Eye,
@@ -9,7 +9,7 @@ import {
 import { getCurrentUser } from '../../utils/auth';
 import { getLessonProgress, saveStageAttempt } from '../../utils/progress';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
-import { EssayBox } from './StageKit';
+import { EssayBox, ContinueActivityButton, ATPConclusionBox } from './StageKit';
 
 // -- Interfaces -----------------------------------------------------------------
 
@@ -374,7 +374,7 @@ function DisruptionSimulation({ lessonId, stageIndex, onComplete }: {
             <Zap className="w-5 h-5 text-[#8B5CF6]" />
           </div>
           <div className="flex-1">
-            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#8B5CF6]">Simulasi Gangguan - X.TCP.5</p>
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#8B5CF6]">Aktivitas Studi Kasus — Analogi Pizza</p>
             <h3 className="text-sm font-bold text-[#395886]">Analisis Dampak pada Lapisan Jaringan</h3>
           </div>
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold
@@ -444,59 +444,390 @@ function DisruptionSimulation({ lessonId, stageIndex, onComplete }: {
   );
 }
 
-// -- Inline Essay (now uses unified EssayBox from StageKit) --------------------
+// -- Layer Function Pairs (cable-matching activity) ----------------------------
 
-function InlineEssay({ onDone }: { onDone: (essay: string) => void }) {
+const LAYER_FUNCTION_PAIRS = [
+  { id: 'lf1', layerName: 'Application Layer', layerNum: 5, funcDesc: 'Menghasilkan dan memproses data pengguna melalui protokol HTTP, SMTP, dan FTP', icon: Smartphone, hexColor: '#8B5CF6', light: 'bg-[#EDE9FE]', border: 'border-[#8B5CF6]', text: 'text-[#6D28D9]', badge: 'bg-[#8B5CF6]' },
+  { id: 'lf2', layerName: 'Transport Layer', layerNum: 4, funcDesc: 'Memecah data menjadi segmen dan memverifikasi integritas pengiriman melalui checksum TCP/UDP', icon: Box, hexColor: '#628ECB', light: 'bg-[#EEF4FF]', border: 'border-[#628ECB]', text: 'text-[#395886]', badge: 'bg-[#628ECB]' },
+  { id: 'lf3', layerName: 'Network Layer', layerNum: 3, funcDesc: 'Menentukan rute terbaik dan mengalamati paket data menggunakan IP Address (Routing)', icon: Route, hexColor: '#10B981', light: 'bg-[#ECFDF5]', border: 'border-[#10B981]', text: 'text-[#065F46]', badge: 'bg-[#10B981]' },
+  { id: 'lf4', layerName: 'Data Link Layer', layerNum: 2, funcDesc: 'Mengidentifikasi perangkat dalam jaringan lokal menggunakan MAC Address dan membungkus data menjadi Frame', icon: Home, hexColor: '#F59E0B', light: 'bg-[#FFFBEB]', border: 'border-[#F59E0B]', text: 'text-[#78350F]', badge: 'bg-[#F59E0B]' },
+  { id: 'lf5', layerName: 'Physical Layer', layerNum: 1, funcDesc: 'Mengirimkan bit (0 dan 1) melalui media fisik: kabel UTP, serat optik, atau sinyal Wi-Fi', icon: Cable, hexColor: '#EC4899', light: 'bg-[#FDF2F8]', border: 'border-[#EC4899]', text: 'text-[#831843]', badge: 'bg-[#EC4899]' },
+];
+
+// Left: shuffled func descriptions. Right: layer order Application (5) → Physical (1)
+const FUNC_DISPLAY_ORDER = ['lf5', 'lf3', 'lf1', 'lf4', 'lf2'];
+const LAYER_DISPLAY_ORDER = ['lf1', 'lf2', 'lf3', 'lf4', 'lf5'];
+
+// -- Function Matching Activity (cable-drawing UI) ------------------------------
+
+function FunctionMatchingActivity({ placements, validated, onPlacementsChange, onValidate, onNext }: {
+  placements: Record<string, string>;
+  validated: boolean;
+  onPlacementsChange: (p: Record<string, string>) => void;
+  onValidate: () => void;
+  onNext: () => void;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const funcEls = useRef<Record<string, HTMLDivElement | null>>({});
+  const layerEls = useRef<Record<string, HTMLDivElement | null>>({});
+  const activeDragRef = useRef<string | null>(null);
+  const placementsRef = useRef(placements);
+  const onChangeRef = useRef(onPlacementsChange);
+  const [dragState, setDragState] = useState<{ funcId: string; pos: { x: number; y: number } } | null>(null);
+  const [, forceRedraw] = useState(0);
+
+  placementsRef.current = placements;
+  onChangeRef.current = onPlacementsChange;
+
+  // After placements change, DOM refs need one extra render to reflect new cable anchors
+  useLayoutEffect(() => {
+    forceRedraw(n => n + 1);
+  }, [placements]);
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (!activeDragRef.current || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      setDragState({ funcId: activeDragRef.current, pos: { x: e.clientX - rect.left, y: e.clientY - rect.top } });
+    };
+
+    const onMouseUp = (e: MouseEvent) => {
+      const dragFuncId = activeDragRef.current;
+      activeDragRef.current = null;
+      setDragState(null);
+      if (!dragFuncId) return;
+      for (const [layerId, el] of Object.entries(layerEls.current)) {
+        if (!el) continue;
+        const r = el.getBoundingClientRect();
+        if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
+          const next = { ...placementsRef.current };
+          Object.keys(next).forEach(k => { if (next[k] === layerId) delete next[k]; });
+          next[dragFuncId] = layerId;
+          onChangeRef.current(next);
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, []);
+
+  const getAnchor = (el: HTMLDivElement | null, side: 'right' | 'left') => {
+    if (!el || !containerRef.current) return null;
+    const cRect = containerRef.current.getBoundingClientRect();
+    const eRect = el.getBoundingClientRect();
+    return {
+      x: side === 'right' ? eRect.right - cRect.left : eRect.left - cRect.left,
+      y: eRect.top - cRect.top + eRect.height / 2,
+    };
+  };
+
+  const makePath = (x1: number, y1: number, x2: number, y2: number) => {
+    const cx = Math.abs(x2 - x1) * 0.45;
+    return `M ${x1} ${y1} C ${x1 + cx} ${y1}, ${x2 - cx} ${y2}, ${x2} ${y2}`;
+  };
+
+  const funcOrder = FUNC_DISPLAY_ORDER.map(id => LAYER_FUNCTION_PAIRS.find(lf => lf.id === id)!);
+  const layerOrder = LAYER_DISPLAY_ORDER.map(id => LAYER_FUNCTION_PAIRS.find(lf => lf.id === id)!);
+
+  const allPlaced = Object.keys(placements).length === LAYER_FUNCTION_PAIRS.length;
+  const correctCount = LAYER_FUNCTION_PAIRS.filter(lf => placements[lf.id] === lf.id).length;
+  const allCorrect = correctCount === LAYER_FUNCTION_PAIRS.length;
+
+  const cables = Object.entries(placements).map(([funcId, layerId]) => {
+    const from = getAnchor(funcEls.current[funcId] ?? null, 'right');
+    const to = getAnchor(layerEls.current[layerId] ?? null, 'left');
+    if (!from || !to) return null;
+    const pair = LAYER_FUNCTION_PAIRS.find(lf => lf.id === layerId);
+    const isCorrect = funcId === layerId;
+    const color = validated ? (isCorrect ? (pair?.hexColor ?? '#10B981') : '#EF4444') : (pair?.hexColor ?? '#8B5CF6');
+    return { key: `${funcId}-${layerId}`, from, to, color, correct: validated ? isCorrect : true };
+  }).filter((c): c is NonNullable<typeof c> => c !== null);
+
+  const liveFrom = dragState ? getAnchor(funcEls.current[dragState.funcId] ?? null, 'right') : null;
+
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <EssayBox
-        objectiveLabel="X.TCP.5"
-        prompt="Mengapa proses pengiriman data di internet harus mengikuti urutan lapisan (layer) yang baku?"
-        submitLabel="Submit Aktivitas"
-        minChars={60}
-        onSubmit={onDone}
-      />
+    <div className="space-y-5">
+      <div
+        ref={containerRef}
+        className="relative select-none"
+        style={{ cursor: dragState ? 'grabbing' : 'default' }}
+      >
+        <svg
+          className="absolute inset-0 pointer-events-none"
+          style={{ width: '100%', height: '100%', overflow: 'visible' }}
+        >
+          {cables.map(c => (
+            <g key={c.key}>
+              <path
+                d={makePath(c.from.x, c.from.y, c.to.x, c.to.y)}
+                stroke={c.color}
+                strokeWidth="3"
+                fill="none"
+                strokeLinecap="round"
+                opacity={c.correct ? 0.85 : 0.55}
+              />
+              <circle cx={c.from.x} cy={c.from.y} r="5" fill={c.color} opacity={c.correct ? 0.9 : 0.55} />
+              <circle cx={c.to.x} cy={c.to.y} r="5" fill={c.color} opacity={c.correct ? 0.9 : 0.55} />
+            </g>
+          ))}
+          {liveFrom && dragState && (
+            <path
+              d={makePath(liveFrom.x, liveFrom.y, dragState.pos.x, dragState.pos.y)}
+              stroke="#8B5CF6"
+              strokeWidth="2.5"
+              strokeDasharray="6 4"
+              fill="none"
+              strokeLinecap="round"
+              opacity={0.65}
+            />
+          )}
+        </svg>
+
+        <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 80px 1fr' }}>
+          {/* Left column: function descriptions (shuffled) */}
+          <div className="space-y-3">
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#395886]/40 text-center pb-1">Deskripsi Fungsi</p>
+            {funcOrder.map(lf => {
+              const connectedLayer = placements[lf.id] ? LAYER_FUNCTION_PAIRS.find(l => l.id === placements[lf.id]) : null;
+              const isCorrect = validated && placements[lf.id] === lf.id;
+              const isWrong = validated && !!placements[lf.id] && !isCorrect;
+              return (
+                <div
+                  key={lf.id}
+                  ref={el => { funcEls.current[lf.id] = el; }}
+                  onMouseDown={validated ? undefined : (e) => { e.preventDefault(); activeDragRef.current = lf.id; }}
+                  className={`px-4 py-3 rounded-xl border-2 text-xs font-bold leading-relaxed transition-all
+                    ${validated
+                      ? isCorrect
+                        ? 'border-[#10B981]/40 bg-[#F0FDF9] text-[#065F46] cursor-default'
+                        : isWrong
+                          ? 'border-red-200 bg-red-50 text-red-700 cursor-default'
+                          : 'border-[#D5DEEF] bg-white text-[#395886] cursor-default'
+                      : 'border-[#D5DEEF] bg-white text-[#395886] cursor-grab hover:border-[#8B5CF6]/40 hover:bg-[#F8F5FF] shadow-sm hover:shadow-md'
+                    }`}
+                  style={!validated && connectedLayer ? { borderColor: connectedLayer.hexColor + '80' } : {}}
+                >
+                  <div className="flex items-start gap-2">
+                    {!validated && (
+                      <div
+                        className="w-3 h-3 rounded-full shrink-0 mt-0.5 border-2"
+                        style={{
+                          backgroundColor: connectedLayer ? connectedLayer.hexColor + '33' : 'transparent',
+                          borderColor: connectedLayer ? connectedLayer.hexColor : '#D5DEEF',
+                        }}
+                      />
+                    )}
+                    {validated && isCorrect && <CheckCircle className="w-3.5 h-3.5 text-[#10B981] shrink-0 mt-0.5" />}
+                    {validated && isWrong && <XCircle className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" />}
+                    <span>{lf.funcDesc}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Center gap: cables pass through here via SVG overlay */}
+          <div />
+
+          {/* Right column: layer names (Application → Physical) */}
+          <div className="space-y-3">
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#395886]/40 text-center pb-1">Lapisan TCP/IP</p>
+            {layerOrder.map(lf => {
+              const LayerIcon = lf.icon;
+              const connectedFuncId = Object.entries(placements).find(([, v]) => v === lf.id)?.[0];
+              const isCorrect = validated && connectedFuncId === lf.id;
+              const isWrong = validated && !!connectedFuncId && !isCorrect;
+              return (
+                <div
+                  key={lf.id}
+                  ref={el => { layerEls.current[lf.id] = el; }}
+                  className={`px-4 py-3 rounded-xl border-2 transition-all flex items-center gap-2.5 cursor-default
+                    ${validated
+                      ? isCorrect
+                        ? `${lf.light} ${lf.border}`
+                        : isWrong
+                          ? 'border-red-200 bg-red-50'
+                          : `${lf.light} ${lf.border}/30`
+                      : lf.light
+                    }`}
+                  style={!validated && connectedFuncId ? { borderColor: lf.hexColor + '80' } : {}}
+                >
+                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${lf.badge} text-white shadow-sm`}>
+                    <LayerIcon className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-[9px] font-black uppercase opacity-50 ${lf.text}`}>Lapisan {lf.layerNum}</p>
+                    <p className={`text-xs font-black ${lf.text}`}>{lf.layerName}</p>
+                  </div>
+                  {validated && isCorrect && <CheckCircle className="w-4 h-4 text-[#10B981] shrink-0" />}
+                  {validated && isWrong && <XCircle className="w-4 h-4 text-red-500 shrink-0" />}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {!validated && (
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#F8F5FF] border border-[#8B5CF6]/15">
+          <div className="w-2 h-2 rounded-full bg-[#8B5CF6] shrink-0" />
+          <p className="text-[10px] font-bold text-[#6D28D9]">Klik dan tarik dari kartu fungsi (kiri) ke lapisan yang sesuai (kanan)</p>
+        </div>
+      )}
+
+      {!validated ? (
+        <button
+          onClick={onValidate}
+          disabled={!allPlaced}
+          className={`w-full py-3.5 rounded-xl font-black text-sm transition-all shadow-sm
+            ${allPlaced ? 'bg-[#8B5CF6] text-white hover:bg-[#7C3AED] shadow-purple-100' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
+        >
+          {allPlaced ? 'Verifikasi Pasangan Fungsi' : `Pasangkan ${LAYER_FUNCTION_PAIRS.length - Object.keys(placements).length} fungsi lagi`}
+        </button>
+      ) : (
+        <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {allCorrect ? (
+            <div className="p-4 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20 text-center">
+              <CheckCircle className="w-5 h-5 text-[#10B981] mx-auto mb-1.5" />
+              <p className="text-sm font-black text-[#065F46]">Semua pasangan tepat!</p>
+              <p className="text-xs font-bold text-[#065F46]/70 mt-1">Kamu sudah memahami perbedaan fungsi setiap lapisan TCP/IP.</p>
+            </div>
+          ) : (
+            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-center">
+              <p className="text-sm font-bold text-amber-800">
+                {correctCount} dari 5 pasangan benar — perhatikan koreksi merah di atas.
+              </p>
+            </div>
+          )}
+          <button
+            onClick={onNext}
+            className="w-full py-3.5 rounded-xl bg-[#10B981] text-white font-black text-sm hover:bg-[#059669] shadow-sm transition-all flex items-center justify-center gap-2"
+          >
+            <ArrowRight className="w-4 h-4" /> Lanjut ke Kemampuan Berargumen
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
-// -- Lesson 1 Questioning (Pizza Analogy) ---------------------------------------
+// -- Layer Q&A Section (Phase 2) ------------------------------------------------
 
-function QuestioningLesson1({ lessonId, stageIndex, onComplete }: QuestioningStageProps) {
-  const tracker = useActivityTracker({
-    lessonId,
-    stageIndex,
-    stageType: 'questioning',
-  });
-  const [subPhase, setSubPhase] = useState<'map' | 'simulation' | 'essay'>('map');
-  const [selections, setPlacements] = useState<Record<string, string>>({});
+function LayerQASection({ questionBank, activeId, openedIds, onOpen }: {
+  questionBank: QuestionBankItem[]; activeId: string | null;
+  openedIds: string[]; onOpen: (id: string) => void;
+}) {
+  const activeResponse = questionBank.find(q => q.id === activeId)?.response;
+  if (questionBank.length === 0) return null;
+  return (
+    <div className="bg-white rounded-2xl border-2 border-[#628ECB]/25 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#628ECB]/10 to-transparent border-b border-[#628ECB]/15">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#628ECB]/15">
+          <MessageSquare className="w-4 h-4 text-[#628ECB]" />
+        </div>
+        <div className="flex-1">
+          <p className="text-[9px] font-black uppercase tracking-widest text-[#628ECB]/60">Tanya Jawab Interaktif</p>
+          <p className="text-xs font-bold text-[#395886]">Perbedaan Fungsi Lapisan TCP/IP</p>
+        </div>
+      </div>
+      <div className="p-5">
+        <p className="text-xs text-[#395886]/60 mb-4 leading-relaxed">Klik pertanyaan untuk melihat penjelasannya. Gunakan jawaban ini sebagai bahan argumenmu.</p>
+        <div className="space-y-2 mb-4">
+          {questionBank.map(q => (
+            <button
+              key={q.id}
+              onClick={() => onOpen(q.id)}
+              className={`w-full p-3.5 rounded-xl border-2 text-left text-xs font-bold transition-all flex items-center gap-2
+                ${activeId === q.id
+                  ? 'border-[#628ECB] bg-[#EEF4FF] text-[#395886]'
+                  : openedIds.includes(q.id)
+                  ? 'border-[#10B981]/30 bg-[#F0FDF4] text-[#395886]'
+                  : 'border-[#D5DEEF] bg-white hover:border-[#628ECB]/40 text-[#395886]'}`}
+            >
+              <ChevronRight className={`w-3.5 h-3.5 shrink-0 transition-transform ${activeId === q.id ? 'rotate-90 text-[#628ECB]' : 'text-[#395886]/30'}`} />
+              <span className="flex-1 leading-relaxed">{q.text}</span>
+              {openedIds.includes(q.id) && activeId !== q.id && (
+                <CheckCircle className="w-3.5 h-3.5 text-[#10B981] shrink-0" />
+              )}
+            </button>
+          ))}
+        </div>
+        {activeResponse && (
+          <div className="p-4 rounded-xl bg-[#F0FDF4] border-2 border-[#10B981]/20 animate-in fade-in slide-in-from-top-2 duration-300">
+            <p className="text-[10px] font-black text-[#10B981] uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+              <Info className="w-3 h-3" /> Jawaban
+            </p>
+            <p className="text-xs font-bold text-[#065F46] leading-relaxed">{activeResponse}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// -- Questioning Lesson 1 (3-phase: Consistency → Arguing → Conclusion) ---------
+
+function QuestioningLesson1({ lessonId, stageIndex, onComplete, questionBank = [] }: QuestioningStageProps) {
+  const tracker = useActivityTracker({ lessonId, stageIndex, stageType: 'questioning' });
+
+  const [phase, setPhase] = useState<'consistency' | 'arguing' | 'conclusion'>('consistency');
+  const [matchPlacements, setMatchPlacements] = useState<Record<string, string>>({});
+  const [matchValidated, setMatchValidated] = useState(false);
+  const [disruptionDone, setDisruptionDone] = useState(false);
+  const [activeQAId, setActiveQAId] = useState<string | null>(null);
+  const [openedQAIds, setOpenedQAIds] = useState<string[]>([]);
   const [essay, setEssay] = useState('');
+  const [conclusionText, setConclusionText] = useState('');
   const [isRestored, setIsRestored] = useState(false);
 
+  // Always keep a stable ref to tracker so the snapshot effect doesn't re-fire on every render
+  const trackerRef = useRef(tracker);
+  trackerRef.current = tracker;
+
   useEffect(() => {
-    if (!tracker.isLoading && tracker.session?.latestSnapshot && !isRestored) {
-      const snap = tracker.session.latestSnapshot;
-      if (snap.subPhase) setSubPhase(snap.subPhase);
-      if (snap.selections) setPlacements(snap.selections);
-      if (snap.essay) setEssay(snap.essay);
-      setIsRestored(true);
-    } else if (!tracker.isLoading) {
+    if (!tracker.isLoading && !isRestored) {
+      const snap = tracker.session?.latestSnapshot;
+      if (snap) {
+        if (snap.phase) setPhase(snap.phase);
+        if (snap.matchPlacements) {
+          // New format uses funcId keys (lf1, lf2…); discard stale layerName-keyed snapshots
+          const keys = Object.keys(snap.matchPlacements as Record<string, string>);
+          if (keys.length === 0 || keys.every(k => /^lf\d+$/.test(k))) {
+            setMatchPlacements(snap.matchPlacements as Record<string, string>);
+          }
+        }
+        if (snap.matchValidated) setMatchValidated(snap.matchValidated);
+        if (snap.disruptionDone) setDisruptionDone(snap.disruptionDone);
+        if (snap.openedQAIds) setOpenedQAIds(snap.openedQAIds);
+        if (snap.activeQAId) setActiveQAId(snap.activeQAId);
+        if (snap.essay) setEssay(snap.essay);
+        if (snap.conclusionText) setConclusionText(snap.conclusionText);
+      }
       setIsRestored(true);
     }
   }, [tracker.isLoading, tracker.session, isRestored]);
 
   useEffect(() => {
     if (!isRestored) return;
-    const progressMap = { map: 15, simulation: 55, essay: 85 } as const;
-    void tracker.saveSnapshot(
-      {
-        subPhase,
-        selections,
-        essay,
-      },
-      { progressPercent: progressMap[subPhase] },
+    // Progress reflects actual state so it stays in sync with trackEvent calls
+    const progress =
+      phase === 'conclusion'
+        ? (conclusionText ? 100 : 90)
+        : phase === 'arguing'
+          ? (essay ? 85 : openedQAIds.length > 0 ? 72 : disruptionDone ? 60 : 50)
+          : (matchValidated ? 30 : Object.keys(matchPlacements).length > 0 ? 18 : 10);
+    void trackerRef.current.saveSnapshot(
+      { phase, matchPlacements, matchValidated, disruptionDone, openedQAIds, activeQAId, essay, conclusionText },
+      { progressPercent: progress },
     );
-  }, [essay, isRestored, selections, subPhase, tracker]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, matchPlacements, matchValidated, disruptionDone, openedQAIds, activeQAId, essay, conclusionText, isRestored]);
 
   if (tracker.isLoading || !isRestored) {
     return (
@@ -507,54 +838,146 @@ function QuestioningLesson1({ lessonId, stageIndex, onComplete }: QuestioningSta
     );
   }
 
-  return (
-    <div className="w-full space-y-8 pb-16">
-      <div className="flex flex-col md:flex-row items-center gap-6 rounded-lg border-2 border-[#8B5CF6]/20 bg-white p-6 shadow-sm">
-        <div className="w-20 h-20 shrink-0 rounded-lg bg-[#8B5CF6] flex items-center justify-center text-white shadow-md">
-          <User className="w-12 h-12" strokeWidth={2.5} />
-        </div>
-        <div className="flex-1 text-center md:text-left">
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#8B5CF6]">Questioning — X.TCP.5 (Fasilitator)</p>
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#8B5CF6]/10 border border-[#8B5CF6]/20">
-              <MessageSquare className="w-3.5 h-3.5 text-[#8B5CF6]" />
-              <span className="text-[10px] font-black text-[#8B5CF6] uppercase tracking-tighter">Diskusi Interaktif</span>
+  // ── Phase 1: Keruntutan Berpikir ──────────────────────────────────────────────
+  if (phase === 'consistency') {
+    return (
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+        <div className="bg-white rounded-2xl border-2 border-[#8B5CF6]/25 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#8B5CF6]/10 to-transparent border-b border-[#8B5CF6]/15">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#8B5CF6]/15">
+              <Layers className="w-5 h-5 text-[#8B5CF6]" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#8B5CF6]">Keruntutan Berpikir (Consistency of Thinking)</p>
+              <h3 className="text-sm font-bold text-[#395886]">Cocokkan Fungsi dengan Lapisan TCP/IP</h3>
             </div>
           </div>
-          <p className="text-base font-bold text-[#395886] leading-relaxed italic">
-            "Setelah mengamati simulasi di tahap Modeling, sekarang mari kita analisis tantangan nyata yang mungkin terjadi jika satu lapisan saja mengalami kegagalan."
-          </p>
+          <div className="px-5 py-3 bg-gradient-to-br from-[#8B5CF6]/3 to-transparent">
+            <p className="text-xs text-[#395886]/70 leading-relaxed">
+              Seret setiap kartu deskripsi fungsi ke lapisan TCP/IP yang tepat. Aktivitas ini membantu kamu memahami <strong>perbedaan fungsi setiap lapisan</strong> secara runtut dan logis.
+            </p>
+          </div>
         </div>
-      </div>
 
-      <div className="space-y-8">
+        <FunctionMatchingActivity
+          placements={matchPlacements}
+          validated={matchValidated}
+          onPlacementsChange={setMatchPlacements}
+          onValidate={() => {
+            setMatchValidated(true);
+            void tracker.trackEvent('questioning_consistency_validated', {}, { progressPercent: 30 });
+          }}
+          onNext={() => {
+            void tracker.trackEvent('questioning_consistency_completed', {}, { progressPercent: 35 });
+            setPhase('arguing');
+          }}
+        />
+      </div>
+    );
+  }
+
+  // ── Phase 2: Kemampuan Berargumen ─────────────────────────────────────────────
+  if (phase === 'arguing') {
+    return (
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+        <div className="bg-white rounded-2xl border-2 border-[#F59E0B]/20 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#F59E0B]/10 to-transparent border-b border-[#F59E0B]/15">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F59E0B]/15">
+              <Zap className="w-5 h-5 text-[#F59E0B]" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#F59E0B]">Kemampuan Berargumen (Arguing Ability)</p>
+              <h3 className="text-sm font-bold text-[#395886]">Studi Kasus & Tanya Jawab Fungsi Lapisan</h3>
+            </div>
+          </div>
+          <div className="px-5 py-3 bg-gradient-to-br from-[#F59E0B]/3 to-transparent">
+            <p className="text-xs text-[#395886]/70 leading-relaxed">Pelajari peta analogi pizza, analisis gangguan jaringan, lalu lakukan tanya jawab untuk memperdalam pemahaman fungsi setiap lapisan.</p>
+          </div>
+        </div>
+
         <PizzaLayerMap />
-        
-        <div className="pt-6 border-t-2 border-dashed border-[#D5DEEF]/30 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+        <div className="pt-2 border-t-2 border-dashed border-[#D5DEEF]/40">
           <DisruptionSimulation
             lessonId={lessonId}
             stageIndex={stageIndex}
-            onComplete={(ans) => { 
-               setPlacements(ans); 
-               setSubPhase('essay');
-               void tracker.trackEvent('questioning_simulation_completed', { answerCount: Object.keys(ans ?? {}).length }, { progressPercent: 75 }); 
+            onComplete={(ans) => {
+              setDisruptionDone(true);
+              void tracker.trackEvent('questioning_disruption_done', { answerCount: Object.keys(ans ?? {}).length }, { progressPercent: 60 });
             }}
           />
         </div>
 
-        {subPhase === 'essay' && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <InlineEssay onDone={(text) => {
-              setEssay(text);
-              const finalAnswer = { selectedId: 'disruption_simulation', isCorrect: true, askedQuestions: [], justification: text, summary: text };
-              void tracker.complete(finalAnswer, { subPhase: 'essay', selections, essay: text, finalAnswer });
-              onComplete(finalAnswer);
-            }} />
+        {disruptionDone && (
+          <>
+            <LayerQASection
+              questionBank={questionBank}
+              activeId={activeQAId}
+              openedIds={openedQAIds}
+              onOpen={(id) => {
+                setActiveQAId(id);
+                if (!openedQAIds.includes(id)) setOpenedQAIds(prev => [...prev, id]);
+                void tracker.trackEvent('qa_opened', { questionId: id }, { progressPercent: 70 });
+              }}
+            />
+
+            <EssayBox
+              objectiveLabel="X.TCP.3"
+              headerLabel="Argumen Logis"
+              prompt="Berdasarkan aktivitas analogi pizza dan analisis gangguan yang telah kamu lakukan, jelaskan mengapa setiap lapisan TCP/IP memiliki fungsi yang berbeda dan tidak bisa saling menggantikan."
+              submitLabel="Simpan Argumen"
+              minWords={20}
+              defaultValue={essay}
+              disabled={!!essay}
+              onSubmit={(text) => {
+                setEssay(text);
+                void tracker.trackEvent('questioning_essay_done', {}, { progressPercent: 80 });
+              }}
+            />
+          </>
+        )}
+
+        {essay && (
+          <ContinueActivityButton
+            onClick={() => {
+              void tracker.trackEvent('questioning_arguing_completed', {}, { progressPercent: 85 });
+              setPhase('conclusion');
+            }}
+            label="Lanjutkan ke Penarikan Kesimpulan"
+          />
+        )}
+      </div>
+    );
+  }
+
+  // ── Phase 3: Penarikan Kesimpulan ─────────────────────────────────────────────
+  if (phase === 'conclusion') {
+    return (
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+        <ATPConclusionBox
+          atpBehavior="mampu membedakan fungsi setiap lapisan model TCP/IP dalam proses komunikasi jaringan"
+          objectiveCode="X.TCP.3"
+          stageType="questioning"
+          defaultValue={conclusionText}
+          disabled={!!conclusionText}
+          onSubmit={(text) => {
+            setConclusionText(text);
+            const finalAnswer = { selectedId: 'function_matching', isCorrect: true, askedQuestions: openedQAIds, justification: essay, conclusion: text };
+            void tracker.complete(finalAnswer, { phase: 'conclusion', finalAnswer });
+            onComplete(finalAnswer);
+          }}
+        />
+        {conclusionText && (
+          <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20 animate-in fade-in zoom-in-95 duration-300">
+            <CheckCircle className="w-5 h-5 text-[#10B981]" />
+            <span className="text-sm font-black text-[#065F46]">Kesimpulan tersimpan — Tahap Questioning selesai!</span>
           </div>
         )}
       </div>
-    </div>
-  );
+    );
+  }
+
+  return null;
 }
 
 // -- Original Questioning Stage (for other lessons) -------------------------------
