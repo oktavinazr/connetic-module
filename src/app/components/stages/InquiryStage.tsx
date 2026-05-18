@@ -9,7 +9,7 @@ import { getCurrentUser } from '../../utils/auth';
 import { getLessonProgress, saveStageAttempt } from '../../utils/progress';
 import { Ipv4Analyzer } from '../ui/Ipv4Analyzer';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
-import { EssayBox, ContinueActivityButton } from './StageKit';
+import { EssayBox, ContinueActivityButton, ATPConclusionBox } from './StageKit';
 
 // -- Types ----------------------------------------------------------------------
 
@@ -68,10 +68,10 @@ const flowLayerColors: Record<string, { gradient: string; borderB: string }> = {
 
 function InquiryEssayBox({
   prompt, objectiveLabel, submitLabel, onSubmit, minWords = 20,
-  defaultValue = '', disabled = false,
+  defaultValue = '', disabled = false, headerLabel,
 }: {
   prompt: string; objectiveLabel: string; submitLabel: string; onSubmit: (text: string) => void; minWords?: number;
-  defaultValue?: string; disabled?: boolean;
+  defaultValue?: string; disabled?: boolean; headerLabel?: string;
 }) {
   return (
     <div className="mt-5">
@@ -83,6 +83,7 @@ function InquiryEssayBox({
         onSubmit={onSubmit}
         defaultValue={defaultValue}
         disabled={disabled}
+        {...(headerLabel ? { headerLabel } : {})}
       />
     </div>
   );
@@ -229,7 +230,7 @@ function DragDropLayerSorter({ flowItems, lessonId, stageIndex, onComplete, onNe
             <Layers className="w-5 h-5 text-[#10B981]" />
           </div>
           <div className="flex-1 text-left">
-            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#10B981]">X.TCP.3 - The Layer Sorting</p>
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#10B981]">Aktivitas Keruntutan Berpikir (Consistency of Thinking)</p>
             <h3 className="text-sm font-bold text-[#395886]">Susun Urutan Lapisan TCP/IP</h3>
           </div>
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold
@@ -645,7 +646,7 @@ function MaterialViewer({ material, onNext, onBackToMaterial }: { material: Inqu
   const tcpColorMap: Record<string, { bg: string; text: string; border: string }> = {
     'Application': { bg: 'bg-[#8B5CF6]/10', text: 'text-[#8B5CF6]', border: 'border-[#8B5CF6]/30' },
     'Transport':   { bg: 'bg-[#628ECB]/10', text: 'text-[#628ECB]', border: 'border-[#628ECB]/30' },
-    'Internet':    { bg: 'bg-[#10B981]/10', text: 'text-[#10B981]', border: 'border-[#10B981]/30' },
+    'Network':     { bg: 'bg-[#10B981]/10', text: 'text-[#10B981]', border: 'border-[#10B981]/30' },
     'Data Link':   { bg: 'bg-[#F59E0B]/10', text: 'text-[#F59E0B]', border: 'border-[#F59E0B]/30' },
     'Physical':    { bg: 'bg-[#EC4899]/10', text: 'text-[#EC4899]', border: 'border-[#EC4899]/30' },
   };
@@ -760,7 +761,7 @@ function MaterialViewer({ material, onNext, onBackToMaterial }: { material: Inqu
             <div className="flex flex-col justify-center">
               <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981]/50 mb-3 text-center">TCP/IP</p>
               <div className="space-y-3">
-                {['Application', 'Transport', 'Internet', 'Data Link', 'Physical'].map((name, i) => {
+                {['Application', 'Transport', 'Network', 'Data Link', 'Physical'].map((name, i) => {
                   const c = tcpColorMap[name] ?? tcpColorMap['Application'];
                   const osiMapped = osiLayers.filter(l => l.mapsTo === name).map(l => l.name).join(' + ');
                   return (
@@ -900,17 +901,8 @@ function InquiryLesson1Page(props: InquiryStageProps) {
       );
     }
 
-    // Sub-phase: Sorting (with OSI comparison panel as reference)
+    // Sub-phase: Sorting
     if (consistencyStep === 'sorting') {
-      const osiLayers = material?.osiLayers ?? [];
-      const tcpColorMap: Record<string, { bg: string; text: string; border: string }> = {
-        'Application': { bg: 'bg-[#8B5CF6]/10', text: 'text-[#8B5CF6]', border: 'border-[#8B5CF6]/30' },
-        'Transport':   { bg: 'bg-[#628ECB]/10', text: 'text-[#628ECB]', border: 'border-[#628ECB]/30' },
-        'Internet':    { bg: 'bg-[#10B981]/10', text: 'text-[#10B981]', border: 'border-[#10B981]/30' },
-        'Data Link':   { bg: 'bg-[#F59E0B]/10', text: 'text-[#F59E0B]', border: 'border-[#F59E0B]/30' },
-        'Physical':    { bg: 'bg-[#EC4899]/10', text: 'text-[#EC4899]', border: 'border-[#EC4899]/30' },
-      };
-
       return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
           {/* Back to material button */}
@@ -920,48 +912,6 @@ function InquiryLesson1Page(props: InquiryStageProps) {
           >
             <BookOpen className="w-3.5 h-3.5" /> Lihat Materi Lagi
           </button>
-
-          {/* OSI-TCP/IP Reference Panel (always visible during sorting) */}
-          {osiLayers.length > 0 && (
-            <div className="rounded-2xl border-2 border-[#8B5CF6]/15 bg-gradient-to-br from-purple-50/50 to-white p-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <Layers className="w-4 h-4 text-[#8B5CF6]" />
-                <h4 className="text-xs font-black uppercase tracking-widest text-[#8B5CF6]">Panduan: OSI (7 Layer) → TCP/IP (5 Layer)</h4>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {/* OSI Column */}
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-[#8B5CF6]/50 mb-2 text-center">OSI (7 Layer)</p>
-                  <div className="space-y-1">
-                    {osiLayers.map((l, i) => {
-                      const tcp = tcpColorMap[l.mapsTo] ?? tcpColorMap['Application'];
-                      return (
-                        <div key={i} className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border ${tcp.border} ${tcp.bg}`}>
-                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-white text-[10px] font-black text-[#8B5CF6]">{l.number}</span>
-                          <span className="text-[11px] font-bold text-[#395886]">{l.name}</span>
-                          <ArrowRight className="w-3 h-3 text-[#395886]/20 shrink-0 ml-auto" />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-                {/* TCP/IP Column */}
-                <div className="flex flex-col justify-center">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981]/50 mb-2 text-center">TCP/IP (5 Layer)</p>
-                  <div className="space-y-2">
-                    {['Application', 'Transport', 'Internet', 'Data Link', 'Physical'].map((name) => {
-                      const c = tcpColorMap[name] ?? tcpColorMap['Application'];
-                      return (
-                        <div key={name} className={`rounded-lg border-2 ${c.border} ${c.bg} py-2 px-3 text-center`}>
-                          <p className={`text-[11px] font-black ${c.text}`}>{name} Layer</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Sorting Activity */}
           <DragDropLayerSorter
@@ -976,33 +926,17 @@ function InquiryLesson1Page(props: InquiryStageProps) {
             }}
           />
 
-          {/* OSI-TCP/IP Comparison Explanation (appears after sorting validated) */}
-          {sortingValidated && osiLayers.length > 0 && (
-            <div className="rounded-2xl border-2 border-[#10B981]/25 bg-gradient-to-br from-[#ECFDF5] to-white p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <CheckCircle className="w-5 h-5 text-[#10B981]" />
-                <h4 className="text-sm font-black text-[#065F46]">Hubungan OSI & TCP/IP</h4>
-              </div>
-              <p className="text-xs text-[#395886]/80 mb-4 leading-relaxed">
-                TCP/IP menyederhanakan 7 layer OSI menjadi 5 layer. Tiga layer atas OSI — <strong>Application, Presentation, dan Session</strong> — digabungkan menjadi satu <strong>Application Layer</strong> di TCP/IP karena ketiganya menangani fungsi yang berkaitan langsung dengan aplikasi pengguna. Empat layer bawah lainnya bersesuaian langsung antara kedua model.
-              </p>
-              <div className="mt-4 p-3 rounded-xl bg-amber-50/60 border border-amber-100 text-center">
-                <p className="text-[10px] font-bold text-amber-800">
-                  💡 <strong>Kunci:</strong> OSI adalah model referensi konseptual (7 layer), sedangkan TCP/IP adalah model praktis yang digunakan di internet sesungguhnya (5 layer). OSI membantu memahami konsep, TCP/IP adalah implementasi nyatanya.
-                </p>
-              </div>
-
-              {/* Submit button to move to next phase */}
-              <button
-                onClick={() => {
-                  void tracker.trackEvent('inquiry_consistency_completed', {}, { progressPercent: 55 });
-                  setPhase('arguing');
-                }}
-                className="mt-5 w-full py-3 rounded-xl bg-[#10B981] text-white font-bold text-sm hover:bg-[#059669] shadow-sm transition-all flex items-center justify-center gap-2"
-              >
-                <CheckCircle className="w-4 h-4" /> Lanjut ke Kemampuan Berargumen
-              </button>
-            </div>
+          {/* Proceed button (appears after sorting validated) */}
+          {sortingValidated && (
+            <button
+              onClick={() => {
+                void tracker.trackEvent('inquiry_consistency_completed', {}, { progressPercent: 55 });
+                setPhase('arguing');
+              }}
+              className="w-full py-3 rounded-xl bg-[#10B981] text-white font-bold text-sm hover:bg-[#059669] shadow-sm transition-all flex items-center justify-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-500"
+            >
+              <CheckCircle className="w-4 h-4" /> Lanjut ke Kemampuan Berargumen
+            </button>
           )}
         </div>
       );
@@ -1050,6 +984,7 @@ function InquiryLesson1Page(props: InquiryStageProps) {
         {analogyStep >= 2 && inquiryReflection1 && (
           <InquiryEssayBox
             objectiveLabel="X.TCP.2"
+            headerLabel="Argumen Logis"
             prompt={inquiryReflection1}
             submitLabel="Simpan Argumen"
             minWords={20}
@@ -1080,33 +1015,12 @@ function InquiryLesson1Page(props: InquiryStageProps) {
   // PHASE 3: CONCLUSION (Penarikan Kesimpulan)
   // ═══════════════════════════════════════════════════════════════════
   if (phase === 'conclusion') {
-    const prompt = props.conclusionPrompt || 'Berdasarkan eksplorasi materi, penyusunan lapisan, dan aktivitas analogi yang telah kamu lakukan, jelaskan bagaimana kamu mampu menguraikan susunan lapisan model TCP/IP berdasarkan perbandingan dengan model OSI. Tuliskan secara runtut dengan kata-katamu sendiri.';
-
     return (
       <div className="space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
-        {/* Phase Header */}
-        <div className="bg-white rounded-2xl border-2 border-[#10B981]/25 shadow-sm overflow-hidden">
-          <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#10B981]/10 to-[#628ECB]/5 border-b border-[#10B981]/15">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#10B981]/15">
-              <CheckCircle className="w-5 h-5 text-[#10B981]" />
-            </div>
-            <div className="flex-1 text-left">
-              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#10B981]">Penarikan Kesimpulan</p>
-              <h3 className="text-sm font-bold text-[#395886]">Simpulkan Hasil Inquiry-mu</h3>
-            </div>
-          </div>
-          <div className="px-5 py-3 bg-gradient-to-br from-[#10B981]/3 to-transparent">
-            <p className="text-xs text-[#395886]/70 leading-relaxed">
-              Fokus refleksi: simpulkan lapisan model TCP/IP beserta perbandingannya dengan model OSI menggunakan bahasamu sendiri.
-            </p>
-          </div>
-        </div>
-
-        <InquiryEssayBox
-          objectiveLabel="X.TCP.2"
-          prompt={prompt}
-          submitLabel="Simpan Kesimpulan & Selesaikan Tahap"
-          minWords={25}
+        <ATPConclusionBox
+          atpBehavior="mampu menguraikan susunan lapisan model TCP/IP berdasarkan perbandingan dengan model OSI"
+          objectiveCode="X.TCP.2"
+          stageType="inquiry"
           defaultValue={conclusionText}
           disabled={!!conclusionText}
           onSubmit={(text) => {

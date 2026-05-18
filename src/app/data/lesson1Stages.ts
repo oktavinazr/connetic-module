@@ -126,7 +126,7 @@ export const lesson1Stages: Stage[] = [
       examples: [
         'OSI Layer 7,6,5 (Application, Presentation, Session) → TCP/IP Application Layer (HTTP, SMTP, FTP).',
         'OSI Layer 4 (Transport) → TCP/IP Transport Layer (TCP, UDP).',
-        'OSI Layer 3 (Network) → TCP/IP Internet Layer (IP, ICMP).',
+        'OSI Layer 3 (Network) → TCP/IP Network Layer (IP, ICMP).',
         'OSI Layer 2 (Data Link) → TCP/IP Data Link Layer (Ethernet, Wi-Fi).',
         'OSI Layer 1 (Physical) → TCP/IP Physical Layer (Kabel UTP, Serat Optik).',
       ],
@@ -135,7 +135,7 @@ export const lesson1Stages: Stage[] = [
         { name: 'Presentation', number: 6, mapsTo: 'Application', desc: 'Format & enkripsi data' },
         { name: 'Session', number: 5, mapsTo: 'Application', desc: 'Manajemen sesi komunikasi' },
         { name: 'Transport', number: 4, mapsTo: 'Transport', desc: 'Pengiriman end-to-end' },
-        { name: 'Network', number: 3, mapsTo: 'Internet', desc: 'Routing & pengalamatan IP' },
+        { name: 'Network', number: 3, mapsTo: 'Network', desc: 'Routing & pengalamatan IP' },
         { name: 'Data Link', number: 2, mapsTo: 'Data Link', desc: 'Frame & MAC Address' },
         { name: 'Physical', number: 1, mapsTo: 'Physical', desc: 'Transmisi bit & sinyal' },
       ],
@@ -159,7 +159,7 @@ export const lesson1Stages: Stage[] = [
       },
       {
         id: 'e3',
-        title: 'Internet Layer / Network Layer (Lapisan 3)',
+        title: 'Network Layer (Lapisan 3)',
         content:
           'Menentukan jalur terbaik (routing) untuk mengirimkan paket data melalui jaringan. Lapisan ini menambahkan alamat IP sumber dan tujuan pada setiap paket. Padanan di OSI adalah Network Layer.',
         example:
@@ -201,7 +201,7 @@ export const lesson1Stages: Stage[] = [
       },
       {
         id: 'fl3',
-        text: 'Internet Layer',
+        text: 'Network Layer',
         correctOrder: 3,
         description: 'Menentukan rute dan pengalamatan IP.',
         colorClass: 'green',
@@ -226,7 +226,7 @@ export const lesson1Stages: Stage[] = [
     groups: [
       { id: 'application', label: 'Application Layer', colorClass: 'purple' },
       { id: 'transport', label: 'Transport Layer', colorClass: 'blue' },
-      { id: 'internet', label: 'Internet Layer', colorClass: 'green' },
+      { id: 'internet', label: 'Network Layer', colorClass: 'green' },
       { id: 'datalink', label: 'Data Link Layer', colorClass: 'amber' },
       { id: 'physical', label: 'Physical Layer', colorClass: 'pink' },
     ],
