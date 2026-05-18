@@ -4,9 +4,10 @@ import { useDrag, useDrop } from 'react-dnd';
 import {
   CheckCircle, ArrowRight, BookOpen, Lightbulb, ChevronRight,
   AlertCircle, MessageSquare, Activity, GripVertical,
-  Cable, Wifi, Radio, Lock, PenLine,
+  Cable, Wifi, Radio, Lock, PenLine, Zap, Server, Monitor,
 } from 'lucide-react';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
+import { EssayBox, ContinueActivityButton, ATPConclusionBox } from './StageKit';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -152,7 +153,349 @@ function DataDropZone({ onDrop, isDropped, message }: { onDrop: () => void; isDr
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function ModelingStage({
+// ─── ModelingLesson2: Three-Way Handshake Simulation ─────────────────────────
+
+const TWH_STEPS = [
+  {
+    id: 'syn',
+    actor: 'client',
+    label: 'Langkah 1: Client → SYN',
+    buttonLabel: 'Kirim SYN',
+    packetLabel: 'SYN (Seq=1000, Flags=SYN)',
+    packetColor: '#628ECB',
+    statusAfter: { client: 'SYN_SENT', server: 'LISTEN' },
+    detail: 'Client memilih ISN = 1000 secara acak, lalu mengirim paket SYN untuk membuka koneksi. Status Client berubah dari CLOSED → SYN_SENT.',
+  },
+  {
+    id: 'synack',
+    actor: 'server',
+    label: 'Langkah 2: Server → SYN-ACK',
+    buttonLabel: 'Balas SYN-ACK',
+    packetLabel: 'SYN-ACK (Seq=5000, Ack=1001)',
+    packetColor: '#8B5CF6',
+    statusAfter: { client: 'SYN_SENT', server: 'SYN_RECEIVED' },
+    detail: 'Server menerima SYN, memilih ISN-nya sendiri = 5000, lalu membalas dengan SYN+ACK. Ack=1001 berarti Server sudah terima byte sampai 1000. Status Server: SYN_RECEIVED.',
+  },
+  {
+    id: 'ack',
+    actor: 'client',
+    label: 'Langkah 3: Client → ACK',
+    buttonLabel: 'Kirim ACK Final',
+    packetLabel: 'ACK (Seq=1001, Ack=5001)',
+    packetColor: '#10B981',
+    statusAfter: { client: 'ESTABLISHED', server: 'ESTABLISHED' },
+    detail: 'Client mengkonfirmasi SYN Server dengan Ack=5001. Sekarang KEDUA pihak berstatus ESTABLISHED — koneksi TCP terbuka penuh!',
+  },
+];
+
+const STATUS_COLORS: Record<string, string> = {
+  CLOSED: '#9CA3AF',
+  LISTEN: '#F59E0B',
+  SYN_SENT: '#628ECB',
+  SYN_RECEIVED: '#8B5CF6',
+  ESTABLISHED: '#10B981',
+};
+
+function TWHPacketAnimation({ label, color, direction }: { label: string; color: string; direction: 'ltr' | 'rtl' }) {
+  return (
+    <motion.div
+      initial={{ x: direction === 'ltr' ? '-60%' : '60%', opacity: 0 }}
+      animate={{ x: '0%', opacity: 1 }}
+      exit={{ x: direction === 'ltr' ? '60%' : '-60%', opacity: 0 }}
+      transition={{ duration: 0.7, ease: 'easeInOut' }}
+      className="absolute inset-0 flex items-center justify-center pointer-events-none"
+    >
+      <span
+        className="px-3 py-1 rounded-full text-white text-xs font-black shadow-lg"
+        style={{ backgroundColor: color }}
+      >
+        {label}
+      </span>
+    </motion.div>
+  );
+}
+
+function ModelingLesson2({ lessonId, stageIndex, onComplete, objectiveCode = 'X.TCP.13' }: ModelingStageProps) {
+  const tracker = useActivityTracker({ lessonId, stageIndex, stageType: 'modeling' });
+
+  const [phase, setPhase] = useState<'consistency' | 'arguing' | 'conclusion'>('consistency');
+  const [currentStep, setCurrentStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<string[]>([]);
+  const [clientStatus, setClientStatus] = useState('CLOSED');
+  const [serverStatus, setServerStatus] = useState('LISTEN');
+  const [showPacket, setShowPacket] = useState(false);
+  const [animatingStep, setAnimatingStep] = useState<number | null>(null);
+  const [essay, setEssay] = useState('');
+  const [conclusionText, setConclusionText] = useState('');
+  const [isRestored, setIsRestored] = useState(false);
+
+  const trackerRef = useRef(tracker);
+  trackerRef.current = tracker;
+
+  useEffect(() => {
+    if (!tracker.isLoading && !isRestored) {
+      const snap = tracker.session?.latestSnapshot;
+      if (snap) {
+        if (snap.phase) setPhase(snap.phase as typeof phase);
+        if (snap.currentStep !== undefined) setCurrentStep(snap.currentStep as number);
+        if (snap.completedSteps) setCompletedSteps(snap.completedSteps as string[]);
+        if (snap.clientStatus) setClientStatus(snap.clientStatus as string);
+        if (snap.serverStatus) setServerStatus(snap.serverStatus as string);
+        if (snap.essay) setEssay(snap.essay as string);
+        if (snap.conclusionText) setConclusionText(snap.conclusionText as string);
+      }
+      setIsRestored(true);
+    }
+  }, [tracker.isLoading, tracker.session, isRestored]);
+
+  useEffect(() => {
+    if (!isRestored) return;
+    const progress =
+      phase === 'conclusion' ? (conclusionText ? 100 : 90)
+      : phase === 'arguing' ? (essay ? 85 : 60)
+      : Math.round((completedSteps.length / 3) * 50);
+    void trackerRef.current.saveSnapshot(
+      { phase, currentStep, completedSteps, clientStatus, serverStatus, essay, conclusionText },
+      { progressPercent: progress },
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, currentStep, completedSteps, clientStatus, serverStatus, essay, conclusionText, isRestored]);
+
+  if (tracker.isLoading || !isRestored) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 space-y-4">
+        <div className="w-10 h-10 border-4 border-[#628ECB] border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm font-bold text-[#395886]">Memuat progres...</p>
+      </div>
+    );
+  }
+
+  const handleStep = (idx: number) => {
+    if (animatingStep !== null || completedSteps.includes(TWH_STEPS[idx].id)) return;
+    const step = TWH_STEPS[idx];
+    setAnimatingStep(idx);
+    setShowPacket(true);
+    setTimeout(() => {
+      setShowPacket(false);
+      setClientStatus(step.statusAfter.client);
+      setServerStatus(step.statusAfter.server);
+      setCompletedSteps(prev => [...prev, step.id]);
+      if (idx + 1 < TWH_STEPS.length) setCurrentStep(idx + 1);
+      setAnimatingStep(null);
+      void trackerRef.current.trackEvent(`modeling_twh_step_${step.id}`, { step: step.id }, {
+        progressPercent: Math.round(((idx + 1) / 3) * 50),
+      });
+    }, 1000);
+  };
+
+  // ── Phase 1: Keruntutan Berpikir ───────────────────────────────────────────
+  if (phase === 'consistency') {
+    const allDone = completedSteps.length === 3;
+    return (
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+        {/* Phase header */}
+        <div className="bg-white rounded-2xl border-2 border-[#628ECB]/25 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#628ECB]/10 to-transparent border-b border-[#628ECB]/15">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#628ECB]/15">
+              <Activity className="w-5 h-5 text-[#628ECB]" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#628ECB]">Keruntutan Berpikir (Consistency of Thinking)</p>
+              <h3 className="text-sm font-bold text-[#395886]">Simulasi Three-Way Handshake TCP</h3>
+            </div>
+          </div>
+          <div className="px-5 py-3 bg-gradient-to-br from-[#628ECB]/3 to-transparent">
+            <p className="text-xs text-[#395886]/70 leading-relaxed">
+              Ikuti 3 langkah koneksi TCP secara berurutan. Klik tombol setiap langkah untuk mengirim paket dan amati perubahan status Client dan Server.
+            </p>
+          </div>
+        </div>
+
+        {/* Client-Server visualization */}
+        <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-5">
+          <div className="flex items-stretch gap-4">
+            {/* Client */}
+            <div className="flex-1 flex flex-col items-center gap-2">
+              <div className="h-10 w-10 rounded-xl bg-[#628ECB]/10 flex items-center justify-center">
+                <Monitor className="w-6 h-6 text-[#628ECB]" />
+              </div>
+              <span className="text-xs font-black text-[#395886]">CLIENT</span>
+              <span
+                className="px-2 py-0.5 rounded-full text-[10px] font-black text-white transition-all duration-500"
+                style={{ backgroundColor: STATUS_COLORS[clientStatus] ?? '#9CA3AF' }}
+              >
+                {clientStatus}
+              </span>
+            </div>
+
+            {/* Packet animation lane */}
+            <div className="flex-[2] relative flex items-center justify-center min-h-[80px]">
+              <div className="w-full h-0.5 bg-[#D5DEEF] absolute" />
+              <AnimatePresence>
+                {showPacket && animatingStep !== null && (
+                  <TWHPacketAnimation
+                    key={TWH_STEPS[animatingStep].id}
+                    label={TWH_STEPS[animatingStep].packetLabel}
+                    color={TWH_STEPS[animatingStep].packetColor}
+                    direction={TWH_STEPS[animatingStep].actor === 'client' ? 'ltr' : 'rtl'}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Server */}
+            <div className="flex-1 flex flex-col items-center gap-2">
+              <div className="h-10 w-10 rounded-xl bg-[#8B5CF6]/10 flex items-center justify-center">
+                <Server className="w-6 h-6 text-[#8B5CF6]" />
+              </div>
+              <span className="text-xs font-black text-[#395886]">SERVER</span>
+              <span
+                className="px-2 py-0.5 rounded-full text-[10px] font-black text-white transition-all duration-500"
+                style={{ backgroundColor: STATUS_COLORS[serverStatus] ?? '#9CA3AF' }}
+              >
+                {serverStatus}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Step buttons */}
+        <div className="space-y-3">
+          {TWH_STEPS.map((step, idx) => {
+            const done = completedSteps.includes(step.id);
+            const isNext = idx === currentStep && !done;
+            const locked = idx > currentStep && !done;
+            return (
+              <div key={step.id} className={`rounded-2xl border-2 overflow-hidden transition-all
+                ${done ? 'border-[#10B981]/30 bg-[#F0FDF4]' : isNext ? 'border-[#628ECB]/30 bg-white' : 'border-[#D5DEEF] bg-[#F8FAFF]/50'}`}>
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <div className={`h-8 w-8 shrink-0 rounded-xl flex items-center justify-center text-xs font-black
+                    ${done ? 'bg-[#10B981]/15 text-[#10B981]' : isNext ? 'bg-[#628ECB]/15 text-[#628ECB]' : 'bg-[#D5DEEF] text-[#395886]/30'}`}>
+                    {done ? <CheckCircle className="w-4 h-4" /> : idx + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs font-black ${done ? 'text-[#065F46]' : isNext ? 'text-[#395886]' : 'text-[#395886]/30'}`}>{step.label}</p>
+                    {(done || isNext) && (
+                      <p className="text-[11px] text-[#395886]/60 mt-0.5 leading-snug">{step.detail}</p>
+                    )}
+                  </div>
+                  {!done && !locked && (
+                    <button
+                      onClick={() => handleStep(idx)}
+                      disabled={animatingStep !== null}
+                      className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black text-white transition-all active:scale-95
+                        ${animatingStep !== null ? 'bg-[#D5DEEF] cursor-wait' : 'bg-gradient-to-r from-[#395886] to-[#628ECB] shadow-sm hover:opacity-90'}`}
+                      style={{ backgroundColor: step.packetColor }}
+                    >
+                      {animatingStep === idx ? 'Mengirim...' : step.buttonLabel}
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  {done && (
+                    <span className="shrink-0 text-[10px] font-black text-[#10B981] bg-[#10B981]/10 px-2 py-0.5 rounded-full">✓ Selesai</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {allDone && (
+          <>
+            <div className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-[#10B981]/10 border-2 border-[#10B981]/25 animate-in fade-in zoom-in-95 duration-300">
+              <CheckCircle className="w-5 h-5 text-[#10B981]" />
+              <span className="text-sm font-black text-[#065F46]">Koneksi TCP berhasil terbuka — Three-Way Handshake selesai!</span>
+            </div>
+            <ContinueActivityButton
+              onClick={() => {
+                void tracker.trackEvent('modeling_consistency_completed', {}, { progressPercent: 55 });
+                setPhase('arguing');
+              }}
+              label="Lanjutkan ke Kemampuan Berargumen"
+            />
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // ── Phase 2: Kemampuan Berargumen ──────────────────────────────────────────
+  if (phase === 'arguing') {
+    return (
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+        <div className="bg-white rounded-2xl border-2 border-[#F59E0B]/20 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#F59E0B]/10 to-transparent border-b border-[#F59E0B]/15">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F59E0B]/15">
+              <Zap className="w-5 h-5 text-[#F59E0B]" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#F59E0B]">Kemampuan Berargumen (Arguing Ability)</p>
+              <h3 className="text-sm font-bold text-[#395886]">Argumen Logis — Three-Way Handshake</h3>
+            </div>
+          </div>
+          <div className="px-5 py-3 bg-gradient-to-br from-[#F59E0B]/3 to-transparent">
+            <p className="text-xs text-[#395886]/70 leading-relaxed">
+              Berdasarkan simulasi Three-Way Handshake yang baru saja kamu lakukan, jawab pertanyaan berikut dengan argumen teknis yang logis.
+            </p>
+          </div>
+        </div>
+
+        <EssayBox
+          objectiveLabel={objectiveCode}
+          headerLabel="Argumen Logis"
+          prompt="Berdasarkan simulasi Three-Way Handshake yang baru saja kamu lakukan, jelaskan: (1) Mengapa Three-Way Handshake memerlukan 3 langkah, tidak bisa 2 atau 4? (2) Apa fungsi nilai Ack# = ISN+1 dalam setiap langkah? (3) Apa yang terjadi jika SYN-ACK tidak pernah sampai ke Client?"
+          submitLabel="Simpan Argumen"
+          minWords={20}
+          defaultValue={essay}
+          disabled={!!essay}
+          onSubmit={(text) => {
+            setEssay(text);
+            void tracker.trackEvent('modeling_arguing_done', {}, { progressPercent: 80 });
+          }}
+        />
+
+        {essay && (
+          <ContinueActivityButton
+            onClick={() => {
+              void tracker.trackEvent('modeling_arguing_completed', {}, { progressPercent: 85 });
+              setPhase('conclusion');
+            }}
+            label="Lanjutkan ke Penarikan Kesimpulan"
+          />
+        )}
+      </div>
+    );
+  }
+
+  // ── Phase 3: Penarikan Kesimpulan ──────────────────────────────────────────
+  return (
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+      <ATPConclusionBox
+        atpBehavior="mampu mensimulasikan mekanisme kerja TCP dari pembentukan koneksi hingga pengiriman data"
+        objectiveCode={objectiveCode}
+        stageType="modeling"
+        defaultValue={conclusionText}
+        disabled={!!conclusionText}
+        onSubmit={(text) => {
+          setConclusionText(text);
+          const finalAnswer = { completedSteps, essay, conclusion: text };
+          void tracker.complete(finalAnswer, { phase: 'conclusion', finalAnswer });
+          onComplete(finalAnswer);
+        }}
+      />
+      {conclusionText && (
+        <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20 animate-in fade-in zoom-in-95 duration-300">
+          <CheckCircle className="w-5 h-5 text-[#10B981]" />
+          <span className="text-sm font-black text-[#065F46]">Kesimpulan tersimpan — Tahap Modeling selesai!</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── ModelingStageOriginal (Lesson 1) ─────────────────────────────────────────
+
+function ModelingStageOriginal({
   lessonId,
   stageIndex,
   onComplete,
@@ -1243,4 +1586,11 @@ export function ModelingStage({
       </div>
     </div>
   );
+}
+
+// ─── Main Export ──────────────────────────────────────────────────────────────
+
+export function ModelingStage(props: ModelingStageProps) {
+  if (props.lessonId === '2') return <ModelingLesson2 {...props} />;
+  return <ModelingStageOriginal {...props} />;
 }

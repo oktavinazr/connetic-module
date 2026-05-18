@@ -1125,11 +1125,295 @@ function QuestioningOriginal({
   );
 }
 
+// -- Questioning Lesson 2 (TCP Sequence Number / Out-of-Order Packets) ----------
+
+function QuestioningLesson2({
+  lessonId, stageIndex, onComplete, scenario, problemVisual, teacherQuestion, questionBank = [],
+  whyQuestion, hint, reasonOptions = [],
+}: QuestioningStageProps) {
+  const tracker = useActivityTracker({ lessonId, stageIndex, stageType: 'questioning' });
+
+  const [phase, setPhase] = useState<'consistency' | 'arguing' | 'conclusion'>('consistency');
+  const [activeQAId, setActiveQAId] = useState<string | null>(null);
+  const [openedQAIds, setOpenedQAIds] = useState<string[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [validated, setValidated] = useState(false);
+  const [essay, setEssay] = useState('');
+  const [conclusionText, setConclusionText] = useState('');
+  const [isRestored, setIsRestored] = useState(false);
+
+  const trackerRef = useRef(tracker);
+  trackerRef.current = tracker;
+
+  useEffect(() => {
+    if (!tracker.isLoading && !isRestored) {
+      const snap = tracker.session?.latestSnapshot;
+      if (snap) {
+        if (snap.phase) setPhase(snap.phase as typeof phase);
+        if (snap.openedQAIds) setOpenedQAIds(snap.openedQAIds as string[]);
+        if (snap.activeQAId) setActiveQAId(snap.activeQAId as string);
+        if (snap.selectedId) setSelectedId(snap.selectedId as string);
+        if (snap.validated) setValidated(snap.validated as boolean);
+        if (snap.essay) setEssay(snap.essay as string);
+        if (snap.conclusionText) setConclusionText(snap.conclusionText as string);
+      }
+      setIsRestored(true);
+    }
+  }, [tracker.isLoading, tracker.session, isRestored]);
+
+  useEffect(() => {
+    if (!isRestored) return;
+    const progress =
+      phase === 'conclusion' ? (conclusionText ? 100 : 90)
+      : phase === 'arguing' ? (essay ? 85 : validated ? 65 : selectedId ? 40 : 30)
+      : (openedQAIds.length >= 2 ? 25 : openedQAIds.length > 0 ? 15 : 10);
+    void trackerRef.current.saveSnapshot(
+      { phase, openedQAIds, activeQAId, selectedId, validated, essay, conclusionText },
+      { progressPercent: progress },
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, openedQAIds, activeQAId, selectedId, validated, essay, conclusionText, isRestored]);
+
+  if (tracker.isLoading || !isRestored) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 space-y-4">
+        <div className="w-12 h-12 border-4 border-[#8B5CF6] border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm font-bold text-[#395886]">Memuat progres...</p>
+      </div>
+    );
+  }
+
+  const isCorrect = reasonOptions.find(o => o.id === selectedId)?.isCorrect ?? false;
+  const canProceedPhase1 = openedQAIds.length >= 2;
+  const activeResponse = questionBank.find(q => q.id === activeQAId)?.response;
+
+  // ── Phase 1: Keruntutan Berpikir ───────────────────────────────────────────
+  if (phase === 'consistency') {
+    return (
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+        <div className="bg-white rounded-2xl border-2 border-[#8B5CF6]/25 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#8B5CF6]/10 to-transparent border-b border-[#8B5CF6]/15">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#8B5CF6]/15">
+              <AlertCircle className="w-5 h-5 text-[#8B5CF6]" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#8B5CF6]">Keruntutan Berpikir (Consistency of Thinking)</p>
+              <h3 className="text-sm font-bold text-[#395886]">Analisis Skenario Out-of-Order Packets</h3>
+            </div>
+          </div>
+          <div className="px-5 py-3 bg-gradient-to-br from-[#8B5CF6]/3 to-transparent">
+            <p className="text-xs text-[#395886]/70 leading-relaxed">
+              Pelajari skenario masalah TCP berikut dan buka minimal 2 pertanyaan eksplorasi untuk mengumpulkan bukti sebelum menentukan penyebabnya.
+            </p>
+          </div>
+        </div>
+
+        {/* Problem visual */}
+        {problemVisual && (
+          <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-5">
+            <div className="flex items-start gap-4">
+              <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#FEF3C7] flex items-center justify-center text-2xl">
+                ⚠️
+              </div>
+              <div className="flex-1">
+                <p className="text-xs font-black uppercase tracking-widest text-[#F59E0B] mb-1">Gejala Jaringan</p>
+                <h3 className="text-sm font-bold text-[#395886] mb-1">{problemVisual.title}</h3>
+                <p className="text-xs text-[#395886]/70 leading-relaxed">{problemVisual.description}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Scenario */}
+        {scenario && (
+          <div className="flex items-start gap-3 p-4 bg-[#EEF4FF] rounded-2xl border border-[#628ECB]/20">
+            <Info className="w-4 h-4 text-[#628ECB] mt-0.5 shrink-0" />
+            <p className="text-xs text-[#395886]/80 leading-relaxed italic">"{scenario}"</p>
+          </div>
+        )}
+
+        {/* Question bank */}
+        {questionBank.length > 0 && (
+          <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <HelpCircle className="w-4 h-4 text-[#628ECB]" />
+              <h3 className="text-sm font-bold text-[#395886]">{teacherQuestion || 'Buka pertanyaan eksplorasi:'}</h3>
+              <span className={`ml-auto text-[10px] font-black px-2 py-0.5 rounded-full
+                ${openedQAIds.length >= 2 ? 'bg-[#10B981]/10 text-[#10B981]' : 'bg-[#D5DEEF] text-[#395886]/40'}`}>
+                {openedQAIds.length} / 2 dibuka
+              </span>
+            </div>
+            <div className="space-y-2 mb-4">
+              {questionBank.map(q => (
+                <button key={q.id}
+                  onClick={() => {
+                    setActiveQAId(q.id);
+                    if (!openedQAIds.includes(q.id)) {
+                      setOpenedQAIds(prev => [...prev, q.id]);
+                      void tracker.trackEvent('qa_opened', { questionId: q.id }, { progressPercent: 18 });
+                    }
+                  }}
+                  className={`w-full p-3 rounded-xl border-2 text-left text-xs font-bold transition-all
+                    ${activeQAId === q.id ? 'border-[#628ECB] bg-[#EEF4FF] text-[#395886]'
+                    : openedQAIds.includes(q.id) ? 'border-[#10B981]/40 bg-[#F0FDF4] text-[#065F46]'
+                    : 'border-[#D5DEEF] bg-white hover:border-[#628ECB]/40 text-[#395886]'}`}>
+                  <span className="flex items-center gap-2">
+                    {openedQAIds.includes(q.id) && <CheckCircle className="w-3.5 h-3.5 text-[#10B981] shrink-0" />}
+                    {q.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+            {activeResponse && (
+              <div className="p-4 rounded-xl bg-[#F0FDF4] border-2 border-[#10B981]/20 animate-in fade-in slide-in-from-top-2">
+                <p className="text-[10px] font-black text-[#10B981] uppercase mb-1 flex items-center gap-1.5">
+                  <CheckCircle className="w-3 h-3" /> Fakta Ditemukan
+                </p>
+                <p className="text-xs font-bold text-[#065F46] leading-relaxed">{activeResponse}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {canProceedPhase1 && (
+          <ContinueActivityButton
+            onClick={() => {
+              void tracker.trackEvent('questioning_consistency_completed', {}, { progressPercent: 30 });
+              setPhase('arguing');
+            }}
+            label="Lanjutkan ke Kemampuan Berargumen"
+          />
+        )}
+      </div>
+    );
+  }
+
+  // ── Phase 2: Kemampuan Berargumen ──────────────────────────────────────────
+  if (phase === 'arguing') {
+    return (
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+        <div className="bg-white rounded-2xl border-2 border-[#F59E0B]/20 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#F59E0B]/10 to-transparent border-b border-[#F59E0B]/15">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F59E0B]/15">
+              <Zap className="w-5 h-5 text-[#F59E0B]" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#F59E0B]">Kemampuan Berargumen (Arguing Ability)</p>
+              <h3 className="text-sm font-bold text-[#395886]">Identifikasi & Argumen Logis</h3>
+            </div>
+          </div>
+          <div className="px-5 py-3 bg-gradient-to-br from-[#F59E0B]/3 to-transparent">
+            <p className="text-xs text-[#395886]/70 leading-relaxed">
+              Pilih field TCP Header yang paling berperan, periksa pilihanmu, lalu tulis argumen logis berdasarkan fakta yang kamu temukan.
+            </p>
+          </div>
+        </div>
+
+        {/* Reason options */}
+        <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-5">
+          <h3 className="text-sm font-bold text-[#395886] mb-3 flex items-center gap-2">
+            <Zap className="w-4 h-4 text-[#F59E0B]" /> {whyQuestion || 'Field TCP Header mana yang paling berperan?'}
+          </h3>
+          {hint && (
+            <div className="mb-3 flex items-start gap-2 p-3 bg-[#FFFBEB] rounded-xl border border-[#F59E0B]/20">
+              <Lightbulb className="w-4 h-4 text-[#F59E0B] shrink-0 mt-0.5" />
+              <p className="text-xs text-[#78350F] leading-relaxed">{hint}</p>
+            </div>
+          )}
+          <div className="space-y-2 mb-4">
+            {reasonOptions.map(opt => (
+              <button key={opt.id}
+                onClick={() => !validated && setSelectedId(opt.id)}
+                disabled={validated}
+                className={`w-full p-4 rounded-xl border-2 text-left transition-all
+                  ${selectedId === opt.id
+                    ? (validated ? (opt.isCorrect ? 'border-[#10B981] bg-[#F0FDF4]' : 'border-red-400 bg-red-50') : 'border-[#628ECB] bg-[#EEF4FF]')
+                    : 'border-[#D5DEEF] bg-white hover:border-[#628ECB]/30'}`}>
+                <p className="text-xs font-bold text-[#395886]">{opt.text}</p>
+                {validated && selectedId === opt.id && (
+                  <p className={`text-[10px] font-bold mt-2 ${opt.isCorrect ? 'text-[#10B981]' : 'text-red-500'}`}>{opt.feedback}</p>
+                )}
+              </button>
+            ))}
+          </div>
+          {!validated && (
+            <button
+              onClick={() => {
+                if (!selectedId) return;
+                setValidated(true);
+                void tracker.trackEvent('questioning_validation', { selectedId }, {
+                  isCorrect: reasonOptions.find(o => o.id === selectedId)?.isCorrect ?? false,
+                  progressPercent: 55,
+                });
+              }}
+              disabled={!selectedId}
+              className={`w-full py-3 rounded-xl font-bold text-sm transition-all
+                ${selectedId ? 'bg-[#395886] text-white hover:bg-[#628ECB]' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}>
+              Periksa Pilihan
+            </button>
+          )}
+        </div>
+
+        {/* Essay after validation */}
+        {validated && (
+          <EssayBox
+            objectiveLabel="X.TCP.11"
+            headerLabel="Argumen Logis"
+            prompt="Berdasarkan skenario out-of-order packets dan pilihan field TCP Header yang baru saja kamu analisis, jelaskan secara teknis: (1) Mengapa field tersebut (bukan yang lain) yang memungkinkan penerima merekonstruksi data dengan benar? (2) Apa yang terjadi jika TCP tidak memiliki field tersebut?"
+            submitLabel="Simpan Argumen"
+            minWords={20}
+            defaultValue={essay}
+            disabled={!!essay}
+            onSubmit={(text) => {
+              setEssay(text);
+              void tracker.trackEvent('questioning_essay_done', {}, { progressPercent: 80 });
+            }}
+          />
+        )}
+
+        {essay && (
+          <ContinueActivityButton
+            onClick={() => {
+              void tracker.trackEvent('questioning_arguing_completed', {}, { progressPercent: 85 });
+              setPhase('conclusion');
+            }}
+            label="Lanjutkan ke Penarikan Kesimpulan"
+          />
+        )}
+      </div>
+    );
+  }
+
+  // ── Phase 3: Penarikan Kesimpulan ──────────────────────────────────────────
+  return (
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+      <ATPConclusionBox
+        atpBehavior="mampu membedakan kondisi pengiriman data normal dengan kondisi yang memerlukan error recovery pada TCP berdasarkan nilai Sequence Number"
+        objectiveCode="X.TCP.11"
+        stageType="questioning"
+        defaultValue={conclusionText}
+        disabled={!!conclusionText}
+        onSubmit={(text) => {
+          setConclusionText(text);
+          const finalAnswer = { selectedId: selectedId ?? '', isCorrect, askedQuestions: openedQAIds, justification: essay, conclusion: text };
+          void tracker.complete(finalAnswer, { phase: 'conclusion', finalAnswer });
+          onComplete(finalAnswer);
+        }}
+      />
+      {conclusionText && (
+        <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20 animate-in fade-in zoom-in-95 duration-300">
+          <CheckCircle className="w-5 h-5 text-[#10B981]" />
+          <span className="text-sm font-black text-[#065F46]">Kesimpulan tersimpan — Tahap Questioning selesai!</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // -- Main Export ----------------------------------------------------------------
 
 export function QuestioningStage(props: QuestioningStageProps) {
-  if (props.lessonId === '1') {
-    return <QuestioningLesson1 {...props} />;
-  }
+  if (props.lessonId === '1') return <QuestioningLesson1 {...props} />;
+  if (props.lessonId === '2') return <QuestioningLesson2 {...props} />;
   return <QuestioningOriginal {...props} />;
 }

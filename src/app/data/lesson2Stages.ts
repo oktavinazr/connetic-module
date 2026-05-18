@@ -178,7 +178,8 @@ export const lesson2Stages: Stage[] = [
       'Jelaskan alasan teknis mengapa field tersebut lebih relevan dari pilihan lainnya.',
     ],
     logicalThinkingIndicators: [
-      'Kemampuan Berargumen: memilih alasan teknis yang tepat berdasarkan bukti skenario.',
+      'Keruntutan Berpikir: menganalisis skenario out-of-order packets secara sistematis melalui tanya jawab terarah.',
+      'Kemampuan Berargumen: memilih field TCP Header yang tepat dan memberikan argumen logis berdasarkan bukti skenario.',
       'Penarikan Kesimpulan: menghubungkan gejala (segmen tidak berurutan) dengan mekanisme TCP yang tepat.',
     ],
     facilitatorNotes: [
@@ -271,9 +272,11 @@ export const lesson2Stages: Stage[] = [
       'Analisis Studi Kasus 2 (TCP Flow Control): pilih strategi, tulis argumen, kirim ke kelompok.',
       'Diskusikan dan beri vote pada argumen terbaik di papan diskusi kelompok.',
     ],
+    moduleId: 'X.TCP.12',
     logicalThinkingIndicators: [
-      'Kemampuan Berargumen: menyampaikan alasan teknis yang jelas berdasarkan mekanisme TCP.',
-      'Validasi Komunal: mengevaluasi argumen rekan dan memberikan vote berdasarkan logika teknis terkuat.',
+      'Keruntutan Berpikir: menganalisis studi kasus TCP Three-Way Handshake dan Flow Control secara sistematis.',
+      'Kemampuan Berargumen: menyampaikan alasan teknis yang jelas dalam diskusi kelompok berdasarkan mekanisme TCP.',
+      'Penarikan Kesimpulan: menyimpulkan argumen terbaik dari diskusi kelompok tentang mekanisme TCP Three-Way Handshake.',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
@@ -363,7 +366,8 @@ export const lesson2Stages: Stage[] = [
     ],
     logicalThinkingIndicators: [
       'Keruntutan Berpikir: mengikuti alur Three-Way Handshake secara sistematis tanpa melewati langkah.',
-      'Penerapan Konsep: menghubungkan nilai Sequence Number dan ACK Number antar setiap langkah.',
+      'Kemampuan Berargumen: menjelaskan nilai Sequence Number dan ACK Number pada setiap langkah Three-Way Handshake.',
+      'Penarikan Kesimpulan: menyimpulkan bagaimana Three-Way Handshake membangun koneksi TCP dari CLOSED hingga ESTABLISHED.',
     ],
     facilitatorNotes: [
       'Guru menunjukkan bahwa ISN (Initial Sequence Number) dipilih secara acak demi alasan keamanan, bukan dimulai dari 0.',
@@ -429,7 +433,9 @@ export const lesson2Stages: Stage[] = [
       'Tulis ringkasan menyeluruh tentang semua mekanisme TCP yang telah kamu pelajari hari ini secara runtut.',
     ],
     logicalThinkingIndicators: [
-      'Penarikan Kesimpulan: menghubungkan semua mekanisme TCP menjadi gambaran utuh cara kerja protokol ini.',
+      'Keruntutan Berpikir: menghubungkan semua mekanisme TCP (Header, Sequence Number, Handshake, Flow Control) secara sistematis dalam peta konsep.',
+      'Kemampuan Berargumen: menjelaskan keterkaitan antar mekanisme TCP dan alasan mengapa setiap mekanisme diperlukan.',
+      'Penarikan Kesimpulan: menyimpulkan mekanisme keandalan TCP sebagai satu kesatuan yang utuh.',
     ],
     facilitatorNotes: [
       'Guru mendorong siswa membandingkan pemahaman sekarang dengan pemahaman awal di tahap Constructivism.',
