@@ -1,6 +1,22 @@
 import { supabase } from './supabase';
 import { lessons, globalPretest, globalPosttest, type Stage, type TestQuestion } from '../data/lessons';
 
+// Bump this string whenever default questions are updated to force-reset stale DB overrides.
+const QUESTION_DEFAULTS_VERSION = 'v2-2026-05-18';
+
+async function maybeResetStaleDefault(key: string): Promise<void> {
+  const storageKey = `qdefault_version_${key}`;
+  try {
+    const stored = localStorage.getItem(storageKey);
+    if (stored !== QUESTION_DEFAULTS_VERSION) {
+      await deleteQuestionsFromDb(key);
+      localStorage.setItem(storageKey, QUESTION_DEFAULTS_VERSION);
+    }
+  } catch {
+    // localStorage not available — skip
+  }
+}
+
 async function fetchQuestionsFromDb(key: string): Promise<TestQuestion[] | null> {
   try {
     const { data, error } = await supabase
@@ -46,6 +62,9 @@ export async function loadTestQuestions(key: string): Promise<TestQuestion[]> {
 }
 
 export async function getAdminTestQuestions(key: string): Promise<TestQuestion[]> {
+  if (key === 'global-pretest' || key === 'global-posttest') {
+    await maybeResetStaleDefault(key);
+  }
   return loadTestQuestions(key);
 }
 

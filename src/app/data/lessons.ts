@@ -645,7 +645,7 @@ export const globalPretest = {
   questions: [
     // 1 (Dokumen No. 31)
     {
-      question: 'Perhatikan pernyataan berikut tentang TCP/IP. 1. TCP/IP adalah kumpulan protokol komunikasi yang menjadi standar di internet maupun jaringan lokal. 2. IP berperan memecah data menjadi segmen-segmen kecil dan memastikan urutan pengirimannya ke penerima. 3. TCP berperan menjamin keandalan pengiriman data melalui konfirmasi penerimaan dan pengiriman ulang jika gagal. 4. TCP/IP adalah protokol yang hanya aktif saat perangkat terhubung ke internet publik, bukan jaringan lokal. Pernyataan yang BENAR tentang TCP/IP adalah ...',
+      question: 'Perhatikan pernyataan berikut tentang TCP/IP.\n\n1. TCP/IP adalah kumpulan protokol komunikasi yang menjadi standar di internet maupun jaringan lokal.\n2. IP berperan memecah data menjadi segmen-segmen kecil dan memastikan urutan pengirimannya ke penerima.\n3. TCP berperan menjamin keandalan pengiriman data melalui konfirmasi penerimaan dan pengiriman ulang jika gagal.\n4. TCP/IP adalah protokol yang hanya aktif saat perangkat terhubung ke internet publik, bukan jaringan lokal.\n\nPernyataan yang BENAR tentang TCP/IP adalah ...',
       options: ['1 dan 2', '2 dan 3', '1 dan 3', '2 dan 4', '3 dan 4'],
       correctAnswer: 2,
     },
@@ -693,7 +693,7 @@ export const globalPretest = {
     },
     // 6 (Dokumen No. 6)
     {
-      question: 'Perhatikan langkah-langkah transmisi data dari sisi pengirim berikut ini (diurutkan secara acak): 1. Protokol HTTP menyiapkan data permintaan halaman web. 2. Data dipecah menjadi Segment dan diberi nomor urut. 3. Data dikemas menjadi Packet dengan penambahan IP Header. 4. Data dikemas menjadi Frame dengan penambahan MAC Header. 5. Data diubah menjadi bit/sinyal dan dikirimkan melalui media transmisi kabel jaringan. Urutan alur transmisi data dari sisi pengirim yang benar (dari lapisan teratas hingga lapisan terbawah) adalah ...',
+      question: 'Perhatikan langkah-langkah transmisi data dari sisi pengirim berikut ini (diurutkan secara acak):\n\n1. Protokol HTTP menyiapkan data permintaan halaman web.\n2. Data dipecah menjadi Segment dan diberi nomor urut.\n3. Data dikemas menjadi Packet dengan penambahan IP Header.\n4. Data dikemas menjadi Frame dengan penambahan MAC Header.\n5. Data diubah menjadi bit/sinyal dan dikirimkan melalui media transmisi kabel jaringan.\n\nUrutan alur transmisi data dari sisi pengirim yang benar (dari lapisan teratas hingga lapisan terbawah) adalah ...',
       options: [
         'Application - Transport - Network - Data Link - Physical',
         'Application - Network - Transport - Data Link - Physical',
@@ -705,7 +705,7 @@ export const globalPretest = {
     },
     // 7 (Dokumen No. 37)
     {
-      question: 'Pak Budi menguji jaringan dengan tiga percobaan: 1. Kabel dicabut → seluruh komunikasi data terputus total. 2. IP Address dihapus → komunikasi antar jaringan terhenti meski kabel terpasang. 3. TCP dimatikan → pengiriman file ukuran besar gagal meski kabel dan IP aktif. Kesimpulan yang tepat adalah ...',
+      question: 'Pak Budi menguji jaringan dengan tiga percobaan:\n\n1. Kabel dicabut → seluruh komunikasi data terputus total.\n2. IP Address dihapus → komunikasi antar jaringan terhenti meski kabel terpasang.\n3. TCP dimatikan → pengiriman file ukuran besar gagal meski kabel dan IP aktif.\n\nKesimpulan yang tepat adalah ...',
       options: [
         'Lapisan Network merupakan lapisan paling kritis karena tanpa adanya IP Address maka tidak akan ada proses komunikasi yang dapat berjalan.',
         'Setiap lapisan protokol bekerja secara independen sehingga kegagalan pada satu lapisan tidak akan mengganggu fungsi dari lapisan lainnya.',
@@ -717,7 +717,7 @@ export const globalPretest = {
     },
     // 8 (Dokumen No. 38)
     {
-      question: 'Ibu Sari memeriksa komputer yang tidak bisa mengakses server ujian dan menemukan tiga fakta berikut: 1. Kabel terpasang dengan benar dan lampu indikator pada perangkat switch menyala hijau. 2. Pengujian perintah ping ke alamat IP server target mendapatkan respons Reply. 3. Koneksi TCP ke port 443 mengalami kegagalan dengan keterangan \'Connection Refused\'. Kesimpulan analisis yang paling tepat berdasarkan pemeriksaan tersebut adalah ...',
+      question: 'Ibu Sari memeriksa komputer yang tidak bisa mengakses server ujian dan menemukan tiga fakta berikut:\n\n1. Kabel terpasang dengan benar dan lampu indikator pada perangkat switch menyala hijau.\n2. Pengujian perintah ping ke alamat IP server target mendapatkan respons Reply.\n3. Koneksi TCP ke port 443 mengalami kegagalan dengan keterangan \'Connection Refused\'.\n\nKesimpulan analisis yang paling tepat berdasarkan pemeriksaan tersebut adalah ...',
       options: [
         'Masalah terjadi di lapisan Physical karena lampu hijau pada perangkat switch belum menjamin aliran data digital dapat mengalir dengan lancar.',
         'Masalah terjadi di lapisan Network karena nilai TTL pada respons Reply mengindikasikan adanya rute perjalanan paket data yang tidak optimal.',
@@ -747,7 +747,7 @@ export const globalPretest = {
     },
     // 11 (Dokumen No. 11)
     {
-      question: 'Dalam komunikasi TCP, penerima mengamati nilai Sequence Number yang diterimanya. Kondisi 1: Penerima menerima segmen dengan SEQ=1, SEQ=501, SEQ=1001, SEQ=1501 secara berurutan. Kondisi 2: Penerima menerima segmen dengan SEQ=1, SEQ=501, kemudian tiba-tiba SEQ=1501 tanpa SEQ=1001. Perbedaan kedua kondisi tersebut menunjukkan bahwa ...',
+      question: 'Dalam komunikasi TCP, penerima mengamati nilai Sequence Number yang diterimanya.\n\nKondisi 1: Penerima menerima segmen dengan SEQ=1, SEQ=501, SEQ=1001, SEQ=1501 secara berurutan.\nKondisi 2: Penerima menerima segmen dengan SEQ=1, SEQ=501, kemudian tiba-tiba SEQ=1501 tanpa SEQ=1001.\n\nPerbedaan kedua kondisi tersebut menunjukkan bahwa ...',
       options: [
         'Kondisi 1 dan Kondisi 2 tidak berbeda karena TCP akan menyusun ulang data secara otomatis tanpa perlu pengiriman ulang.',
         'Kondisi 1 menunjukkan pengiriman normal, sedangkan Kondisi 2 menunjukkan jalur jaringan berbeda yang digunakan tiap segmen.',
@@ -771,13 +771,13 @@ export const globalPretest = {
     },
     // 13 (Dokumen No. 13)
     {
-      question: 'Perhatikan urutan langkah mekanisme kerja TCP berikut dalam urutan yang acak: 1. Pengirim menerima ACK dari penerima dan mengirimkan segmen data berikutnya. 2. Pengirim mengirimkan SYN untuk memulai Three-Way Handshake. 3. Data dipecah menjadi segmen-segmen dengan Sequence Number. 4. Koneksi TCP ditutup setelah semua data terkirim dan dikonfirmasi. 5. Penerima mengirimkan SYN-ACK sebagai respons. Urutan mekanisme kerja TCP yang benar dari awal hingga akhir adalah ...',
+      question: 'Perhatikan urutan langkah mekanisme kerja TCP berikut dalam urutan yang acak:\n\n1. Pengirim menerima ACK dari penerima dan mengirimkan segmen data berikutnya.\n2. Pengirim mengirimkan SYN untuk memulai Three-Way Handshake.\n3. Data dipecah menjadi segmen-segmen dengan Sequence Number.\n4. Koneksi TCP ditutup setelah semua data terkirim dan dikonfirmasi.\n5. Penerima mengirimkan SYN-ACK sebagai respons.\n\nUrutan mekanisme kerja TCP yang benar dari awal hingga akhir adalah ...',
       options: ['2 - 5 - 3 - 1 - 4', '2 - 3 - 5 - 1 - 4', '3 - 2 - 5 - 1 - 4', '5 - 2 - 3 - 1 - 4', '2 - 5 - 1 - 3 - 4'],
       correctAnswer: 0,
     },
     // 14 (Dokumen No. 14)
     {
-      question: 'Perhatikan tiga fakta tentang mekanisme TCP berikut: Fakta 1: TCP menggunakan Three-Way Handshake sebelum pengiriman data sehingga koneksi terjamin terbentuk antara pengirim dan penerima. Fakta 2: TCP menggunakan Sequence Number dan Acknowledgment sehingga setiap kehilangan segmen dapat dideteksi dan data dapat dikirim ulang. Fakta 3: TCP menggunakan Checksum untuk mendeteksi kerusakan data selama pengiriman. Berdasarkan ketiga fakta tersebut, kesimpulan yang paling tepat tentang mekanisme keandalan TCP adalah ...',
+      question: 'Perhatikan tiga fakta tentang mekanisme TCP berikut:\n\nFakta 1: TCP menggunakan Three-Way Handshake sebelum pengiriman data sehingga koneksi terjamin terbentuk antara pengirim dan penerima.\nFakta 2: TCP menggunakan Sequence Number dan Acknowledgment sehingga setiap kehilangan segmen dapat dideteksi dan data dapat dikirim ulang.\nFakta 3: TCP menggunakan Checksum untuk mendeteksi kerusakan data selama pengiriman.\n\nBerdasarkan ketiga fakta tersebut, kesimpulan yang paling tepat tentang mekanisme keandalan TCP adalah ...',
       options: [
         'TCP menjamin keandalan hanya pada tahap pembukaan koneksi melalui Three-Way Handshake, sedangkan keandalan saat pengiriman data bergantung pada media fisik jaringan.',
         'Ketiga mekanisme TCP bekerja secara berurutan dan tidak bisa aktif secara bersamaan, sehingga hanya satu mekanisme yang aktif pada satu waktu tertentu.',
@@ -789,7 +789,7 @@ export const globalPretest = {
     },
     // 15 (Dokumen No. 15)
     {
-      question: 'Perhatikan skenario komunikasi TCP berikut: Komputer A (pengirim) memulai koneksi: mengirim SYN dengan SEQ=0. Server B merespons dengan SYN-ACK, SEQ=0, ACK_NUM=1. Komputer A membalas dengan ACK, SEQ=1, ACK_NUM=1 (koneksi terbentuk). Komputer A mulai mengirim data: Segmen 1 dengan SEQ=1 berisi 100 byte. Server B menerima Segmen 1 dan membalas ACK_NUM=101. Namun, Segmen 2 (SEQ=101) tidak kunjung mendapat ACK dari Server B. Berdasarkan skenario tersebut, manakah kesimpulan yang tepat tentang kondisi jaringan dan langkah selanjutnya?',
+      question: 'Perhatikan skenario komunikasi TCP berikut:\n\nKomputer A (pengirim) memulai koneksi: mengirim SYN dengan SEQ=0.\nServer B merespons dengan SYN-ACK, SEQ=0, ACK_NUM=1.\nKomputer A membalas dengan ACK, SEQ=1, ACK_NUM=1 (koneksi terbentuk).\nKomputer A mulai mengirim data: Segmen 1 dengan SEQ=1 berisi 100 byte.\nServer B menerima Segmen 1 dan membalas ACK_NUM=101.\nNamun, Segmen 2 (SEQ=101) tidak kunjung mendapat ACK dari Server B.\n\nBerdasarkan skenario tersebut, manakah kesimpulan yang tepat tentang kondisi jaringan dan langkah selanjutnya?',
       options: [
         'Tidak adanya ACK untuk Segmen 2 adalah kondisi normal dalam TCP karena ACK hanya dikirimkan setelah semua segmen diterima, bukan per-segmen.',
         'Server B telah menerima semua data karena ACK_NUM=101 menunjukkan bahwa semua segmen sudah berhasil diterima dengan sempurna.',
@@ -867,7 +867,7 @@ export const globalPretest = {
     },
     // 22 (Dokumen No. 22)
     {
-      question: 'Perhatikan fakta-fakta hasil pemeriksaan pada IP Header berikut: IP Pengirim: 192.168.1.5 dengan Subnet Mask 255.255.255.0, IP Penerima: 192.168.1.200 dengan Subnet Mask 255.255.255.0, Default Gateway perangkat pengirim: 192.168.1.1, Aktivitas terdeteksi: Perangkat pengirim mengirimkan ARP Request untuk mencari MAC Address perangkat tujuan di jaringan lokal. Berdasarkan analisis terhadap seluruh fakta di atas, manakah kesimpulan yang tepat mengenai proses pengiriman paket tersebut?',
+      question: 'Perhatikan fakta-fakta hasil pemeriksaan pada IP Header berikut:\n\nIP Pengirim: 192.168.1.5 dengan Subnet Mask 255.255.255.0\nIP Penerima: 192.168.1.200 dengan Subnet Mask 255.255.255.0\nDefault Gateway perangkat pengirim: 192.168.1.1\nAktivitas terdeteksi: Perangkat pengirim mengirimkan ARP Request untuk mencari MAC Address perangkat tujuan di jaringan lokal.\n\nBerdasarkan analisis terhadap seluruh fakta di atas, manakah kesimpulan yang tepat mengenai proses pengiriman paket tersebut?',
       options: [
         'Paket tidak dapat dikirim karena oktet terakhir IP pengirim (5) dan penerima (200) terlalu jauh sehingga melebihi batas jangkauan transmisi.',
         'Paket diteruskan ke Default Gateway 192.168.1.1 terlebih dahulu karena nilai subnet mask 255.255.255.0 menunjukkan keterbatasan jumlah host dalam satu jaringan.',
@@ -879,7 +879,7 @@ export const globalPretest = {
     },
     // 23 (Dokumen No. 23)
     {
-      question: 'Pak Hendri, seorang administrator jaringan, sedang menganalisis laporan gangguan koneksi di kantornya. Ia menemukan data berikut: Komputer A: IP 192.168.10.5, Subnet Mask 255.255.255.0, Gateway 192.168.10.1; Komputer B: IP 192.168.10.80, Subnet Mask 255.255.255.0, Gateway 192.168.10.1; Server C: IP 192.168.20.50, Subnet Mask 255.255.255.0, Gateway 192.168.20.1. Komputer A dapat berkomunikasi dengan Komputer B tanpa masalah. Namun, saat Komputer A mencoba mengakses Server C, koneksi selalu gagal. Pak Hendri memastikan bahwa kabel dan switch berfungsi normal. Berdasarkan analisis pengalamatan IP tersebut, manakah kesimpulan yang tepat?',
+      question: 'Pak Hendri, seorang administrator jaringan, sedang menganalisis laporan gangguan koneksi di kantornya. Ia menemukan data berikut:\n\nKomputer A: IP 192.168.10.5, Subnet Mask 255.255.255.0, Gateway 192.168.10.1\nKomputer B: IP 192.168.10.80, Subnet Mask 255.255.255.0, Gateway 192.168.10.1\nServer C: IP 192.168.20.50, Subnet Mask 255.255.255.0, Gateway 192.168.20.1\n\nKomputer A dapat berkomunikasi dengan Komputer B tanpa masalah. Namun, saat Komputer A mencoba mengakses Server C, koneksi selalu gagal. Pak Hendri memastikan bahwa kabel dan switch berfungsi normal.\n\nBerdasarkan analisis pengalamatan IP tersebut, manakah kesimpulan yang tepat?',
       options: [
         'Komputer A tidak dapat berkomunikasi dengan siapapun karena nilai oktet terakhir (5) terlalu kecil dan dianggap sebagai alamat network.',
         'Koneksi A ke C gagal karena Komputer A tidak memiliki alamat IP yang valid; seharusnya menggunakan Kelas B agar dapat menjangkau subnet yang berbeda.',
@@ -903,7 +903,7 @@ export const globalPretest = {
     },
     // 25 (Dokumen No. 55)
     {
-      question: 'Interface memiliki MAC A0:B1:C2:D3:E4:F5. Proses EUI-64: Bagi MAC: A0:B1:C2 | D3:E4:F5. Sisipkan FF:FE: A0:B1:C2:FF:FE:D3:E4:F5. A0=10100000, flip bit ke-7: 10100010=A2. Interface ID: A2:B1:C2:FF:FE:D3:E4:F5. IPv6 Link Local Address yang terbentuk adalah ...',
+      question: 'Interface memiliki MAC A0:B1:C2:D3:E4:F5. Proses EUI-64:\n\nBagi MAC: A0:B1:C2 | D3:E4:F5\nSisipkan FF:FE: A0:B1:C2:FF:FE:D3:E4:F5\nA0=10100000, flip bit ke-7: 10100010=A2\nInterface ID: A2:B1:C2:FF:FE:D3:E4:F5\n\nIPv6 Link Local Address yang terbentuk adalah ...',
       options: [
         'FE80::A0B1:C2FF:FED3:E4F5/64',
         'FE80::A2B1:C2FF:FED3:E4F5/64',
@@ -927,7 +927,7 @@ export const globalPretest = {
     },
     // 27 (Dokumen No. 27)
     {
-      question: 'Seorang siswa mengerjakan konversi MAC Address 08:00:27:AB:CD:EF menjadi IPv6 Interface ID menggunakan EUI-64. Ia melakukan langkah-langkah berikut: Langkah 1: Membagi MAC menjadi 08:00:27 | AB:CD:EF. Langkah 2: Menyisipkan FF:FE di tengah menjadi 08:00:27:FF:FE:AB:CD:EF. Langkah 3: Mengonversi 08 (oktet pertama) ke biner: 00001000, lalu membalik bit ke-7 menjadi 00001010, lalu mengonversi kembali ke heksadesimal: 0A. Langkah 4: Interface ID = 0A00:27FF:FEAB:CDEF. Manakah analisis yang benar terhadap pekerjaan siswa tersebut?',
+      question: 'Seorang siswa mengerjakan konversi MAC Address 08:00:27:AB:CD:EF menjadi IPv6 Interface ID menggunakan EUI-64. Ia melakukan langkah-langkah berikut:\n\nLangkah 1: Membagi MAC menjadi 08:00:27 | AB:CD:EF.\nLangkah 2: Menyisipkan FF:FE di tengah menjadi 08:00:27:FF:FE:AB:CD:EF.\nLangkah 3: Mengonversi 08 (oktet pertama) ke biner: 00001000, lalu membalik bit ke-7 menjadi 00001010, lalu mengonversi kembali ke heksadesimal: 0A.\nLangkah 4: Interface ID = 0A00:27FF:FEAB:CDEF.\n\nManakah analisis yang benar terhadap pekerjaan siswa tersebut?',
       options: [
         'Langkah 1 benar, tetapi Langkah 2 salah karena berdasarkan aturan baku standar EUI-64 kode yang disisipkan seharusnya adalah FE:FF',
         'Langkah 2 salah karena kode FF:FE seharusnya diletakkan pada bagian akhir alamat biner, bukan disisipkan di tengah-tengah urutan MAC',
@@ -951,13 +951,13 @@ export const globalPretest = {
     },
     // 29 (Dokumen No. 29)
     {
-      question: 'Perhatikan pernyataan-pernyataan berikut tentang perbedaan IPv4 dan IPv6: 1. IPv4 menggunakan panjang alamat 32-bit, sedangkan IPv6 menggunakan 128-bit sehingga kapasitas alamat IPv6 jauh lebih besar. 2. IPv6 menggunakan format penulisan heksadesimal dengan tanda titik dua (:) sebagai pemisah, sedangkan IPv4 menggunakan format desimal dengan tanda titik (.) sebagai pemisah. 3. IPv6 sudah tidak memerlukan teknik NAT (Network Address Translation) karena jumlah alamatnya yang sangat banyak, berbeda dengan IPv4 yang sangat bergantung pada NAT. 4. IPv6 hanya cocok digunakan untuk jaringan lokal saja, sedangkan IPv4 digunakan untuk jaringan global dan internet. Pernyataan yang benar adalah ...',
+      question: 'Perhatikan pernyataan-pernyataan berikut tentang perbedaan IPv4 dan IPv6:\n\n1. IPv4 menggunakan panjang alamat 32-bit, sedangkan IPv6 menggunakan 128-bit sehingga kapasitas alamat IPv6 jauh lebih besar.\n2. IPv6 menggunakan format penulisan heksadesimal dengan tanda titik dua (:) sebagai pemisah, sedangkan IPv4 menggunakan format desimal dengan tanda titik (.) sebagai pemisah.\n3. IPv6 sudah tidak memerlukan teknik NAT (Network Address Translation) karena jumlah alamatnya yang sangat banyak, berbeda dengan IPv4 yang sangat bergantung pada NAT.\n4. IPv6 hanya cocok digunakan untuk jaringan lokal saja, sedangkan IPv4 digunakan untuk jaringan global dan internet.\n\nPernyataan yang benar adalah ...',
       options: ['1, 2, dan 3', '2, 3, dan 4', '1, 2, dan 4', '1, 3, dan 4', '2 dan 4 saja'],
       correctAnswer: 0,
     },
     // 30 (Dokumen No. 30)
     {
-      question: 'Perhatikan skenario berikut: Komputer A mengirimkan permintaan halaman web ke Server B. Proses yang terjadi melibatkan: 1. TCP memecah permintaan HTTP menjadi segmen dan melakukan Three-Way Handshake untuk memastikan koneksi terbentuk. 2. IP memberikan alamat logis pada setiap segmen yang dikemas menjadi paket, lalu menentukan jalur terbaik menuju Server B. 3. Server B menerima paket, IP melepas Network Header, TCP menyusun ulang segmen berdasarkan Sequence Number, dan data diteruskan ke aplikasi web. Berdasarkan skenario tersebut, manakah evaluasi yang tepat tentang keterkaitan TCP dan IP dalam arsitektur TCP/IP?',
+      question: 'Perhatikan skenario berikut: Komputer A mengirimkan permintaan halaman web ke Server B. Proses yang terjadi melibatkan:\n\n1. TCP memecah permintaan HTTP menjadi segmen dan melakukan Three-Way Handshake untuk memastikan koneksi terbentuk.\n2. IP memberikan alamat logis pada setiap segmen yang dikemas menjadi paket, lalu menentukan jalur terbaik menuju Server B.\n3. Server B menerima paket, IP melepas Network Header, TCP menyusun ulang segmen berdasarkan Sequence Number, dan data diteruskan ke aplikasi web.\n\nBerdasarkan skenario tersebut, manakah evaluasi yang tepat tentang keterkaitan TCP dan IP dalam arsitektur TCP/IP?',
       options: [
         'TCP dan IP bekerja secara berurutan dan tidak bisa aktif bersamaan; TCP harus selesai bekerja sebelum IP mulai bekerja dalam setiap pengiriman paket.',
         'TCP bertanggung jawab atas keandalan dan urutan data (Transport Layer), sedangkan IP bertanggung jawab atas pengalamatan dan routing (Network Layer); keduanya bekerja bersama secara berlapis untuk menjamin pengiriman data yang andal dan tepat sasaran.',
@@ -976,7 +976,7 @@ export const globalPosttest = {
   questions: [
     // 1 (Dokumen No. 61)
     {
-      question: 'Perhatikan pernyataan berikut tentang TCP/IP. 1. TCP/IP adalah satu protokol tunggal yang menangani semua fungsi jaringan dari lapisan fisik hingga aplikasi. 2. TCP (Transmission Control Protocol) berperan menjamin keandalan data dengan mekanisme ACK dan retransmission. 3. IP (Internet Protocol) berperan memastikan setiap segmen data tiba secara berurutan dan lengkap di penerima. 4. IP berperan memberikan pengalamatan logis dan menentukan rute terbaik pengiriman paket antar jaringan. 5. TCP dan IP bekerja di lapisan yang sama (lapisan Transport) dalam arsitektur model TCP/IP. Pernyataan yang BENAR tentang TCP/IP adalah ...',
+      question: 'Perhatikan pernyataan berikut tentang TCP/IP:\n\n1. TCP/IP adalah satu protokol tunggal yang menangani semua fungsi jaringan dari lapisan fisik hingga aplikasi.\n2. TCP (Transmission Control Protocol) berperan menjamin keandalan data dengan mekanisme ACK dan retransmission.\n3. IP (Internet Protocol) berperan memastikan setiap segmen data tiba secara berurutan dan lengkap di penerima.\n4. IP berperan memberikan pengalamatan logis dan menentukan rute terbaik pengiriman paket antar jaringan.\n5. TCP dan IP bekerja di lapisan yang sama (lapisan Transport) dalam arsitektur model TCP/IP.\n\nPernyataan yang BENAR tentang TCP/IP adalah ...',
       options: ['1 dan 3', '2 dan 4', '3 dan 5', '1 dan 5', '3 dan 4'],
       correctAnswer: 1,
     },
@@ -994,7 +994,7 @@ export const globalPosttest = {
     },
     // 3 (Dokumen No. 63)
     {
-      question: 'Sebuah kartu referensi memuat lima pasangan lapisan dan fungsi model TCP/IP berikut. 1. Application – antarmuka antara aplikasi pengguna dan layanan jaringan. 2. Network – memberikan alamat IP dan menentukan rute pengiriman paket. 3. Transport – memecah data menjadi segmen dan memastikan keutuhan pengirimannya. 4. Data Link – mengelola pengiriman frame melalui media fisik menggunakan MAC Address. 5. Network – memecah data menjadi segmen kecil agar lebih efisien di jaringan. Pasangan yang TIDAK TEPAT adalah ...',
+      question: 'Sebuah kartu referensi memuat lima pasangan lapisan dan fungsi model TCP/IP berikut.\n\n1. Application – antarmuka antara aplikasi pengguna dan layanan jaringan.\n2. Network – memberikan alamat IP dan menentukan rute pengiriman paket.\n3. Transport – memecah data menjadi segmen dan memastikan keutuhan pengirimannya.\n4. Data Link – mengelola pengiriman frame melalui media fisik menggunakan MAC Address.\n5. Network – memecah data menjadi segmen kecil agar lebih efisien di jaringan.\n\nPasangan yang TIDAK TEPAT adalah ...',
       options: [
         'Pasangan (1) tidak tepat karena lapisan Application seharusnya hanya bertanggung jawab penuh dalam menangani proses enkripsi data digital.',
         'Pasangan (2) tidak tepat karena lapisan Network tidak mengurus rute pengiriman paket data melainkan itu tugas dari lapisan Transport.',
@@ -1036,7 +1036,7 @@ export const globalPosttest = {
     },
     // 7 (Dokumen No. 67)
     {
-      question: 'Seorang mahasiswa teknik jaringan melakukan empat eksperimen pada sistem jaringan komputer: 1. Router dimatikan - komunikasi antar jaringan berhenti. 2. Alamat IP dihapus - paket data tidak bisa diarahkan ke tujuan. 3. Protokol TCP dimatikan - file ukuran besar gagal terkirim. 4. Kabel transmisi dicabut - tidak ada komunikasi sama sekali. Mahasiswa tersebut menarik kesimpulan: "Lapisan Network (IP) adalah satu-satunya lapisan kritis dalam jaringan; sedangkan lapisan protokol lainnya hanyalah opsional." Berdasarkan keempat eksperimen tersebut, manakah analisis yang paling tepat terhadap kesimpulan mahasiswa tersebut?',
+      question: 'Seorang mahasiswa teknik jaringan melakukan empat eksperimen pada sistem jaringan komputer:\n\n1. Router dimatikan - komunikasi antar jaringan berhenti.\n2. Alamat IP dihapus - paket data tidak bisa diarahkan ke tujuan.\n3. Protokol TCP dimatikan - file ukuran besar gagal terkirim.\n4. Kabel transmisi dicabut - tidak ada komunikasi sama sekali.\n\nMahasiswa tersebut menarik kesimpulan: "Lapisan Network (IP) adalah satu-satunya lapisan kritis dalam jaringan; sedangkan lapisan protokol lainnya hanyalah opsional."\n\nBerdasarkan keempat eksperimen tersebut, manakah analisis yang paling tepat terhadap kesimpulan mahasiswa tersebut?',
       options: [
         'Benar; hasil pengujian nomor (1) dan (2) membuktikan bahwa protokol IP pada lapisan Network memegang peranan yang paling penting di dalam komunikasi data.',
         'Benar sebagian; hanya lapisan Network dan Transport saja yang dianggap kritis, sedangkan konfigurasi pada lapisan protokol yang lainnya bersifat opsional.',
@@ -1066,7 +1066,7 @@ export const globalPosttest = {
     },
     // 10 (Dokumen No. 70)
     {
-      question: 'Aplikasi transfer file mengirim 4000 byte via TCP dipecah menjadi: Seq=1 (1000 byte), Seq=1001 (1000 byte), Seq=2001 (1000 byte), Seq=3001 (1000 byte). Urutan tiba di penerima: Seq=3001, Seq=1001, Seq=1, Seq=2001. Seorang siswa mengklaim \'Penerima akan menjalankan file dari Seq=3001 karena itu yang pertama tiba.\' Berdasarkan mekanisme TCP Sequence Number, urutan data yang benar diproses oleh penerima adalah ...',
+      question: 'Aplikasi transfer file mengirim 4000 byte via TCP dipecah menjadi:\n\nSeq=1 (1000 byte), Seq=1001 (1000 byte), Seq=2001 (1000 byte), Seq=3001 (1000 byte)\n\nUrutan tiba di penerima: Seq=3001, Seq=1001, Seq=1, Seq=2001.\n\nSeorang siswa mengklaim \'Penerima akan menjalankan file dari Seq=3001 karena itu yang pertama tiba.\'\n\nBerdasarkan mekanisme TCP Sequence Number, urutan data yang benar diproses oleh penerima adalah ...',
       options: [
         'Klien memutar video mulai dari Seq=3001 karena segmen itu yang pertama tiba di penerima.',
         'Klien menyusun ulang segmen berdasarkan nilai Sequence Number menjadi Seq=1 → 1001 → 2001 → 3001, sehingga video ditampilkan dengan urutan yang benar meski segmen tiba secara acak.',
@@ -1078,7 +1078,7 @@ export const globalPosttest = {
     },
     // 11 (Dokumen No. 41)
     {
-      question: 'Kondisi Normal: Server kirim Seq=500 (200 byte); Klien balas ACK=700. Kondisi Error Recovery: Server kirim Seq=700; tidak ada ACK (timeout); Server kirim ulang Seq=700; Klien balas ACK=900. Argumen yang tepat membedakan kedua kondisi adalah ...',
+      question: 'Perhatikan dua kondisi komunikasi TCP berikut:\n\nKondisi Normal: Server kirim Seq=500 (200 byte) → Klien balas ACK=700.\nKondisi Error Recovery: Server kirim Seq=700 → tidak ada ACK (timeout) → Server kirim ulang Seq=700 → Klien balas ACK=900.\n\nArgumen yang tepat membedakan kedua kondisi adalah ...',
       options: [
         'Tidak ada perbedaan; ACK dikirim hanya setelah semua data selesai diterima',
         'Pada kondisi normal ACK meningkat sesuai data diterima; pada error recovery tidak ada ACK yang kembali, menandakan segmen hilang dan retransmission diperlukan',
@@ -1102,7 +1102,7 @@ export const globalPosttest = {
     },
     // 13 (Dokumen No. 43)
     {
-      question: 'Mekanisme kerja TCP (urutan diacak): 1. Penerima kirim ACK untuk setiap segmen. 2. Pengirim kirim SYN untuk memulai koneksi. 3. Koneksi ditutup dengan FIN. 4. Penerima balas SYN-ACK. 5. Data dikirim dalam segmen bernomor urut. Urutan BENAR dari awal hingga selesai adalah ...',
+      question: 'Mekanisme kerja TCP (urutan diacak):\n\n1. Penerima kirim ACK untuk setiap segmen.\n2. Pengirim kirim SYN untuk memulai koneksi.\n3. Koneksi ditutup dengan FIN.\n4. Penerima balas SYN-ACK.\n5. Data dikirim dalam segmen bernomor urut.\n\nUrutan BENAR dari awal hingga selesai adalah ...',
       options: ['2 – 4 – 5 – 1 – 3', '4 – 2 – 5 – 1 – 3', '2 – 5 – 4 – 1 – 3', '5 – 2 – 4 – 3 – 1', '2 – 5 – 1 – 4 – 3'],
       correctAnswer: 0,
     },
@@ -1120,7 +1120,7 @@ export const globalPosttest = {
     },
     // 15 (Dokumen No. 45)
     {
-      question: 'Log komunikasi TCP: SYN-SYN-ACK-ACK, koneksi terbentuk. Klien kirim Seq=1 (500 byte); Server balas ACK=501. Klien kirim Seq=501; Server balas ACK=501 (Duplicate ACK). Klien kirim ulang Seq=501; Server balas ACK=1001. FIN, koneksi ditutup. Kesimpulan paling tepat adalah ...',
+      question: 'Log komunikasi TCP:\n\nSYN → SYN-ACK → ACK (koneksi terbentuk)\nKlien kirim Seq=1 (500 byte) → Server balas ACK=501\nKlien kirim Seq=501 → Server balas ACK=501 (Duplicate ACK)\nKlien kirim ulang Seq=501 → Server balas ACK=1001\nFIN, koneksi ditutup.\n\nKesimpulan paling tepat adalah ...',
       options: [
         'Komunikasi gagal; Duplicate ACK di [3] menandakan koneksi rusak permanen',
         'Duplicate ACK adalah kondisi normal yang terjadi pada setiap segmen TCP',
@@ -1132,7 +1132,7 @@ export const globalPosttest = {
     },
     // 16 (Dokumen No. 46)
     {
-      question: 'Perhatikan empat pernyataan tentang Internet Protocol (IP) di bawah ini: 1. IP beroperasi secara aktif pada lapisan Network (Network Layer). 2. IP memberikan identitas alamat logis unik kepada setiap perangkat. 3. IP menentukan rute terbaik pengiriman paket data antar jaringan. 4. IP menjamin setiap paket data diterima berurutan dan lengkap. Pernyataan yang benar mengenai peran dan karakteristik dari IP adalah ...',
+      question: 'Perhatikan empat pernyataan tentang Internet Protocol (IP) di bawah ini:\n\n1. IP beroperasi secara aktif pada lapisan Network (Network Layer).\n2. IP memberikan identitas alamat logis unik kepada setiap perangkat.\n3. IP menentukan rute terbaik pengiriman paket data antar jaringan.\n4. IP menjamin setiap paket data diterima berurutan dan lengkap.\n\nPernyataan yang benar mengenai peran dan karakteristik dari IP adalah ...',
       options: [
         'Pernyataan 1, 2, dan 4',
         'Pernyataan 1, 3, dan 4',
@@ -1204,7 +1204,7 @@ export const globalPosttest = {
     },
     // 22 (Dokumen No. 82)
     {
-      question: 'Host X: IP 10.1.5.100, Mask 255.255.0.0, GW 10.1.0.1. Host Y: IP 10.1.200.50, Mask 255.255.0.0, GW 10.1.0.1. Seorang siswa mengklaim X dan Y tidak bisa berkomunikasi langsung karena oktet ketiga berbeda (5 vs 200). Berdasarkan klaim tersebut, manakah analisis yang benar tentang pengalamatan IPv4 Host X dan Y?',
+      question: 'Host X: IP 10.1.5.100, Mask 255.255.0.0, GW 10.1.0.1.\nHost Y: IP 10.1.200.50, Mask 255.255.0.0, GW 10.1.0.1.\n\nSeorang siswa mengklaim X dan Y tidak bisa berkomunikasi langsung karena oktet ketiga berbeda (5 vs 200).\n\nBerdasarkan klaim tersebut, manakah analisis yang benar tentang pengalamatan IPv4 Host X dan Y?',
       options: [
         'Benar; perbedaan oktet ketiga (5 vs 200) selalu berarti subnet berbeda',
         'Benar; Subnet Mask 255.255.0.0 membatasi oktet ketiga harus sama',
@@ -1216,7 +1216,7 @@ export const globalPosttest = {
     },
     // 23 (Dokumen No. 53)
     {
-      question: 'Bu Ratna memeriksa dua komputer yang tidak bisa berkomunikasi. Komputer X: IP 192.168.1.100, Mask 255.255.255.0, GW 192.168.1.1. Komputer Y: IP 192.168.2.100, Mask 255.255.255.0, GW 192.168.2.1. Switch dan kabel berfungsi normal. Kesimpulan yang tepat adalah ...',
+      question: 'Bu Ratna memeriksa dua komputer yang tidak bisa berkomunikasi.\n\nKomputer X: IP 192.168.1.100, Mask 255.255.255.0, GW 192.168.1.1.\nKomputer Y: IP 192.168.2.100, Mask 255.255.255.0, GW 192.168.2.1.\n\nSwitch dan kabel berfungsi normal.\n\nKesimpulan yang tepat adalah ...',
       options: [
         'Komputer X tidak valid; oktet terakhir 100 dianggap sebagai alamat network',
         'Kedua komputer konflik karena menggunakan subnet mask yang sama',
@@ -1228,13 +1228,13 @@ export const globalPosttest = {
     },
     // 24 (Dokumen No. 54)
     {
-      question: 'Perhatikan fakta tentang IPv4 dan IPv6: 1. IPv4 menggunakan 32-bit dengan sekitar 4,3 miliar alamat. 2. Pertumbuhan pesat perangkat menyebabkan kehabisan alamat IPv4. 3. IPv6 menggunakan 128-bit dengan kapasitas jauh lebih besar. 4. IPv6 menggantikan TCP sebagai protokol pengiriman data andal. Pernyataan yang BENAR tentang IPv6 adalah ...',
+      question: 'Perhatikan fakta tentang IPv4 dan IPv6:\n\n1. IPv4 menggunakan 32-bit dengan sekitar 4,3 miliar alamat.\n2. Pertumbuhan pesat perangkat menyebabkan kehabisan alamat IPv4.\n3. IPv6 menggunakan 128-bit dengan kapasitas jauh lebih besar.\n4. IPv6 menggantikan TCP sebagai protokol pengiriman data andal.\n\nPernyataan yang BENAR tentang IPv6 adalah ...',
       options: ['1, 2, 3, dan 4', '1, 2, dan 4', '2, 3, dan 4', '1, 2, dan 3', '1 dan 4 saja'],
       correctAnswer: 3,
     },
     // 25 (Dokumen No. 85)
     {
-      question: 'Interface router MAC: C8:3A:35:44:55:66. EUI-64: C8:3A:35 | 44:55:66. Sisipkan FF:FE: C8:3A:35:FF:FE:44:55:66. C8=11001000, flip bit ke-7 → 11001010=CA. Interface ID: CA:3A:35:FF:FE:44:55:66. Seorang siswa mengklaim \'Langkah salah; bit ke-7 dari kiri pada 11001000 bernilai 0, setelah dibalik hasilnya 11001001=C9 bukan CA.\' Berdasarkan klaim tersebut, manakah analisis yang benar tentang hasil konversi EUI-64?',
+      question: 'Interface router MAC: C8:3A:35:44:55:66. Proses EUI-64:\n\nC8:3A:35 | 44:55:66\nSisipkan FF:FE: C8:3A:35:FF:FE:44:55:66\nC8=11001000, flip bit ke-7 → 11001010=CA\nInterface ID: CA:3A:35:FF:FE:44:55:66\n\nSeorang siswa mengklaim \'Langkah salah; bit ke-7 dari kiri pada 11001000 bernilai 0, setelah dibalik hasilnya 11001001=C9 bukan CA.\'\n\nBerdasarkan klaim tersebut, manakah analisis yang benar tentang hasil konversi EUI-64?',
       options: [
         'Benar; C9 adalah hasil yang tepat dari membalik bit ke-7 pada 11001000',
         'Benar; penghitungan bit ke-7 dimulai dari kanan (LSB) sehingga nilainya berbeda',
@@ -1258,7 +1258,7 @@ export const globalPosttest = {
     },
     // 27 (Dokumen No. 87)
     {
-      question: 'Siswa mengklaim EUI-64 dari MAC B8:27:EB:12:34:56 menghasilkan Interface ID BA:27:EB:FF:FE:12:34:56. Verifikasi: L1: B8:27:EB | 12:34:56 ✓. L2: B8:27:EB:FF:FE:12:34:56 ✓. L3: B8=10111000, bit ke-7 dari kiri=0, dibalik=1 → 10111010=BA ✓. Seorang validator mengklaim \'Hasil BA salah; seharusnya BC.\' Berdasarkan klaim validator tersebut, manakah analisis yang benar tentang hasil konversi EUI-64?',
+      question: 'Siswa mengklaim EUI-64 dari MAC B8:27:EB:12:34:56 menghasilkan Interface ID BA:27:EB:FF:FE:12:34:56. Verifikasi:\n\nL1: B8:27:EB | 12:34:56 ✓\nL2: B8:27:EB:FF:FE:12:34:56 ✓\nL3: B8=10111000, bit ke-7 dari kiri=0, dibalik=1 → 10111010=BA ✓\n\nSeorang validator mengklaim \'Hasil BA salah; seharusnya BC.\'\n\nBerdasarkan klaim validator tersebut, manakah analisis yang benar tentang hasil konversi EUI-64?',
       options: [
         'Validator benar; bit ke-7 dari kiri pada 10111000 menghasilkan 10111100=BC',
         'Validator benar; bit ke-7 adalah bit ke-7 dari kanan (LSB ke-7) sehingga hasilnya berbeda',
