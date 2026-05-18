@@ -62,6 +62,7 @@ export interface Stage {
   }>;
 
   // ── LEARNING COMMUNITY ──────────────────────────────────────────
+  moduleId?: string;
   matchingPairs?: Array<{ left: string; right: string }>;
   caseScenario?: {
     id?: string;

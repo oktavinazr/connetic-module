@@ -120,7 +120,7 @@ export function StageAnswerDetail({ stage, answer }: { stage: Stage; answer: any
   if (!answer) return <p className="text-xs text-[#395886]/50 italic">Belum dikerjakan</p>;
 
   const a = answer as any;
-  const conclusionText = a.conclusion || a.summary;
+  const conclusionText = a.conclusion || a.summary || a.reflection || a.conclusionText || a.argumentText;
 
   // Only show the reflection content — no wrapper so callers can style it appropriately
   if (conclusionText && typeof conclusionText === 'string') {

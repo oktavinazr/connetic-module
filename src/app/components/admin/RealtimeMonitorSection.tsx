@@ -123,7 +123,7 @@ export function RealtimeMonitorSection() {
   }, [lessonId]);
 
   const isIdle = !syncState || syncState.session_status === 'idle';
-  const isCompleted = syncState?.status === 'completed';
+  const isCompleted = (syncState?.status as string) === 'completed';
   const currentSyncStage = syncState?.current_stage_index ?? 0;
 
   // Local countdown tick

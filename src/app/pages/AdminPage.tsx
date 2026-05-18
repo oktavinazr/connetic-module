@@ -764,9 +764,9 @@ function ScoreBadge({ score, total, completed }: { score: number | null; total: 
 
 function TimerManagementSection() {
   const [lessonId, setLessonId] = useState('1');
-  const [timers, setTimers] = useState([]);
+  const [timers, setTimers] = useState<StageTimer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState({});
+  const [saving, setSaving] = useState<Record<number, boolean>>({});
 
   const lesson = lessons[lessonId];
 
@@ -775,7 +775,7 @@ function TimerManagementSection() {
     getStageTimers(lessonId).then(t => { setTimers(t); setLoading(false); });
   }, [lessonId]);
 
-  const handleSetTimer = async (stageIndex, minutes) => {
+  const handleSetTimer = async (stageIndex: number, minutes: number) => {
     setSaving(prev => ({ ...prev, [stageIndex]: true }));
     await setStageTimer(lessonId, stageIndex, minutes);
     setTimers(prev => {
@@ -786,7 +786,7 @@ function TimerManagementSection() {
     setSaving(prev => ({ ...prev, [stageIndex]: false }));
   };
 
-  const getTimerForStage = (idx) => timers.find(t => t.stage_index === idx);
+  const getTimerForStage = (idx: number) => timers.find(t => t.stage_index === idx);
   const stageNames = ['Constructivism', 'Inquiry', 'Questioning', 'Learning Community', 'Modeling', 'Reflection', 'Authentic Assessment'];
   const stageColors = ['#628ECB', '#10B981', '#8B5CF6', '#F59E0B', '#EC4899', '#F59E0B', '#8B5CF6'];
 
@@ -825,7 +825,7 @@ function TimerManagementSection() {
                   <div className="flex items-center gap-2">
                     <input type="number" min={0} max={120} defaultValue={currentMinutes || ''} placeholder="0"
                       onBlur={e => { const v = parseInt(e.target.value,10); if (!isNaN(v) && v>=0 && v!==currentMinutes) handleSetTimer(idx,v); }}
-                      onKeyDown={e => { if (e.key==='Enter') { const v=parseInt(e.target.value,10); if (!isNaN(v)&&v>=0&&v!==currentMinutes) handleSetTimer(idx,v); }}}
+                      onKeyDown={e => { if (e.key==='Enter') { const v=parseInt(e.currentTarget.value,10); if (!isNaN(v)&&v>=0&&v!==currentMinutes) handleSetTimer(idx,v); }}}
                       disabled={isSaving}
                       className="w-20 px-3 py-2 text-sm border border-[#D5DEEF] rounded-lg text-center font-bold text-[#395886] disabled:opacity-50" />
                     <span className="text-xs font-bold text-[#395886]/40">menit</span>

@@ -109,10 +109,19 @@ const REFLECTION_PHASES = [
   { key: 'conclusion', label: 'Penarikan Kesimpulan', icon: <Sparkles className="w-3.5 h-3.5" /> },
 ];
 
-function PhaseTracker({ current, completed }: { current: number; completed: Set<number> }) {
+const REFLECTION_PHASES_WITH_EVAL = [
+  { key: 'review', label: 'Tinjau Hasil', icon: <Eye className="w-3.5 h-3.5" /> },
+  { key: 'concept-map', label: 'Keruntutan Berpikir', icon: <Brain className="w-3.5 h-3.5" /> },
+  { key: 'self-eval', label: 'Evaluasi Diri', icon: <CheckCircle className="w-3.5 h-3.5" /> },
+  { key: 'arguing', label: 'Kemampuan Berargumen', icon: <MessageSquare className="w-3.5 h-3.5" /> },
+  { key: 'conclusion', label: 'Penarikan Kesimpulan', icon: <Sparkles className="w-3.5 h-3.5" /> },
+];
+
+function PhaseTracker({ current, completed, hasEval }: { current: number; completed: Set<number>; hasEval: boolean }) {
+  const phases = hasEval ? REFLECTION_PHASES_WITH_EVAL : REFLECTION_PHASES;
   return (
-    <div className="flex items-center gap-1.5 mb-6 px-1">
-      {REFLECTION_PHASES.map((phase, idx) => {
+    <div className="flex items-center gap-1.5 mb-6 px-1 flex-wrap">
+      {phases.map((phase, idx) => {
         const isDone = completed.has(idx);
         const isActive = idx === current;
         return (
@@ -129,7 +138,7 @@ function PhaseTracker({ current, completed }: { current: number; completed: Set<
               {isDone ? <CheckCircle className="w-3.5 h-3.5" /> : phase.icon}
               <span className="text-[9px] font-bold uppercase tracking-tight whitespace-nowrap">{phase.label}</span>
             </div>
-            {idx < REFLECTION_PHASES.length - 1 && (
+            {idx < phases.length - 1 && (
               <div className={`h-px w-4 shrink-0 ${isDone ? 'bg-[#10B981]/40' : 'bg-[#D5DEEF]'}`} />
             )}
           </React.Fragment>
@@ -807,6 +816,7 @@ export function ReflectionStage({
       argumentText,
       evaluationData,
       conclusionText: text,
+      conclusion: text,
       completedPhases: Array.from(new Set([...completedPhases, CONCLUSION_PHASE])),
     };
     void tracker.trackEvent('reflection_completed', {
@@ -818,7 +828,7 @@ export function ReflectionStage({
   };
 
   const advancePhase = () => {
-    if (activePhase < REFLECTION_PHASES.length - 1) {
+    if (activePhase < CONCLUSION_PHASE) {
       setActivePhase(prev => prev + 1);
     }
   };
@@ -840,7 +850,7 @@ export function ReflectionStage({
   return (
     <div className="w-full space-y-6">
       {/* Phase Tracker */}
-      <PhaseTracker current={activePhase} completed={completedPhases} />
+      <PhaseTracker current={activePhase} completed={completedPhases} hasEval={hasEval} />
 
       {/* Phase 0: Review Previous Results */}
       {activePhase === 0 && (

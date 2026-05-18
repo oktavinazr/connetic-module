@@ -306,7 +306,7 @@ export function LessonPage() {
       const clampedStage = Math.max(0, Math.min(syncStage, maxStage));
       // Admin advanced → follow
       if (clampedStage > currentStageIndex) {
-        if (syncStage >= lesson.stages.length || globalSync.sync?.status === 'completed') {
+        if (syncStage >= lesson.stages.length) {
           navigate(`/evaluation/${lessonId}`);
         } else {
           setCurrentStageIndex(clampedStage);
@@ -438,17 +438,9 @@ export function LessonPage() {
         return (
           <LearningCommunityStage
             {...commonProps}
-            matchingPairs={currentStage.matchingPairs}
-            caseScenario={currentStage.caseScenario}
-            peerAnswers={currentStage.peerAnswers}
-            peerVotingScenario={currentStage.peerVotingScenario}
-            peerComments={currentStage.peerComments}
-            caseComparisonData={currentStage.caseComparisonData}
-            encapsulationCaseData={currentStage.encapsulationCaseData}
             encapsulationCase={currentStage.encapsulationCase}
             decapsulationCase={currentStage.decapsulationCase}
             layers5={currentStage.layers5}
-            groupActivity={currentStage.groupActivity}
             moduleId={currentStage.moduleId || ''}
             groupName={groupName}
           />
