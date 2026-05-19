@@ -43,6 +43,7 @@ export function useGlobalStageSync(
   const stageCompletedRef = useRef(isStageCompleted);
   stageCompletedRef.current = isStageCompleted;
   const prevStartedAtRef = useRef<string | null | undefined>(null);
+  const expiryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isIdle = !sync || sync.session_status === 'idle';
 
@@ -53,12 +54,25 @@ export function useGlobalStageSync(
     const mins = tm?.duration_minutes ?? 0;
     setTimerMinutes(mins);
 
+    // Clear any pending expiry timeout before scheduling a new one
+    if (expiryTimeoutRef.current) {
+      clearTimeout(expiryTimeoutRef.current);
+      expiryTimeoutRef.current = null;
+    }
+
     if (s && s.session_status !== 'idle') {
       const { seconds, isExpired, isUnlimited: unlimited, isPaused: paused } = calcTimerRemaining(s, mins);
       setTimerRemaining(seconds);
       setTimerExpired(isExpired);
       setIsUnlimited(unlimited);
       setIsPaused(paused);
+      // Schedule expiry detection with a one-shot timeout — no 1s tick needed
+      if (!isExpired && !unlimited && !paused && seconds > 0) {
+        expiryTimeoutRef.current = setTimeout(() => {
+          setTimerExpired(true);
+          setTimerRemaining(0);
+        }, seconds * 1000);
+      }
     } else {
       setTimerRemaining(-1);
       setTimerExpired(false);
@@ -131,28 +145,19 @@ export function useGlobalStageSync(
 
     return () => {
       supabase.removeChannel(channel);
+      if (expiryTimeoutRef.current) {
+        clearTimeout(expiryTimeoutRef.current);
+        expiryTimeoutRef.current = null;
+      }
     };
   }, [lessonId, applySync]);
 
-  // Initial load + polling (fast fallback — 1s)
+  // Initial load + polling (fallback — 10s; realtime handles instant sync)
   useEffect(() => {
     refresh();
-    const interval = setInterval(refresh, 1000);
+    const interval = setInterval(refresh, 10000);
     return () => clearInterval(interval);
   }, [refresh]);
-
-  // Local countdown tick
-  useEffect(() => {
-    if (!loaded || isIdle || isPaused || isUnlimited || timerRemaining <= 0) return;
-    const t = setInterval(() => {
-      setTimerRemaining(r => Math.max(0, r - 1));
-    }, 1000);
-    return () => clearInterval(t);
-  }, [loaded, isIdle, isPaused, isUnlimited, timerRemaining <= 0 ? 0 : 1]);
-
-  useEffect(() => {
-    if (timerRemaining === 0 && !isUnlimited) setTimerExpired(true);
-  }, [timerRemaining, isUnlimited]);
 
   useEffect(() => {
     if (sync?.force_advance) setForceAdvanced(true);

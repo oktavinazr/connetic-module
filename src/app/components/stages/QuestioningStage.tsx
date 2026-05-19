@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import {
   AlertCircle, CheckCircle, ChevronRight, Clock, Eye,
@@ -458,7 +458,7 @@ const LAYER_FUNCTION_PAIRS = [
 const FUNC_DISPLAY_ORDER = ['lf5', 'lf3', 'lf1', 'lf4', 'lf2'];
 const LAYER_DISPLAY_ORDER = ['lf1', 'lf2', 'lf3', 'lf4', 'lf5'];
 
-// -- Function Matching Activity (cable-drawing UI) ------------------------------
+// -- Function Matching Activity (tap-to-select → tap-to-assign, mobile-friendly) --
 
 function FunctionMatchingActivity({ placements, validated, onPlacementsChange, onValidate, onNext }: {
   placements: Record<string, string>;
@@ -467,70 +467,7 @@ function FunctionMatchingActivity({ placements, validated, onPlacementsChange, o
   onValidate: () => void;
   onNext: () => void;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const funcEls = useRef<Record<string, HTMLDivElement | null>>({});
-  const layerEls = useRef<Record<string, HTMLDivElement | null>>({});
-  const activeDragRef = useRef<string | null>(null);
-  const placementsRef = useRef(placements);
-  const onChangeRef = useRef(onPlacementsChange);
-  const [dragState, setDragState] = useState<{ funcId: string; pos: { x: number; y: number } } | null>(null);
-  const [, forceRedraw] = useState(0);
-
-  placementsRef.current = placements;
-  onChangeRef.current = onPlacementsChange;
-
-  // After placements change, DOM refs need one extra render to reflect new cable anchors
-  useLayoutEffect(() => {
-    forceRedraw(n => n + 1);
-  }, [placements]);
-
-  useEffect(() => {
-    const onMouseMove = (e: MouseEvent) => {
-      if (!activeDragRef.current || !containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      setDragState({ funcId: activeDragRef.current, pos: { x: e.clientX - rect.left, y: e.clientY - rect.top } });
-    };
-
-    const onMouseUp = (e: MouseEvent) => {
-      const dragFuncId = activeDragRef.current;
-      activeDragRef.current = null;
-      setDragState(null);
-      if (!dragFuncId) return;
-      for (const [layerId, el] of Object.entries(layerEls.current)) {
-        if (!el) continue;
-        const r = el.getBoundingClientRect();
-        if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
-          const next = { ...placementsRef.current };
-          Object.keys(next).forEach(k => { if (next[k] === layerId) delete next[k]; });
-          next[dragFuncId] = layerId;
-          onChangeRef.current(next);
-          break;
-        }
-      }
-    };
-
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-    };
-  }, []);
-
-  const getAnchor = (el: HTMLDivElement | null, side: 'right' | 'left') => {
-    if (!el || !containerRef.current) return null;
-    const cRect = containerRef.current.getBoundingClientRect();
-    const eRect = el.getBoundingClientRect();
-    return {
-      x: side === 'right' ? eRect.right - cRect.left : eRect.left - cRect.left,
-      y: eRect.top - cRect.top + eRect.height / 2,
-    };
-  };
-
-  const makePath = (x1: number, y1: number, x2: number, y2: number) => {
-    const cx = Math.abs(x2 - x1) * 0.45;
-    return `M ${x1} ${y1} C ${x1 + cx} ${y1}, ${x2 - cx} ${y2}, ${x2} ${y2}`;
-  };
+  const [selectedFuncId, setSelectedFuncId] = useState<string | null>(null);
 
   const funcOrder = FUNC_DISPLAY_ORDER.map(id => LAYER_FUNCTION_PAIRS.find(lf => lf.id === id)!);
   const layerOrder = LAYER_DISPLAY_ORDER.map(id => LAYER_FUNCTION_PAIRS.find(lf => lf.id === id)!);
@@ -539,145 +476,195 @@ function FunctionMatchingActivity({ placements, validated, onPlacementsChange, o
   const correctCount = LAYER_FUNCTION_PAIRS.filter(lf => placements[lf.id] === lf.id).length;
   const allCorrect = correctCount === LAYER_FUNCTION_PAIRS.length;
 
-  const cables = Object.entries(placements).map(([funcId, layerId]) => {
-    const from = getAnchor(funcEls.current[funcId] ?? null, 'right');
-    const to = getAnchor(layerEls.current[layerId] ?? null, 'left');
-    if (!from || !to) return null;
-    const pair = LAYER_FUNCTION_PAIRS.find(lf => lf.id === layerId);
-    const isCorrect = funcId === layerId;
-    const color = validated ? (isCorrect ? (pair?.hexColor ?? '#10B981') : '#EF4444') : (pair?.hexColor ?? '#8B5CF6');
-    return { key: `${funcId}-${layerId}`, from, to, color, correct: validated ? isCorrect : true };
-  }).filter((c): c is NonNullable<typeof c> => c !== null);
+  const handleFuncTap = (funcId: string) => {
+    if (validated) return;
+    setSelectedFuncId(prev => prev === funcId ? null : funcId);
+  };
 
-  const liveFrom = dragState ? getAnchor(funcEls.current[dragState.funcId] ?? null, 'right') : null;
+  const handleLayerTap = (layerId: string) => {
+    if (validated || !selectedFuncId) return;
+    const next = { ...placements };
+    // Lepas func lain yang sebelumnya ada di layer ini
+    Object.keys(next).forEach(k => { if (next[k] === layerId) delete next[k]; });
+    // Toggle: jika sudah terpasang di sini, lepas; jika belum, pasang
+    if (next[selectedFuncId] === layerId) {
+      delete next[selectedFuncId];
+    } else {
+      next[selectedFuncId] = layerId;
+    }
+    onPlacementsChange(next);
+    setSelectedFuncId(null);
+  };
+
+  const placedCount = Object.keys(placements).length;
 
   return (
-    <div className="space-y-5">
-      <div
-        ref={containerRef}
-        className="relative select-none"
-        style={{ cursor: dragState ? 'grabbing' : 'default' }}
-      >
-        <svg
-          className="absolute inset-0 pointer-events-none"
-          style={{ width: '100%', height: '100%', overflow: 'visible' }}
-        >
-          {cables.map(c => (
-            <g key={c.key}>
-              <path
-                d={makePath(c.from.x, c.from.y, c.to.x, c.to.y)}
-                stroke={c.color}
-                strokeWidth="3"
-                fill="none"
-                strokeLinecap="round"
-                opacity={c.correct ? 0.85 : 0.55}
-              />
-              <circle cx={c.from.x} cy={c.from.y} r="5" fill={c.color} opacity={c.correct ? 0.9 : 0.55} />
-              <circle cx={c.to.x} cy={c.to.y} r="5" fill={c.color} opacity={c.correct ? 0.9 : 0.55} />
-            </g>
-          ))}
-          {liveFrom && dragState && (
-            <path
-              d={makePath(liveFrom.x, liveFrom.y, dragState.pos.x, dragState.pos.y)}
-              stroke="#8B5CF6"
-              strokeWidth="2.5"
-              strokeDasharray="6 4"
-              fill="none"
-              strokeLinecap="round"
-              opacity={0.65}
-            />
-          )}
-        </svg>
+    <div className="space-y-4">
+      {/* Instruction */}
+      {!validated && (
+        <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl bg-[#F8F5FF] border border-[#8B5CF6]/20">
+          <div className="w-5 h-5 rounded-full bg-[#8B5CF6] flex items-center justify-center shrink-0 mt-0.5">
+            <span className="text-white text-[9px] font-black">{selectedFuncId ? '2' : '1'}</span>
+          </div>
+          <p className="text-[11px] font-bold text-[#6D28D9] leading-relaxed">
+            {selectedFuncId
+              ? 'Fungsi dipilih — sekarang ketuk lapisan yang sesuai di bawah'
+              : 'Ketuk kartu fungsi untuk memilih, lalu ketuk lapisan yang sesuai'}
+          </p>
+        </div>
+      )}
 
-        <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 80px 1fr' }}>
-          {/* Left column: function descriptions (shuffled) */}
-          <div className="space-y-3">
-            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#395886]/40 text-center pb-1">Deskripsi Fungsi</p>
-            {funcOrder.map(lf => {
-              const connectedLayer = placements[lf.id] ? LAYER_FUNCTION_PAIRS.find(l => l.id === placements[lf.id]) : null;
-              const isCorrect = validated && placements[lf.id] === lf.id;
-              const isWrong = validated && !!placements[lf.id] && !isCorrect;
-              return (
-                <div
-                  key={lf.id}
-                  ref={el => { funcEls.current[lf.id] = el; }}
-                  onMouseDown={validated ? undefined : (e) => { e.preventDefault(); activeDragRef.current = lf.id; }}
-                  className={`px-4 py-3 rounded-xl border-2 text-xs font-bold leading-relaxed transition-all
-                    ${validated
-                      ? isCorrect
-                        ? 'border-[#10B981]/40 bg-[#F0FDF9] text-[#065F46] cursor-default'
-                        : isWrong
-                          ? 'border-red-200 bg-red-50 text-red-700 cursor-default'
-                          : 'border-[#D5DEEF] bg-white text-[#395886] cursor-default'
-                      : 'border-[#D5DEEF] bg-white text-[#395886] cursor-grab hover:border-[#8B5CF6]/40 hover:bg-[#F8F5FF] shadow-sm hover:shadow-md'
-                    }`}
-                  style={!validated && connectedLayer ? { borderColor: connectedLayer.hexColor + '80' } : {}}
-                >
-                  <div className="flex items-start gap-2">
-                    {!validated && (
-                      <div
-                        className="w-3 h-3 rounded-full shrink-0 mt-0.5 border-2"
-                        style={{
-                          backgroundColor: connectedLayer ? connectedLayer.hexColor + '33' : 'transparent',
-                          borderColor: connectedLayer ? connectedLayer.hexColor : '#D5DEEF',
-                        }}
-                      />
-                    )}
-                    {validated && isCorrect && <CheckCircle className="w-3.5 h-3.5 text-[#10B981] shrink-0 mt-0.5" />}
-                    {validated && isWrong && <XCircle className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" />}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
+        {/* Kiri / Atas: Deskripsi Fungsi */}
+        <div className="space-y-2">
+          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#395886]/40 text-center pb-1">
+            Deskripsi Fungsi
+          </p>
+          {funcOrder.map(lf => {
+            const assignedLayerId = placements[lf.id];
+            const assignedLayer = assignedLayerId ? LAYER_FUNCTION_PAIRS.find(l => l.id === assignedLayerId) : null;
+            const isSelected = selectedFuncId === lf.id;
+            const isCorrect = validated && placements[lf.id] === lf.id;
+            const isWrong = validated && !!placements[lf.id] && !isCorrect;
+
+            return (
+              <button
+                key={lf.id}
+                onClick={() => handleFuncTap(lf.id)}
+                disabled={validated}
+                className={`w-full px-3 py-2.5 rounded-xl border-2 text-left text-xs font-bold leading-relaxed transition-all duration-150
+                  ${validated
+                    ? isCorrect
+                      ? 'border-[#10B981]/40 bg-[#F0FDF9] text-[#065F46] cursor-default'
+                      : isWrong
+                        ? 'border-red-200 bg-red-50 text-red-700 cursor-default'
+                        : 'border-[#D5DEEF] bg-white text-[#395886] cursor-default'
+                    : isSelected
+                      ? 'border-[#8B5CF6] bg-[#F3F0FF] text-[#395886] shadow-md ring-2 ring-[#8B5CF6]/25 scale-[1.02] cursor-pointer'
+                      : 'bg-white text-[#395886] cursor-pointer hover:bg-[#F8F5FF] active:scale-[0.98]'
+                  }`}
+                style={
+                  !validated && !isSelected
+                    ? { borderColor: assignedLayer ? assignedLayer.hexColor + '80' : '#D5DEEF' }
+                    : {}
+                }
+              >
+                <div className="flex items-start gap-2">
+                  {!validated && (
+                    <div
+                      className="w-3 h-3 rounded-full shrink-0 mt-0.5 border-2 transition-all"
+                      style={{
+                        backgroundColor: isSelected ? '#8B5CF6' : assignedLayer ? assignedLayer.hexColor + '33' : 'transparent',
+                        borderColor: isSelected ? '#8B5CF6' : assignedLayer ? assignedLayer.hexColor : '#D5DEEF',
+                      }}
+                    />
+                  )}
+                  {validated && isCorrect && <CheckCircle className="w-3.5 h-3.5 text-[#10B981] shrink-0 mt-0.5" />}
+                  {validated && isWrong && <XCircle className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" />}
+                  <div className="flex-1">
                     <span>{lf.funcDesc}</span>
+                    {!validated && assignedLayer && (
+                      <span
+                        className="mt-1.5 ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-white text-[9px] font-black"
+                        style={{ backgroundColor: assignedLayer.hexColor }}
+                      >
+                        <assignedLayer.icon className="w-2.5 h-2.5" />
+                        {assignedLayer.layerName.split(' ')[0]}
+                      </span>
+                    )}
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              </button>
+            );
+          })}
+        </div>
 
-          {/* Center gap: cables pass through here via SVG overlay */}
-          <div />
+        {/* Kanan / Bawah: Lapisan TCP/IP */}
+        <div className="space-y-2">
+          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#395886]/40 text-center pb-1">
+            {selectedFuncId ? 'Ketuk lapisan yang sesuai' : 'Lapisan TCP/IP'}
+          </p>
+          {layerOrder.map(lf => {
+            const LayerIcon = lf.icon;
+            const connectedFuncId = Object.entries(placements).find(([, v]) => v === lf.id)?.[0];
+            const connectedFunc = connectedFuncId ? LAYER_FUNCTION_PAIRS.find(f => f.id === connectedFuncId) : null;
+            const isTarget = !!selectedFuncId && !validated;
+            const isCorrect = validated && connectedFuncId === lf.id;
+            const isWrong = validated && !!connectedFuncId && !isCorrect;
 
-          {/* Right column: layer names (Application → Physical) */}
-          <div className="space-y-3">
-            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#395886]/40 text-center pb-1">Lapisan TCP/IP</p>
-            {layerOrder.map(lf => {
-              const LayerIcon = lf.icon;
-              const connectedFuncId = Object.entries(placements).find(([, v]) => v === lf.id)?.[0];
-              const isCorrect = validated && connectedFuncId === lf.id;
-              const isWrong = validated && !!connectedFuncId && !isCorrect;
-              return (
-                <div
-                  key={lf.id}
-                  ref={el => { layerEls.current[lf.id] = el; }}
-                  className={`px-4 py-3 rounded-xl border-2 transition-all flex items-center gap-2.5 cursor-default
-                    ${validated
-                      ? isCorrect
-                        ? `${lf.light} ${lf.border}`
-                        : isWrong
-                          ? 'border-red-200 bg-red-50'
-                          : `${lf.light} ${lf.border}/30`
-                      : lf.light
-                    }`}
-                  style={!validated && connectedFuncId ? { borderColor: lf.hexColor + '80' } : {}}
-                >
-                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${lf.badge} text-white shadow-sm`}>
-                    <LayerIcon className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-[9px] font-black uppercase opacity-50 ${lf.text}`}>Lapisan {lf.layerNum}</p>
-                    <p className={`text-xs font-black ${lf.text}`}>{lf.layerName}</p>
-                  </div>
-                  {validated && isCorrect && <CheckCircle className="w-4 h-4 text-[#10B981] shrink-0" />}
-                  {validated && isWrong && <XCircle className="w-4 h-4 text-red-500 shrink-0" />}
+            return (
+              <button
+                key={lf.id}
+                onClick={() => handleLayerTap(lf.id)}
+                disabled={validated || !selectedFuncId}
+                className={`w-full px-3 py-2.5 rounded-xl border-2 text-left flex items-center gap-2.5 transition-all duration-150
+                  ${validated
+                    ? isWrong ? 'border-red-200 bg-red-50 cursor-default' : 'cursor-default'
+                    : isTarget
+                      ? 'cursor-pointer hover:scale-[1.02] active:scale-[0.98] shadow-md'
+                      : 'cursor-default'
+                  }`}
+                style={{
+                  backgroundColor: validated
+                    ? isWrong ? undefined : lf.hexColor + '12'
+                    : lf.hexColor + '10',
+                  borderColor: validated
+                    ? isCorrect ? lf.hexColor + '55' : isWrong ? undefined : lf.hexColor + '30'
+                    : isTarget ? lf.hexColor : connectedFunc ? lf.hexColor + '55' : lf.hexColor + '22',
+                  boxShadow: isTarget ? `0 0 0 3px ${lf.hexColor}22` : undefined,
+                }}
+              >
+                <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${lf.badge} text-white shadow-sm`}>
+                  <LayerIcon className="w-4 h-4" />
                 </div>
-              );
-            })}
-          </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] font-black uppercase opacity-50" style={{ color: lf.hexColor }}>
+                    Lapisan {lf.layerNum}
+                  </p>
+                  <p className="text-xs font-black" style={{ color: lf.hexColor }}>{lf.layerName}</p>
+                  {!validated && connectedFunc && (
+                    <p className="text-[9px] text-[#395886]/50 mt-0.5 truncate font-medium">
+                      {connectedFunc.funcDesc.slice(0, 38)}...
+                    </p>
+                  )}
+                </div>
+                {validated && isCorrect && <CheckCircle className="w-4 h-4 text-[#10B981] shrink-0" />}
+                {validated && isWrong && <XCircle className="w-4 h-4 text-red-500 shrink-0" />}
+                {/* Target indicator when a func is selected */}
+                {!validated && isTarget && (
+                  <div
+                    className="w-5 h-5 rounded-full border-2 border-dashed flex items-center justify-center shrink-0 animate-pulse"
+                    style={{ borderColor: lf.hexColor + '80' }}
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: lf.hexColor + '70' }} />
+                  </div>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {!validated && (
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#F8F5FF] border border-[#8B5CF6]/15">
-          <div className="w-2 h-2 rounded-full bg-[#8B5CF6] shrink-0" />
-          <p className="text-[10px] font-bold text-[#6D28D9]">Klik dan tarik dari kartu fungsi (kiri) ke lapisan yang sesuai (kanan)</p>
+      {/* Progress + reset */}
+      {!validated && placedCount > 0 && (
+        <div className="flex items-center justify-between px-3 py-2 bg-[#F8FAFF] rounded-xl border border-[#D5DEEF]">
+          <div className="flex items-center gap-2">
+            <div className="h-1.5 w-24 bg-[#D5DEEF] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#8B5CF6] rounded-full transition-all duration-300"
+                style={{ width: `${(placedCount / LAYER_FUNCTION_PAIRS.length) * 100}%` }}
+              />
+            </div>
+            <span className="text-[10px] font-bold text-[#395886]/60">
+              {placedCount}/{LAYER_FUNCTION_PAIRS.length} dipasangkan
+            </span>
+          </div>
+          <button
+            onClick={() => { onPlacementsChange({}); setSelectedFuncId(null); }}
+            className="flex items-center gap-1 text-[10px] font-bold text-red-400 hover:text-red-600 transition-colors"
+          >
+            <RotateCcw className="w-3 h-3" /> Reset
+          </button>
         </div>
       )}
 
@@ -685,10 +672,10 @@ function FunctionMatchingActivity({ placements, validated, onPlacementsChange, o
         <button
           onClick={onValidate}
           disabled={!allPlaced}
-          className={`w-full py-3.5 rounded-xl font-black text-sm transition-all shadow-sm
+          className={`w-full py-3.5 rounded-xl font-black text-sm transition-all shadow-sm active:scale-[0.98]
             ${allPlaced ? 'bg-[#8B5CF6] text-white hover:bg-[#7C3AED] shadow-purple-100' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
         >
-          {allPlaced ? 'Verifikasi Pasangan Fungsi' : `Pasangkan ${LAYER_FUNCTION_PAIRS.length - Object.keys(placements).length} fungsi lagi`}
+          {allPlaced ? 'Verifikasi Pasangan Fungsi' : `Pasangkan ${LAYER_FUNCTION_PAIRS.length - placedCount} fungsi lagi`}
         </button>
       ) : (
         <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -707,7 +694,7 @@ function FunctionMatchingActivity({ placements, validated, onPlacementsChange, o
           )}
           <button
             onClick={onNext}
-            className="w-full py-3.5 rounded-xl bg-[#10B981] text-white font-black text-sm hover:bg-[#059669] shadow-sm transition-all flex items-center justify-center gap-2"
+            className="w-full py-3.5 rounded-xl bg-[#10B981] text-white font-black text-sm hover:bg-[#059669] shadow-sm transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
           >
             <ArrowRight className="w-4 h-4" /> Lanjut ke Kemampuan Berargumen
           </button>
