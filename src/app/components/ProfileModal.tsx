@@ -11,7 +11,7 @@ interface ProfileModalProps {
     username: string;
     email: string;
     gender: 'Laki-laki' | 'Perempuan';
-    class: string;
+    class: string; 
     nis: string;
     registeredAt?: string;
     role: string;
