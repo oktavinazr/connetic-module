@@ -371,11 +371,7 @@ export const isLessonUnlocked = async (userId: string, lessonId: string): Promis
   const prevLesson = lessons[prevLessonId];
   if (!prevLesson) return false;
 
-  return (
-    prevProgress.pretestCompleted &&
-    prevProgress.completedStages.length >= prevLesson.stages.length &&
-    prevProgress.posttestCompleted
-  );
+  return prevProgress.pretestCompleted && prevProgress.posttestCompleted;
 };
 
 export const isGlobalPosttestUnlocked = async (userId: string): Promise<boolean> => {
@@ -385,11 +381,7 @@ export const isGlobalPosttestUnlocked = async (userId: string): Promise<boolean>
   return allProgress.every((progress) => {
     const lesson = lessons[progress.lessonId];
     if (!lesson) return true;
-    return (
-      progress.pretestCompleted &&
-      progress.completedStages.length >= lesson.stages.length &&
-      progress.posttestCompleted
-    );
+    return progress.pretestCompleted && progress.posttestCompleted;
   });
 };
 

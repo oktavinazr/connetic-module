@@ -3,6 +3,7 @@ import {
   ChevronRight, CheckCircle, XCircle, Lightbulb, HelpCircle, PlayCircle,
   RotateCcw, AlertCircle, Info, BookOpen, GripVertical, PenLine, ArrowRight,
   Package, Shield, MapPin, FileImage, Network,
+  ArrowLeftRight, Hash, CornerDownLeft, Flag, Layers, Zap, Link2, Unlink2,
 } from 'lucide-react';
 import { useDrag, useDrop } from 'react-dnd';
 import { getCurrentUser } from '../../utils/auth';
@@ -1164,6 +1165,26 @@ function MCQPhase({
 
 // -- Matching Lines Activity (Tarik Garis) ------------------------------------
 
+// Color palette per pair index — each pair gets a unique vibrant color
+const MATCH_PALETTE = [
+  { bg: 'bg-violet-50', border: 'border-violet-300', activeBorder: 'border-violet-500', text: 'text-violet-700', iconBg: 'bg-violet-500', ring: 'ring-violet-200', dot: 'bg-violet-400', badge: 'bg-violet-500 text-white' },
+  { bg: 'bg-sky-50', border: 'border-sky-300', activeBorder: 'border-sky-500', text: 'text-sky-700', iconBg: 'bg-sky-500', ring: 'ring-sky-200', dot: 'bg-sky-400', badge: 'bg-sky-500 text-white' },
+  { bg: 'bg-emerald-50', border: 'border-emerald-300', activeBorder: 'border-emerald-500', text: 'text-emerald-700', iconBg: 'bg-emerald-500', ring: 'ring-emerald-200', dot: 'bg-emerald-400', badge: 'bg-emerald-500 text-white' },
+  { bg: 'bg-amber-50', border: 'border-amber-300', activeBorder: 'border-amber-500', text: 'text-amber-700', iconBg: 'bg-amber-500', ring: 'ring-amber-200', dot: 'bg-amber-400', badge: 'bg-amber-500 text-white' },
+  { bg: 'bg-purple-50', border: 'border-purple-300', activeBorder: 'border-purple-500', text: 'text-purple-700', iconBg: 'bg-purple-500', ring: 'ring-purple-200', dot: 'bg-purple-400', badge: 'bg-purple-500 text-white' },
+  { bg: 'bg-rose-50', border: 'border-rose-300', activeBorder: 'border-rose-500', text: 'text-rose-700', iconBg: 'bg-rose-500', ring: 'ring-rose-200', dot: 'bg-rose-400', badge: 'bg-rose-500 text-white' },
+] as const;
+
+// Icon per pair index (TCP Header context)
+const PAIR_ICONS = [
+  <ArrowLeftRight className="w-4 h-4" />,
+  <Hash className="w-4 h-4" />,
+  <CornerDownLeft className="w-4 h-4" />,
+  <Flag className="w-4 h-4" />,
+  <Layers className="w-4 h-4" />,
+  <Shield className="w-4 h-4" />,
+];
+
 function MatchingLinesActivity({
   pairs, essayPrompt, lessonId, stageIndex, onComplete, initialData, skipEssay,
 }: {
@@ -1185,6 +1206,13 @@ function MatchingLinesActivity({
     return arr;
   });
 
+  // Map pair id → its original index (for color assignment)
+  const pairIndexMap = useMemo(() => {
+    const m: Record<string, number> = {};
+    pairs.forEach((p, i) => { m[p.id] = i; });
+    return m;
+  }, [pairs]);
+
   const [matches, setMatches] = useState<Record<string, string>>(initialData?.matches || {});
   const [validated, setValidated] = useState(initialData?.validated || false);
   const [attempts, setAttempts] = useState(0);
@@ -1203,16 +1231,15 @@ function MatchingLinesActivity({
   const handleLeftClick = (leftId: string) => {
     if (validated) return;
     if (matches[leftId]) {
-      // Undo this match
       setMatches(prev => { const n = { ...prev }; delete n[leftId]; return n; });
+      if (selectedLeft === leftId) setSelectedLeft(null);
       return;
     }
-    setSelectedLeft(leftId);
+    setSelectedLeft(prev => prev === leftId ? null : leftId);
   };
 
   const handleRightClick = (rightId: string) => {
     if (validated || !selectedLeft) return;
-    // Remove any existing match for this right
     const existingLeft = Object.entries(matches).find(([_, v]) => v === rightId);
     const next = { ...matches };
     if (existingLeft) delete next[existingLeft[0]];
@@ -1243,182 +1270,348 @@ function MatchingLinesActivity({
   const correctCount = validated ? pairs.filter(p => matches[p.id] === p.id).length : 0;
 
   return (
-    <div className="w-full space-y-5">
-      {/* Header */}
-      <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-5 py-3 bg-[#628ECB]/8 border-b border-[#628ECB]/20">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#628ECB]/15">
-            <BookOpen className="w-4 h-4 text-[#628ECB]" />
+    <div className="w-full space-y-4">
+
+      {/* ── Header Card ── */}
+      <div className="overflow-hidden rounded-2xl border-2 border-[#395886]/15 shadow-md">
+        {/* Gradient header bar */}
+        <div className="flex items-center gap-4 bg-gradient-to-r from-[#395886] via-[#4A6FA8] to-[#628ECB] px-5 py-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 shadow-inner border border-white/30">
+            <Link2 className="w-5 h-5 text-white" />
           </div>
-          <div className="flex-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Keruntutan Berpikir</p>
-            <h3 className="text-sm font-bold text-[#395886]">Pasangkan Komponen dengan Fungsinya</h3>
+          <div className="flex-1 min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.35em] text-white/55 mb-0.5">Keruntutan Berpikir — TCP Header</p>
+            <h3 className="text-base font-black text-white leading-tight">Pasangkan Komponen dengan Fungsinya</h3>
           </div>
-          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-bold
-            ${attempts >= 3 ? 'border-red-200 bg-red-50 text-red-500' : 'border-[#628ECB]/20 bg-white text-[#628ECB]'}`}>
+          <div className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black shrink-0
+            ${attempts >= 3 ? 'border-red-300/60 bg-red-500/20 text-red-200' : 'border-white/25 bg-white/15 text-white'}`}>
             <AlertCircle className="w-3 h-3" />
-            {attempts >= 3 ? 'Habis' : `${3 - attempts} percobaan`}
+            {attempts >= 3 ? 'Habis' : `${3 - attempts}× lagi`}
           </div>
         </div>
-        <div className="px-5 py-4 bg-gradient-to-br from-[#628ECB]/5 to-transparent">
-          <div className="flex items-start gap-3">
-            <Lightbulb className="w-4 h-4 text-[#628ECB] mt-0.5 shrink-0" />
-            <p className="text-sm text-[#395886]/80 leading-relaxed">
-              Klik salah satu komponen di kolom <strong>kiri</strong>, lalu klik fungsinya di kolom <strong>kanan</strong> untuk memasangkan. Klik ulang pasangan yang sudah terhubung untuk membatalkan.
-            </p>
+
+        {/* TCP Header mini-visual */}
+        <div className="bg-white px-5 py-4 border-b border-[#D5DEEF]">
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB] mb-2.5">Komponen TCP Header</p>
+          <div className="flex rounded-xl overflow-hidden border border-[#C8D8F0] shadow-sm text-[9px] font-bold">
+            {['Port', 'SEQ', 'ACK', 'Flags', 'Window', 'Checksum'].map((label, i) => {
+              const pal = MATCH_PALETTE[i % MATCH_PALETTE.length];
+              return (
+                <div key={label} className={`flex-1 py-2 text-center border-r border-[#C8D8F0] last:border-r-0 ${pal.bg} ${pal.text}`}>
+                  {label}
+                </div>
+              );
+            })}
           </div>
+          <p className="mt-2 text-[10px] text-[#628ECB]/70 font-medium text-center">
+            Setiap field di atas memiliki fungsi khusus dalam protokol TCP
+          </p>
+        </div>
+
+        {/* Instructions */}
+        <div className="bg-gradient-to-br from-[#F8FAFD] to-[#EEF3FB] px-5 py-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="flex items-center gap-2.5 flex-1">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#395886] text-white text-[10px] font-black">1</div>
+              <p className="text-xs font-semibold text-[#395886]/75">Klik komponen di <span className="font-black text-[#395886]">kiri</span></p>
+            </div>
+            <ArrowRight className="hidden sm:block w-4 h-4 text-[#395886]/30 shrink-0" />
+            <div className="flex items-center gap-2.5 flex-1">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#628ECB] text-white text-[10px] font-black">2</div>
+              <p className="text-xs font-semibold text-[#395886]/75">Klik fungsinya di <span className="font-black text-[#395886]">kanan</span></p>
+            </div>
+            <ArrowRight className="hidden sm:block w-4 h-4 text-[#395886]/30 shrink-0" />
+            <div className="flex items-center gap-2.5 flex-1">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#10B981] text-white text-[10px] font-black">3</div>
+              <p className="text-xs font-semibold text-[#395886]/75">Ulangi hingga semua terhubung</p>
+            </div>
+          </div>
+          {selectedLeft && (
+            <div className="mt-3 flex items-center gap-2 rounded-xl bg-[#395886] px-4 py-2.5 text-white shadow-md animate-pulse">
+              <Zap className="w-3.5 h-3.5 shrink-0" />
+              <p className="text-xs font-bold">
+                <span className="font-black">{pairs.find(p => p.id === selectedLeft)?.left}</span> dipilih — klik fungsinya di kanan!
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Matching Area */}
-      <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-5">
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Left Column — Component Names */}
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/50 mb-3">
-              Komponen TCP Header
-            </p>
-            <div className="space-y-2">
-              {pairs.map(p => {
-                const matched = !!matches[p.id];
-                const isCorrectMatch = validated && matches[p.id] === p.id;
-                const isWrongMatch = validated && matches[p.id] && matches[p.id] !== p.id;
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => handleLeftClick(p.id)}
-                    disabled={validated}
-                    className={`w-full text-left px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all ${
-                      selectedLeft === p.id
-                        ? 'border-[#628ECB] bg-[#628ECB]/10 ring-2 ring-[#628ECB]/20'
-                        : isCorrectMatch
-                          ? 'border-[#10B981] bg-[#ECFDF5]'
-                          : isWrongMatch
-                            ? 'border-red-300 bg-red-50'
-                            : matched
-                              ? 'border-[#628ECB]/40 bg-[#EEF4FF]'
-                              : 'border-[#D5DEEF] bg-white hover:border-[#628ECB]/30'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className={isWrongMatch ? 'text-red-700' : 'text-[#395886]'}>{p.left}</span>
-                      {validated && isCorrectMatch && <CheckCircle className="w-4 h-4 text-[#10B981]" />}
-                      {validated && isWrongMatch && <XCircle className="w-4 h-4 text-red-400" />}
-                      {!validated && matched && (
-                        <span className="text-[8px] font-bold text-[#628ECB]/60">terhubung</span>
-                      )}
-                      {!validated && !matched && selectedLeft === p.id && (
-                        <span className="text-[8px] font-bold text-[#628ECB]">pilih fungsi →</span>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+      {/* ── Matching Area ── */}
+      <div className="grid md:grid-cols-2 gap-4">
 
-          {/* Right Column — Functions */}
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/50 mb-3">
-              Fungsi Komponen
-            </p>
-            <div className="space-y-2">
-              {shuffledRight.map(r => {
-                const matchedLeft = Object.entries(matches).find(([_, v]) => v === r.id);
-                const isMatched = !!matchedLeft;
-                const isCorrectMatch = validated && matchedLeft && matchedLeft[0] === r.id;
-                const isWrongMatch = validated && matchedLeft && matchedLeft[0] !== r.id;
-                return (
-                  <button
-                    key={r.id}
-                    onClick={() => handleRightClick(r.id)}
-                    disabled={validated}
-                    className={`w-full text-left px-4 py-3 rounded-xl border-2 text-xs font-medium transition-all leading-relaxed ${
-                      isMatched && !isWrongMatch
-                        ? isCorrectMatch
-                          ? 'border-[#10B981] bg-[#ECFDF5]'
-                          : 'border-[#628ECB]/40 bg-[#EEF4FF]'
-                        : isWrongMatch
-                          ? 'border-red-300 bg-red-50'
-                          : 'border-[#D5DEEF] bg-white hover:border-[#628ECB]/30'
-                    } ${selectedLeft && !isMatched ? 'hover:border-[#10B981]/50 hover:bg-[#ECFDF5] cursor-pointer' : ''}`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className={isWrongMatch ? 'text-red-700' : 'text-[#395886]'}>{r.text}</span>
-                      {validated && isCorrectMatch && <CheckCircle className="w-4 h-4 text-[#10B981] shrink-0 ml-2" />}
-                      {validated && isWrongMatch && <XCircle className="w-4 h-4 text-red-400 shrink-0 ml-2" />}
-                      {!validated && isMatched && (
-                        <span className="text-[8px] font-bold text-[#628ECB]/60 shrink-0 ml-2">← terhubung</span>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+        {/* Left Column — Component Names */}
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="h-1.5 w-1.5 rounded-full bg-[#395886]" />
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#395886]">Komponen TCP Header</p>
           </div>
+          {pairs.map((p) => {
+            const idx = pairIndexMap[p.id] ?? 0;
+            const pal = MATCH_PALETTE[idx % MATCH_PALETTE.length];
+            const icon = PAIR_ICONS[idx % PAIR_ICONS.length];
+            const isSelected = selectedLeft === p.id;
+            const isMatched = !!matches[p.id];
+            const matchedRightId = matches[p.id];
+            // Find what color the matched right item has
+            const matchedPairIdx = matchedRightId ? pairIndexMap[matchedRightId] ?? idx : idx;
+            const matchedPal = MATCH_PALETTE[matchedPairIdx % MATCH_PALETTE.length];
+            const isCorrectMatch = validated && matches[p.id] === p.id;
+            const isWrongMatch = validated && matches[p.id] && matches[p.id] !== p.id;
+
+            return (
+              <button
+                key={p.id}
+                onClick={() => handleLeftClick(p.id)}
+                disabled={validated}
+                className={`group w-full text-left rounded-2xl border-2 transition-all duration-200 select-none
+                  ${isSelected
+                    ? `${pal.bg} ${pal.activeBorder} ring-2 ${pal.ring} shadow-lg scale-[1.02]`
+                    : isCorrectMatch
+                      ? 'bg-[#ECFDF5] border-[#10B981] shadow-md'
+                      : isWrongMatch
+                        ? 'bg-red-50 border-red-300'
+                        : isMatched
+                          ? `${matchedPal.bg} ${matchedPal.border} shadow-sm`
+                          : 'bg-white border-[#D5DEEF] hover:border-[#628ECB]/40 hover:shadow-md hover:-translate-y-0.5 cursor-pointer'
+                  }`}
+              >
+                <div className="flex items-center gap-3 px-4 py-3.5">
+                  {/* Icon square */}
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all
+                    ${isCorrectMatch ? 'bg-[#10B981] text-white shadow-md shadow-[#10B981]/30'
+                      : isWrongMatch ? 'bg-red-400 text-white'
+                      : isMatched || isSelected ? `${pal.iconBg} text-white shadow-md`
+                      : 'bg-[#EEF3FB] text-[#395886]/50 group-hover:bg-[#628ECB]/15 group-hover:text-[#628ECB]'
+                    }`}>
+                    {isCorrectMatch ? <CheckCircle className="w-4 h-4" />
+                      : isWrongMatch ? <XCircle className="w-4 h-4" />
+                      : icon}
+                  </div>
+
+                  {/* Component name */}
+                  <span className={`flex-1 text-sm font-bold leading-snug
+                    ${isWrongMatch ? 'text-red-700'
+                      : isCorrectMatch ? 'text-[#065F46]'
+                      : isMatched || isSelected ? pal.text
+                      : 'text-[#395886]'
+                    }`}>
+                    {p.left}
+                  </span>
+
+                  {/* Status chip */}
+                  {!validated && isMatched && (
+                    <span className={`text-[9px] font-black uppercase tracking-tight px-2 py-0.5 rounded-full shrink-0 ${pal.badge}`}>
+                      ✓ terhubung
+                    </span>
+                  )}
+                  {!validated && isSelected && (
+                    <span className="text-[9px] font-black text-white bg-[#395886] px-2 py-0.5 rounded-full shrink-0 animate-pulse">
+                      pilih →
+                    </span>
+                  )}
+                  {!validated && !isMatched && !isSelected && (
+                    <span className="text-[9px] font-bold text-[#395886]/30 group-hover:text-[#628ECB]/60 transition-colors shrink-0">
+                      klik
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Progress bar */}
-        <div className="mt-5 flex items-center gap-3">
-          <div className="flex-1 h-1.5 bg-[#EEF2FF] rounded-full overflow-hidden">
-            <div className="h-1.5 rounded-full transition-all duration-500"
-              style={{ width: `${(matchedLeftIds.size / pairs.length) * 100}%`, background: allMatched ? 'linear-gradient(90deg,#10B981,#059669)' : 'linear-gradient(90deg,#628ECB,#395886)' }} />
+        {/* Right Column — Functions */}
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="h-1.5 w-1.5 rounded-full bg-[#628ECB]" />
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#628ECB]">Fungsi Komponen</p>
           </div>
-          <span className={`text-[10px] font-bold shrink-0 ${allMatched ? 'text-[#10B981]' : 'text-[#395886]/50'}`}>
-            {matchedLeftIds.size}/{pairs.length}
+          {shuffledRight.map(r => {
+            const pairIdx = pairIndexMap[r.id] ?? 0;
+            const pal = MATCH_PALETTE[pairIdx % MATCH_PALETTE.length];
+            const matchedLeftEntry = Object.entries(matches).find(([_, v]) => v === r.id);
+            const isMatched = !!matchedLeftEntry;
+            const matchedLeftId = matchedLeftEntry?.[0];
+            // color based on which left item is connected
+            const connectedLeftIdx = matchedLeftId ? pairIndexMap[matchedLeftId] ?? pairIdx : pairIdx;
+            const connectedPal = MATCH_PALETTE[connectedLeftIdx % MATCH_PALETTE.length];
+            const isCorrectMatch = validated && matchedLeftId && matchedLeftId === r.id;
+            const isWrongMatch = validated && matchedLeftId && matchedLeftId !== r.id;
+            const isSelectable = !!selectedLeft && !isMatched && !validated;
+
+            return (
+              <button
+                key={r.id}
+                onClick={() => handleRightClick(r.id)}
+                disabled={validated || !selectedLeft}
+                className={`group w-full text-left rounded-2xl border-2 transition-all duration-200 select-none
+                  ${isCorrectMatch
+                    ? 'bg-[#ECFDF5] border-[#10B981] shadow-md'
+                    : isWrongMatch
+                      ? 'bg-red-50 border-red-300'
+                      : isMatched
+                        ? `${connectedPal.bg} ${connectedPal.border} shadow-sm`
+                        : isSelectable
+                          ? `hover:${pal.bg} hover:${pal.activeBorder} hover:shadow-md hover:scale-[1.01] bg-white border-[#D5DEEF] border-dashed cursor-pointer`
+                          : 'bg-white border-[#D5DEEF]'
+                  }`}
+              >
+                <div className="flex items-start gap-3 px-4 py-3.5">
+                  {/* Connection dot */}
+                  <div className={`mt-1 h-3 w-3 rounded-full shrink-0 flex-none transition-all ring-2 ring-offset-2
+                    ${isCorrectMatch ? 'bg-[#10B981] ring-[#10B981]/30'
+                      : isWrongMatch ? 'bg-red-400 ring-red-200'
+                      : isMatched ? `${connectedPal.dot} ring-transparent`
+                      : isSelectable ? 'bg-[#628ECB]/30 ring-[#628ECB]/15 animate-pulse'
+                      : 'bg-[#D5DEEF] ring-transparent'
+                    }`}
+                  />
+
+                  {/* Function text */}
+                  <p className={`flex-1 text-xs leading-relaxed font-medium
+                    ${isWrongMatch ? 'text-red-700'
+                      : isCorrectMatch ? 'text-[#065F46]'
+                      : isMatched ? connectedPal.text
+                      : isSelectable ? 'text-[#395886]'
+                      : 'text-[#395886]/70'
+                    }`}>
+                    {r.text}
+                  </p>
+
+                  {/* Validation icons */}
+                  {validated && isCorrectMatch && <CheckCircle className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" />}
+                  {validated && isWrongMatch && <XCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />}
+                  {!validated && isSelectable && (
+                    <span className="text-[9px] font-black text-[#628ECB] shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">pilih</span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Progress tracker ── */}
+      <div className="rounded-2xl border-2 border-[#D5DEEF] bg-white p-4">
+        <div className="flex items-center gap-4 mb-3">
+          <div className="flex items-center gap-2 flex-1">
+            <Link2 className="w-4 h-4 text-[#628ECB]" />
+            <span className="text-xs font-bold text-[#395886]">Koneksi terbuat</span>
+          </div>
+          <span className={`text-sm font-black ${allMatched ? 'text-[#10B981]' : 'text-[#395886]/70'}`}>
+            {matchedLeftIds.size} / {pairs.length}
           </span>
         </div>
 
-        {/* Action buttons */}
-        <div className="mt-4 space-y-3">
-          {!validated && (
-            <button onClick={handleValidate} disabled={!allMatched}
-              className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${allMatched ? 'bg-[#628ECB] text-white hover:bg-[#395886] shadow-sm' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}>
-              {allMatched ? 'Periksa Pasangan' : `Pasangkan ${pairs.length - matchedLeftIds.size} fungsi lagi...`}
-            </button>
-          )}
-          {validated && !isCorrect && attempts < 3 && (
-            <button onClick={handleRetry} className="w-full py-2.5 rounded-xl font-bold text-sm bg-red-50 text-red-600 border-2 border-red-200 hover:bg-red-100 flex items-center justify-center gap-2">
-              <RotateCcw className="w-4 h-4" /> Perbaiki Pasangan
-            </button>
-          )}
+        {/* Color dot progress */}
+        <div className="flex gap-1.5 mb-4">
+          {pairs.map((p, i) => {
+            const pal = MATCH_PALETTE[i % MATCH_PALETTE.length];
+            const isConnected = !!matches[p.id];
+            const isCorrectMatch = validated && matches[p.id] === p.id;
+            const isWrongMatch = validated && matches[p.id] && matches[p.id] !== p.id;
+            return (
+              <div key={p.id} className={`flex-1 h-2 rounded-full transition-all duration-500
+                ${isCorrectMatch ? 'bg-[#10B981]'
+                  : isWrongMatch ? 'bg-red-400'
+                  : isConnected ? pal.dot
+                  : 'bg-[#D5DEEF]'
+                }`}
+              />
+            );
+          })}
         </div>
 
-        {/* Validation result */}
-        {validated && (
-          <div className={`mt-4 p-4 rounded-xl border-2 ${isCorrect ? 'bg-[#ECFDF5] border-[#10B981]/30' : attempts < 3 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'}`}>
-            <div className="flex items-start gap-3">
-              {isCorrect ? <CheckCircle className="w-5 h-5 text-[#10B981] shrink-0 mt-0.5" /> : attempts < 3 ? <XCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" /> : <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />}
-              <p className={`text-sm font-bold ${isCorrect ? 'text-[#065F46]' : attempts < 3 ? 'text-red-800' : 'text-amber-800'}`}>
-                {isCorrect ? `Sempurna! Semua ${pairs.length} pasangan benar.` : attempts < 3 ? `${correctCount}/${pairs.length} pasangan benar. Sisa ${3 - attempts} percobaan.` : 'Pelajari pasangan yang benar di bawah.'}
+        {/* Action area */}
+        {!validated ? (
+          <button
+            onClick={handleValidate}
+            disabled={!allMatched}
+            className={`w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2
+              ${allMatched
+                ? 'bg-gradient-to-r from-[#395886] to-[#628ECB] text-white hover:from-[#2E4A75] hover:to-[#4A79BA] shadow-lg shadow-[#395886]/20 active:scale-[0.98]'
+                : 'bg-[#F0F3FA] text-[#395886]/40 cursor-not-allowed'
+              }`}
+          >
+            {allMatched
+              ? <><CheckCircle className="w-4 h-4" /> Periksa Semua Pasangan</>
+              : <><Link2 className="w-4 h-4 opacity-40" /> Pasangkan {pairs.length - matchedLeftIds.size} lagi...</>
+            }
+          </button>
+        ) : (
+          <div className="space-y-3">
+            {/* Result banner */}
+            <div className={`flex items-center gap-3 p-4 rounded-xl border-2
+              ${isCorrect
+                ? 'bg-[#ECFDF5] border-[#10B981]/40'
+                : attempts < 3 ? 'bg-red-50 border-red-200'
+                : 'bg-amber-50 border-amber-200'
+              }`}>
+              {isCorrect
+                ? <CheckCircle className="w-5 h-5 text-[#10B981] shrink-0" />
+                : attempts < 3 ? <XCircle className="w-5 h-5 text-red-500 shrink-0" />
+                : <Info className="w-5 h-5 text-amber-600 shrink-0" />
+              }
+              <p className={`text-sm font-bold flex-1
+                ${isCorrect ? 'text-[#065F46]'
+                  : attempts < 3 ? 'text-red-800'
+                  : 'text-amber-800'
+                }`}>
+                {isCorrect
+                  ? `Sempurna! Semua ${pairs.length} pasangan benar.`
+                  : attempts < 3
+                    ? `${correctCount}/${pairs.length} pasangan benar. Sisa ${3 - attempts} percobaan.`
+                    : 'Lihat kunci jawaban di bawah untuk belajar.'
+                }
               </p>
             </div>
-          </div>
-        )}
-
-        {/* Answer key */}
-        {isTerminal && !isCorrect && (
-          <div className="mt-4 p-4 rounded-xl bg-amber-50 border-2 border-amber-200">
-            <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 mb-3">Kunci Jawaban:</p>
-            <div className="space-y-1.5">
-              {pairs.map(p => (
-                <div key={p.id} className="flex items-center gap-2 text-xs text-amber-800 p-2 rounded-lg bg-white/60">
-                  <span className="font-black text-[#628ECB]">{p.left}</span>
-                  <span className="text-amber-400">→</span>
-                  <span className="text-[#10B981] font-medium">{p.right}</span>
-                </div>
-              ))}
-            </div>
+            {/* Retry button */}
+            {!isCorrect && attempts < 3 && (
+              <button
+                onClick={handleRetry}
+                className="w-full py-2.5 rounded-xl font-bold text-sm bg-white border-2 border-red-200 text-red-600 hover:bg-red-50 active:scale-[0.98] flex items-center justify-center gap-2 transition-all"
+              >
+                <RotateCcw className="w-4 h-4" /> Perbaiki Pasangan yang Salah
+              </button>
+            )}
           </div>
         )}
       </div>
 
-      {/* Essay prompt */}
+      {/* ── Answer Key ── */}
+      {isTerminal && !isCorrect && (
+        <div className="rounded-2xl overflow-hidden border-2 border-amber-200 shadow-sm">
+          <div className="flex items-center gap-3 px-5 py-3 bg-amber-50 border-b border-amber-200">
+            <Lightbulb className="w-4 h-4 text-amber-500" />
+            <p className="text-xs font-black uppercase tracking-widest text-amber-600">Kunci Jawaban</p>
+          </div>
+          <div className="p-4 bg-white space-y-2">
+            {pairs.map((p, i) => {
+              const pal = MATCH_PALETTE[i % MATCH_PALETTE.length];
+              const icon = PAIR_ICONS[i % PAIR_ICONS.length];
+              return (
+                <div key={p.id} className={`flex items-start gap-3 p-3 rounded-xl border ${pal.bg} ${pal.border}`}>
+                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${pal.iconBg} text-white`}>
+                    {icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs font-black ${pal.text}`}>{p.left}</p>
+                    <p className="text-[11px] text-[#395886]/65 leading-relaxed mt-0.5">{p.right}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Essay prompt ── */}
       {showEssay && essayPrompt && (
         <EssayBox prompt={essayPrompt} objectiveLabel="X.TCP.9" submitLabel="Simpan Argumen" headerLabel="Argumen Logis" onSubmit={(text) => onComplete(text)} />
       )}
       {showEssay && !essayPrompt && (
-        <button onClick={() => onComplete(undefined)} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm">
+        <button onClick={() => onComplete(undefined)} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-[#395886] to-[#628ECB] text-white font-bold text-sm hover:from-[#2E4A75] hover:to-[#4A79BA] shadow-md active:scale-[0.98] transition-all">
           Submit Aktivitas <ChevronRight className="w-4 h-4" />
         </button>
       )}

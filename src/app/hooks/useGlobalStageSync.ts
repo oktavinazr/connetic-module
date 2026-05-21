@@ -42,6 +42,8 @@ export function useGlobalStageSync(
   const [wasReset, setWasReset] = useState(false);
   const stageCompletedRef = useRef(isStageCompleted);
   stageCompletedRef.current = isStageCompleted;
+  const stageIndexRef = useRef(stageIndex);
+  stageIndexRef.current = stageIndex;
   const prevStartedAtRef = useRef<string | null | undefined>(null);
   const expiryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -50,7 +52,7 @@ export function useGlobalStageSync(
   const applySync = useCallback((s: AdminStageSync | null, timersData?: any[]) => {
     setSync(s);
 
-    const tm = timersData?.find((t: any) => t.stage_index === (s?.current_stage_index ?? stageIndex));
+    const tm = timersData?.find((t: any) => t.stage_index === (s?.current_stage_index ?? stageIndexRef.current));
     const mins = tm?.duration_minutes ?? 0;
     setTimerMinutes(mins);
 
@@ -91,7 +93,7 @@ export function useGlobalStageSync(
       setWasReset(true);
     }
     prevStartedAtRef.current = s?.stage_started_at;
-  }, [stageIndex]);
+  }, []);
 
   const refresh = useCallback(async () => {
     const [s, timers] = await Promise.all([

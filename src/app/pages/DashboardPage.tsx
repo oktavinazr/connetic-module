@@ -68,7 +68,6 @@ export function DashboardPage() {
       map[lessonId] = Boolean(
         prevLesson &&
         prevProgress?.pretestCompleted &&
-        prevProgress.completedStages.length >= prevLesson.stages.length &&
         prevProgress.posttestCompleted,
       );
     }

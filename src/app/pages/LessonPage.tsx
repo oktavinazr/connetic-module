@@ -683,7 +683,15 @@ export function LessonPage() {
           </div>
 
           {/* ── Session state screens ── */}
-          {globalSync.isIdle ? (
+          {!globalSync.loaded ? (
+            <div className="w-full">
+              <div className="rounded-2xl border-2 border-[#D5DEEF] bg-white p-10 text-center shadow-sm animate-pulse">
+                <div className="mx-auto mb-5 h-20 w-20 rounded-full bg-[#D5DEEF]" />
+                <div className="h-5 w-48 mx-auto rounded-lg bg-[#D5DEEF]" />
+                <div className="mt-3 h-4 w-64 mx-auto rounded-lg bg-[#D5DEEF]" />
+              </div>
+            </div>
+          ) : globalSync.isIdle ? (
             <div className="w-full">
               <div className="rounded-2xl border-2 border-[#628ECB]/20 bg-gradient-to-br from-[#F0F3FA] to-white p-10 text-center shadow-sm">
                 <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-[#628ECB]/10">

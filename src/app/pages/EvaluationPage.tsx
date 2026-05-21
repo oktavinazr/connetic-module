@@ -29,10 +29,6 @@ export function EvaluationPage() {
     if (!user) { navigate('/login'); return; }
     if (!lesson) { navigate('/dashboard'); return; }
     getLessonProgress(user.id, lessonId!).then((p) => {
-      if (p.completedStages.length < lesson.stages.length) {
-        navigate(`/lesson/${lessonId}`);
-        return;
-      }
       setProgress(p);
     });
     loadTestQuestions(`lesson_${lessonId}_posttest`).then(setQuestions);
