@@ -40,7 +40,7 @@ export async function getAdminStageSync(lessonId: string): Promise<AdminStageSyn
 
   const { data, error } = await supabase
     .from('admin_stage_sync')
-    .select('*')
+    .select('id,lesson_id,current_stage_index,stage_started_at,force_advance,force_advance_at,status,session_status,paused_at,total_paused_ms,added_minutes,updated_at')
     .eq('lesson_id', lessonId)
     .maybeSingle();
 

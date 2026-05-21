@@ -154,10 +154,10 @@ export function useGlobalStageSync(
     };
   }, [lessonId, applySync]);
 
-  // Initial load + polling (fallback — 10s; realtime handles instant sync)
+  // Initial load + polling (fallback — 60s; realtime handles instant sync)
   useEffect(() => {
     refresh();
-    const interval = setInterval(refresh, 10000);
+    const interval = setInterval(refresh, 60000);
     return () => clearInterval(interval);
   }, [refresh]);
 

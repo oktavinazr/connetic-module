@@ -63,6 +63,8 @@ export const lesson2Stages: Stage[] = [
         right: 'Nilai verifikasi yang dihitung dari seluruh isi segmen. Penerima menghitung ulang untuk mendeteksi kerusakan data selama perjalanan.',
       },
     ],
+    constructivismEssay2:
+      'Berdasarkan aktivitas memasangkan fungsi komponen TCP Header yang telah kamu selesaikan, jelaskan mengapa setiap komponen TCP Header tidak dapat saling menggantikan fungsi satu sama lain. Gunakan minimal dua komponen TCP Header sebagai contoh, sebutkan fungsinya secara spesifik, dan berikan argumen logis mengapa fungsi tersebut hanya bisa dijalankan oleh komponen tersebut dan tidak bisa diambil alih komponen lain.',
     conclusionPrompt: 'Berdasarkan eksplorasi animasi TCP Header dan aktivitas memasangkan fungsi komponen yang telah kamu lakukan, jelaskan bagaimana kamu mampu mengidentifikasi TCP Header beserta fungsinya pada protokol TCP. Jelaskan juga mengapa Sequence Number dan Acknowledgment Number harus bekerja berpasangan, serta apa yang terjadi jika Checksum mendeteksi kerusakan data. Tuliskan dengan tepat menggunakan kata-katamu sendiri.',
   },
 
@@ -160,7 +162,7 @@ export const lesson2Stages: Stage[] = [
       { id: 'fl5', text: 'Jika ada segmen hilang (timeout tanpa ACK), TCP mengirim ulang segmen tersebut. Setelah semua segmen lengkap, data disusun ulang sesuai Sequence Number menjadi data utuh.', correctOrder: 5, description: 'Data hilang dikirim ulang, lalu disusun ulang.', colorClass: 'pink' },
     ],
     inquiryReflection1:
-      'Berdasarkan urutan tahapan Sequence Number yang baru saja kamu susun, jelaskan mengapa Sequence Number sangat penting dalam memastikan data diterima secara berurutan! Apa yang akan terjadi jika TCP tidak memiliki mekanisme Sequence Number? Jelaskan argumenmu secara logis.',
+      'Berdasarkan urutan 5 tahapan TCP Sequence Number yang baru saja kamu susun, jelaskan: (1) mengapa setiap tahapan harus dilakukan dalam urutan tersebut dan apa yang terjadi jika salah satu tahap dilewati, serta (2) bagaimana Sequence Number dan ACK Number bekerja sama dalam memastikan data TCP tiba secara berurutan dan lengkap di sisi penerima. Tuliskan argumenmu secara logis dan runtut.',
     inquiryReflection2:
       'Setelah mengeksplorasi seluruh materi tentang TCP Sequence Number, jelaskan bagaimana mekanisme Sequence Number dan Acknowledgment Number bekerja sama dalam menjaga keandalan pengiriman data. Berikan contoh konkret dengan nilai Sequence Number tertentu untuk memperjelas penjelasanmu.',
     conclusionPrompt: 'Berdasarkan eksplorasi materi dan aktivitas penyusunan tahapan Sequence Number yang telah kamu lakukan, jelaskan bagaimana kamu mampu menguraikan mekanisme TCP Sequence Number dalam memastikan urutan pengiriman. Tuliskan secara runtut dengan kata-katamu sendiri.',

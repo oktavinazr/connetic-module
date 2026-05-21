@@ -126,7 +126,7 @@ export async function getCurrentSession(
 
   const { data, error } = await supabase
     .from('ctl_activity_sessions')
-    .select('*')
+    .select('user_id,lesson_id,stage_index,stage_type,status,progress_percent,latest_snapshot,final_answer,attempt_count,error_count,total_events,started_at,completed_at,updated_at')
     .eq('user_id', userId)
     .eq('lesson_id', lessonId)
     .eq('stage_index', stageIndex)

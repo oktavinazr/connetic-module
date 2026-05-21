@@ -18,7 +18,7 @@ export async function getStageTimers(lessonId: string): Promise<StageTimer[]> {
 
   const { data, error } = await supabase
     .from('stage_timers')
-    .select('*')
+    .select('id,lesson_id,stage_index,duration_minutes,updated_at')
     .eq('lesson_id', lessonId)
     .order('stage_index', { ascending: true });
 

@@ -1216,7 +1216,10 @@ function MatchingLinesActivity({
   const [matches, setMatches] = useState<Record<string, string>>(initialData?.matches || {});
   const [validated, setValidated] = useState(initialData?.validated || false);
   const [attempts, setAttempts] = useState(0);
-  const [showEssay, setShowEssay] = useState(false);
+  // Restore showEssay if matching was already completed (validated) on page reload
+  const [showEssay, setShowEssay] = useState(
+    () => !!(initialData?.showEssay || (initialData?.validated && !!essayPrompt))
+  );
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
 
   useEffect(() => {
@@ -1255,8 +1258,10 @@ function MatchingLinesActivity({
     const newA = await saveStageAttempt(user!.id, lessonId, stageIndex, ok, `stage_${stageIndex}_matching`);
     setAttempts(newA);
     setValidated(true);
-    onComplete(undefined, { matches, validated: true });
-    if (!skipEssay && (ok || newA >= 3)) setShowEssay(true);
+    // Show essay (Kemampuan Berargumen) once matching is terminal: correct OR all 3 attempts used
+    const willShowEssay = ok || newA >= 3;
+    if (willShowEssay) setShowEssay(true);
+    onComplete(undefined, { matches, validated: true, showEssay: willShowEssay });
   };
 
   const handleRetry = () => {
@@ -1606,9 +1611,26 @@ function MatchingLinesActivity({
         </div>
       )}
 
-      {/* ── Essay prompt ── */}
+      {/* ── Kemampuan Berargumen phase transition + Essay ── */}
       {showEssay && essayPrompt && (
-        <EssayBox prompt={essayPrompt} objectiveLabel="X.TCP.9" submitLabel="Simpan Argumen" headerLabel="Argumen Logis" onSubmit={(text) => onComplete(text)} />
+        <>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-[#D5DEEF]" />
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#395886] to-[#628ECB] shadow-sm">
+              <CheckCircle className="w-3.5 h-3.5 text-white" />
+              <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Kemampuan Berargumen</span>
+            </div>
+            <div className="flex-1 h-px bg-[#D5DEEF]" />
+          </div>
+          <EssayBox
+            prompt={essayPrompt}
+            objectiveLabel="X.TCP.9"
+            submitLabel="Simpan Argumen"
+            headerLabel="Argumen Logis"
+            minWords={20}
+            onSubmit={(text) => onComplete(text)}
+          />
+        </>
       )}
       {showEssay && !essayPrompt && (
         <button onClick={() => onComplete(undefined)} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-[#395886] to-[#628ECB] text-white font-bold text-sm hover:from-[#2E4A75] hover:to-[#4A79BA] shadow-md active:scale-[0.98] transition-all">
@@ -1837,22 +1859,23 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
       <div className="space-y-4">
         <MatchingLinesActivity
           pairs={constructivismMatching}
-          essayPrompt={lessonId === '2' ? undefined : constructivismEssay2}
+          essayPrompt={constructivismEssay2}
           lessonId={lessonId}
           stageIndex={stageIndex}
           initialData={analogyData}
-          skipEssay={lessonId === '2'}
           onComplete={(essayText, currentState) => {
+            // Save matching state on every validation attempt (for snapshot restore)
             if (currentState !== undefined) {
-              setAnalogyData({ ...currentState, validated: true });
-              // Lesson 2: go directly to conclusion after matching is validated
-              if (currentState.validated && lessonId === '2') {
-                void tracker.trackEvent('constructivism_matching_completed', {}, { progressPercent: 75 });
+              setAnalogyData({ ...currentState });
+            }
+            // Essay (Kemampuan Berargumen) submitted → advance to Penarikan Kesimpulan
+            if (essayText !== undefined) {
+              setEssay2Text(essayText);
+              void tracker.trackEvent('constructivism_matching_completed', { hasEssay: true }, { progressPercent: 75 });
+              if (lessonId === '2') {
                 setPhase('conclusion');
                 return;
               }
-            }
-            if (essayText !== undefined) {
               const finalAnswer = { essay1: essay1Text, essay2: essayText, summary: essayText };
               void tracker.complete(finalAnswer, { phase: 'analogy', finalAnswer });
               onComplete(finalAnswer);

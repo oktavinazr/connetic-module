@@ -153,11 +153,89 @@ function FlowDropSlot({ position, placedItem, validated, isCorrect, onDrop }: {
   );
 }
 
-function DragDropLayerSorter({ flowItems, lessonId, stageIndex, onComplete, onNext, initialData }: {
-  flowItems: FlowItem[]; lessonId: string; stageIndex: number; 
+// ── Sequence-themed Draggable Card (TCP Sequence Number activities) ───────────
+
+function SequenceDraggableCard({ item }: { item: FlowItem }) {
+  const [{ isDragging }, drag] = useDrag({
+    type: DRAG_LAYER,
+    item: { id: item.id },
+    collect: m => ({ isDragging: m.isDragging() }),
+  });
+  return (
+    <div
+      ref={drag as unknown as React.Ref<HTMLDivElement>}
+      className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 bg-white select-none transition-all group
+        ${isDragging
+          ? 'opacity-40 scale-95 cursor-grabbing border-[#628ECB]/60 shadow-lg'
+          : 'cursor-grab hover:scale-[1.015] hover:-translate-y-0.5 hover:shadow-md border-[#628ECB]/20 hover:border-[#628ECB]/50 shadow-sm'}`}
+    >
+      <GripVertical className="w-4 h-4 text-[#395886]/25 group-hover:text-[#628ECB]/40 shrink-0 transition-colors" />
+      <div className="w-px h-7 bg-gradient-to-b from-[#628ECB] to-[#395886]/20 rounded-full shrink-0" />
+      <span className="text-xs font-bold text-[#395886] leading-relaxed flex-1">{item.text}</span>
+    </div>
+  );
+}
+
+// ── Sequence-themed Drop Slot ─────────────────────────────────────────────────
+
+function SequenceDropSlot({ position, placedItem, validated, isCorrect, onDrop }: {
+  position: number; placedItem?: FlowItem; validated: boolean; isCorrect?: boolean;
+  onDrop: (pos: number, id: string) => void;
+}) {
+  const [{ isOver }, drop] = useDrop({
+    accept: DRAG_LAYER,
+    drop: (d: { id: string }) => onDrop(position, d.id),
+    collect: m => ({ isOver: m.isOver() }),
+  });
+  return (
+    <div ref={drop as unknown as React.Ref<HTMLDivElement>} className="flex items-stretch gap-3">
+      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-black transition-all duration-300
+        ${validated
+          ? isCorrect
+            ? 'bg-[#10B981] text-white shadow-md'
+            : 'bg-red-400 text-white shadow-md'
+          : placedItem
+            ? 'bg-[#395886] text-white shadow-sm'
+            : 'bg-white text-[#395886]/30 border-2 border-dashed border-[#D5DEEF]'}`}
+      >
+        {position}
+      </div>
+      <div className={`flex-1 rounded-xl border-2 transition-all duration-300 min-h-[52px]
+        ${isOver
+          ? 'border-[#628ECB] bg-[#EEF4FF] shadow-[0_0_20px_rgba(98,142,203,0.18)] ring-1 ring-[#628ECB]/20'
+          : placedItem
+            ? 'border-[#628ECB]/25 bg-white shadow-sm'
+            : 'border-dashed border-[#D5DEEF] bg-[#F8FAFF]'}`}
+      >
+        {placedItem ? (
+          <div className="flex items-center gap-3 px-4 py-3 h-full">
+            <div className="w-1 h-7 rounded-full bg-gradient-to-b from-[#628ECB] to-[#395886]/20 shrink-0" />
+            <span className="text-xs font-bold text-[#395886] leading-relaxed flex-1">{placedItem.text}</span>
+            {validated && (isCorrect
+              ? <CheckCircle className="w-4 h-4 text-[#10B981] shrink-0" />
+              : <XCircle className="w-4 h-4 text-red-400 shrink-0" />)}
+          </div>
+        ) : (
+          <div className={`flex items-center justify-center h-full text-[10px] font-bold uppercase tracking-wide py-3
+            ${isOver ? 'text-[#628ECB]' : 'text-[#395886]/20'}`}>
+            {isOver ? '— lepaskan di sini —' : `Langkah ke-${position}`}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── DragDropLayerSorter ───────────────────────────────────────────────────────
+
+function DragDropLayerSorter({ flowItems, lessonId, stageIndex, onComplete, onNext, initialData, title, instruction, theme }: {
+  flowItems: FlowItem[]; lessonId: string; stageIndex: number;
   onComplete: (currentSlots?: Record<number, string>) => void;
   onNext?: () => void;
   initialData?: { slots?: Record<number, string>; validated?: boolean };
+  title?: string;
+  instruction?: string;
+  theme?: 'sequence';
 }) {
   const user = getCurrentUser();
   const [slots, setSlots] = useState<Record<number, string>>(initialData?.slots || {});
@@ -222,55 +300,158 @@ function DragDropLayerSorter({ flowItems, lessonId, stageIndex, onComplete, onNe
 
   const isDone = validated && (isCorrectOrder || attempts >= 3);
 
+  const isSeq = theme === 'sequence';
+
   return (
     <div className="w-full space-y-4 animate-in fade-in duration-700">
-      <div className="bg-white rounded-2xl border-2 border-[#10B981]/25 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#10B981]/10 to-[#628ECB]/5 border-b border-[#10B981]/15">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#10B981]/15">
-            <Layers className="w-5 h-5 text-[#10B981]" />
+      {/* Header card */}
+      <div className={`bg-white rounded-2xl border-2 shadow-sm overflow-hidden ${isSeq ? 'border-[#628ECB]/25' : 'border-[#10B981]/25'}`}>
+        <div className={`flex items-center gap-3 px-5 py-3 border-b ${isSeq ? 'bg-[#628ECB]/5 border-[#628ECB]/10' : 'bg-gradient-to-r from-[#10B981]/10 to-[#628ECB]/5 border-[#10B981]/15'}`}>
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${isSeq ? 'bg-[#628ECB]/10' : 'bg-[#10B981]/15'}`}>
+            <Layers className={`w-5 h-5 ${isSeq ? 'text-[#628ECB]' : 'text-[#10B981]'}`} />
           </div>
           <div className="flex-1 text-left">
-            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#10B981]">Aktivitas Keruntutan Berpikir (Consistency of Thinking)</p>
-            <h3 className="text-sm font-bold text-[#395886]">Susun Urutan Lapisan TCP/IP</h3>
+            <p className={`text-[9px] font-black uppercase tracking-[0.2em] ${isSeq ? 'text-[#628ECB]' : 'text-[#10B981]'}`}>
+              Aktivitas Keruntutan Berpikir (Consistency of Thinking)
+            </p>
+            <h3 className="text-sm font-bold text-[#395886]">{title ?? 'Susun Urutan Lapisan TCP/IP'}</h3>
           </div>
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold
-            ${attempts >= 3 ? 'border-red-200 bg-red-50 text-red-500' : 'border-[#10B981]/20 bg-white text-[#10B981]'}`}>
+            ${attempts >= 3 ? 'border-red-200 bg-red-50 text-red-500' : isSeq ? 'border-[#628ECB]/20 bg-white text-[#628ECB]' : 'border-[#10B981]/20 bg-white text-[#10B981]'}`}>
             <AlertCircle className="w-3 h-3" />
             {attempts >= 3 ? 'Habis' : `${3 - attempts} percobaan`}
           </div>
         </div>
       </div>
 
+      {/* Main content card */}
       <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-5">
-        {unplacedItems.length > 0 && (
-          <div className="mb-6 p-4 bg-[#F8FAFF] rounded-2xl border-2 border-dashed border-[#D5DEEF]">
-            <div className="flex flex-wrap gap-2.5">
-              {unplacedItems.map(it => <DraggableFlowCard key={it.id} item={it} />)}
-            </div>
+        {/* Instruction */}
+        {instruction && (
+          <div className={`mb-4 p-3 rounded-xl border flex items-start gap-2 ${isSeq ? 'bg-[#F0F6FF] border-[#628ECB]/20' : 'bg-[#EEF4FF] border-[#628ECB]/20'}`}>
+            <Info className="w-4 h-4 text-[#628ECB] shrink-0 mt-0.5" />
+            <p className="text-xs font-bold text-[#395886] leading-relaxed">{instruction}</p>
           </div>
         )}
 
-        <div className="space-y-1.5 mb-6">
+        {/* Sequence progress flow (only for sequence theme) */}
+        {isSeq && (
+          <div className="flex items-center justify-center gap-1.5 mb-5 px-4 py-3 bg-[#F8FAFF] rounded-xl border border-[#D5DEEF]/70">
+            <span className="text-[9px] font-black uppercase tracking-widest text-[#395886]/30 mr-1">Urutan:</span>
+            {flowItems.map((_, i) => {
+              const pos = i + 1;
+              const isFilled = !!slots[pos];
+              const isNextFilled = !!slots[pos + 1];
+              return (
+                <React.Fragment key={pos}>
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black border-2 transition-all duration-300
+                    ${isFilled ? 'bg-[#395886] text-white border-[#395886] shadow-sm' : 'bg-white text-[#628ECB]/30 border-dashed border-[#D5DEEF]'}`}>
+                    {pos}
+                  </div>
+                  {i < flowItems.length - 1 && (
+                    <span className={`text-xs font-bold transition-colors px-0.5 ${isFilled && isNextFilled ? 'text-[#628ECB]' : 'text-[#D5DEEF]'}`}>→</span>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Unplaced cards pool */}
+        {unplacedItems.length > 0 && (
+          isSeq ? (
+            <div className="mb-5 p-4 bg-[#F0F4FA] rounded-xl border-2 border-dashed border-[#628ECB]/20">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#628ECB]/50 mb-3">
+                Kartu tersedia — seret ke urutan yang benar
+              </p>
+              <div className="flex flex-col gap-2">
+                {unplacedItems.map(it => <SequenceDraggableCard key={it.id} item={it} />)}
+              </div>
+            </div>
+          ) : (
+            <div className="mb-6 p-4 bg-[#F8FAFF] rounded-2xl border-2 border-dashed border-[#D5DEEF]">
+              <div className="flex flex-wrap gap-2.5">
+                {unplacedItems.map(it => <DraggableFlowCard key={it.id} item={it} />)}
+              </div>
+            </div>
+          )
+        )}
+
+        {/* Drop slots */}
+        <div className="space-y-2 mb-6">
           {flowItems.map((item, idx) => {
             const pos = idx + 1;
             const placedId = slots[pos];
             const placedItem = flowItems.find(f => f.id === placedId);
             const correct = validated && placedItem?.correctOrder === pos;
-            return <FlowDropSlot key={pos} position={pos} placedItem={placedItem} validated={validated} isCorrect={correct} onDrop={handleDrop} />;
+            return isSeq
+              ? <SequenceDropSlot key={pos} position={pos} placedItem={placedItem} validated={validated} isCorrect={correct} onDrop={handleDrop} />
+              : <FlowDropSlot key={pos} position={pos} placedItem={placedItem} validated={validated} isCorrect={correct} onDrop={handleDrop} />;
           })}
         </div>
 
+        {/* Action buttons */}
         {!validated ? (
-          <button onClick={handleValidate} disabled={!allPlaced}
-            className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${allPlaced ? 'bg-[#10B981] text-white hover:bg-[#059669] shadow-lg shadow-green-200' : 'bg-[#EEF2FF] text-[#395886]/30 cursor-not-allowed'}`}>
+          <button
+            onClick={handleValidate}
+            disabled={!allPlaced}
+            className={`w-full py-3 rounded-xl font-bold text-sm transition-all
+              ${allPlaced
+                ? isSeq
+                  ? 'bg-[#395886] text-white hover:bg-[#2d4a72] shadow-lg shadow-blue-200/50'
+                  : 'bg-[#10B981] text-white hover:bg-[#059669] shadow-lg shadow-green-200'
+                : 'bg-[#EEF2FF] text-[#395886]/30 cursor-not-allowed'}`}
+          >
             Periksa Susunan
           </button>
         ) : isDone ? (
-          <button onClick={onNext || (() => onComplete(slots))} className="w-full py-3 rounded-xl bg-[#628ECB] text-white font-black text-sm hover:bg-[#395886] shadow-lg transition-all active:scale-95">Submit & Lanjut <ChevronRight className="w-4 h-4 ml-1 inline" /></button>
+          <button
+            onClick={onNext || (() => onComplete(slots))}
+            className="w-full py-3 rounded-xl bg-[#628ECB] text-white font-black text-sm hover:bg-[#395886] shadow-lg transition-all active:scale-95"
+          >
+            Lanjut ke Argumen Logis <ChevronRight className="w-4 h-4 ml-1 inline" />
+          </button>
         ) : (
-           <button onClick={handleRetry} className="w-full py-3 rounded-xl bg-red-50 text-red-600 font-bold text-sm border-2 border-red-200 flex items-center justify-center gap-2">
-             <RotateCcw className="w-4 h-4" /> Perbaiki yang Salah
-           </button>
+          <button
+            onClick={handleRetry}
+            className="w-full py-3 rounded-xl bg-red-50 text-red-600 font-bold text-sm border-2 border-red-200 flex items-center justify-center gap-2"
+          >
+            <RotateCcw className="w-4 h-4" /> Perbaiki yang Salah ({3 - attempts} sisa)
+          </button>
+        )}
+
+        {/* Correct answer reveal — sequence theme, attempts exhausted */}
+        {isSeq && validated && !isCorrectOrder && attempts >= 3 && (
+          <div className="mt-5 space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="p-5 rounded-2xl bg-amber-50 border-2 border-amber-200">
+              <div className="flex items-center gap-2 mb-4">
+                <Lightbulb className="w-4 h-4 text-amber-500 shrink-0" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-amber-700">Urutan yang Benar</span>
+              </div>
+              <div className="space-y-2">
+                {[...flowItems].sort((a, b) => a.correctOrder - b.correctOrder).map(item => (
+                  <div key={item.id} className="flex items-start gap-3 bg-white p-3 rounded-xl border border-amber-100">
+                    <div className="w-6 h-6 rounded-lg bg-[#395886] text-white text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">
+                      {item.correctOrder}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-[#395886] leading-relaxed">{item.text}</p>
+                      {item.description && (
+                        <p className="text-[10px] text-[#628ECB]/60 mt-1 italic">{item.description}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="p-4 rounded-xl bg-[#EEF4FF] border border-[#628ECB]/20 flex items-start gap-3">
+              <Info className="w-4 h-4 text-[#628ECB] shrink-0 mt-0.5" />
+              <p className="text-xs text-[#395886]/80 leading-relaxed">
+                <span className="font-black text-[#395886]">Penjelasan singkat: </span>
+                TCP Sequence Number bekerja secara berurutan: ISN ditetapkan saat handshake, setiap byte data diberi nomor urut, segmen dikirim dan diperiksa penerima, konfirmasi dikirim via ACK Number, lalu data yang hilang dikirim ulang dan disusun kembali. Tanpa urutan ini, penerima tidak dapat mengetahui apakah data sudah lengkap atau dalam urutan yang benar.
+              </p>
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -279,7 +460,7 @@ function DragDropLayerSorter({ flowItems, lessonId, stageIndex, onComplete, onNe
 
 // -- Explore Phase ------------------------------------------------------------
 
-function ExplorePhase({ explorationSections, onNext, onBackToMaterial }: { explorationSections: ExplorationSection[]; onNext: () => void; onBackToMaterial?: () => void }) {
+function ExplorePhase({ explorationSections, onNext, onBackToMaterial, subtitle, useGenericTitles }: { explorationSections: ExplorationSection[]; onNext: () => void; onBackToMaterial?: () => void; subtitle?: string; useGenericTitles?: boolean }) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [openedIds, setOpenedIds] = useState<Set<string>>(new Set());
   const handleToggle = (id: string) => {
@@ -306,7 +487,7 @@ function ExplorePhase({ explorationSections, onNext, onBackToMaterial }: { explo
             </div>
             <div>
               <h3 className="text-2xl font-black text-[#395886] tracking-tight uppercase">Eksplorasi Konsep</h3>
-              <p className="text-xs font-bold text-[#395886]/40 uppercase tracking-widest mt-1">Pelajari Alur Pengiriman Data Melalui 5 Lapisan TCP/IP</p>
+              <p className="text-xs font-bold text-[#395886]/40 uppercase tracking-widest mt-1">{subtitle ?? 'Pelajari Alur Pengiriman Data Melalui 5 Lapisan TCP/IP'}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 px-5 py-3 bg-[#F8FAFD] rounded-2xl border-2 border-[#D5DEEF]/50">
@@ -341,7 +522,7 @@ function ExplorePhase({ explorationSections, onNext, onBackToMaterial }: { explo
                 <span className={`font-black text-[10px] uppercase tracking-widest text-center leading-tight transition-colors duration-500
                   ${isActive ? 'text-white' : 'text-[#395886]/60 group-hover:text-[#628ECB]'}
                 `}>
-                  {config.title}
+                  {useGenericTitles ? `Konsep ${idx + 1}` : config.title}
                 </span>
                 {isOpened && !isActive && (
                   <div className="absolute top-3 right-3 animate-in zoom-in duration-300">
@@ -371,7 +552,7 @@ function ExplorePhase({ explorationSections, onNext, onBackToMaterial }: { explo
                           {idx + 1}
                         </div>
                         <h4 className="text-2xl font-black text-[#395886] tracking-tight">
-                          {section?.title} Layer
+                          {useGenericTitles ? section?.title : `${section?.title} Layer`}
                         </h4>
                       </div>
                       <p className="text-[15px] text-[#395886]/80 leading-relaxed font-medium">
@@ -1240,7 +1421,7 @@ function InquiryStageGeneric(props: InquiryStageProps) {
     stageType: 'inquiry',
   });
 
-  const [phase, setPhase] = useState<'material' | 'explore' | 'analyzer' | 'activities'>('material');
+  const [phase, setPhase] = useState<'material' | 'explore' | 'analyzer' | 'activities' | 'conclusion'>('material');
   const [subPhase, setSubPhase] = useState<'flow' | 'group' | 'matching'>('flow');
   const [flowData, setFlowData] = useState<any>(null);
   const [groupData, setGroupData] = useState<any>(null);
@@ -1248,6 +1429,7 @@ function InquiryStageGeneric(props: InquiryStageProps) {
   const [activityStep, setActivityStep] = useState(1);
   const [reflection1, setReflection1] = useState('');
   const [reflection2, setReflection2] = useState('');
+  const [conclusionText, setConclusionText] = useState('');
   const [isRestored, setIsRestored] = useState(false);
   const [pendingNextSubPhase, setPendingNextSubPhase] = useState<'group' | 'matching' | null>(null);
 
@@ -1262,6 +1444,7 @@ function InquiryStageGeneric(props: InquiryStageProps) {
       if (snap.activityStep) setActivityStep(snap.activityStep);
       if (snap.reflection1) setReflection1(snap.reflection1);
       if (snap.reflection2) setReflection2(snap.reflection2);
+      if (snap.conclusionText) setConclusionText(snap.conclusionText);
       if (snap.pendingNextSubPhase) setPendingNextSubPhase(snap.pendingNextSubPhase);
       setIsRestored(true);
     } else if (!tracker.isLoading) {
@@ -1271,11 +1454,11 @@ function InquiryStageGeneric(props: InquiryStageProps) {
 
   useEffect(() => {
     if (!isRestored) return;
-    const progressMap = { material: 10, explore: 30, analyzer: 45, activities: 65 } as const;
+    const progressMap = { material: 10, explore: 30, analyzer: 45, activities: 65, conclusion: 90 } as const;
     void tracker.saveSnapshot(
       {
         phase, subPhase, flowData, groupData, matchingData,
-        activityStep, reflection1, reflection2,
+        activityStep, reflection1, reflection2, conclusionText,
         pendingNextSubPhase,
         hasFlow: !!props.flowItems?.length,
         hasGroup: !!props.groupItems?.length,
@@ -1285,6 +1468,16 @@ function InquiryStageGeneric(props: InquiryStageProps) {
     );
   }, [activityStep, flowData, groupData, isRestored, matchingData, pendingNextSubPhase, phase, props.flowItems?.length, props.groupItems?.length, props.matchingPairs?.length, reflection1, reflection2, subPhase, tracker]);
 
+  // Report tracker phase to parent for LogicalThinkingTracker
+  useEffect(() => {
+    if (!isRestored) return;
+    let tp: 'consistency' | 'arguing' | 'conclusion';
+    if (phase === 'conclusion') tp = 'conclusion';
+    else if (phase === 'activities' && activityStep >= 2) tp = 'arguing';
+    else tp = 'consistency';
+    onTrackerPhase?.(tp);
+  }, [phase, activityStep, isRestored, onTrackerPhase]);
+
   if (tracker.isLoading || !isRestored) return (
     <div className="flex flex-col items-center justify-center py-20 space-y-4">
       <div className="w-12 h-12 border-4 border-[#10B981] border-t-transparent rounded-full animate-spin" />
@@ -1293,15 +1486,24 @@ function InquiryStageGeneric(props: InquiryStageProps) {
   );
 
   if (phase === 'material') return <MaterialViewer material={props.material} onNext={() => setPhase('explore')} />;
-  if (phase === 'explore') return <ExplorePhase explorationSections={props.explorationSections ?? []} onNext={() => {
-    if (props.lessonId === '3') setPhase('analyzer');
-    else {
-      setPhase('activities');
-      if (props.flowItems) setSubPhase('flow');
-      else if (props.groups) setSubPhase('group');
-      else if (props.matchingPairs) setSubPhase('matching');
-    }
-  }} />;
+  if (phase === 'explore') return (
+    <ExplorePhase
+      explorationSections={props.explorationSections ?? []}
+      useGenericTitles
+      subtitle={
+        props.lessonId === '2' ? 'Pelajari Mekanisme TCP Sequence Number secara Mendalam' : undefined
+      }
+      onNext={() => {
+        if (props.lessonId === '3') setPhase('analyzer');
+        else {
+          setPhase('activities');
+          if (props.flowItems) setSubPhase('flow');
+          else if (props.groups) setSubPhase('group');
+          else if (props.matchingPairs) setSubPhase('matching');
+        }
+      }}
+    />
+  );
 
   if (phase === 'analyzer' && props.lessonId === '3') {
     return (
@@ -1333,6 +1535,9 @@ function InquiryStageGeneric(props: InquiryStageProps) {
               flowItems={props.flowItems}
               lessonId={props.lessonId}
               stageIndex={props.stageIndex}
+              title={props.lessonId === '2' ? 'Susun Tahapan TCP Sequence Number' : undefined}
+              instruction={props.flowInstruction}
+              theme={props.lessonId === '2' ? 'sequence' : undefined}
               initialData={flowData}
               onComplete={(slots) => setFlowData({ slots })}
               onNext={() => {
@@ -1342,9 +1547,10 @@ function InquiryStageGeneric(props: InquiryStageProps) {
             />
             {activityStep >= 2 && props.inquiryReflection1 && (
               <InquiryEssayBox
-                objectiveLabel="Refleksi Aktivitas 1"
+                objectiveLabel={props.lessonId === '2' ? 'X.TCP.10' : 'Refleksi Aktivitas 1'}
+                headerLabel={props.lessonId === '2' ? 'Argumen Logis' : undefined}
                 prompt={props.inquiryReflection1}
-                submitLabel="Submit Refleksi Aktivitas 1"
+                submitLabel={props.lessonId === '2' ? 'Simpan Argumen' : 'Submit Refleksi Aktivitas 1'}
                 minWords={20}
                 defaultValue={reflection1}
                 disabled={!!reflection1}
@@ -1352,7 +1558,10 @@ function InquiryStageGeneric(props: InquiryStageProps) {
                   setReflection1(text);
                   if (props.groups && props.groupItems) setPendingNextSubPhase('group');
                   else if (props.matchingPairs) setPendingNextSubPhase('matching');
-                  else {
+                  else if (props.conclusionPrompt) {
+                    void tracker.trackEvent('inquiry_arguing_completed', {}, { progressPercent: 80 });
+                    setPhase('conclusion');
+                  } else {
                     const finalAnswer = { flowData, reflection1: text, summary: text };
                     void tracker.complete(finalAnswer, { phase: 'done', finalAnswer });
                     onComplete(finalAnswer);
@@ -1426,6 +1635,38 @@ function InquiryStageGeneric(props: InquiryStageProps) {
               />
             )}
           </>
+        )}
+      </div>
+    );
+  }
+
+  if (phase === 'conclusion' && props.conclusionPrompt) {
+    const atpBehaviorMap: Record<string, string> = {
+      '2': 'mampu menguraikan mekanisme TCP Sequence Number dalam memastikan urutan pengiriman',
+    };
+    const objectiveCodeMap: Record<string, string> = {
+      '2': 'X.TCP.10',
+    };
+    return (
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+        <ATPConclusionBox
+          atpBehavior={atpBehaviorMap[props.lessonId] ?? props.conclusionPrompt}
+          objectiveCode={objectiveCodeMap[props.lessonId] ?? ''}
+          stageType="inquiry"
+          defaultValue={conclusionText}
+          disabled={!!conclusionText}
+          onSubmit={(text) => {
+            setConclusionText(text);
+            const finalAnswer = { flowData, reflection1, reflection2, conclusion: text, summary: text };
+            void tracker.complete(finalAnswer, { phase: 'conclusion', finalAnswer });
+            onComplete(finalAnswer);
+          }}
+        />
+        {conclusionText && (
+          <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20 animate-in fade-in zoom-in-95 duration-300">
+            <CheckCircle className="w-5 h-5 text-[#10B981]" />
+            <span className="text-sm font-black text-[#065F46]">Kesimpulan tersimpan — Tahap Inquiry selesai!</span>
+          </div>
         )}
       </div>
     );

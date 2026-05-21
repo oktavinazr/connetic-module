@@ -166,7 +166,7 @@ export const getGlobalTestProgress = async (userId: string): Promise<GlobalTestP
 
   const { data, error } = await supabase
     .from('global_test_progress')
-    .select('*')
+    .select('user_id,global_pretest_completed,global_pretest_score,global_pretest_answers,global_posttest_completed,global_posttest_score,global_posttest_answers')
     .eq('user_id', userId)
     .maybeSingle();
 
@@ -233,7 +233,7 @@ export const getLessonProgress = async (userId: string, lessonId: string): Promi
 
   const { data, error } = await supabase
     .from('lesson_progress')
-    .select('*')
+    .select('user_id,lesson_id,pretest_completed,pretest_score,completed_stages,posttest_completed,posttest_score,answers,stage_attempts,stage_success')
     .eq('user_id', userId)
     .eq('lesson_id', lessonId)
     .maybeSingle();
