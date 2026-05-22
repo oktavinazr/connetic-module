@@ -18,7 +18,7 @@ import {
 import { supabase } from '../../utils/supabase';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
 import { TcpIpInteractive } from '../ui/TcpIpInteractive';
-import { StepTracker, ActivityCard, InstructionBox, EssayBox, anim, SectionDivider } from './StageKit';
+import { StepTracker, ActivityCard, InstructionBox, EssayBox, ATPConclusionBox, anim, SectionDivider } from './StageKit';
 
 // -- Types ----------------------------------------------------------------------
 
@@ -39,6 +39,7 @@ interface CaseStudy {
   question: string;
   options: CaseStudyOption[];
   correctFeedback?: string;
+  argumentPrompt?: string;
 }
 
 interface TimelineFlowchartData {
@@ -59,6 +60,8 @@ interface LearningCommunityStageProps {
   encapsulationCase?: CaseStudy;
   decapsulationCase?: CaseStudy;
   timelineFlowchart?: TimelineFlowchartData;
+  onTrackerPhase?: (phase: 'consistency' | 'arguing' | 'conclusion') => void;
+  atpBehavior?: string;
 }
 
 // -- Shared UI Components -------------------------------------------------------
@@ -850,7 +853,7 @@ function CasePhase({ study, isSubmitted, submitError, onNext }: { study: CaseStu
                 onChange={e => !isSubmitted && setArgument(e.target.value)}
                 rows={3}
                 className={`w-full p-4 border-2 border-[#D5DEEF] rounded-xl text-sm text-[#395886] focus:border-[#F59E0B] focus:ring-4 focus:ring-[#F59E0B]/5 outline-none transition-all resize-none ${isSubmitted ? 'bg-[#F1F5F9] border-dashed cursor-not-allowed' : 'bg-white'}`}
-                placeholder="Jelaskan alasan teknismu di sini..."
+                placeholder={study.argumentPrompt ?? 'Jelaskan alasan teknismu di sini...'}
               />
               <div className="flex justify-between items-center">
                 {isSubmitted ? (
@@ -1368,16 +1371,16 @@ function OverallGroupResult({ lessonId, module1Data, module2Data, groupName, onN
 
 // -- Main LearningCommunityStage ------------------------------------------------
 
-export function LearningCommunityStage({ 
+export function LearningCommunityStage({
   lessonId, stageIndex, moduleId, groupName, onComplete, isCompleted,
-  layers5 = [], encapsulationCase, decapsulationCase, timelineFlowchart
+  layers5 = [], encapsulationCase, decapsulationCase, timelineFlowchart, onTrackerPhase, atpBehavior
 }: LearningCommunityStageProps) {
   const tracker = useActivityTracker({
     lessonId,
     stageIndex,
     stageType: 'learning-community',
   });
-  
+
   const isLesson2WithFlowchart = lessonId === '2' && !!timelineFlowchart;
   const [subStage, setSubPhase] = useState<'simulasi' | 'keruntutan_berpikir' | 'x_tcp_6' | 'x_tcp_7' | 'group_result' | 'individual_summary'>(isCompleted ? 'individual_summary' : 'simulasi');
   const [understood, setUnderstood] = useState(false);
@@ -1401,6 +1404,13 @@ export function LearningCommunityStage({
       { progressPercent: progressMap[subStage] || 10 },
     );
   }, [subStage, understood, flowchartCompleted, module1Data, module2Data, tracker]);
+
+  useEffect(() => {
+    let phase: 'consistency' | 'arguing' | 'conclusion' = 'consistency';
+    if (subStage === 'x_tcp_6' || subStage === 'x_tcp_7' || subStage === 'group_result') phase = 'arguing';
+    else if (subStage === 'individual_summary') phase = 'conclusion';
+    onTrackerPhase?.(phase);
+  }, [subStage, onTrackerPhase]);
 
   if (!groupName) return (
     <div className="w-full py-12 text-center bg-white rounded-lg border-2 border-dashed border-[#D5DEEF] shadow-inner">
@@ -1487,25 +1497,27 @@ export function LearningCommunityStage({
   );
 
   if (subStage === 'x_tcp_6') return (
-    <ModuleFlow
-      key="x_tcp_6"
-      lessonId={lessonId}
-      moduleId={encapsulationCase?.id || 'X.TCP.6'}
-      groupName={groupName}
-      title={isLesson2WithFlowchart ? (encapsulationCase?.title || 'Studi Kasus Three-Way Handshake') : (encapsulationCase?.title || 'Aktivitas Enkapsulasi')}
-      concept={encapsulationCase?.concept || 'Enkapsulasi adalah proses pembungkusan data.'}
-      layers={layers5}
-      study={encapsulationCase!}
-      isEncapsulation={true}
-      onModuleDone={d => {
-        setModule1Data(d);
-        if (isLesson2WithFlowchart) {
-          setSubPhase('individual_summary');
-        } else {
-          setSubPhase('x_tcp_7');
-        }
-      }}
-    />
+    <div className={`w-full space-y-6 ${anim.fadeUp}`}>
+      <ModuleFlow
+        key="x_tcp_6"
+        lessonId={lessonId}
+        moduleId={encapsulationCase?.id || 'X.TCP.6'}
+        groupName={groupName}
+        title={isLesson2WithFlowchart ? (encapsulationCase?.title || 'Studi Kasus Three-Way Handshake') : (encapsulationCase?.title || 'Aktivitas Enkapsulasi')}
+        concept={encapsulationCase?.concept || 'Enkapsulasi adalah proses pembungkusan data.'}
+        layers={layers5}
+        study={encapsulationCase!}
+        isEncapsulation={true}
+        onModuleDone={d => {
+          setModule1Data(d);
+          if (isLesson2WithFlowchart) {
+            setSubPhase('individual_summary');
+          } else {
+            setSubPhase('x_tcp_7');
+          }
+        }}
+      />
+    </div>
   );
 
   if (subStage === 'x_tcp_7') return (
@@ -1534,42 +1546,24 @@ export function LearningCommunityStage({
   );
 
   if (subStage === 'individual_summary') return (
-    <div className={`space-y-8 ${anim.fadeUp} w-full`}>
-      <ActivityCard
-        icon={<Award className="w-5 h-5 text-[#10B981]" />}
-        label={isLesson2WithFlowchart ? 'Tahap 3 — Penarikan Kesimpulan' : 'Langkah Akhir'}
-        title={isLesson2WithFlowchart ? 'Refleksi Three-Way Handshake TCP' : 'Kesimpulan Individu'}
-        headerBg="bg-[#10B981]/5"
-        headerBorder="border-[#10B981]/20"
-        iconBg="bg-[#10B981]/10"
-        labelCls="text-[#10B981]"
-      >
-        <div className="space-y-6">
-          <InstructionBox accent="text-[#10B981]">
-            {isLesson2WithFlowchart
-              ? 'Simpulkan kembali proses Three-Way Handshake TCP berdasarkan hasil aktivitas Timeline Flowchart dan diskusi kelompok.'
-              : 'Selesaikan tahap Learning Community dengan menuliskan pemahaman pribadimu berdasarkan hasil kolaborasi kelompok.'}
-          </InstructionBox>
-
-          <EssayBox
-            objectiveLabel={moduleId}
-            prompt={
-              isLesson2WithFlowchart
-                ? 'Berdasarkan aktivitas penyusunan Timeline Flowchart dan diskusi kelompok tentang koneksi tertunda ke server sekolah, simpulkan: (1) apa yang terjadi pada setiap langkah Three-Way Handshake (SYN → SYN-ACK → ACK) beserta nilai Sequence Number dan ACK Number-nya, serta (2) mengapa urutan ini tidak dapat diubah atau dilewati. Tuliskan secara logis dengan kata-katamu sendiri.'
-                : isLesson2
-                  ? 'Berdasarkan hasil diskusi kelompokmu tentang TCP Three-Way Handshake dan Flow Control, simpulkan: (1) Mengapa Three-Way Handshake diperlukan sebelum data dikirim? (2) Apa hubungan antara Window Size dan kemampuan server dalam menerima data?'
-                  : 'Berdasarkan hasil diskusi kelompokmu, simpulkan mengapa pemahaman alur enkapsulasi dan dekapsulasi sangat penting bagi seorang teknisi jaringan dalam melakukan troubleshooting?'
-            }
-            submitLabel="Submit Aktivitas"
-            onSubmit={essay => {
-              const finalAnswer = { module1Data, module2Data, flowchartCompleted, finalConclusion: essay };
-              void tracker.complete(finalAnswer, { finalAnswer });
-              onComplete(finalAnswer);
-            }}
-            minChars={50}
-          />
-        </div>
-      </ActivityCard>
+    <div className={`w-full space-y-6 ${anim.fadeUp}`}>
+      <ATPConclusionBox
+        atpBehavior={
+          atpBehavior ||
+          (isLesson2WithFlowchart
+            ? 'mampu menerapkan proses TCP Three-Way Handshake untuk menentukan nilai SYN, SYN-ACK, dan ACK pada setiap langkah pembentukan koneksi'
+            : isLesson2
+              ? 'mampu menganalisis mekanisme TCP Three-Way Handshake dan Flow Control dalam proses komunikasi jaringan'
+              : 'mampu menganalisis proses enkapsulasi dan dekapsulasi data dalam komunikasi jaringan komputer')
+        }
+        objectiveCode={moduleId}
+        stageType="learning-community"
+        onSubmit={essay => {
+          const finalAnswer = { module1Data, module2Data, flowchartCompleted, finalConclusion: essay };
+          void tracker.complete(finalAnswer, { finalAnswer });
+          onComplete(finalAnswer);
+        }}
+      />
     </div>
   );
 

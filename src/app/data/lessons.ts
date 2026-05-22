@@ -85,8 +85,9 @@ export interface Stage {
     concept?: string;
     scenario: string;
     question: string;
-    options: Array<{ id: string; text: string; description?: string; logic?: string }>;
+    options: Array<{ id: string; text: string; description?: string; logic?: string; isCorrect?: boolean }>;
     peerArguments?: Array<{ name: string; text: string; votes: number; isUser?: boolean; choiceText?: string }>;
+    argumentPrompt?: string;
   };
   decapsulationCase?: {
     id: string;
@@ -94,8 +95,9 @@ export interface Stage {
     concept?: string;
     scenario: string;
     question: string;
-    options: Array<{ id: string; text: string; description?: string; logic?: string }>;
+    options: Array<{ id: string; text: string; description?: string; logic?: string; isCorrect?: boolean }>;
     peerArguments?: Array<{ name: string; text: string; votes: number; isUser?: boolean; choiceText?: string }>;
+    argumentPrompt?: string;
   };
   timelineFlowchart?: {
     instruction: string;

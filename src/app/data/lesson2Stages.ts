@@ -312,28 +312,33 @@ export const lesson2Stages: Stage[] = [
       id: 'X.TCP.12.A',
       title: 'Studi Kasus: Koneksi Tertunda ke Server Sekolah',
       concept:
-        'Three-Way Handshake adalah proses 3 langkah pembentukan koneksi TCP: Client mengirim SYN, Server membalas SYN-ACK, dan Client mengonfirmasi dengan ACK. Proses ini memastikan kedua pihak siap bertukar data sebelum pengiriman dimulai.',
+        'Three-Way Handshake adalah proses 3 langkah pembentukan koneksi TCP: Client mengirim SYN, Server membalas SYN-ACK, dan Client mengonfirmasi dengan ACK. Nilai ACK Number selalu = Sequence Number pihak pengirim + 1, menandakan bahwa byte tersebut telah diterima.',
       scenario:
-        'Sebuah laptop (Client) ingin terhubung ke server sekolah untuk membuka website. Laptop tersebut telah mengirimkan paket SYN ke server. Namun, server mengalami keterlambatan respon selama beberapa detik.',
+        'Sebuah laptop (Client) ingin terhubung ke server sekolah untuk membuka website. Pada Langkah 1, Laptop mengirimkan paket SYN dengan nilai SYN = 1 dan ACK = 0 serta Sequence Number (Seq) = 100 ke server. Namun, server sekolah mengalami keterlambatan respons selama beberapa detik karena lalu lintas jaringan yang padat, sebelum akhirnya siap menerima koneksi dan menentukan Sequence Number awalnya sendiri sebesar 500.',
       question:
-        'Berdasarkan proses Three-Way Handshake, jelaskan apa yang terjadi selanjutnya pada SYN-ACK dan ACK hingga koneksi berhasil terbentuk.',
+        'Berdasarkan proses TCP Three-Way Handshake, tentukan nilai kontrol dan nomor urut yang tepat pada langkah selanjutnya hingga koneksi berhasil terbentuk.',
       options: [
         {
           id: 'A',
-          text: 'Server tetap akan membalas dengan SYN-ACK setelah siap merespons, kemudian Client mengirim ACK final. Koneksi tetap bisa terbentuk meskipun ada keterlambatan — TCP memiliki mekanisme timeout dan retransmission yang menjamin keandalan.',
-          logic: 'Tepat. Keterlambatan server tidak membatalkan koneksi. TCP memiliki mekanisme retransmission: jika SYN tidak mendapat balasan dalam waktu tertentu (timeout), Client akan mengirim ulang SYN. Begitu server siap, ia membalas SYN-ACK, dan Client menyelesaikan dengan ACK. Koneksi akhirnya ESTABLISHED.',
+          isCorrect: true,
+          text: 'Langkah 2 (Server): SYN=1, ACK=1, Seq=500, Ack=101. | Langkah 3 (Client): ACK=1, Seq=101, Ack=501. → Koneksi berhasil terbentuk; handshake berjalan normal meski server sempat terlambat merespons.',
+          logic: 'Tepat. Ack=101 pada Langkah 2 adalah Seq Client (100) + 1, menandakan server telah menerima byte ke-100. Ack=501 pada Langkah 3 adalah Seq Server (500) + 1. Keterlambatan server tidak membatalkan koneksi — TCP menunggu hingga server siap, lalu melanjutkan handshake secara normal.',
         },
         {
           id: 'B',
-          text: 'Koneksi langsung gagal total karena server tidak merespons dalam waktu yang diharapkan, dan Client harus memulai ulang seluruh proses dari awal secara manual.',
-          logic: 'Ini tidak tepat. TCP dirancang untuk menangani keterlambatan jaringan. Client tidak langsung menyerah — ia akan mencoba mengirim ulang SYN beberapa kali sebelum menyatakan koneksi gagal. Prosesnya otomatis, bukan manual.',
+          isCorrect: false,
+          text: 'Langkah 2 (Server): SYN=1, ACK=1, Seq=500, Ack=100. | Langkah 3 (Client): ACK=1, Seq=100, Ack=500. → Nilai acknowledgment menggunakan nomor sequence yang sama tanpa penambahan.',
+          logic: 'Tidak tepat. Nilai Ack harus = Seq pengirim + 1, bukan nilai yang sama. Ack=100 berarti server meminta ulang byte ke-100 yang sebenarnya sudah diterima — ini menyebabkan sinkronisasi yang keliru dan koneksi tidak valid.',
         },
         {
           id: 'C',
-          text: 'Client melewati langkah SYN-ACK dan langsung mengirim data karena server sudah diketahui alamatnya.',
-          logic: 'Ini melanggar prinsip dasar TCP. Data tidak boleh dikirim sebelum Three-Way Handshake selesai. Tanpa SYN-ACK, Client tidak tahu apakah server siap menerima data. Koneksi harus ESTABLISHED terlebih dahulu.',
+          isCorrect: false,
+          text: 'Langkah 2 (Client): Client langsung mengirim data dengan ACK=1, Seq=101, Ack=1, tanpa menunggu SYN-ACK dari server. → Koneksi terbentuk lebih cepat karena melompati tahapan SYN-ACK.',
+          logic: 'Tidak tepat. Three-Way Handshake tidak boleh melompati tahapan. Client harus menunggu SYN-ACK dari server sebelum mengirim ACK final. Tanpa SYN-ACK, client tidak mengetahui ISN server (500), sehingga koneksi tidak bisa tersinkronisasi dengan benar.',
         },
       ],
+      argumentPrompt:
+        'Jelaskan alasan teknismu: Mengapa nilai Ack pada Langkah 2 dari Server harus bernilai 101, dan bagaimana pengaruh keterlambatan respons server terhadap proses pembentukan koneksi TCP tersebut?',
     },
     groupActivity: {
       groupNames: ['Kelompok 1', 'Kelompok 2', 'Kelompok 3', 'Kelompok 4', 'Kelompok 5', 'Kelompok 6', 'Kelompok 7', 'Kelompok 8'],

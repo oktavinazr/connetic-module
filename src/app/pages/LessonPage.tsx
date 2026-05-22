@@ -173,6 +173,7 @@ const stageReflectionPrompts: Record<StageType, string> = {
 const stageNeedsExternalReflection = (type: StageType, lid: string): boolean => {
   // Stages that handle their own conclusion internally
   if (type === 'reflection') return false;
+  if (type === 'learning-community') return false;
   if (type === 'constructivism' && (lid === '1' || lid === '2')) return false;
   if (type === 'questioning' && (lid === '1' || lid === '2')) return false;
   if (type === 'inquiry' && (lid === '1' || lid === '2')) return false;
@@ -447,6 +448,8 @@ export function LessonPage() {
             moduleId={currentStage.moduleId || ''}
             groupName={groupName}
             timelineFlowchart={currentStage.timelineFlowchart}
+            atpBehavior={currentStage.atpAbcd?.behavior}
+            onTrackerPhase={(phase) => setTrackerPhase(phase as 'consistency' | 'arguing' | 'conclusion')}
           />
         );
       case 'modeling': {
