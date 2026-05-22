@@ -174,6 +174,7 @@ const stageNeedsExternalReflection = (type: StageType, lid: string): boolean => 
   // Stages that handle their own conclusion internally
   if (type === 'reflection') return false;
   if (type === 'learning-community') return false;
+  if (type === 'modeling' && lid === '2') return false;
   if (type === 'constructivism' && (lid === '1' || lid === '2')) return false;
   if (type === 'questioning' && (lid === '1' || lid === '2')) return false;
   if (type === 'inquiry' && (lid === '1' || lid === '2')) return false;
@@ -463,12 +464,13 @@ export function LessonPage() {
           }));
 
         return (
-          <ModelingStage 
-            {...commonProps} 
-            modelingSteps={modelingStepsData} 
+          <ModelingStage
+            {...commonProps}
+            modelingSteps={modelingStepsData}
             title={currentStage.title}
             description={currentStage.description}
             objectiveCode={currentStage.objectiveCode}
+            onTrackerPhase={(phase) => setTrackerPhase(phase as 'consistency' | 'arguing' | 'conclusion')}
           />
         );
       }

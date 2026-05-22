@@ -4,10 +4,10 @@ import { useDrag, useDrop } from 'react-dnd';
 import {
   CheckCircle, ArrowRight, BookOpen, Lightbulb, ChevronRight,
   AlertCircle, MessageSquare, Activity, GripVertical,
-  Cable, Wifi, Radio, Lock, PenLine, Zap, Server, Monitor,
+  Cable, Wifi, Radio, Lock, PenLine, Server, Monitor,
 } from 'lucide-react';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
-import { EssayBox, ContinueActivityButton, ATPConclusionBox } from './StageKit';
+import { ContinueActivityButton, ATPConclusionBox } from './StageKit';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -29,6 +29,7 @@ interface ModelingStageProps {
   objectiveCode?: string;
   activityNumber?: number;
   isCompleted?: boolean;
+  onTrackerPhase?: (phase: 'consistency' | 'arguing' | 'conclusion') => void;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -215,17 +216,37 @@ function TWHPacketAnimation({ label, color, direction }: { label: string; color:
   );
 }
 
-function ModelingLesson2({ lessonId, stageIndex, onComplete, objectiveCode = 'X.TCP.13' }: ModelingStageProps) {
+function ModelingLesson2({ lessonId, stageIndex, onComplete, objectiveCode = 'X.TCP.13', onTrackerPhase }: ModelingStageProps) {
   const tracker = useActivityTracker({ lessonId, stageIndex, stageType: 'modeling' });
 
-  const [phase, setPhase] = useState<'consistency' | 'arguing' | 'conclusion'>('consistency');
-  const [currentStep, setCurrentStep] = useState(0);
-  const [completedSteps, setCompletedSteps] = useState<string[]>([]);
+  type L2Phase = 'intro' | 'handshake' | 'segmentation' | 'transfer' | 'conclusion';
+
+  const [phase, setPhase] = useState<L2Phase>('intro');
+  // TWH sub-step: 0=input_clientSeq 1=ready_syn 2=anim_syn 3=input_server 4=ready_synack 5=anim_synack 6=input_clientAck 7=ready_ack 8=anim_ack 9=established
+  const [twhSub, setTwhSub] = useState(0);
   const [clientStatus, setClientStatus] = useState('CLOSED');
   const [serverStatus, setServerStatus] = useState('LISTEN');
-  const [showPacket, setShowPacket] = useState(false);
-  const [animatingStep, setAnimatingStep] = useState<number | null>(null);
-  const [essay, setEssay] = useState('');
+  const [pkt, setPkt] = useState<{ label: string; color: string; dir: 'ltr' | 'rtl' } | null>(null);
+  // TWH inputs
+  const [inClientSeq, setInClientSeq] = useState('');
+  const [inServerAck, setInServerAck] = useState('');
+  const [inServerSeq, setInServerSeq] = useState('');
+  const [inClientAck, setInClientAck] = useState('');
+  const [twhErr, setTwhErr] = useState('');
+  // Segmentation sub-step: 0=input_count 1=input_seq0 2=input_seq1 3=input_seq2 4=done
+  const [segSub, setSegSub] = useState(0);
+  const [inSegCount, setInSegCount] = useState('');
+  const [inSegSeqs, setInSegSeqs] = useState(['', '', '']);
+  const [segErr, setSegErr] = useState('');
+  // Transfer: xferSeg=current segment index, xferState per segment
+  const [xferSeg, setXferSeg] = useState(0);
+  // 'send'=waiting to send | 'anim'=animating | 'ack'=input ACK | 'done'=complete
+  const [xferStates, setXferStates] = useState<Array<'send' | 'anim' | 'ack' | 'done'>>(['send', 'send', 'send']);
+  const [inXferAck, setInXferAck] = useState('');
+  const [xferErr, setXferErr] = useState('');
+  // Arguing checkpoint (after Segmen 1 is confirmed)
+  const [arguingEssay, setArguingEssay] = useState('');
+  const [arguingDraft, setArguingDraft] = useState('');
   const [conclusionText, setConclusionText] = useState('');
   const [isRestored, setIsRestored] = useState(false);
 
@@ -236,12 +257,14 @@ function ModelingLesson2({ lessonId, stageIndex, onComplete, objectiveCode = 'X.
     if (!tracker.isLoading && !isRestored) {
       const snap = tracker.session?.latestSnapshot;
       if (snap) {
-        if (snap.phase) setPhase(snap.phase as typeof phase);
-        if (snap.currentStep !== undefined) setCurrentStep(snap.currentStep as number);
-        if (snap.completedSteps) setCompletedSteps(snap.completedSteps as string[]);
+        if (snap.phase) setPhase(snap.phase as L2Phase);
+        if (snap.twhSub !== undefined) setTwhSub(snap.twhSub as number);
         if (snap.clientStatus) setClientStatus(snap.clientStatus as string);
         if (snap.serverStatus) setServerStatus(snap.serverStatus as string);
-        if (snap.essay) setEssay(snap.essay as string);
+        if (snap.segSub !== undefined) setSegSub(snap.segSub as number);
+        if (snap.xferSeg !== undefined) setXferSeg(snap.xferSeg as number);
+        if (snap.xferStates) setXferStates(snap.xferStates as typeof xferStates);
+        if (snap.arguingEssay) setArguingEssay(snap.arguingEssay as string);
         if (snap.conclusionText) setConclusionText(snap.conclusionText as string);
       }
       setIsRestored(true);
@@ -250,16 +273,28 @@ function ModelingLesson2({ lessonId, stageIndex, onComplete, objectiveCode = 'X.
 
   useEffect(() => {
     if (!isRestored) return;
-    const progress =
+    const doneSeg = xferStates.filter(s => s === 'done').length;
+    const pct =
       phase === 'conclusion' ? (conclusionText ? 100 : 90)
-      : phase === 'arguing' ? (essay ? 85 : 60)
-      : Math.round((completedSteps.length / 3) * 50);
+      : phase === 'transfer' ? 60 + Math.round((doneSeg / 3) * 27)
+      : phase === 'segmentation' ? 50 + Math.round((segSub / 4) * 10)
+      : phase === 'handshake' ? Math.round((twhSub / 9) * 48)
+      : 0;
     void trackerRef.current.saveSnapshot(
-      { phase, currentStep, completedSteps, clientStatus, serverStatus, essay, conclusionText },
-      { progressPercent: progress },
+      { phase, twhSub, clientStatus, serverStatus, segSub, xferSeg, xferStates, arguingEssay, conclusionText },
+      { progressPercent: pct },
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, currentStep, completedSteps, clientStatus, serverStatus, essay, conclusionText, isRestored]);
+  }, [phase, twhSub, clientStatus, serverStatus, segSub, xferSeg, xferStates, arguingEssay, conclusionText, isRestored]);
+
+  useEffect(() => {
+    if (!isRestored) return;
+    let tp: 'consistency' | 'arguing' | 'conclusion' = 'consistency';
+    if (phase === 'conclusion') tp = 'conclusion';
+    else if (phase === 'transfer' && xferStates[0] === 'done' && !arguingEssay) tp = 'arguing';
+    onTrackerPhase?.(tp);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, xferStates, arguingEssay, isRestored]);
 
   if (tracker.isLoading || !isRestored) {
     return (
@@ -270,225 +305,652 @@ function ModelingLesson2({ lessonId, stageIndex, onComplete, objectiveCode = 'X.
     );
   }
 
-  const handleStep = (idx: number) => {
-    if (animatingStep !== null || completedSteps.includes(TWH_STEPS[idx].id)) return;
-    const step = TWH_STEPS[idx];
-    setAnimatingStep(idx);
-    setShowPacket(true);
-    setTimeout(() => {
-      setShowPacket(false);
-      setClientStatus(step.statusAfter.client);
-      setServerStatus(step.statusAfter.server);
-      setCompletedSteps(prev => [...prev, step.id]);
-      if (idx + 1 < TWH_STEPS.length) setCurrentStep(idx + 1);
-      setAnimatingStep(null);
-      void trackerRef.current.trackEvent(`modeling_twh_step_${step.id}`, { step: step.id }, {
-        progressPercent: Math.round(((idx + 1) / 3) * 50),
-      });
-    }, 1000);
+  const SEGS = [
+    { seq: 101, len: 100, ack: 201, label: 'Segmen 1' },
+    { seq: 201, len: 100, ack: 301, label: 'Segmen 2' },
+    { seq: 301, len: 100, ack: 401, label: 'Segmen 3' },
+  ];
+
+  const firePacket = (label: string, color: string, dir: 'ltr' | 'rtl', onDone: () => void) => {
+    setPkt({ label, color, dir });
+    setTimeout(() => { setPkt(null); setTimeout(onDone, 150); }, 1100);
   };
 
-  // ── Phase 1: Keruntutan Berpikir ───────────────────────────────────────────
-  if (phase === 'consistency') {
-    const allDone = completedSteps.length === 3;
+  const validateInt = (val: string, expected: number) => parseInt(val.trim(), 10) === expected;
+
+  // ── Intro phase ─────────────────────────────────────────────────────────────
+  if (phase === 'intro') {
     return (
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
-        {/* Phase header */}
+      <div className="space-y-5 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
         <div className="bg-white rounded-2xl border-2 border-[#628ECB]/25 shadow-sm overflow-hidden">
           <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#628ECB]/10 to-transparent border-b border-[#628ECB]/15">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#628ECB]/15">
+            <div className="h-9 w-9 shrink-0 rounded-xl bg-[#628ECB]/15 flex items-center justify-center">
               <Activity className="w-5 h-5 text-[#628ECB]" />
             </div>
-            <div className="flex-1">
-              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#628ECB]">Keruntutan Berpikir (Consistency of Thinking)</p>
-              <h3 className="text-sm font-bold text-[#395886]">Simulasi Three-Way Handshake TCP</h3>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-widest text-[#628ECB]">Keruntutan Berpikir · Fase A–C</p>
+              <h3 className="text-sm font-bold text-[#395886]">Simulator TCP Interaktif</h3>
             </div>
           </div>
-          <div className="px-5 py-3 bg-gradient-to-br from-[#628ECB]/3 to-transparent">
+          <div className="px-5 py-4 space-y-4">
             <p className="text-xs text-[#395886]/70 leading-relaxed">
-              Ikuti 3 langkah koneksi TCP secara berurutan. Klik tombol setiap langkah untuk mengirim paket dan amati perubahan status Client dan Server.
+              Sebelum simulasi dimulai, pahami 4 konsep kunci TCP berikut:
             </p>
-          </div>
-        </div>
-
-        {/* Client-Server visualization */}
-        <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-5">
-          <div className="flex items-stretch gap-4">
-            {/* Client */}
-            <div className="flex-1 flex flex-col items-center gap-2">
-              <div className="h-10 w-10 rounded-xl bg-[#628ECB]/10 flex items-center justify-center">
-                <Monitor className="w-6 h-6 text-[#628ECB]" />
-              </div>
-              <span className="text-xs font-black text-[#395886]">CLIENT</span>
-              <span
-                className="px-2 py-0.5 rounded-full text-[10px] font-black text-white transition-all duration-500"
-                style={{ backgroundColor: STATUS_COLORS[clientStatus] ?? '#9CA3AF' }}
-              >
-                {clientStatus}
-              </span>
-            </div>
-
-            {/* Packet animation lane */}
-            <div className="flex-[2] relative flex items-center justify-center min-h-[80px]">
-              <div className="w-full h-0.5 bg-[#D5DEEF] absolute" />
-              <AnimatePresence>
-                {showPacket && animatingStep !== null && (
-                  <TWHPacketAnimation
-                    key={TWH_STEPS[animatingStep].id}
-                    label={TWH_STEPS[animatingStep].packetLabel}
-                    color={TWH_STEPS[animatingStep].packetColor}
-                    direction={TWH_STEPS[animatingStep].actor === 'client' ? 'ltr' : 'rtl'}
-                  />
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Server */}
-            <div className="flex-1 flex flex-col items-center gap-2">
-              <div className="h-10 w-10 rounded-xl bg-[#8B5CF6]/10 flex items-center justify-center">
-                <Server className="w-6 h-6 text-[#8B5CF6]" />
-              </div>
-              <span className="text-xs font-black text-[#395886]">SERVER</span>
-              <span
-                className="px-2 py-0.5 rounded-full text-[10px] font-black text-white transition-all duration-500"
-                style={{ backgroundColor: STATUS_COLORS[serverStatus] ?? '#9CA3AF' }}
-              >
-                {serverStatus}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Step buttons */}
-        <div className="space-y-3">
-          {TWH_STEPS.map((step, idx) => {
-            const done = completedSteps.includes(step.id);
-            const isNext = idx === currentStep && !done;
-            const locked = idx > currentStep && !done;
-            return (
-              <div key={step.id} className={`rounded-2xl border-2 overflow-hidden transition-all
-                ${done ? 'border-[#10B981]/30 bg-[#F0FDF4]' : isNext ? 'border-[#628ECB]/30 bg-white' : 'border-[#D5DEEF] bg-[#F8FAFF]/50'}`}>
-                <div className="flex items-center gap-3 px-4 py-3">
-                  <div className={`h-8 w-8 shrink-0 rounded-xl flex items-center justify-center text-xs font-black
-                    ${done ? 'bg-[#10B981]/15 text-[#10B981]' : isNext ? 'bg-[#628ECB]/15 text-[#628ECB]' : 'bg-[#D5DEEF] text-[#395886]/30'}`}>
-                    {done ? <CheckCircle className="w-4 h-4" /> : idx + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-xs font-black ${done ? 'text-[#065F46]' : isNext ? 'text-[#395886]' : 'text-[#395886]/30'}`}>{step.label}</p>
-                    {(done || isNext) && (
-                      <p className="text-[11px] text-[#395886]/60 mt-0.5 leading-snug">{step.detail}</p>
-                    )}
-                  </div>
-                  {!done && !locked && (
-                    <button
-                      onClick={() => handleStep(idx)}
-                      disabled={animatingStep !== null}
-                      className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black text-white transition-all active:scale-95
-                        ${animatingStep !== null ? 'bg-[#D5DEEF] cursor-wait' : 'bg-gradient-to-r from-[#395886] to-[#628ECB] shadow-sm hover:opacity-90'}`}
-                      style={{ backgroundColor: step.packetColor }}
-                    >
-                      {animatingStep === idx ? 'Mengirim...' : step.buttonLabel}
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                  {done && (
-                    <span className="shrink-0 text-[10px] font-black text-[#10B981] bg-[#10B981]/10 px-2 py-0.5 rounded-full">✓ Selesai</span>
-                  )}
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { term: 'SYN', color: '#628ECB', desc: 'Flag untuk memulai koneksi. Dikirim oleh Client ke Server sebagai sinyal "Saya ingin terhubung".' },
+                { term: 'SYN-ACK', color: '#8B5CF6', desc: 'Balasan Server: "Saya terima permintaanmu dan saya juga ingin terhubung ke kamu".' },
+                { term: 'Sequence Number (Seq)', color: '#F59E0B', desc: 'Nomor urut byte data yang dikirim. Digunakan untuk menyusun ulang data di sisi penerima.' },
+                { term: 'ACK Number', color: '#10B981', desc: 'Nomor byte berikutnya yang diharapkan penerima. Rumus: ACK = Seq_pengirim + 1 (atau + panjang data).' },
+              ].map(c => (
+                <div key={c.term} className="p-2.5 rounded-xl border border-[#D5DEEF] bg-[#F8FAFF]">
+                  <p className="text-[9px] font-black mb-1" style={{ color: c.color }}>{c.term}</p>
+                  <p className="text-[9px] text-[#395886]/65 leading-relaxed">{c.desc}</p>
                 </div>
+              ))}
+            </div>
+            <div className="px-3 py-2 rounded-xl bg-[#FEF3C7] border border-[#F59E0B]/30 text-[10px] text-[#92400E]/80 leading-relaxed">
+              💡 Dalam simulasi ini, kamu akan diminta <strong>menginput nilai Seq dan ACK secara manual</strong> sebelum paket dapat dikirim. Hitung dengan cermat!
+            </div>
+          </div>
+        </div>
+        <ContinueActivityButton
+          onClick={() => {
+            void trackerRef.current.trackEvent('modeling_intro_done', {}, { progressPercent: 5 });
+            setPhase('handshake');
+          }}
+          label="Mulai Simulasi TCP"
+        />
+      </div>
+    );
+  }
+
+  // ── Conclusion phase ─────────────────────────────────────────────────────────
+  if (phase === 'conclusion') {
+    return (
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+        <ATPConclusionBox
+          atpBehavior="mampu mensimulasikan mekanisme kerja TCP dari pembentukan koneksi, segmentasi data, hingga pengiriman data dengan acknowledgment yang tepat"
+          objectiveCode={objectiveCode}
+          stageType="modeling"
+          defaultValue={conclusionText}
+          disabled={!!conclusionText}
+          onSubmit={(text) => {
+            setConclusionText(text);
+            const finalAnswer = { twhSub, segSub, xferStates, conclusion: text };
+            void tracker.complete(finalAnswer, { phase: 'conclusion', finalAnswer });
+            onComplete(finalAnswer);
+          }}
+        />
+        {conclusionText && (
+          <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20 animate-in fade-in zoom-in-95 duration-300">
+            <CheckCircle className="w-5 h-5 text-[#10B981]" />
+            <span className="text-sm font-black text-[#065F46]">Kesimpulan tersimpan — Tahap Modeling selesai!</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── Shared: Client-Server header strip ──────────────────────────────────────
+  const renderCSHeader = (cs: string, ss: string) => (
+    <div className="flex items-center justify-between mb-3">
+      <div className="flex flex-col items-center gap-1">
+        <div className="h-9 w-9 rounded-xl bg-[#628ECB]/10 flex items-center justify-center"><Monitor className="w-5 h-5 text-[#628ECB]" /></div>
+        <span className="text-[9px] font-black text-[#395886]">CLIENT</span>
+        <span className="px-1.5 py-0.5 rounded-full text-[8px] font-black text-white transition-all duration-500" style={{ backgroundColor: STATUS_COLORS[cs] ?? '#9CA3AF' }}>{cs}</span>
+      </div>
+      <div className="flex-1 relative mx-2 min-h-[60px] flex items-center">
+        <div className="w-full h-0.5 bg-[#D5DEEF]" />
+        <AnimatePresence>
+          {pkt && (
+            <TWHPacketAnimation key={pkt.label + pkt.dir} label={pkt.label} color={pkt.color} direction={pkt.dir} />
+          )}
+        </AnimatePresence>
+      </div>
+      <div className="flex flex-col items-center gap-1">
+        <div className="h-9 w-9 rounded-xl bg-[#8B5CF6]/10 flex items-center justify-center"><Server className="w-5 h-5 text-[#8B5CF6]" /></div>
+        <span className="text-[9px] font-black text-[#395886]">SERVER</span>
+        <span className="px-1.5 py-0.5 rounded-full text-[8px] font-black text-white transition-all duration-500" style={{ backgroundColor: STATUS_COLORS[ss] ?? '#9CA3AF' }}>{ss}</span>
+      </div>
+    </div>
+  );
+
+  // ── Input field helper ───────────────────────────────────────────────────────
+  const InputField = ({ label, value, onChange, placeholder, disabled }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; disabled?: boolean }) => (
+    <div className="flex items-center gap-2">
+      <span className="text-[9px] font-black text-[#395886]/60 shrink-0 w-20">{label}</span>
+      <input
+        type="number"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        disabled={disabled}
+        placeholder={placeholder ?? '?'}
+        className="w-20 text-xs font-black text-[#395886] border-2 border-[#D5DEEF] rounded-lg px-2 py-1 focus:border-[#628ECB] focus:outline-none transition-colors disabled:opacity-50 disabled:bg-[#F8FAFF]"
+      />
+    </div>
+  );
+
+  // ── Phase progress bar ───────────────────────────────────────────────────────
+  const phaseOrder: Record<L2Phase, number> = { intro: 0, handshake: 1, segmentation: 2, transfer: 3, conclusion: 4 };
+  const PHASES: { key: L2Phase; label: string }[] = [
+    { key: 'handshake', label: 'Handshake' },
+    { key: 'segmentation', label: 'Segmentasi' },
+    { key: 'transfer', label: 'Transfer' },
+  ];
+
+  // ── Canvas content per phase ─────────────────────────────────────────────────
+  const renderCanvas = () => {
+    // ─ Handshake canvas ──────────────────────────────────────────────────────
+    if (phase === 'handshake') {
+      const sub = twhSub;
+      const animating = sub === 2 || sub === 5 || sub === 8;
+      return (
+        <div className="space-y-3">
+          {renderCSHeader(clientStatus, serverStatus)}
+
+          {/* Step 1: Client Seq input */}
+          <div className={`rounded-xl border-2 p-3 space-y-2 transition-all ${sub >= 3 ? 'border-[#10B981]/25 bg-[#F0FDF4]' : sub < 3 ? 'border-[#628ECB]/25 bg-[#F0F7FF]' : 'border-[#D5DEEF]'}`}>
+            <div className="flex items-center gap-2">
+              <div className={`h-4 w-4 rounded-full flex items-center justify-center shrink-0 ${sub >= 3 ? 'bg-[#10B981]' : 'bg-[#628ECB]/20'}`}>
+                {sub >= 3 ? <CheckCircle className="w-3 h-3 text-white" /> : <span className="text-[8px] font-black text-[#628ECB]">1</span>}
+              </div>
+              <p className="text-[10px] font-black text-[#395886]">Langkah 1 — Client kirim SYN</p>
+            </div>
+            {sub < 3 && (
+              <div className="space-y-2 pl-6">
+                <InputField label="Client Seq =" value={inClientSeq} onChange={v => { setInClientSeq(v); setTwhErr(''); }} disabled={sub >= 1} />
+                {sub === 0 && (
+                  <button
+                    onClick={() => { if (validateInt(inClientSeq, 100)) { setTwhSub(1); setTwhErr(''); } else setTwhErr('Nilai belum tepat. Seq awal Client = ?'); }}
+                    className="px-3 py-1 rounded-lg text-[9px] font-black text-white bg-[#628ECB] hover:opacity-90 active:scale-95 transition-all"
+                  >Cek Nilai</button>
+                )}
+                {sub === 1 && (
+                  <button
+                    onClick={() => { setTwhSub(2); firePacket('SYN (Seq=100)', '#628ECB', 'ltr', () => { setClientStatus('SYN_SENT'); setTwhSub(3); void trackerRef.current.trackEvent('modeling_syn_sent', {}, { progressPercent: 20 }); }); }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black text-white bg-gradient-to-r from-[#395886] to-[#628ECB] hover:opacity-90 active:scale-95 shadow-sm transition-all"
+                  >▶ Kirim SYN</button>
+                )}
+                {sub === 2 && <p className="text-[9px] text-[#628ECB] font-black animate-pulse">Mengirim SYN...</p>}
+              </div>
+            )}
+            {sub >= 3 && <p className="text-[9px] text-[#065F46]/70 pl-6">SYN dikirim — Seq=100 ✓</p>}
+          </div>
+
+          {/* Step 2: Server SYN-ACK */}
+          {sub >= 3 && (
+            <div className={`rounded-xl border-2 p-3 space-y-2 transition-all ${sub >= 6 ? 'border-[#10B981]/25 bg-[#F0FDF4]' : 'border-[#8B5CF6]/25 bg-[#FAF5FF]'}`}>
+              <div className="flex items-center gap-2">
+                <div className={`h-4 w-4 rounded-full flex items-center justify-center shrink-0 ${sub >= 6 ? 'bg-[#10B981]' : 'bg-[#8B5CF6]/20'}`}>
+                  {sub >= 6 ? <CheckCircle className="w-3 h-3 text-white" /> : <span className="text-[8px] font-black text-[#8B5CF6]">2</span>}
+                </div>
+                <p className="text-[10px] font-black text-[#395886]">Langkah 2 — Server balas SYN-ACK</p>
+              </div>
+              {sub < 6 && (
+                <div className="space-y-2 pl-6">
+                  <InputField label="Server Ack =" value={inServerAck} onChange={v => { setInServerAck(v); setTwhErr(''); }} disabled={sub >= 4} />
+                  <InputField label="Server Seq =" value={inServerSeq} onChange={v => { setInServerSeq(v); setTwhErr(''); }} disabled={sub >= 4} />
+                  {sub === 3 && (
+                    <button
+                      onClick={() => { if (validateInt(inServerAck, 101) && validateInt(inServerSeq, 500)) { setTwhSub(4); setTwhErr(''); } else setTwhErr('Periksa lagi: Ack = Seq_client + 1, Seq baru Server = 500'); }}
+                      className="px-3 py-1 rounded-lg text-[9px] font-black text-white bg-[#8B5CF6] hover:opacity-90 active:scale-95 transition-all"
+                    >Cek Nilai</button>
+                  )}
+                  {sub === 4 && (
+                    <button
+                      onClick={() => { setTwhSub(5); firePacket('SYN-ACK (Seq=500,Ack=101)', '#8B5CF6', 'rtl', () => { setServerStatus('SYN_RECEIVED'); setTwhSub(6); void trackerRef.current.trackEvent('modeling_synack_sent', {}, { progressPercent: 35 }); }); }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black text-white bg-[#8B5CF6] hover:opacity-90 active:scale-95 shadow-sm transition-all"
+                    >▶ Kirim SYN-ACK</button>
+                  )}
+                  {sub === 5 && <p className="text-[9px] text-[#8B5CF6] font-black animate-pulse">Mengirim SYN-ACK...</p>}
+                </div>
+              )}
+              {sub >= 6 && <p className="text-[9px] text-[#065F46]/70 pl-6">SYN-ACK dikirim — Seq=500, Ack=101 ✓</p>}
+            </div>
+          )}
+
+          {/* Step 3: Client ACK */}
+          {sub >= 6 && (
+            <div className={`rounded-xl border-2 p-3 space-y-2 transition-all ${sub >= 9 ? 'border-[#10B981]/25 bg-[#F0FDF4]' : 'border-[#10B981]/25 bg-[#F0FDF4]/50'}`}>
+              <div className="flex items-center gap-2">
+                <div className={`h-4 w-4 rounded-full flex items-center justify-center shrink-0 ${sub >= 9 ? 'bg-[#10B981]' : 'bg-[#10B981]/20'}`}>
+                  {sub >= 9 ? <CheckCircle className="w-3 h-3 text-white" /> : <span className="text-[8px] font-black text-[#10B981]">3</span>}
+                </div>
+                <p className="text-[10px] font-black text-[#395886]">Langkah 3 — Client kirim ACK Final</p>
+              </div>
+              {sub < 9 && (
+                <div className="space-y-2 pl-6">
+                  <InputField label="Client Ack =" value={inClientAck} onChange={v => { setInClientAck(v); setTwhErr(''); }} disabled={sub >= 7} />
+                  {sub === 6 && (
+                    <button
+                      onClick={() => { if (validateInt(inClientAck, 501)) { setTwhSub(7); setTwhErr(''); } else setTwhErr('Ack = Seq_server + 1 = 500 + 1 = ?'); }}
+                      className="px-3 py-1 rounded-lg text-[9px] font-black text-white bg-[#10B981] hover:opacity-90 active:scale-95 transition-all"
+                    >Cek Nilai</button>
+                  )}
+                  {sub === 7 && (
+                    <button
+                      onClick={() => { setTwhSub(8); firePacket('ACK (Seq=101,Ack=501)', '#10B981', 'ltr', () => { setClientStatus('ESTABLISHED'); setServerStatus('ESTABLISHED'); setTwhSub(9); void trackerRef.current.trackEvent('modeling_ack_sent', {}, { progressPercent: 48 }); }); }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black text-white bg-[#10B981] hover:opacity-90 active:scale-95 shadow-sm transition-all"
+                    >▶ Kirim ACK Final</button>
+                  )}
+                  {sub === 8 && <p className="text-[9px] text-[#10B981] font-black animate-pulse">Mengirim ACK Final...</p>}
+                </div>
+              )}
+              {sub >= 9 && <p className="text-[9px] text-[#065F46]/70 pl-6">ACK Final dikirim — Ack=501 ✓</p>}
+            </div>
+          )}
+
+          {twhErr && <p className="text-[9px] font-black text-red-500 px-1">{twhErr}</p>}
+
+          {sub === 9 && (
+            <>
+              <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[#10B981]/10 border-2 border-[#10B981]/30 animate-in fade-in zoom-in-95 duration-300">
+                <CheckCircle className="w-4 h-4 text-[#10B981]" />
+                <span className="text-[10px] font-black text-[#065F46]">Koneksi ESTABLISHED!</span>
+              </div>
+              <ContinueActivityButton onClick={() => { void trackerRef.current.trackEvent('modeling_handshake_done', {}, { progressPercent: 50 }); setPhase('segmentation'); }} label="Lanjutkan ke Segmentasi Data" />
+            </>
+          )}
+        </div>
+      );
+    }
+
+    // ─ Segmentation canvas ────────────────────────────────────────────────────
+    if (phase === 'segmentation') {
+      const ss = segSub;
+      return (
+        <div className="space-y-3">
+          <div className="px-3 py-2.5 rounded-xl border-2 border-[#628ECB]/20 bg-[#F0F7FF] text-center">
+            <p className="text-[10px] font-black text-[#395886]">FILE DATA</p>
+            <p className="text-lg font-black text-[#628ECB]">300 Byte</p>
+            <p className="text-[9px] text-[#395886]/60">Siap dikirim ke Server</p>
+          </div>
+
+          {/* Q1: jumlah segmen */}
+          <div className={`rounded-xl border-2 p-3 space-y-2 transition-all ${ss >= 1 ? 'border-[#10B981]/25 bg-[#F0FDF4]' : 'border-[#F59E0B]/25 bg-[#FFFBEB]'}`}>
+            <p className="text-[10px] font-black text-[#395886]">Jika tiap segmen berukuran 100 Byte, berapa jumlah segmen?</p>
+            {ss === 0 ? (
+              <div className="flex items-center gap-2">
+                <input type="number" value={inSegCount} onChange={e => { setInSegCount(e.target.value); setSegErr(''); }} placeholder="?" className="w-16 text-xs font-black text-[#395886] border-2 border-[#D5DEEF] rounded-lg px-2 py-1 focus:border-[#628ECB] focus:outline-none transition-colors" />
+                <span className="text-[9px] text-[#395886]/60">segmen</span>
+                <button
+                  onClick={() => { if (validateInt(inSegCount, 3)) { setSegSub(1); setSegErr(''); } else setSegErr('300 ÷ 100 = ?'); }}
+                  className="px-3 py-1 rounded-lg text-[9px] font-black text-white bg-[#F59E0B] hover:opacity-90 active:scale-95 transition-all"
+                >Cek</button>
+              </div>
+            ) : (
+              <p className="text-[9px] text-[#065F46]/70">3 segmen ✓ (300 ÷ 100 = 3)</p>
+            )}
+          </div>
+
+          {/* Q2–Q4: Seq tiap segmen */}
+          {ss >= 1 && (
+            <div className="space-y-2">
+              <p className="text-[9px] font-black text-[#395886]/60 px-1">Tentukan Sequence Number tiap segmen (melanjutkan dari Seq terakhir handshake):</p>
+              {SEGS.map((seg, i) => {
+                const inputDone = ss > i + 1;
+                const isActive = ss === i + 1;
+                return (
+                  <div key={seg.label} className={`rounded-xl border-2 p-2.5 space-y-1.5 transition-all ${inputDone ? 'border-[#10B981]/25 bg-[#F0FDF4]' : isActive ? 'border-[#F59E0B]/25 bg-[#FFFBEB]' : 'border-[#D5DEEF] opacity-35'}`}>
+                    <div className="flex items-center gap-2">
+                      <div className={`h-4 w-4 rounded-full flex items-center justify-center shrink-0 ${inputDone ? 'bg-[#10B981]' : 'bg-[#F59E0B]/20'}`}>
+                        {inputDone ? <CheckCircle className="w-3 h-3 text-white" /> : <span className="text-[8px] font-black text-[#F59E0B]">{i + 1}</span>}
+                      </div>
+                      <p className={`text-[9px] font-black ${inputDone ? 'text-[#065F46]' : 'text-[#395886]'}`}>{seg.label} — Seq = ?</p>
+                    </div>
+                    {isActive && (
+                      <div className="flex items-center gap-2 pl-6">
+                        <input
+                          type="number"
+                          value={inSegSeqs[i]}
+                          onChange={e => { const a = [...inSegSeqs]; a[i] = e.target.value; setInSegSeqs(a); setSegErr(''); }}
+                          placeholder="?"
+                          className="w-16 text-xs font-black text-[#395886] border-2 border-[#D5DEEF] rounded-lg px-2 py-1 focus:border-[#628ECB] focus:outline-none transition-colors"
+                        />
+                        <button
+                          onClick={() => { if (validateInt(inSegSeqs[i], seg.seq)) { setSegSub(ss + 1); setSegErr(''); if (ss + 1 === 4) void trackerRef.current.trackEvent('modeling_seg_inputs_done', {}, { progressPercent: 60 }); } else setSegErr(`Ingat: Seq melanjutkan dari byte sebelumnya.`); }}
+                          className="px-3 py-1 rounded-lg text-[9px] font-black text-white bg-[#F59E0B] hover:opacity-90 active:scale-95 transition-all"
+                        >Cek</button>
+                      </div>
+                    )}
+                    {inputDone && <p className="text-[9px] text-[#065F46]/70 pl-6">Seq={seg.seq} ✓</p>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {segErr && <p className="text-[9px] font-black text-red-500 px-1">{segErr}</p>}
+
+          {ss >= 4 && (
+            <>
+              <div className="flex gap-2 justify-center">
+                {SEGS.map(s => (
+                  <div key={s.label} className="flex flex-col items-center">
+                    <div className="px-2.5 py-1.5 rounded-t-lg bg-[#8B5CF6]/10 border border-b-0 border-[#8B5CF6]/30 text-center">
+                      <p className="text-[8px] font-black text-[#6D28D9]">TCP HDR</p>
+                      <p className="text-[8px] text-[#6D28D9]/70">Seq={s.seq}</p>
+                    </div>
+                    <div className="px-2.5 py-1.5 rounded-b-lg bg-[#628ECB]/10 border border-t-0 border-[#628ECB]/30 text-center">
+                      <p className="text-[8px] font-black text-[#395886]">DATA 100B</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <ContinueActivityButton onClick={() => { void trackerRef.current.trackEvent('modeling_segmentation_done', {}, { progressPercent: 62 }); setPhase('transfer'); }} label="Lanjutkan ke Pengiriman Data" />
+            </>
+          )}
+        </div>
+      );
+    }
+
+    // ─ Transfer canvas ────────────────────────────────────────────────────────
+    if (phase === 'transfer') {
+      const allDone = xferStates.every(s => s === 'done');
+      const cur = xferSeg < 3 ? SEGS[xferSeg] : null;
+      const curState = xferSeg < 3 ? xferStates[xferSeg] : 'done';
+      return (
+        <div className="space-y-3">
+          {renderCSHeader('ESTABLISHED', 'ESTABLISHED')}
+
+          {/* Segment list */}
+          {SEGS.map((seg, i) => {
+            const st = xferStates[i];
+            const isActive = i === xferSeg;
+            // Block Seg 2+ until arguing essay is submitted
+            const blockedByArguing = i >= 1 && xferStates[0] === 'done' && !arguingEssay;
+            return (
+              <div key={seg.label} className={`rounded-xl border-2 p-3 space-y-2 transition-all ${st === 'done' ? 'border-[#10B981]/25 bg-[#F0FDF4]' : isActive && !blockedByArguing ? 'border-[#628ECB]/25 bg-[#F0F7FF]' : 'border-[#D5DEEF] opacity-30'}`}>
+                <div className="flex items-center gap-2">
+                  <div className={`h-4 w-4 rounded-full flex items-center justify-center shrink-0 ${st === 'done' ? 'bg-[#10B981]' : 'bg-[#628ECB]/20'}`}>
+                    {st === 'done' ? <CheckCircle className="w-3 h-3 text-white" /> : <span className="text-[8px] font-black text-[#628ECB]">{i + 1}</span>}
+                  </div>
+                  <p className={`flex-1 text-[10px] font-black ${st === 'done' ? 'text-[#065F46]' : 'text-[#395886]'}`}>{seg.label} — Seq={seg.seq}, Len=100B</p>
+                </div>
+
+                {isActive && st === 'send' && !blockedByArguing && (
+                  <button
+                    onClick={() => {
+                      const ns = [...xferStates]; ns[i] = 'anim'; setXferStates(ns);
+                      firePacket(`Seq=${seg.seq}`, '#628ECB', 'ltr', () => {
+                        const ns2 = [...xferStates]; ns2[i] = 'ack'; setXferStates(ns2);
+                        void trackerRef.current.trackEvent(`modeling_seg${i + 1}_sent`, {}, { progressPercent: 65 + i * 8 });
+                      });
+                    }}
+                    className="ml-6 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black text-white bg-gradient-to-r from-[#395886] to-[#628ECB] hover:opacity-90 active:scale-95 shadow-sm transition-all"
+                  >▶ Kirim {seg.label}</button>
+                )}
+                {isActive && st === 'anim' && !blockedByArguing && <p className="text-[9px] text-[#628ECB] font-black animate-pulse ml-6">Mengirim segmen...</p>}
+                {isActive && st === 'ack' && !blockedByArguing && (
+                  <div className="space-y-1.5 ml-6">
+                    <p className="text-[9px] text-[#395886]/70">Segmen diterima Server. Berapa nilai ACK yang akan Server kirim?</p>
+                    <p className="text-[9px] text-[#395886]/50">Rumus: ACK = Seq + Len = {seg.seq} + 100 = ?</p>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={inXferAck}
+                        onChange={e => { setInXferAck(e.target.value); setXferErr(''); }}
+                        placeholder="?"
+                        className="w-16 text-xs font-black text-[#395886] border-2 border-[#D5DEEF] rounded-lg px-2 py-1 focus:border-[#628ECB] focus:outline-none transition-colors"
+                      />
+                      <span className="text-[9px] text-[#395886]/50">Server ACK = ?</span>
+                      <button
+                        onClick={() => {
+                          if (validateInt(inXferAck, seg.ack)) {
+                            const ns = [...xferStates]; ns[i] = 'done'; setXferStates(ns);
+                            if (i + 1 < 3) setXferSeg(i + 1);
+                            setInXferAck(''); setXferErr('');
+                            void trackerRef.current.trackEvent(`modeling_seg${i + 1}_ack`, {}, { progressPercent: 68 + i * 9 });
+                          } else setXferErr(`${seg.seq} + 100 = ?`);
+                        }}
+                        className="px-3 py-1 rounded-lg text-[9px] font-black text-white bg-[#10B981] hover:opacity-90 active:scale-95 transition-all"
+                      >Konfirmasi ACK</button>
+                    </div>
+                    {xferErr && <p className="text-[9px] font-black text-red-500">{xferErr}</p>}
+                  </div>
+                )}
+                {st === 'done' && (
+                  <p className="text-[9px] text-[#065F46]/70 ml-6">Terkirim · Server ACK={seg.ack} ({seg.seq}+100) ✓</p>
+                )}
               </div>
             );
           })}
+
+          {/* Arguing checkpoint — pauses after Segmen 1 */}
+          {xferStates[0] === 'done' && !arguingEssay && (
+            <div className="rounded-xl border-2 border-[#F59E0B]/40 bg-[#FFFBEB] p-3 space-y-2.5 animate-in fade-in slide-in-from-bottom-4 duration-400">
+              <div className="flex items-center gap-2">
+                <div className="h-5 w-5 rounded-md bg-[#F59E0B]/20 flex items-center justify-center shrink-0">
+                  <MessageSquare className="w-3 h-3 text-[#F59E0B]" />
+                </div>
+                <div>
+                  <p className="text-[8px] font-black uppercase tracking-widest text-[#F59E0B]">Kemampuan Berargumen — Simulasi Dijeda</p>
+                  <p className="text-[9px] font-black text-[#395886] mt-0.5">Jawab pertanyaan berikut sebelum melanjutkan</p>
+                </div>
+              </div>
+              <div className="px-3 py-2 rounded-lg bg-[#FEF3C7] border border-[#F59E0B]/30">
+                <p className="text-[9px] text-[#92400E]/85 leading-relaxed">
+                  Mengapa setelah Segmen 1 dengan Seq=101 dan ukuran data 100 Byte diterima, Server mengirimkan ACK=201? Jelaskan rumus dan alasan teknisnya.
+                </p>
+              </div>
+              <textarea
+                value={arguingDraft}
+                onChange={e => setArguingDraft(e.target.value)}
+                className="w-full text-[10px] text-[#395886] border-2 border-[#D5DEEF] rounded-xl p-2.5 resize-none focus:border-[#F59E0B] focus:outline-none transition-colors leading-relaxed"
+                rows={4}
+                placeholder="Jelaskan alasanmu... (min. 20 kata)"
+              />
+              <div className="flex items-center justify-between">
+                <span className={`text-[9px] font-black ${arguingDraft.trim().split(/\s+/).filter(Boolean).length >= 20 ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
+                  {arguingDraft.trim().split(/\s+/).filter(Boolean).length} / 20 kata
+                </span>
+                <button
+                  onClick={() => {
+                    if (arguingDraft.trim().split(/\s+/).filter(Boolean).length < 20) return;
+                    setArguingEssay(arguingDraft);
+                    void trackerRef.current.trackEvent('modeling_arguing_done', { essay: arguingDraft }, { progressPercent: 75 });
+                  }}
+                  disabled={arguingDraft.trim().split(/\s+/).filter(Boolean).length < 20}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black text-white transition-all active:scale-95 ${arguingDraft.trim().split(/\s+/).filter(Boolean).length >= 20 ? 'bg-[#F59E0B] hover:opacity-90' : 'bg-[#D5DEEF] cursor-not-allowed'}`}
+                >
+                  Kirim Argumen & Lanjutkan
+                </button>
+              </div>
+            </div>
+          )}
+
+          {xferStates[0] === 'done' && arguingEssay && !allDone && (
+            <div className="px-3 py-2 rounded-xl bg-[#F0FDF4] border border-[#10B981]/25 text-[9px] text-[#065F46]/70">
+              <span className="font-black text-[#065F46]">Argumen tersimpan.</span> Lanjutkan pengiriman segmen berikutnya.
+            </div>
+          )}
+
+          {allDone && (
+            <>
+              <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[#10B981]/10 border-2 border-[#10B981]/30 animate-in fade-in zoom-in-95 duration-300">
+                <CheckCircle className="w-4 h-4 text-[#10B981]" />
+                <span className="text-[10px] font-black text-[#065F46]">Semua segmen berhasil dikirim!</span>
+              </div>
+              <ContinueActivityButton onClick={() => { void trackerRef.current.trackEvent('modeling_transfer_done', {}, { progressPercent: 88 }); setPhase('conclusion'); }} label="Lanjutkan ke Penarikan Kesimpulan" />
+            </>
+          )}
         </div>
+      );
+    }
 
-        {allDone && (
-          <>
-            <div className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-[#10B981]/10 border-2 border-[#10B981]/25 animate-in fade-in zoom-in-95 duration-300">
-              <CheckCircle className="w-5 h-5 text-[#10B981]" />
-              <span className="text-sm font-black text-[#065F46]">Koneksi TCP berhasil terbuka — Three-Way Handshake selesai!</span>
-            </div>
-            <ContinueActivityButton
-              onClick={() => {
-                void tracker.trackEvent('modeling_consistency_completed', {}, { progressPercent: 55 });
-                setPhase('arguing');
-              }}
-              label="Lanjutkan ke Kemampuan Berargumen"
-            />
-          </>
-        )}
-      </div>
-    );
-  }
+    return null;
+  };
 
-  // ── Phase 2: Kemampuan Berargumen ──────────────────────────────────────────
-  if (phase === 'arguing') {
-    return (
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
-        <div className="bg-white rounded-2xl border-2 border-[#F59E0B]/20 shadow-sm overflow-hidden">
-          <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#F59E0B]/10 to-transparent border-b border-[#F59E0B]/15">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F59E0B]/15">
-              <Zap className="w-5 h-5 text-[#F59E0B]" />
-            </div>
-            <div className="flex-1">
-              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#F59E0B]">Kemampuan Berargumen (Arguing Ability)</p>
-              <h3 className="text-sm font-bold text-[#395886]">Argumen Logis — Three-Way Handshake</h3>
-            </div>
+  // ── Guide content per phase ──────────────────────────────────────────────────
+  const renderGuide = () => {
+    if (phase === 'handshake') {
+      const tips = [
+        { sub: [0], title: 'Tentukan Seq Client', body: 'Client memilih Initial Sequence Number (ISN) secara acak. Untuk simulasi ini, ISN Client = 100.' },
+        { sub: [1, 2], title: 'Kirim SYN', body: 'Setelah Seq ditentukan, Client mengirim paket SYN ke Server untuk meminta koneksi.' },
+        { sub: [3], title: 'Tentukan nilai SYN-ACK', body: 'Server harus mengkonfirmasi SYN Client. Rumus: Ack = Seq_client + 1. Server juga memilih ISN-nya sendiri = 500.' },
+        { sub: [4, 5], title: 'Kirim SYN-ACK', body: 'Server mengirim SYN-ACK ke Client sebagai tanda "permintaan diterima".' },
+        { sub: [6], title: 'Tentukan ACK Final Client', body: 'Client mengkonfirmasi SYN Server. Rumus: Ack = Seq_server + 1 = 500 + 1.' },
+        { sub: [7, 8], title: 'Kirim ACK Final', body: 'Client mengirim ACK terakhir. Setelah ini kedua pihak berstatus ESTABLISHED.' },
+      ];
+      const activeTip = tips.find(t => t.sub.includes(twhSub)) ?? tips[tips.length - 1];
+      return (
+        <div className="space-y-3">
+          <div className="px-3 py-2 rounded-xl bg-[#EFF4FF] border border-[#628ECB]/20">
+            <p className="text-[9px] font-black uppercase tracking-widest text-[#628ECB]">Keruntutan Berpikir</p>
+            <p className="text-xs font-bold text-[#395886] mt-0.5">Fase A — Three-Way Handshake</p>
           </div>
-          <div className="px-5 py-3 bg-gradient-to-br from-[#F59E0B]/3 to-transparent">
-            <p className="text-xs text-[#395886]/70 leading-relaxed">
-              Berdasarkan simulasi Three-Way Handshake yang baru saja kamu lakukan, jawab pertanyaan berikut dengan argumen teknis yang logis.
+          <div className="px-3 py-2.5 rounded-xl bg-[#F0F7FF] border border-[#628ECB]/15 space-y-1">
+            <p className="text-[9px] font-black text-[#628ECB]">Langkah saat ini</p>
+            <p className="text-[10px] font-black text-[#395886]">{activeTip.title}</p>
+            <p className="text-[9px] text-[#395886]/65 leading-relaxed">{activeTip.body}</p>
+          </div>
+          <div className="space-y-1">
+            {[
+              { s: 3, label: 'SYN dikirim', sub: 'Seq=100 → Client: SYN_SENT' },
+              { s: 6, label: 'SYN-ACK dikirim', sub: 'Seq=500, Ack=101 → Server: SYN_RECEIVED' },
+              { s: 9, label: 'ACK Final dikirim', sub: 'Ack=501 → ESTABLISHED' },
+            ].map((item, i) => (
+              <div key={i} className={`flex gap-2 items-center px-2.5 py-1.5 rounded-lg text-[9px] border transition-all ${twhSub >= item.s ? 'border-[#10B981]/25 bg-[#F0FDF4]' : 'border-[#D5DEEF] opacity-40'}`}>
+                <div className={`h-3.5 w-3.5 rounded-full flex items-center justify-center shrink-0 ${twhSub >= item.s ? 'bg-[#10B981]' : 'bg-[#D5DEEF]'}`}>
+                  {twhSub >= item.s && <CheckCircle className="w-2.5 h-2.5 text-white" />}
+                </div>
+                <div>
+                  <p className={`font-black ${twhSub >= item.s ? 'text-[#065F46]' : 'text-[#395886]/30'}`}>{item.label}</p>
+                  <p className={twhSub >= item.s ? 'text-[#065F46]/65' : 'text-[#395886]/25'}>{item.sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    if (phase === 'segmentation') {
+      return (
+        <div className="space-y-3">
+          <div className="px-3 py-2 rounded-xl bg-[#FEF3C7] border border-[#F59E0B]/20">
+            <p className="text-[9px] font-black uppercase tracking-widest text-[#F59E0B]">Keruntutan Berpikir</p>
+            <p className="text-xs font-bold text-[#395886] mt-0.5">Fase B — Segmentasi Data</p>
+          </div>
+          <div className="px-3 py-2.5 rounded-xl bg-[#FFFBEB] border border-[#F59E0B]/15 space-y-1">
+            <p className="text-[9px] font-black text-[#F59E0B]">Mengapa data dipecah?</p>
+            <p className="text-[9px] text-[#395886]/65 leading-relaxed">TCP membagi data besar menjadi segmen-segmen kecil agar: (1) lebih mudah dikirim ulang jika ada yang hilang, (2) receiver dapat menyimpan buffer lebih efisien, (3) urutan data dapat dijaga.</p>
+          </div>
+          <div className="px-3 py-2.5 rounded-xl bg-[#FFFBEB] border border-[#F59E0B]/15 space-y-1">
+            <p className="text-[9px] font-black text-[#F59E0B]">Cara menentukan Seq Number</p>
+            <p className="text-[9px] text-[#395886]/65 leading-relaxed">Seq setiap segmen melanjutkan dari byte terakhir handshake. ACK terakhir handshake = 101, jadi data mulai dari Seq=101. Segmen berikutnya = Seq sebelumnya + ukuran data (100).</p>
+          </div>
+          <div className="space-y-1">
+            {[
+              { s: 1, label: 'Jumlah segmen', sub: '3 segmen (300÷100)' },
+              { s: 2, label: 'Seq Segmen 1', sub: 'Seq=101' },
+              { s: 3, label: 'Seq Segmen 2', sub: 'Seq=201' },
+              { s: 4, label: 'Seq Segmen 3', sub: 'Seq=301' },
+            ].map((item, i) => (
+              <div key={i} className={`flex gap-2 items-center px-2.5 py-1.5 rounded-lg text-[9px] border transition-all ${segSub >= item.s ? 'border-[#10B981]/25 bg-[#F0FDF4]' : 'border-[#D5DEEF] opacity-40'}`}>
+                <div className={`h-3.5 w-3.5 rounded-full flex items-center justify-center shrink-0 ${segSub >= item.s ? 'bg-[#10B981]' : 'bg-[#D5DEEF]'}`}>
+                  {segSub >= item.s && <CheckCircle className="w-2.5 h-2.5 text-white" />}
+                </div>
+                <div>
+                  <p className={`font-black ${segSub >= item.s ? 'text-[#065F46]' : 'text-[#395886]/30'}`}>{item.label}</p>
+                  <p className={segSub >= item.s ? 'text-[#065F46]/65' : 'text-[#395886]/25'}>{item.sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    if (phase === 'transfer') {
+      const isArguing = xferStates[0] === 'done' && !arguingEssay;
+      return (
+        <div className="space-y-3">
+          <div className={`px-3 py-2 rounded-xl border ${isArguing ? 'bg-[#FEF3C7] border-[#F59E0B]/20' : 'bg-[#ECFDF5] border-[#10B981]/20'}`}>
+            <p className={`text-[9px] font-black uppercase tracking-widest ${isArguing ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
+              {isArguing ? 'Kemampuan Berargumen' : 'Keruntutan Berpikir'}
+            </p>
+            <p className="text-xs font-bold text-[#395886] mt-0.5">
+              {isArguing ? 'Pause — Pertanyaan Analisis' : 'Fase C — Pengiriman Data + ACK'}
             </p>
           </div>
+          {isArguing ? (
+            <div className="space-y-2">
+              <p className="text-[10px] text-[#395886]/65 leading-relaxed">Simulasi dijeda. Isi kolom argumen di canvas kiri untuk melanjutkan.</p>
+              <div className="px-3 py-2 rounded-xl bg-[#FEF3C7] border border-[#F59E0B]/25">
+                <p className="text-[9px] font-black text-[#92400E] mb-1">Rumus yang perlu kamu jelaskan</p>
+                <p className="text-[9px] text-[#92400E]/75 leading-relaxed font-mono">ACK = Seq + Len<br/>ACK = 101 + 100 = 201</p>
+              </div>
+            </div>
+          ) : (
+            <div className="px-3 py-2.5 rounded-xl bg-[#ECFDF5] border border-[#10B981]/15 space-y-1">
+              <p className="text-[9px] font-black text-[#10B981]">Rumus ACK</p>
+              <p className="text-[9px] text-[#395886]/65 leading-relaxed">Setiap kali menerima segmen, Server mengirim ACK = Seq + ukuran data. Ini memberitahu Client: "Saya sudah terima byte sampai ACK-1, kirim mulai dari ACK."</p>
+            </div>
+          )}
+          <div className="space-y-1">
+            {SEGS.map((seg, i) => {
+              const st = xferStates[i];
+              const done = st === 'done';
+              return (
+                <div key={seg.label} className={`flex gap-2 items-start px-2.5 py-1.5 rounded-lg text-[9px] border transition-all ${done ? 'border-[#10B981]/25 bg-[#F0FDF4]' : i === xferSeg ? 'border-[#628ECB]/25 bg-[#F0F7FF]' : 'border-[#D5DEEF] opacity-40'}`}>
+                  <div className={`h-3.5 w-3.5 mt-0.5 rounded-full flex items-center justify-center shrink-0 ${done ? 'bg-[#10B981]' : 'bg-[#D5DEEF]'}`}>
+                    {done && <CheckCircle className="w-2.5 h-2.5 text-white" />}
+                  </div>
+                  <div>
+                    <p className={`font-black ${done ? 'text-[#065F46]' : i === xferSeg ? 'text-[#395886]' : 'text-[#395886]/30'}`}>{seg.label}</p>
+                    <p className={done ? 'text-[#065F46]/65' : i === xferSeg ? 'text-[#395886]/55' : 'text-[#395886]/25'}>{seg.seq}+100 → ACK={seg.ack}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
+      );
+    }
 
-        <EssayBox
-          objectiveLabel={objectiveCode}
-          headerLabel="Argumen Logis"
-          prompt="Berdasarkan simulasi Three-Way Handshake yang baru saja kamu lakukan, jelaskan: (1) Mengapa Three-Way Handshake memerlukan 3 langkah, tidak bisa 2 atau 4? (2) Apa fungsi nilai Ack# = ISN+1 dalam setiap langkah? (3) Apa yang terjadi jika SYN-ACK tidak pernah sampai ke Client?"
-          submitLabel="Simpan Argumen"
-          minWords={20}
-          defaultValue={essay}
-          disabled={!!essay}
-          onSubmit={(text) => {
-            setEssay(text);
-            void tracker.trackEvent('modeling_arguing_done', {}, { progressPercent: 80 });
-          }}
-        />
+    return null;
+  };
 
-        {essay && (
-          <ContinueActivityButton
-            onClick={() => {
-              void tracker.trackEvent('modeling_arguing_completed', {}, { progressPercent: 85 });
-              setPhase('conclusion');
-            }}
-            label="Lanjutkan ke Penarikan Kesimpulan"
-          />
-        )}
-      </div>
-    );
-  }
-
-  // ── Phase 3: Penarikan Kesimpulan ──────────────────────────────────────────
+  // ── Two-panel layout ─────────────────────────────────────────────────────────
   return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
-      <ATPConclusionBox
-        atpBehavior="mampu mensimulasikan mekanisme kerja TCP dari pembentukan koneksi hingga pengiriman data"
-        objectiveCode={objectiveCode}
-        stageType="modeling"
-        defaultValue={conclusionText}
-        disabled={!!conclusionText}
-        onSubmit={(text) => {
-          setConclusionText(text);
-          const finalAnswer = { completedSteps, essay, conclusion: text };
-          void tracker.complete(finalAnswer, { phase: 'conclusion', finalAnswer });
-          onComplete(finalAnswer);
-        }}
-      />
-      {conclusionText && (
-        <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20 animate-in fade-in zoom-in-95 duration-300">
-          <CheckCircle className="w-5 h-5 text-[#10B981]" />
-          <span className="text-sm font-black text-[#065F46]">Kesimpulan tersimpan — Tahap Modeling selesai!</span>
+    <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10 space-y-4">
+      {/* Phase progress */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {PHASES.map((p, i) => {
+          const pIdx = phaseOrder[p.key];
+          const curIdx = phaseOrder[phase];
+          const isDone = pIdx < curIdx;
+          const isActive = pIdx === curIdx;
+          return (
+            <div key={p.key} className="flex items-center gap-1.5">
+              {i > 0 && <div className={`h-0.5 w-4 rounded-full ${isDone || isActive ? 'bg-[#628ECB]/40' : 'bg-[#D5DEEF]'}`} />}
+              <span className={`px-2 py-0.5 rounded-full text-[8px] font-black transition-all ${isActive ? 'bg-[#395886] text-white' : isDone ? 'bg-[#10B981]/15 text-[#10B981]' : 'bg-[#D5DEEF] text-[#395886]/40'}`}>
+                {isDone ? `✓ ${p.label}` : p.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Two-panel */}
+      <div className="flex flex-col lg:flex-row gap-4 items-start">
+        <div className="w-full lg:flex-[3] bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-4">
+          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[#D5DEEF]/60">
+            <div className="h-5 w-5 rounded-md bg-[#628ECB]/10 flex items-center justify-center"><Activity className="w-3 h-3 text-[#628ECB]" /></div>
+            <p className="text-[8px] font-black uppercase tracking-[0.18em] text-[#628ECB]">Interactive Canvas</p>
+          </div>
+          {renderCanvas()}
         </div>
-      )}
+        <div className="w-full lg:flex-[2] bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-4">
+          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[#D5DEEF]/60">
+            <div className="h-5 w-5 rounded-md bg-[#F59E0B]/10 flex items-center justify-center"><BookOpen className="w-3 h-3 text-[#F59E0B]" /></div>
+            <p className="text-[8px] font-black uppercase tracking-[0.18em] text-[#F59E0B]">Tutorial Guide</p>
+          </div>
+          {renderGuide()}
+        </div>
+      </div>
     </div>
   );
 }
