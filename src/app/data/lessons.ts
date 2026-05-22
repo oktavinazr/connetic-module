@@ -97,6 +97,12 @@ export interface Stage {
     options: Array<{ id: string; text: string; description?: string; logic?: string }>;
     peerArguments?: Array<{ name: string; text: string; votes: number; isUser?: boolean; choiceText?: string }>;
   };
+  timelineFlowchart?: {
+    instruction: string;
+    blocks: Array<{ id: string; label: string; text: string; correctSlot: number }>;
+    successMessage: string;
+    errorFeedback: string;
+  };
 
   // ── MODELING ────────────────────────────────────────────────────
   modelingSteps?: Array<{                          // Interactive step-by-step

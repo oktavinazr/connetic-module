@@ -5,7 +5,7 @@ import {
   MessageSquare, Info, RotateCcw, AlertCircle, ThumbsUp, ArrowUpDown, GripVertical,
   Zap, Database, Cpu, Cable, Network, ShieldCheck, PlayCircle, Eye, ArrowRight,
   Vote, Award, Sparkles, Monitor, PenLine, BookOpen, GraduationCap, Lightbulb,
-  Clock, Server
+  Clock, Server, Lock, Unlock, ArrowDown, ArrowUp, Shuffle
 } from 'lucide-react';
 import { getCurrentUser } from '../../utils/auth';
 import {
@@ -41,6 +41,13 @@ interface CaseStudy {
   correctFeedback?: string;
 }
 
+interface TimelineFlowchartData {
+  instruction: string;
+  blocks: Array<{ id: string; label: string; text: string; correctSlot: number }>;
+  successMessage: string;
+  errorFeedback: string;
+}
+
 interface LearningCommunityStageProps {
   lessonId: string;
   stageIndex: number;
@@ -51,6 +58,7 @@ interface LearningCommunityStageProps {
   layers5?: Array<{ id: string; name: string; pdu: string; color: string; desc: string }>;
   encapsulationCase?: CaseStudy;
   decapsulationCase?: CaseStudy;
+  timelineFlowchart?: TimelineFlowchartData;
 }
 
 // -- Shared UI Components -------------------------------------------------------
@@ -69,6 +77,298 @@ function GroupMembersList({ members, submissions = [] }: { members: { user_id: s
         );
       })}
       {members.length === 0 && <p className="text-[10px] font-bold text-[#395886]/30 uppercase italic">Menunggu anggota lain...</p>}
+    </div>
+  );
+}
+
+// -- Interactive Timeline Flowchart (Lesson 2 Tahap 1: Keruntutan Berpikir) ------
+
+const MAX_ATTEMPTS = 3;
+
+function TimelineFlowchartSection({
+  data, onSuccess,
+}: {
+  data: TimelineFlowchartData;
+  onSuccess: () => void;
+}) {
+  const [slots, setSlots] = useState<(string | null)[]>([null, null, null]);
+  const [status, setStatus] = useState<'idle' | 'correct' | 'incorrect' | 'locked'>('idle');
+  const [attempts, setAttempts] = useState(0);
+
+  const remainingAttempts = MAX_ATTEMPTS - attempts;
+  const isLocked = status === 'locked';
+  const isEditable = status !== 'correct' && !isLocked;
+
+  const availableBlocks = data.blocks.filter(b => !slots.includes(b.id));
+
+  const handlePlaceBlock = (blockId: string, slotIndex: number) => {
+    if (!isEditable) return;
+    const newSlots = [...slots];
+    if (newSlots[slotIndex]) return;
+    const existingIdx = newSlots.indexOf(blockId);
+    if (existingIdx !== -1) newSlots[existingIdx] = null;
+    newSlots[slotIndex] = blockId;
+    setSlots(newSlots);
+    setStatus('idle');
+  };
+
+  const handleRemoveFromSlot = (slotIndex: number) => {
+    if (!isEditable) return;
+    const newSlots = [...slots];
+    newSlots[slotIndex] = null;
+    setSlots(newSlots);
+    setStatus('idle');
+  };
+
+  const handleReset = () => {
+    if (isLocked) return;
+    setSlots([null, null, null]);
+    setStatus('idle');
+  };
+
+  const handleCheck = () => {
+    const newAttempts = attempts + 1;
+    setAttempts(newAttempts);
+    const allCorrect = data.blocks.every(b => slots[b.correctSlot - 1] === b.id);
+    if (allCorrect) {
+      setStatus('correct');
+    } else if (newAttempts >= MAX_ATTEMPTS) {
+      // Reveal correct answer
+      const correctSlots = [...slots];
+      data.blocks.forEach(b => { correctSlots[b.correctSlot - 1] = b.id; });
+      setSlots(correctSlots);
+      setStatus('locked');
+    } else {
+      setStatus('incorrect');
+    }
+  };
+
+  const getBlockById = (id: string) => data.blocks.find(b => b.id === id);
+
+  return (
+    <div className="space-y-6">
+      {/* Single card — no duplicate heading */}
+      <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm overflow-hidden">
+        {/* Top bar: instruction + attempt badge */}
+        <div className="flex items-start justify-between gap-3 p-4 border-b border-[#D5DEEF]/60 bg-[#F8FAFD]">
+          <div className="flex items-start gap-2.5 flex-1 min-w-0">
+            <Info className="w-4 h-4 text-[#628ECB] shrink-0 mt-0.5" />
+            <p className="text-xs font-bold text-[#395886]/80 leading-relaxed">{data.instruction}</p>
+          </div>
+          <div className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold
+            ${isLocked ? 'border-red-200 bg-red-50 text-red-500' : 'border-[#8B5CF6]/20 bg-white text-[#8B5CF6]'}`}>
+            <AlertCircle className="w-3 h-3" />
+            {isLocked ? 'Habis' : `${remainingAttempts} percobaan`}
+          </div>
+        </div>
+
+        {/* Activity body */}
+        <div className="p-5 space-y-5">
+          {/* Timeline Slots — no sub-heading, langsung slot */}
+          <div className="grid gap-3">
+          {[1, 2, 3].map((stepNum, idx) => {
+            const blockId = slots[idx];
+            const block = blockId ? getBlockById(blockId) : null;
+            const isOccupied = !!block;
+
+            return (
+              <div key={idx} className="relative">
+                <div className="flex items-center gap-3 mb-1.5">
+                  <div
+                    className="h-7 w-7 rounded-lg flex items-center justify-center text-[10px] font-black text-white shadow-sm"
+                    style={{ backgroundColor: idx === 0 ? '#628ECB' : idx === 1 ? '#8B5CF6' : '#10B981' }}
+                  >
+                    {stepNum}
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[#395886]/40">Langkah {stepNum}</span>
+                </div>
+
+                <div
+                  onClick={() => isOccupied && isEditable && handleRemoveFromSlot(idx)}
+                  className={`min-h-[58px] rounded-2xl border-2 transition-all duration-300 flex items-center justify-center p-3
+                    ${isEditable ? 'cursor-pointer border-dashed' : 'cursor-default'}
+                    ${status === 'correct'
+                      ? 'border-[#10B981] bg-[#F0FDF4]'
+                      : isLocked
+                        ? 'border-[#F59E0B] bg-[#FFFBEB]'
+                        : status === 'incorrect' && !isOccupied
+                          ? 'border-red-300 bg-red-50/50'
+                          : isOccupied
+                            ? 'border-[#628ECB] bg-[#EEF4FF] shadow-sm'
+                            : isEditable
+                              ? 'border-[#D5DEEF] bg-white hover:border-[#628ECB]/50'
+                              : 'border-[#D5DEEF] bg-white'
+                    }`}
+                >
+                  {isOccupied ? (
+                    <div className="flex items-center gap-3 w-full group">
+                      <span
+                        className="shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-black text-white"
+                        style={{ backgroundColor: idx === 0 ? '#628ECB' : idx === 1 ? '#8B5CF6' : '#10B981' }}
+                      >
+                        {block!.label}
+                      </span>
+                      <span className="text-xs font-bold text-[#395886] flex-1 leading-relaxed">{block!.text}</span>
+                      {isEditable && (
+                        <XCircle className="w-4 h-4 text-[#395886]/20 group-hover:text-red-400 transition-colors shrink-0" />
+                      )}
+                      {isLocked && (
+                        <CheckCircle className="w-4 h-4 text-[#F59E0B] shrink-0" />
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-1">
+                      <ArrowDown className="w-4 h-4 text-[#D5DEEF]" />
+                      <span className="text-[10px] font-bold text-[#D5DEEF] uppercase">Letakkan Blok di Sini</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Available Blocks — no sub-heading, langsung blok */}
+        {isEditable && (
+          <div className="grid gap-2">
+            {availableBlocks.map(block => (
+              <div key={block.id} className="flex flex-wrap gap-2">
+                {[0, 1, 2].map(slotIdx => {
+                  if (slots[slotIdx]) return null;
+                  return (
+                    <button
+                      key={slotIdx}
+                      onClick={() => handlePlaceBlock(block.id, slotIdx)}
+                      className="flex items-center gap-2 px-4 py-3 rounded-xl border-2 border-[#D5DEEF] bg-white hover:border-[#628ECB]/50 hover:bg-[#EEF4FF] transition-all text-left group flex-1 min-w-0"
+                    >
+                      <span
+                        className="shrink-0 px-2 py-1 rounded-lg text-[10px] font-black text-white"
+                        style={{ backgroundColor: slotIdx === 0 ? '#628ECB' : slotIdx === 1 ? '#8B5CF6' : '#10B981' }}
+                      >
+                        {block.label}
+                      </span>
+                      <span className="text-[11px] font-bold text-[#395886] leading-snug flex-1">{block.text}</span>
+                      <div className="shrink-0 flex flex-col items-center text-[#628ECB]/30 group-hover:text-[#628ECB] transition-colors">
+                        <span className="text-[8px] font-black">Ke</span>
+                        <span className="text-[8px] font-black">Slot {slotIdx + 1}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+            {availableBlocks.length === 0 && (
+              <p className="text-center text-[10px] font-bold text-[#395886]/30 py-2">Semua blok sudah ditempatkan. Periksa urutannya!</p>
+            )}
+          </div>
+        )}
+
+        {/* Feedback */}
+        {status === 'incorrect' && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 rounded-2xl bg-red-50 border-2 border-red-200 flex items-start gap-3"
+          >
+            <XCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-bold text-red-800 mb-1">Urutan Belum Logis</p>
+              <p className="text-xs text-red-600/80 leading-relaxed">{data.errorFeedback}</p>
+              <button
+                onClick={handleReset}
+                className="mt-2 flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-700 transition-colors"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Coba Susun Ulang
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Locked state */}
+        {isLocked && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
+            <div className="p-5 rounded-2xl bg-amber-50 border-2 border-amber-200 flex items-start gap-3">
+              <div className="h-10 w-10 shrink-0 rounded-xl bg-amber-100 flex items-center justify-center">
+                <Lock className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-amber-800 mb-1">Batas Percobaan Tercapai (3×)</p>
+                <p className="text-xs text-amber-600/80 leading-relaxed">
+                  Kamu telah menggunakan semua kesempatan. Urutan yang benar telah ditampilkan di atas.
+                  Pelajari alurnya: <strong>SYN → SYN-ACK → ACK</strong>, lalu lanjutkan ke papan kolaboratif.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={onSuccess}
+              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-sm shadow-lg transition-all active:scale-95 bg-gradient-to-r from-[#395886] to-[#628ECB] text-white hover:opacity-90"
+            >
+              <Users className="w-4 h-4" />
+              Masuk ke Papan Kolaboratif
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+
+        {status === 'correct' && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
+            <div className="p-5 rounded-2xl bg-[#F0FDF4] border-2 border-[#10B981] flex items-start gap-3">
+              <div className="h-10 w-10 shrink-0 rounded-xl bg-[#10B981]/15 flex items-center justify-center">
+                <CheckCircle className="w-5 h-5 text-[#10B981]" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-[#065F46] mb-1">Koneksi Valid!</p>
+                <p className="text-xs text-[#10B981]/80 leading-relaxed">{data.successMessage}</p>
+              </div>
+            </div>
+
+            <button
+              onClick={onSuccess}
+              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-sm shadow-lg transition-all active:scale-95 bg-gradient-to-r from-[#395886] to-[#628ECB] text-white hover:opacity-90"
+            >
+              <Users className="w-4 h-4" />
+              Masuk ke Papan Kolaboratif
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+
+        {/* Check / Reset buttons */}
+        {isEditable && (
+          <div className="flex gap-3">
+            <button
+              onClick={handleReset}
+              disabled={slots.every(s => s === null)}
+              className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all active:scale-95 bg-white border-2 border-[#D5DEEF] text-[#395886]/60 hover:border-[#628ECB]/30 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Reset
+            </button>
+            <button
+              onClick={handleCheck}
+              disabled={slots.some(s => s === null)}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-black text-sm transition-all active:scale-95 shadow-sm
+                ${slots.some(s => s === null)
+                  ? 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'
+                  : 'bg-[#F59E0B] text-white hover:bg-amber-600'}`}
+            >
+              <CheckCircle className="w-4 h-4" />
+              Periksa Urutan
+            </button>
+          </div>
+        )}
+        </div>{/* close activity body */}
+      </div>{/* close single card */}
     </div>
   );
 }
@@ -1070,7 +1370,7 @@ function OverallGroupResult({ lessonId, module1Data, module2Data, groupName, onN
 
 export function LearningCommunityStage({ 
   lessonId, stageIndex, moduleId, groupName, onComplete, isCompleted,
-  layers5 = [], encapsulationCase, decapsulationCase
+  layers5 = [], encapsulationCase, decapsulationCase, timelineFlowchart
 }: LearningCommunityStageProps) {
   const tracker = useActivityTracker({
     lessonId,
@@ -1078,8 +1378,10 @@ export function LearningCommunityStage({
     stageType: 'learning-community',
   });
   
-  const [subStage, setSubPhase] = useState<'simulasi' | 'x_tcp_6' | 'x_tcp_7' | 'group_result' | 'individual_summary'>(isCompleted ? 'individual_summary' : 'simulasi');
+  const isLesson2WithFlowchart = lessonId === '2' && !!timelineFlowchart;
+  const [subStage, setSubPhase] = useState<'simulasi' | 'keruntutan_berpikir' | 'x_tcp_6' | 'x_tcp_7' | 'group_result' | 'individual_summary'>(isCompleted ? 'individual_summary' : 'simulasi');
   const [understood, setUnderstood] = useState(false);
+  const [flowchartCompleted, setFlowchartCompleted] = useState(false);
   const [module1Data, setModule1Data] = useState<any>(null);
   const [module2Data, setModule2Data] = useState<any>(null);
   const [members, setMembers] = useState<{ user_id: string; user_name: string }[]>([]);
@@ -1091,12 +1393,14 @@ export function LearningCommunityStage({
   }, [groupName]);
 
   useEffect(() => {
-    const progressMap = { simulasi: 10, x_tcp_6: 35, x_tcp_7: 65, group_result: 85, individual_summary: 95 } as const;
+    const progressMap: Record<string, number> = {
+      simulasi: 10, keruntutan_berpikir: 30, x_tcp_6: 55, x_tcp_7: 70, group_result: 85, individual_summary: 95,
+    };
     void tracker.saveSnapshot(
-      { subStage, understood, module1Data, module2Data },
-      { progressPercent: progressMap[subStage] },
+      { subStage, understood, flowchartCompleted, module1Data, module2Data },
+      { progressPercent: progressMap[subStage] || 10 },
     );
-  }, [subStage, understood, module1Data, module2Data, tracker]);
+  }, [subStage, understood, flowchartCompleted, module1Data, module2Data, tracker]);
 
   if (!groupName) return (
     <div className="w-full py-12 text-center bg-white rounded-lg border-2 border-dashed border-[#D5DEEF] shadow-inner">
@@ -1143,14 +1447,42 @@ export function LearningCommunityStage({
           </div>
 
           <button
-            onClick={() => setSubPhase('x_tcp_6')}
+            onClick={() => isLesson2WithFlowchart ? setSubPhase('keruntutan_berpikir') : setSubPhase('x_tcp_6')}
             disabled={!understood}
             className={`w-full mt-5 py-3.5 rounded-xl font-black text-sm shadow-md transition-all active:scale-95 flex items-center justify-center gap-2
               ${understood ? 'bg-[#395886] text-white hover:bg-[#2A4468]' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
           >
-             Mulai Aktivitas Kelompok <ChevronRight className="w-5 h-5" />
+             {isLesson2WithFlowchart ? 'Mulai Aktivitas Keruntutan Berpikir' : 'Mulai Aktivitas Kelompok'} <ChevronRight className="w-5 h-5" />
           </button>
        </div>
+    </div>
+  );
+
+  if (subStage === 'keruntutan_berpikir') return (
+    <div className={`w-full space-y-6 ${anim.fadeUp}`}>
+      <div className="bg-white rounded-2xl border-2 border-[#8B5CF6]/20 p-5 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-4 mb-5 text-left border-b border-[#D5DEEF]/60 pb-5">
+          <div className="h-12 w-12 rounded-xl bg-[#8B5CF6]/10 text-[#8B5CF6] flex items-center justify-center shadow-sm">
+            <Shuffle className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#8B5CF6]">Keruntutan Berpikir</p>
+            <h2 className="text-base font-black text-[#395886]">Protokol Kronologis: Amankan Jalur Koneksi</h2>
+            <p className="text-xs text-[#395886]/60 mt-0.5">Susun blok proses TCP Three-Way Handshake secara berurutan sebelum masuk ke diskusi kelompok.</p>
+          </div>
+        </div>
+
+        {timelineFlowchart && (
+          <TimelineFlowchartSection
+            data={timelineFlowchart}
+            onSuccess={() => {
+              setFlowchartCompleted(true);
+              // Brief delay so student can see the success state
+              setTimeout(() => setSubPhase('x_tcp_6'), 1500);
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 
@@ -1160,12 +1492,19 @@ export function LearningCommunityStage({
       lessonId={lessonId}
       moduleId={encapsulationCase?.id || 'X.TCP.6'}
       groupName={groupName}
-      title={encapsulationCase?.title || 'Aktivitas Enkapsulasi'}
+      title={isLesson2WithFlowchart ? (encapsulationCase?.title || 'Studi Kasus Three-Way Handshake') : (encapsulationCase?.title || 'Aktivitas Enkapsulasi')}
       concept={encapsulationCase?.concept || 'Enkapsulasi adalah proses pembungkusan data.'}
       layers={layers5}
       study={encapsulationCase!}
       isEncapsulation={true}
-      onModuleDone={d => { setModule1Data(d); setSubPhase('x_tcp_7'); }}
+      onModuleDone={d => {
+        setModule1Data(d);
+        if (isLesson2WithFlowchart) {
+          setSubPhase('individual_summary');
+        } else {
+          setSubPhase('x_tcp_7');
+        }
+      }}
     />
   );
 
@@ -1198,8 +1537,8 @@ export function LearningCommunityStage({
     <div className={`space-y-8 ${anim.fadeUp} w-full`}>
       <ActivityCard
         icon={<Award className="w-5 h-5 text-[#10B981]" />}
-        label="Langkah Akhir"
-        title="Kesimpulan Individu"
+        label={isLesson2WithFlowchart ? 'Tahap 3 — Penarikan Kesimpulan' : 'Langkah Akhir'}
+        title={isLesson2WithFlowchart ? 'Refleksi Three-Way Handshake TCP' : 'Kesimpulan Individu'}
         headerBg="bg-[#10B981]/5"
         headerBorder="border-[#10B981]/20"
         iconBg="bg-[#10B981]/10"
@@ -1207,19 +1546,23 @@ export function LearningCommunityStage({
       >
         <div className="space-y-6">
           <InstructionBox accent="text-[#10B981]">
-            Selesaikan tahap Learning Community dengan menuliskan pemahaman pribadimu berdasarkan hasil kolaborasi kelompok.
+            {isLesson2WithFlowchart
+              ? 'Simpulkan kembali proses Three-Way Handshake TCP berdasarkan hasil aktivitas Timeline Flowchart dan diskusi kelompok.'
+              : 'Selesaikan tahap Learning Community dengan menuliskan pemahaman pribadimu berdasarkan hasil kolaborasi kelompok.'}
           </InstructionBox>
 
           <EssayBox
             objectiveLabel={moduleId}
             prompt={
-              isLesson2
-                ? 'Berdasarkan hasil diskusi kelompokmu tentang TCP Three-Way Handshake dan Flow Control, simpulkan: (1) Mengapa Three-Way Handshake diperlukan sebelum data dikirim? (2) Apa hubungan antara Window Size dan kemampuan server dalam menerima data?'
-                : 'Berdasarkan hasil diskusi kelompokmu, simpulkan mengapa pemahaman alur enkapsulasi dan dekapsulasi sangat penting bagi seorang teknisi jaringan dalam melakukan troubleshooting?'
+              isLesson2WithFlowchart
+                ? 'Berdasarkan aktivitas penyusunan Timeline Flowchart dan diskusi kelompok tentang koneksi tertunda ke server sekolah, simpulkan: (1) apa yang terjadi pada setiap langkah Three-Way Handshake (SYN → SYN-ACK → ACK) beserta nilai Sequence Number dan ACK Number-nya, serta (2) mengapa urutan ini tidak dapat diubah atau dilewati. Tuliskan secara logis dengan kata-katamu sendiri.'
+                : isLesson2
+                  ? 'Berdasarkan hasil diskusi kelompokmu tentang TCP Three-Way Handshake dan Flow Control, simpulkan: (1) Mengapa Three-Way Handshake diperlukan sebelum data dikirim? (2) Apa hubungan antara Window Size dan kemampuan server dalam menerima data?'
+                  : 'Berdasarkan hasil diskusi kelompokmu, simpulkan mengapa pemahaman alur enkapsulasi dan dekapsulasi sangat penting bagi seorang teknisi jaringan dalam melakukan troubleshooting?'
             }
             submitLabel="Submit Aktivitas"
             onSubmit={essay => {
-              const finalAnswer = { module1Data, module2Data, finalConclusion: essay };
+              const finalAnswer = { module1Data, module2Data, flowchartCompleted, finalConclusion: essay };
               void tracker.complete(finalAnswer, { finalAnswer });
               onComplete(finalAnswer);
             }}

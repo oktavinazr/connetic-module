@@ -446,6 +446,7 @@ export function LessonPage() {
             layers5={currentStage.layers5}
             moduleId={currentStage.moduleId || ''}
             groupName={groupName}
+            timelineFlowchart={currentStage.timelineFlowchart}
           />
         );
       case 'modeling': {

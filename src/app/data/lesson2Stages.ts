@@ -266,25 +266,40 @@ export const lesson2Stages: Stage[] = [
     type: 'learning-community',
     title: 'Learning Community',
     description:
-      'Siswa berdiskusi dalam kelompok tentang pengambilan keputusan teknis dalam mekanisme Three-Way Handshake dan Flow Control TCP.',
+      'Siswa menyusun blok proses TCP Three-Way Handshake secara berurutan, kemudian berdiskusi dalam kelompok menganalisis studi kasus koneksi tertunda ke server sekolah.',
     objectiveCode: 'X.TCP.12',
     activityGuide: [
-      'Simak visualisasi alur Three-Way Handshake sebagai fondasi diskusi kelompok.',
-      'Analisis Studi Kasus 1 (TCP Handshake): pilih strategi, tulis argumen, kirim ke kelompok.',
-      'Analisis Studi Kasus 2 (TCP Flow Control): pilih strategi, tulis argumen, kirim ke kelompok.',
+      'Simak animasi Three-Way Handshake TCP sebagai fondasi.',
+      'Susun 3 blok proses TCP (SYN, SYN-ACK, ACK) pada Interactive Timeline Flowchart secara berurutan.',
+      'Analisis studi kasus: pilih strategi, tulis argumen, kirim ke papan kolaboratif kelompok.',
       'Diskusikan dan beri vote pada argumen terbaik di papan diskusi kelompok.',
     ],
     moduleId: 'X.TCP.12',
     logicalThinkingIndicators: [
-      'Keruntutan Berpikir: menganalisis studi kasus TCP Three-Way Handshake dan Flow Control secara sistematis.',
-      'Kemampuan Berargumen: menyampaikan alasan teknis yang jelas dalam diskusi kelompok berdasarkan mekanisme TCP.',
-      'Penarikan Kesimpulan: menyimpulkan argumen terbaik dari diskusi kelompok tentang mekanisme TCP Three-Way Handshake.',
+      'Keruntutan Berpikir: menyusun blok proses TCP Three-Way Handshake secara kronologis melalui Interactive Timeline Flowchart.',
+      'Kemampuan Berargumen: menyampaikan alasan teknis yang jelas dalam diskusi kelompok berdasarkan studi kasus koneksi tertunda.',
+      'Penarikan Kesimpulan: menyimpulkan kembali proses Three-Way Handshake TCP berdasarkan hasil aktivitas dan diskusi kelompok.',
+    ],
+    facilitatorNotes: [
+      'Guru memastikan setiap siswa menyelesaikan Timeline Flowchart sebelum masuk ke papan kolaboratif.',
+      'Guru menekankan hubungan sebab-akibat: SYN memicu SYN-ACK, SYN-ACK memicu ACK final.',
+      'Guru mengarahkan diskusi kelompok menggunakan pertanyaan pemandu tentang peran server dan client.',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
       behavior: 'mampu menerapkan proses TCP Three-Way Handshake untuk menentukan nilai SYN, SYN-ACK, dan ACK pada setiap langkah pembentukan koneksi',
-      condition: 'melalui aktivitas learning community berupa papan kolaboratif studi kasus pada CONNETIC Module',
+      condition: 'melalui aktivitas learning community berupa Interactive Timeline Flowchart dan papan kolaboratif studi kasus pada CONNETIC Module',
       degree: 'secara logis',
+    },
+    timelineFlowchart: {
+      instruction: 'Susun ketiga blok proses TCP Three-Way Handshake di bawah ini ke dalam urutan yang benar. Tarik dan letakkan setiap blok ke slot Langkah 1, Langkah 2, dan Langkah 3 secara berurutan.',
+      blocks: [
+        { id: 'block_a', label: 'Blok A', text: 'Client mengirim SYN sebagai permintaan awal untuk memulai koneksi ke server.', correctSlot: 1 },
+        { id: 'block_b', label: 'Blok B', text: 'Server membalas dengan SYN-ACK sebagai bentuk persetujuan dan respons terhadap permintaan koneksi.', correctSlot: 2 },
+        { id: 'block_c', label: 'Blok C', text: 'Client mengirim ACK sebagai konfirmasi bahwa koneksi telah berhasil dibangun dan siap digunakan.', correctSlot: 3 },
+      ],
+      successMessage: '✅ Koneksi Valid! Urutan Three-Way Handshake sudah benar. Koneksi TCP berhasil dibangun — Client dan Server siap bertukar data.',
+      errorFeedback: 'Urutan belum logis. Perhatikan kembali alur komunikasi TCP: Client harus memulai permintaan terlebih dahulu, kemudian Server merespons, dan terakhir Client mengonfirmasi. Coba susun ulang berdasarkan alur komunikasi yang benar.',
     },
     layers5: [
       { id: 'L5', name: 'Application', pdu: 'Data', color: '#8B5CF6', desc: 'Browser meminta halaman web ke server melalui HTTP.' },
@@ -294,65 +309,38 @@ export const lesson2Stages: Stage[] = [
       { id: 'L1', name: 'Physical', pdu: 'Bits', color: '#395886', desc: 'Sinyal elektrik, optik, atau radio membawa bit melalui media fisik.' },
     ],
     encapsulationCase: {
-      id: 'X.TCP.8.A',
-      title: 'Studi Kasus: Kapan Harus Kirim SYN Ulang?',
+      id: 'X.TCP.12.A',
+      title: 'Studi Kasus: Koneksi Tertunda ke Server Sekolah',
       concept:
-        'Three-Way Handshake dimulai dengan SYN dari Client. Namun, jaringan tidak selalu sempurna — bagaimana jika SYN tidak mendapat balasan SYN-ACK dalam waktu tertentu?',
+        'Three-Way Handshake adalah proses 3 langkah pembentukan koneksi TCP: Client mengirim SYN, Server membalas SYN-ACK, dan Client mengonfirmasi dengan ACK. Proses ini memastikan kedua pihak siap bertukar data sebelum pengiriman dimulai.',
       scenario:
-        'Client mengirim SYN ke server web sekolah. Sudah 3 detik berlalu, tetapi tidak ada balasan SYN-ACK. Koneksi tampaknya tertunda. Client dihadapkan pada pilihan: menunggu lebih lama, mengirim ulang SYN, atau langsung menyerah.',
+        'Sebuah laptop (Client) ingin terhubung ke server sekolah untuk membuka website. Laptop tersebut telah mengirimkan paket SYN ke server. Namun, server mengalami keterlambatan respon selama beberapa detik.',
       question:
-        'Apa yang seharusnya dilakukan TCP Client dalam situasi ini sesuai standar protokol TCP?',
+        'Berdasarkan proses Three-Way Handshake, jelaskan apa yang terjadi selanjutnya pada SYN-ACK dan ACK hingga koneksi berhasil terbentuk.',
       options: [
         {
           id: 'A',
-          text: 'Mengirim ulang SYN secara otomatis dengan exponential backoff — timeout yang semakin panjang di setiap percobaan.',
-          logic: 'Ini perilaku standar TCP RFC. Exponential backoff mencegah Client membanjiri jaringan yang sedang sibuk dengan SYN berulang-ulang.',
+          text: 'Server tetap akan membalas dengan SYN-ACK setelah siap merespons, kemudian Client mengirim ACK final. Koneksi tetap bisa terbentuk meskipun ada keterlambatan — TCP memiliki mekanisme timeout dan retransmission yang menjamin keandalan.',
+          logic: 'Tepat. Keterlambatan server tidak membatalkan koneksi. TCP memiliki mekanisme retransmission: jika SYN tidak mendapat balasan dalam waktu tertentu (timeout), Client akan mengirim ulang SYN. Begitu server siap, ia membalas SYN-ACK, dan Client menyelesaikan dengan ACK. Koneksi akhirnya ESTABLISHED.',
         },
         {
           id: 'B',
-          text: 'Langsung menampilkan "Connection Failed" kepada pengguna tanpa mencoba lagi.',
-          logic: 'Ini terlalu agresif. TCP dirancang resilient — ia mencoba beberapa kali sebelum menyerah. Sekali gagal belum tentu koneksi mustahil.',
+          text: 'Koneksi langsung gagal total karena server tidak merespons dalam waktu yang diharapkan, dan Client harus memulai ulang seluruh proses dari awal secara manual.',
+          logic: 'Ini tidak tepat. TCP dirancang untuk menangani keterlambatan jaringan. Client tidak langsung menyerah — ia akan mencoba mengirim ulang SYN beberapa kali sebelum menyatakan koneksi gagal. Prosesnya otomatis, bukan manual.',
         },
         {
           id: 'C',
-          text: 'Mengirim data langsung tanpa menunggu SYN-ACK karena koneksi mungkin sudah terbuka di sisi server.',
-          logic: 'Ini melanggar prinsip TCP. Data tidak boleh dikirim sebelum Three-Way Handshake selesai — tanpa koneksi terbuka, server tidak tahu bagaimana menanggapi data tersebut.',
-        },
-      ],
-    },
-    decapsulationCase: {
-      id: 'X.TCP.5.B',
-      title: 'Studi Kasus: Window Size Mendekati Nol',
-      concept:
-        'Flow Control TCP menggunakan Window Size untuk mencegah pengirim mengirim data lebih cepat dari kemampuan proses penerima. Window Size yang terus menurun adalah sinyal darurat.',
-      scenario:
-        'Monitoring jaringan sekolah menunjukkan bahwa nilai Window Size yang dikirim server e-learning terus menurun: 65535 → 8192 → 1024 → 128. Infrastruktur jaringan fisik tidak mengalami gangguan apapun.',
-      question:
-        'Apa interpretasi teknis yang paling tepat dari menurunnya Window Size secara konsisten pada server tersebut?',
-      options: [
-        {
-          id: 'A',
-          text: 'Buffer penerima (server) semakin penuh karena data baru datang lebih cepat dari kecepatan pemrosesan aplikasi.',
-          logic: 'Tepat. Window Size mencerminkan ruang kosong di buffer penerima. Penurunan konsisten ini menandakan server kewalahan memproses antrean request yang terus bertambah.',
-        },
-        {
-          id: 'B',
-          text: 'Kabel jaringan mengalami degradasi sehingga data hilang di tengah perjalanan dan Window Size menyesuaikan.',
-          logic: 'Jika masalah fisik, gejalanya adalah packet loss dan retransmission, bukan penurunan Window Size secara konsisten. Window Size adalah kondisi internal server, bukan refleksi kualitas fisik kabel.',
-        },
-        {
-          id: 'C',
-          text: 'TCP secara otomatis memperkecil Window Size untuk meningkatkan keamanan dari serangan jaringan.',
-          logic: 'Window Size tidak berkaitan dengan keamanan jaringan — itu murni mekanisme Flow Control untuk mencegah buffer overflow di sisi penerima.',
+          text: 'Client melewati langkah SYN-ACK dan langsung mengirim data karena server sudah diketahui alamatnya.',
+          logic: 'Ini melanggar prinsip dasar TCP. Data tidak boleh dikirim sebelum Three-Way Handshake selesai. Tanpa SYN-ACK, Client tidak tahu apakah server siap menerima data. Koneksi harus ESTABLISHED terlebih dahulu.',
         },
       ],
     },
     groupActivity: {
       groupNames: ['Kelompok 1', 'Kelompok 2', 'Kelompok 3', 'Kelompok 4', 'Kelompok 5', 'Kelompok 6', 'Kelompok 7', 'Kelompok 8'],
       discussionPrompt:
-        'Diskusikan: Apa yang terjadi jika KEDUA masalah (SYN timeout dan Window Size mendekati nol) terjadi bersamaan? Mana yang lebih kritis untuk ditangani lebih dulu? Berikan vote pada argumen teknis terkuat.',
+        'Diskusikan bersama kelompok menggunakan pertanyaan pemandu berikut:\n1. Apa yang dilakukan server setelah menerima SYN?\n2. Bagaimana respons client setelah menerima balasan dari server?\n3. Jelaskan urutan proses hingga koneksi berhasil terbentuk.\n\nBerikan vote pada argumen teknis terkuat!',
     },
-    conclusionPrompt: 'Berdasarkan diskusi kelompok tentang TCP Handshake dan Flow Control yang telah kamu lakukan, jelaskan bagaimana kamu mampu menerapkan proses TCP Three-Way Handshake untuk menentukan nilai SYN, SYN-ACK, dan ACK pada setiap langkah pembentukan koneksi. Tuliskan secara logis dengan kata-katamu sendiri.',
+    conclusionPrompt: 'Berdasarkan aktivitas penyusunan Timeline Flowchart dan diskusi kelompok tentang koneksi tertunda ke server sekolah, simpulkan kembali proses Three-Way Handshake TCP secara runtut. Jelaskan: (1) apa yang terjadi pada setiap langkah (SYN → SYN-ACK → ACK), dan (2) mengapa urutan ini tidak bisa diubah atau dilewati. Tuliskan secara logis dengan kata-katamu sendiri.',
   },
 
   {
