@@ -181,7 +181,7 @@ function ConstructivismReview({ answer, snap }: { answer: any; snap?: Record<str
   return (
     <div className="space-y-3">
       {(essay1 || essay2) && (
-        <ReviewCard title="Esai Kamu" icon={<PenLine className="w-3.5 h-3.5" />} accentColor="text-[#628ECB]" borderColor="border-[#628ECB]/20" bgColor="bg-[#EEF4FF]/40">
+        <ReviewCard title="Kemampuan Beragumen" icon={<PenLine className="w-3.5 h-3.5" />} accentColor="text-[#628ECB]" borderColor="border-[#628ECB]/20" bgColor="bg-[#EEF4FF]/40">
           <div className="space-y-3">
             {essay1 && (
               <div>
@@ -191,7 +191,7 @@ function ConstructivismReview({ answer, snap }: { answer: any; snap?: Record<str
             )}
             {essay2 && (
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60 mb-1.5">Esai 2</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60 mb-1.5">Argumen Logis</p>
                 <EssayDisplay text={essay2} />
               </div>
             )}
@@ -624,6 +624,67 @@ function ReflectionReview({ answer, snap }: { answer: any; snap?: Record<string,
 }
 
 function AuthenticAssessmentReview({ answer, snap, stage }: { answer: any; snap?: Record<string, any>; stage: Stage }) {
+  const scenario = (stage as any).branchingScenario;
+  const isTcpBranching = scenario?.mode === 'tcp-branching' && Array.isArray(scenario?.steps);
+
+  if (isTcpBranching) {
+    const selectedOptions = snap?.selectedOptions ?? answer?.selectedOptions ?? {};
+    const argumentText = snap?.argumentText ?? answer?.argumentText;
+    const conclusionChoice = snap?.conclusionChoice ?? answer?.conclusionChoice;
+    const conclusionCorrect = answer?.conclusionCorrect;
+    const steps = scenario.steps ?? [];
+    const conclusionOptions = scenario.conclusionOptions ?? [];
+    const selectedConclusion = conclusionOptions.find((opt: any) => opt.id === conclusionChoice);
+
+    const hasAny = Object.keys(selectedOptions).length > 0 || argumentText || conclusionChoice;
+    if (!hasAny) return <MissingData />;
+
+    return (
+      <div className="space-y-3">
+        {Object.keys(selectedOptions).length > 0 && (
+          <ReviewCard title="Branching TCP Case Simulation" icon={<CheckCircle className="w-3.5 h-3.5" />} accentColor="text-[#8B5CF6]" borderColor="border-[#8B5CF6]/20" bgColor="bg-[#F5F3FF]/40">
+            <div className="space-y-2">
+              {steps.map((step: any, index: number) => {
+                const selectedId = selectedOptions[step.id];
+                if (!selectedId) return null;
+                const selected = step.options.find((opt: any) => opt.id === selectedId);
+                return (
+                  <div key={step.id} className="rounded-xl border border-[#D5DEEF] bg-white p-3">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#8B5CF6]/60 mb-1">Langkah {index + 1}</p>
+                    <p className="text-xs font-bold text-[#395886]">{step.prompt}</p>
+                    <p className={`text-[11px] mt-2 font-medium ${selected?.isCorrect ? 'text-[#10B981]' : 'text-red-600'}`}>
+                      {selected?.text || selectedId}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </ReviewCard>
+        )}
+
+        {argumentText && (
+          <ReviewCard title="Kemampuan Berargumen" icon={<PenLine className="w-3.5 h-3.5" />} accentColor="text-[#628ECB]" borderColor="border-[#628ECB]/20" bgColor="bg-[#EEF4FF]/40">
+            <EssayDisplay text={argumentText} />
+          </ReviewCard>
+        )}
+
+        {conclusionChoice && (
+          <ReviewCard
+            title="Penarikan Kesimpulan"
+            icon={conclusionCorrect ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+            accentColor={conclusionCorrect ? 'text-[#10B981]' : 'text-red-500'}
+            borderColor={conclusionCorrect ? 'border-[#10B981]/20' : 'border-red-200'}
+            bgColor={conclusionCorrect ? 'bg-[#F0FDF9]/40' : 'bg-red-50/40'}
+          >
+            <div className={`rounded-xl p-3 ${conclusionCorrect ? 'bg-[#ECFDF5]' : 'bg-red-50'}`}>
+              <p className="text-xs font-bold text-[#395886]">{selectedConclusion?.text || conclusionChoice}</p>
+            </div>
+          </ReviewCard>
+        )}
+      </div>
+    );
+  }
+
   const initialChoice = snap?.initialChoice ?? answer?.initialChoice;
   const initialReason = snap?.initialReason ?? answer?.initialReason;
   const followUpChoice = snap?.followUpChoice ?? answer?.followUpChoice;
@@ -631,8 +692,8 @@ function AuthenticAssessmentReview({ answer, snap, stage }: { answer: any; snap?
   const isOptimal = answer?.isOptimal;
   const isFollowUpCorrect = answer?.isFollowUpCorrect;
 
-  const scenario = (stage as any).branchingScenario;
-  const initialBranch = scenario?.branches?.find((b: any) => b.id === initialChoice);
+  const legacyScenario = (stage as any).branchingScenario;
+  const initialBranch = legacyScenario?.branches?.find((b: any) => b.id === initialChoice);
   const followUpOpt = initialBranch?.followUp?.options?.find((o: any) => o.id === followUpChoice);
 
   const hasAny = initialChoice || followUpChoice;

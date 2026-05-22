@@ -369,6 +369,129 @@ function ModelingLesson2({ lessonId, stageIndex, onComplete, objectiveCode = 'X.
   if (phase === 'conclusion') {
     return (
       <div className="space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+
+        {/* Activity Summary — always visible so students have context while writing */}
+        <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#395886]/8 to-transparent border-b border-[#D5DEEF]">
+            <div className="h-8 w-8 rounded-xl bg-[#395886]/10 flex items-center justify-center">
+              <Activity className="w-4 h-4 text-[#395886]" />
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-widest text-[#395886]/60">Ringkasan Simulasi</p>
+              <p className="text-sm font-bold text-[#395886]">Hasil Aktivitas TCP — Pertemuan 2</p>
+            </div>
+          </div>
+
+          <div className="p-5 space-y-5">
+            {/* Fase A */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="h-5 w-5 rounded-md bg-[#628ECB]/15 flex items-center justify-center">
+                  <span className="text-[8px] font-black text-[#628ECB]">A</span>
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-wide text-[#628ECB]">Fase A — Three-Way Handshake</p>
+              </div>
+              <div className="ml-7 space-y-1.5">
+                {[
+                  { step: 'Langkah 1 (SYN)', values: 'Client Seq = 100', dir: 'Client → Server', color: '#628ECB' },
+                  { step: 'Langkah 2 (SYN-ACK)', values: 'Server Seq = 500, Ack = 101', dir: 'Server → Client', color: '#8B5CF6' },
+                  { step: 'Langkah 3 (ACK)', values: 'Client Ack = 501', dir: 'Client → Server', color: '#10B981' },
+                ].map(r => (
+                  <div key={r.step} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-[#F8FAFF] border border-[#D5DEEF]">
+                    <div className="h-3.5 w-3.5 mt-0.5 rounded-full shrink-0 bg-[#10B981] flex items-center justify-center">
+                      <CheckCircle className="w-2.5 h-2.5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[9px] font-black text-[#395886]">{r.step}</p>
+                      <p className="text-[9px] text-[#395886]/60">{r.dir} · <span className="font-black" style={{ color: r.color }}>{r.values}</span></p>
+                    </div>
+                  </div>
+                ))}
+                <div className="px-3 py-1.5 rounded-lg bg-[#10B981]/10 border border-[#10B981]/25 text-[9px] font-black text-[#065F46]">
+                  Status akhir: CLIENT = ESTABLISHED · SERVER = ESTABLISHED ✓
+                </div>
+              </div>
+            </div>
+
+            <div className="h-px bg-[#D5DEEF]" />
+
+            {/* Fase B */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="h-5 w-5 rounded-md bg-[#F59E0B]/15 flex items-center justify-center">
+                  <span className="text-[8px] font-black text-[#F59E0B]">B</span>
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-wide text-[#F59E0B]">Fase B — Segmentasi Data</p>
+              </div>
+              <div className="ml-7 space-y-1.5">
+                <div className="px-3 py-2 rounded-lg bg-[#F8FAFF] border border-[#D5DEEF] text-[9px]">
+                  <span className="font-black text-[#395886]">Jumlah segmen: </span>
+                  <span className="text-[#F59E0B] font-black">3 segmen</span>
+                  <span className="text-[#395886]/60"> (300 Byte ÷ 100 Byte)</span>
+                </div>
+                <div className="flex gap-2">
+                  {[{ label: 'Segmen 1', seq: 101 }, { label: 'Segmen 2', seq: 201 }, { label: 'Segmen 3', seq: 301 }].map(s => (
+                    <div key={s.label} className="flex-1 flex flex-col">
+                      <div className="px-2 py-1 rounded-t-lg bg-[#8B5CF6]/10 border border-b-0 border-[#8B5CF6]/25 text-center">
+                        <p className="text-[7px] font-black text-[#6D28D9]">TCP HDR</p>
+                        <p className="text-[7px] text-[#6D28D9]/70">Seq={s.seq}</p>
+                      </div>
+                      <div className="px-2 py-1 rounded-b-lg bg-[#628ECB]/10 border border-t-0 border-[#628ECB]/25 text-center">
+                        <p className="text-[7px] font-black text-[#395886]">DATA 100B</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="h-px bg-[#D5DEEF]" />
+
+            {/* Fase C */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="h-5 w-5 rounded-md bg-[#10B981]/15 flex items-center justify-center">
+                  <span className="text-[8px] font-black text-[#10B981]">C</span>
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-wide text-[#10B981]">Fase C — Pengiriman Data + ACK</p>
+              </div>
+              <div className="ml-7 space-y-1.5">
+                {[
+                  { label: 'Segmen 1', seq: 101, ack: 201 },
+                  { label: 'Segmen 2', seq: 201, ack: 301 },
+                  { label: 'Segmen 3', seq: 301, ack: 401 },
+                ].map(s => (
+                  <div key={s.label} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#F8FAFF] border border-[#D5DEEF] text-[9px]">
+                    <CheckCircle className="w-3 h-3 text-[#10B981] shrink-0" />
+                    <span className="font-black text-[#395886]">{s.label}</span>
+                    <span className="text-[#395886]/50">Seq={s.seq}, Len=100B</span>
+                    <ArrowRight className="w-3 h-3 text-[#395886]/30 shrink-0" />
+                    <span className="text-[#10B981] font-black">Server ACK={s.ack}</span>
+                    <span className="text-[#395886]/40 ml-auto">({s.seq}+100)</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="h-px bg-[#D5DEEF]" />
+
+            {/* Kemampuan Berargumen */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="h-5 w-5 rounded-md bg-[#F59E0B]/15 flex items-center justify-center">
+                  <MessageSquare className="w-3 h-3 text-[#F59E0B]" />
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-wide text-[#F59E0B]">Kemampuan Berargumen</p>
+              </div>
+              <div className="ml-7 px-3 py-2.5 rounded-lg bg-[#FFFBEB] border border-[#F59E0B]/25">
+                <p className="text-[9px] text-[#92400E]/60 mb-1.5 font-black">Pertanyaan: Mengapa Server mengirim ACK=201 setelah menerima Segmen 1 (Seq=101, 100 Byte)?</p>
+                <p className="text-[10px] text-[#395886] leading-relaxed">{arguingEssay}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Conclusion form */}
         <ATPConclusionBox
           atpBehavior="mampu mensimulasikan mekanisme kerja TCP dari pembentukan koneksi, segmentasi data, hingga pengiriman data dengan acknowledgment yang tepat"
           objectiveCode={objectiveCode}
@@ -377,15 +500,30 @@ function ModelingLesson2({ lessonId, stageIndex, onComplete, objectiveCode = 'X.
           disabled={!!conclusionText}
           onSubmit={(text) => {
             setConclusionText(text);
-            const finalAnswer = { twhSub, segSub, xferStates, conclusion: text };
+            const finalAnswer = { twhSub, segSub, xferStates, arguingEssay, conclusion: text };
             void tracker.complete(finalAnswer, { phase: 'conclusion', finalAnswer });
             onComplete(finalAnswer);
           }}
         />
+
+        {/* After submission: success banner + conclusion text */}
         {conclusionText && (
-          <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20 animate-in fade-in zoom-in-95 duration-300">
-            <CheckCircle className="w-5 h-5 text-[#10B981]" />
-            <span className="text-sm font-black text-[#065F46]">Kesimpulan tersimpan — Tahap Modeling selesai!</span>
+          <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20">
+              <CheckCircle className="w-5 h-5 text-[#10B981]" />
+              <span className="text-sm font-black text-[#065F46]">Tahap Modeling selesai!</span>
+            </div>
+            <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-[#EFF4FF]/60 border-b border-[#628ECB]/15">
+                <div className="h-5 w-5 rounded-md bg-[#628ECB]/15 flex items-center justify-center">
+                  <BookOpen className="w-3 h-3 text-[#628ECB]" />
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-wide text-[#628ECB]">Penarikan Kesimpulan</p>
+              </div>
+              <div className="px-4 py-3">
+                <p className="text-[10px] text-[#395886] leading-relaxed">{conclusionText}</p>
+              </div>
+            </div>
           </div>
         )}
       </div>

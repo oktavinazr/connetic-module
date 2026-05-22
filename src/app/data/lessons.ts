@@ -226,6 +226,8 @@ export interface Stage {
 
   // ── AUTHENTIC ASSESSMENT ────────────────────────────────────────────────
   branchingScenario?: {
+    mode?: 'legacy' | 'tcp-branching';
+    caseTitle?: string;
     context: string;
     initialQuestion: string;
     focusAreas?: string[];
@@ -241,6 +243,25 @@ export interface Stage {
         isCorrect: boolean;
         explanation: string;
       }>;
+    }>;
+    steps?: Array<{
+      id: string;
+      prompt: string;
+      options: Array<{
+        id: string;
+        text: string;
+        isCorrect: boolean;
+        feedback: string;
+      }>;
+    }>;
+    argumentPrompt?: string;
+    argumentAfterStepId?: string;
+    conclusionQuestion?: string;
+    conclusionOptions?: Array<{
+      id: string;
+      text: string;
+      isCorrect: boolean;
+      feedback: string;
     }>;
     finalEvaluation: string;
   };

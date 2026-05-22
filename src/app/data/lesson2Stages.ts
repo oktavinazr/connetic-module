@@ -162,7 +162,7 @@ export const lesson2Stages: Stage[] = [
       { id: 'fl5', text: 'Jika ada segmen hilang (timeout tanpa ACK), TCP mengirim ulang segmen tersebut. Setelah semua segmen lengkap, data disusun ulang sesuai Sequence Number menjadi data utuh.', correctOrder: 5, description: 'Data hilang dikirim ulang, lalu disusun ulang.', colorClass: 'pink' },
     ],
     inquiryReflection1:
-      'Berdasarkan urutan 5 tahapan TCP Sequence Number yang baru saja kamu susun, jelaskan: (1) mengapa setiap tahapan harus dilakukan dalam urutan tersebut dan apa yang terjadi jika salah satu tahap dilewati, serta (2) bagaimana Sequence Number dan ACK Number bekerja sama dalam memastikan data TCP tiba secara berurutan dan lengkap di sisi penerima. Tuliskan argumenmu secara logis dan runtut.',
+      'Berdasarkan 5 tahapan TCP Sequence Number, jelaskan secara singkat: (1) mengapa urutan tahap tersebut harus benar dan apa dampaknya jika ada tahap yang dilewati, serta (2) bagaimana Sequence Number dan ACK Number bekerja sama agar data TCP diterima secara urut dan lengkap.',
     inquiryReflection2:
       'Setelah mengeksplorasi seluruh materi tentang TCP Sequence Number, jelaskan bagaimana mekanisme Sequence Number dan Acknowledgment Number bekerja sama dalam menjaga keandalan pengiriman data. Berikan contoh konkret dengan nilai Sequence Number tertentu untuk memperjelas penjelasanmu.',
     conclusionPrompt: 'Berdasarkan eksplorasi materi dan aktivitas penyusunan tahapan Sequence Number yang telah kamu lakukan, jelaskan bagaimana kamu mampu menguraikan mekanisme TCP Sequence Number dalam memastikan urutan pengiriman. Tuliskan secara runtut dengan kata-katamu sendiri.',
@@ -487,21 +487,21 @@ export const lesson2Stages: Stage[] = [
     type: 'authentic-assessment',
     title: 'Authentic Assessment',
     description:
-      'Siswa mendiagnosis masalah koneksi TCP pada jaringan laboratorium sekolah menggunakan pemahaman tentang Three-Way Handshake dan Flow Control.',
+      'Siswa menganalisis skenario komunikasi TCP pada setiap langkah koneksi melalui studi kasus bercabang yang menuntut keputusan runtut, argumen teknis, dan kesimpulan yang tepat.',
     objectiveCode: 'X.TCP.15',
     activityGuide: [
-      'Baca konteks kasus: jaringan lab dengan gejala SYN yang terus dikirim ulang dan Window Size mendekati nol.',
-      'Pilih jalur diagnosis awal berdasarkan bukti teknis yang tersedia.',
-      'Jelaskan alasan teknis, ikuti cabang keputusan, dan simpulkan solusi yang paling prioritas.',
+      'Baca studi kasus utama tentang koneksi laptop siswa ke website sekolah yang sempat mengalami keterlambatan respons.',
+      'Ikuti percabangan langkah komunikasi TCP dari pembukaan koneksi hingga pengiriman data secara bertahap.',
+      'Tuliskan argumen logis saat diminta, lalu pilih kesimpulan terbaik tentang faktor keandalan TCP.',
     ],
     logicalThinkingIndicators: [
-      'Keruntutan Berpikir: menentukan urutan diagnosis yang paling masuk akal dari bukti yang ada.',
-      'Kemampuan Berargumen: memberi alasan teknis pada setiap keputusan bercabang.',
-      'Penarikan Kesimpulan: memilih prioritas solusi berdasarkan bukti mekanisme TCP.',
+      'Keruntutan Berpikir: menentukan langkah komunikasi TCP yang tepat secara berurutan dari pembukaan koneksi sampai pengiriman data.',
+      'Kemampuan Berargumen: menjelaskan alasan teknis mengapa SYN-ACK harus dikirim sebelum data dikirim.',
+      'Penarikan Kesimpulan: memilih kesimpulan terbaik tentang faktor utama yang membuat TCP andal.',
     ],
     facilitatorNotes: [
-      'Guru memposisikan diri sebagai kepala IT yang meminta laporan diagnosis dari siswa-teknisi.',
-      'Guru menggunakan hasil jalur keputusan untuk melihat pemahaman siswa tentang mekanisme TCP vs masalah infrastruktur.',
+      'Guru menekankan bahwa setiap keputusan pada percabangan mewakili satu mekanisme TCP yang harus terjadi pada urutan yang tepat.',
+      'Guru mengarahkan siswa melihat hubungan antara handshake, sequence number, acknowledgment, dan retransmission sebagai satu alur komunikasi.',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
@@ -510,90 +510,137 @@ export const lesson2Stages: Stage[] = [
       degree: 'secara logis',
     },
     branchingScenario: {
+      mode: 'tcp-branching',
+      caseTitle: 'Branching TCP Case Simulation',
       context:
-        'Kamu adalah teknisi IT di laboratorium komputer sekolah. Guru melaporkan koneksi ke server e-learning sangat lambat bahkan sering gagal. Analisis Wireshark menunjukkan dua gejala bersamaan: (1) Banyak paket SYN yang dikirim ulang tanpa mendapat SYN-ACK dari server, dan (2) Window Size dari server terus menurun dari 65535 menjadi hampir 0.',
+        'Seorang siswa sedang mengakses website sekolah menggunakan laptop melalui jaringan laboratorium komputer. Saat proses koneksi berlangsung, jaringan sempat mengalami keterlambatan respons sehingga beberapa paket TCP tidak langsung diterima dengan baik. Sebagai analis jaringan, tentukan langkah komunikasi TCP yang paling tepat agar koneksi tetap berhasil dan data dapat dikirim dengan benar.',
       initialQuestion:
-        'Berdasarkan dua gejala tersebut, dari mana kamu akan memulai diagnosis untuk menemukan akar masalah paling efisien?',
-      focusAreas: ['SYN Retransmission', 'Window Size ≈ 0', 'Server Resource'],
-      choices: [
+        'Ikuti tiap percabangan berikut dan tentukan langkah komunikasi TCP yang paling tepat.',
+      focusAreas: ['Three-Way Handshake', 'Sequence & ACK Number', 'Error Recovery'],
+      choices: [],
+      steps: [
         {
-          id: 'c1',
-          text: 'Periksa kondisi server e-learning terlebih dahulu: cek penggunaan CPU, RAM, dan jumlah koneksi TCP aktif.',
-          isOptimal: true,
-          consequence:
-            'Langkah yang tepat! Hasil pemeriksaan menunjukkan: CPU server 98%, RAM tersisa 200MB dari 8GB, dan ada 847 koneksi TCP aktif — jauh melebihi kapasitas normal 200 koneksi. Inilah akar masalah sesungguhnya.',
-          followUpQuestion:
-            'Server jelas kelebihan beban. Tindakan mana yang paling tepat untuk memulihkan layanan dengan cepat?',
-          followUpChoices: [
+          id: 'step-1',
+          prompt: 'Client ingin memulai koneksi. Paket apa yang harus dikirim terlebih dahulu?',
+          options: [
             {
-              id: 'f1a',
-              text: 'Restart server secara darurat DAN tutup koneksi TCP idle untuk membebaskan resource sebelum server dibebani lagi.',
+              id: 'step-1-syn',
+              text: 'SYN',
               isCorrect: true,
-              explanation:
-                'Sangat tepat! Restart mengembalikan server ke kondisi bersih. Menutup koneksi idle mencegah masalah berulang segera. Ini solusi jangka pendek yang efektif sambil merencanakan peningkatan kapasitas jangka panjang.',
+              feedback: 'Tepat. Koneksi TCP harus diawali SYN untuk meminta pembentukan koneksi dan menyepakati nomor urut awal.',
             },
             {
-              id: 'f1b',
-              text: 'Tambahkan kabel LAN baru dari lab ke server untuk meningkatkan bandwidth.',
+              id: 'step-1-ack',
+              text: 'ACK',
               isCorrect: false,
-              explanation:
-                'Bandwidth bukan masalahnya — server kewalahan memproses request, bukan kekurangan jalur. Menambah kabel tidak akan membantu jika bottleneck-nya ada di CPU dan RAM server.',
+              feedback: 'ACK tidak bisa dikirim lebih dulu karena belum ada segmen sebelumnya yang perlu dikonfirmasi.',
+            },
+            {
+              id: 'step-1-fin',
+              text: 'FIN',
+              isCorrect: false,
+              feedback: 'FIN dipakai untuk menutup koneksi, bukan untuk memulainya.',
             },
           ],
         },
         {
-          id: 'c2',
-          text: 'Ganti kabel jaringan dari lab ke server karena SYN yang tidak terbalas mengindikasikan masalah fisik.',
-          isOptimal: false,
-          consequence:
-            'Kabel baru terpasang, namun masalah tidak berubah sama sekali. SYN masih terus dikirim ulang dan Window Size tetap mendekati 0. Masalahnya ternyata bukan di infrastruktur fisik.',
-          followUpQuestion:
-            'Setelah mengganti kabel tidak membantu, data apa yang harus segera kamu cek untuk menemukan akar masalah?',
-          followUpChoices: [
+          id: 'step-2',
+          prompt: 'Server menerima SYN dari Client. Respons apa yang paling tepat?',
+          options: [
             {
-              id: 'f2a',
-              text: 'Periksa statistik resource server (CPU, RAM, jumlah koneksi aktif) menggunakan monitoring tool.',
+              id: 'step-2-synack',
+              text: 'SYN-ACK',
               isCorrect: true,
-              explanation:
-                'Tepat. SYN yang tidak terbalas bisa berarti server terlalu sibuk untuk memproses permintaan koneksi baru. Pemeriksaan resource server adalah langkah logis berikutnya setelah menyingkirkan masalah fisik.',
+              feedback: 'Benar. Server harus mengakui SYN Client sekaligus mengirim SYN miliknya agar kedua sisi sinkron.',
             },
             {
-              id: 'f2b',
-              text: 'Ganti juga switch jaringan karena mungkin switch yang bermasalah.',
+              id: 'step-2-fin',
+              text: 'FIN',
               isCorrect: false,
-              explanation:
-                'Mengganti hardware secara berurutan tanpa data diagnostik adalah pemborosan waktu. Periksa data server dulu untuk membuktikan atau menyingkirkan hipotesamu sebelum mengganti perangkat lain.',
+              feedback: 'FIN menutup koneksi. Pada tahap ini koneksi bahkan belum terbentuk.',
+            },
+            {
+              id: 'step-2-data',
+              text: 'Langsung kirim data',
+              isCorrect: false,
+              feedback: 'Data belum boleh dikirim sebelum koneksi valid terbentuk melalui handshake.',
             },
           ],
         },
         {
-          id: 'c3',
-          text: 'Restart router lab karena router mungkin tidak bisa meneruskan paket SYN ke server dengan benar.',
-          isOptimal: false,
-          consequence:
-            'Router di-restart, tetapi gejala tetap persis sama. Router ternyata bekerja normal — ia berhasil meneruskan SYN ke server, tapi server tidak merespons dengan SYN-ACK.',
-          followUpQuestion:
-            'Router berfungsi normal tapi SYN tetap tidak mendapat balasan. Apa yang seharusnya kamu periksa berikutnya?',
-          followUpChoices: [
+          id: 'step-3',
+          prompt: 'Client menerima SYN-ACK dari Server. Langkah berikutnya agar koneksi benar-benar terbentuk adalah...',
+          options: [
             {
-              id: 'f3a',
-              text: 'Periksa kondisi server langsung: apakah server bisa menerima koneksi baru atau sudah mencapai batas maksimum koneksi aktif.',
+              id: 'step-3-ack',
+              text: 'Mengirim ACK final ke Server',
               isCorrect: true,
-              explanation:
-                'Tepat sekali. Router hanya perantara — jika server tidak merespons SYN, berarti server yang bermasalah. Pemeriksaan langsung ke server adalah langkah terarah selanjutnya.',
+              feedback: 'Tepat. ACK final mengonfirmasi SYN server sehingga status koneksi berpindah ke ESTABLISHED.',
             },
             {
-              id: 'f3b',
-              text: 'Hubungi ISP dan minta laporan gangguan jaringan dari sisi mereka.',
+              id: 'step-3-syn',
+              text: 'Mengirim SYN lagi agar koneksi lebih cepat',
               isCorrect: false,
-              explanation:
-                'Masalah ini adalah koneksi lokal antara lab dan server sekolah. ISP tidak ada kaitannya dengan koneksi internal di jaringan sekolah.',
+              feedback: 'SYN kedua tidak diperlukan. Setelah menerima SYN-ACK, yang dibutuhkan adalah ACK final.',
+            },
+            {
+              id: 'step-3-fin',
+              text: 'Menutup koneksi dengan FIN lalu mengulang dari awal',
+              isCorrect: false,
+              feedback: 'Tidak perlu menutup koneksi. Handshake tinggal diselesaikan dengan ACK final.',
+            },
+          ],
+        },
+        {
+          id: 'step-4',
+          prompt: 'Koneksi sudah terbentuk, tetapi saat data dikirim jaringan terlambat merespons dan satu segmen tidak langsung terkonfirmasi. Tindakan TCP yang paling tepat adalah...',
+          options: [
+            {
+              id: 'step-4-retransmit',
+              text: 'Mengirim ulang segmen yang belum mendapat ACK dengan tetap memakai Sequence Number yang sesuai',
+              isCorrect: true,
+              feedback: 'Benar. TCP memakai Sequence Number dan ACK untuk mendeteksi segmen yang belum dikonfirmasi lalu melakukan retransmission.',
+            },
+            {
+              id: 'step-4-broadcast',
+              text: 'Mengirim semua segmen sekaligus tanpa menunggu ACK agar lebih cepat',
+              isCorrect: false,
+              feedback: 'Tanpa menunggu ACK, pengirim tidak tahu segmen mana yang berhasil diterima dan keandalan hilang.',
+            },
+            {
+              id: 'step-4-reset',
+              text: 'Langsung reset koneksi setiap kali ada keterlambatan',
+              isCorrect: false,
+              feedback: 'Keterlambatan tidak selalu berarti koneksi harus direset. TCP lebih dulu mencoba recovery melalui ACK dan retransmission.',
             },
           ],
         },
       ],
+      argumentAfterStepId: 'step-2',
+      argumentPrompt: 'Mengapa Server harus mengirim SYN-ACK sebelum data dikirim?',
+      conclusionQuestion: 'Faktor utama yang membuat TCP dapat mengirim data secara andal adalah...',
+      conclusionOptions: [
+        {
+          id: 'tcp-conclusion-1',
+          text: 'adanya proses handshake, sequence number, acknowledgment, dan recovery data',
+          isCorrect: true,
+          feedback: 'Tepat. TCP andal karena koneksi dibangun dulu, data dilacak dengan nomor urut, dikonfirmasi dengan ACK, lalu dipulihkan bila ada kehilangan.',
+        },
+        {
+          id: 'tcp-conclusion-2',
+          text: 'data langsung dikirim tanpa konfirmasi',
+          isCorrect: false,
+          feedback: 'Tanpa konfirmasi, pengirim tidak tahu apakah data benar-benar diterima.',
+        },
+        {
+          id: 'tcp-conclusion-3',
+          text: 'semua paket dikirim bersamaan tanpa urutan',
+          isCorrect: false,
+          feedback: 'Tanpa urutan dan konfirmasi, TCP kehilangan mekanisme utama keandalannya.',
+        },
+      ],
       finalEvaluation:
-        'Gunakan pemahamanmu tentang Three-Way Handshake dan Window Size untuk membedakan antara masalah fisik (kabel/hardware) dan masalah logis (resource server/buffer). Argumen teknis yang kuat selalu didasarkan pada bukti data, bukan asumsi.',
+        'Gunakan jalur keputusan yang telah kamu ambil untuk menilai apakah kamu sudah mengikuti urutan koneksi TCP secara benar, memberi argumen teknis yang logis, dan menyimpulkan faktor utama keandalan TCP dengan tepat.',
     },
     conclusionPrompt: 'Berdasarkan studi kasus bercabang tentang troubleshooting koneksi TCP yang telah kamu analisis, jelaskan bagaimana kamu mampu menganalisis skenario komunikasi TCP pada setiap langkah koneksi. Tuliskan secara logis dengan kata-katamu sendiri.',
   },
