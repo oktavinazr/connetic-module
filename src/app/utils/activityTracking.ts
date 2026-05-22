@@ -348,6 +348,46 @@ export async function getLessonActivitySessions(userId: string, lessonId: string
   return sessions.map(cloneSession);
 }
 
+export interface AdminDetailedSession {
+  userId: string;
+  stageIndex: number;
+  stageType: string;
+  status: 'not_started' | 'in_progress' | 'completed';
+  progressPercent: number;
+  totalAttempts: number;
+  totalErrors: number;
+  latestSnapshot: Record<string, any>;
+  finalAnswer: any;
+  startedAt: string | null;
+  completedAt: string | null;
+}
+
+export async function getAllLessonSessionsDetailed(lessonId: string): Promise<AdminDetailedSession[]> {
+  const { data, error } = await supabase
+    .from('ctl_activity_sessions')
+    .select('user_id,stage_index,stage_type,status,progress_percent,total_attempts,total_errors,latest_snapshot,final_answer,started_at,completed_at')
+    .eq('lesson_id', lessonId);
+
+  if (error || !data) {
+    if (error) console.error('[getAllLessonSessionsDetailed]', error.message);
+    return [];
+  }
+
+  return data.map(row => ({
+    userId: row.user_id,
+    stageIndex: normalizeNumber(row.stage_index),
+    stageType: row.stage_type ?? '',
+    status: (row.status as AdminDetailedSession['status']) ?? 'not_started',
+    progressPercent: normalizeNumber(row.progress_percent),
+    totalAttempts: normalizeNumber(row.total_attempts),
+    totalErrors: normalizeNumber(row.total_errors),
+    latestSnapshot: normalizeObject(row.latest_snapshot),
+    finalAnswer: row.final_answer,
+    startedAt: row.started_at ?? null,
+    completedAt: row.completed_at ?? null,
+  }));
+}
+
 export async function getStudentActivityFeed(limit = 50): Promise<CTLActivityEvent[]> {
   const { data, error } = await supabase
     .from('ctl_activity_events')

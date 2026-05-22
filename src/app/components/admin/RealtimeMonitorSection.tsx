@@ -16,8 +16,131 @@ import { getStageTimers } from '../../utils/stageTimer';
 import { lessons } from '../../data/lessons';
 import { RefreshCw, SkipForward, Users, Clock, Timer, Filter, Play, Pause, RotateCcw, CheckCircle } from 'lucide-react';
 import { supabase } from '../../utils/supabase';
+import { getAllLessonSessionsDetailed, type AdminDetailedSession } from '../../utils/activityTracking';
 
 const STAGE_LABELS = ['Constructivism', 'Inquiry', 'Questioning', 'Learning Com.', 'Modeling', 'Reflection', 'Assessment'];
+
+function extractConsistencySummary(session: AdminDetailedSession, lessonId: string): string {
+  const snap = session.latestSnapshot;
+  const answer = session.finalAnswer;
+  switch (session.stageType) {
+    case 'constructivism': {
+      const fa = snap?.finalAnswer ?? {};
+      const parts: string[] = [];
+      if (fa.essay1 ?? answer?.essay1) parts.push('Esai 1 ✓');
+      if (fa.essay2 ?? answer?.essay2) parts.push('Esai 2 ✓');
+      const sel = fa.selectedOption ?? answer?.selectedOption;
+      const ok = fa.isCorrect ?? answer?.isCorrect;
+      if (sel) parts.push(`Pilihan: ${sel} (${ok ? 'Benar' : 'Salah'})`);
+      return parts.join(' · ') || '—';
+    }
+    case 'inquiry': {
+      const parts: string[] = [];
+      if (snap?.flowData ?? answer?.flowData) parts.push('Alur ✓');
+      if (snap?.analogyData ?? answer?.analogyData) parts.push('Analogi ✓');
+      const gd = snap?.groupData ?? answer?.groupData;
+      if (gd) parts.push(`Pengelompokan ✓${gd.correctCount !== undefined ? ` (${gd.correctCount}/${gd.total ?? '?'} benar)` : ''}`);
+      if (snap?.matchingData ?? answer?.matchingData) parts.push('Pencocokan ✓');
+      return parts.join(' · ') || '—';
+    }
+    case 'questioning': {
+      const isL1 = lessonId === '1' || snap?.matchPlacements !== undefined;
+      if (isL1) {
+        const mp = snap?.matchPlacements as Record<string, string> | undefined;
+        if (!mp || !Object.keys(mp).length) return '—';
+        const validated = snap?.matchValidated;
+        const correct = Object.entries(mp).filter(([k, v]) => k === v).length;
+        return validated ? `Layer matching: ${correct}/${Object.keys(mp).length} benar` : `${Object.keys(mp).length} layer dipasangkan`;
+      }
+      const selId = snap?.selectedId ?? answer?.selectedId;
+      if (!selId) return '—';
+      return `Identifikasi field TCP: ${answer?.isCorrect ? 'Benar' : 'Salah'}`;
+    }
+    case 'learning-community': {
+      const parts: string[] = [];
+      if (snap?.module1Data ?? answer?.module1Data) parts.push('Diskusi Modul 1 ✓');
+      if (snap?.module2Data ?? answer?.module2Data) parts.push('Diskusi Modul 2 ✓');
+      return parts.join(' · ') || '—';
+    }
+    case 'modeling': {
+      const steps = (snap?.completedSteps ?? answer?.completedSteps) as number[] | undefined;
+      return steps?.length ? `${steps.length} langkah simulasi selesai` : '—';
+    }
+    case 'reflection': {
+      const parts: string[] = [];
+      const md = snap?.mapData ?? answer?.mapData;
+      if (md?.correctCount !== undefined) parts.push(`Peta konsep: ${md.correctCount}/${md.totalConnections ?? md.total ?? '?'} benar`);
+      else if (md) parts.push('Peta konsep ✓');
+      const ev = snap?.evaluationData ?? answer?.evaluationData;
+      if (ev && Object.keys(ev).length) {
+        const checked = Object.values(ev).filter(Boolean).length;
+        parts.push(`Evaluasi diri: ${checked}/${Object.keys(ev).length}`);
+      }
+      return parts.join(' · ') || '—';
+    }
+    case 'authentic-assessment': {
+      const ic = snap?.initialChoice ?? answer?.initialChoice;
+      const fc = snap?.followUpChoice ?? answer?.followUpChoice;
+      const parts: string[] = [];
+      if (ic) parts.push(`Diagnosis${answer?.isOptimal !== undefined ? `: ${answer.isOptimal ? 'Optimal' : 'Tidak optimal'}` : ' ✓'}`);
+      if (fc) parts.push('Tindak lanjut ✓');
+      return parts.join(' · ') || '—';
+    }
+    default: return '—';
+  }
+}
+
+function extractArgumentText(session: AdminDetailedSession): string | null {
+  const snap = session.latestSnapshot;
+  const answer = session.finalAnswer;
+  switch (session.stageType) {
+    case 'constructivism': {
+      const fa = snap?.finalAnswer ?? {};
+      return fa.essay1 ?? fa.essay2 ?? answer?.essay1 ?? answer?.essay2 ?? null;
+    }
+    case 'inquiry':
+      return snap?.essay1Text ?? snap?.reflection1 ?? answer?.reflection1 ?? answer?.essay1 ?? null;
+    case 'questioning':
+      return snap?.essay ?? answer?.justification ?? null;
+    case 'learning-community': {
+      const m1 = snap?.module1Data ?? answer?.module1Data;
+      const m2 = snap?.module2Data ?? answer?.module2Data;
+      return m1?.bestArgument?.argument ?? m1?.discussions?.[0]?.argument
+        ?? m2?.bestArgument?.argument ?? m2?.discussions?.[0]?.argument ?? null;
+    }
+    case 'modeling':
+      return snap?.essay ?? answer?.essay ?? answer?.argument ?? null;
+    case 'reflection':
+      return snap?.argumentText ?? answer?.argumentText ?? null;
+    case 'authentic-assessment':
+      return snap?.initialReason ?? answer?.initialReason ?? null;
+    default: return null;
+  }
+}
+
+function extractConclusionText(session: AdminDetailedSession): string | null {
+  const snap = session.latestSnapshot;
+  const answer = session.finalAnswer;
+  switch (session.stageType) {
+    case 'constructivism': {
+      const fa = snap?.finalAnswer ?? {};
+      return fa.conclusion ?? answer?.conclusion ?? answer?.summary ?? null;
+    }
+    case 'inquiry':
+      return snap?.conclusionText ?? answer?.conclusion ?? answer?.summary ?? null;
+    case 'questioning':
+      return snap?.conclusionText ?? answer?.conclusion ?? null;
+    case 'learning-community':
+      return answer?.finalConclusion ?? snap?.finalConclusion ?? null;
+    case 'modeling':
+      return snap?.conclusionText ?? answer?.conclusion ?? null;
+    case 'reflection':
+      return snap?.conclusionText ?? answer?.conclusionText ?? answer?.conclusion ?? null;
+    case 'authentic-assessment':
+      return snap?.followUpReason ?? answer?.followUpReason ?? null;
+    default: return null;
+  }
+}
 
 export function RealtimeMonitorSection() {
   const [lessonId, setLessonId] = useState('1');
@@ -31,6 +154,8 @@ export function RealtimeMonitorSection() {
   const [isUnlimited, setIsUnlimited] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [filterGroup, setFilterGroup] = useState('all');
+  const [detailedSessions, setDetailedSessions] = useState<AdminDetailedSession[]>([]);
+  const [detailStageIndex, setDetailStageIndex] = useState(0);
 
   const lesson = lessons[lessonId];
   const stageCount = lesson?.stages?.length ?? 7;
@@ -65,6 +190,7 @@ export function RealtimeMonitorSection() {
     const statusMap: Record<number, StudentStageStatus[]> = {};
     results.forEach((r, i) => { statusMap[i] = r; });
     setAllStatuses(statusMap);
+    getAllLessonSessionsDetailed(lessonId).then(setDetailedSessions);
     setLoading(false);
   }, [lessonId, stageCount]);
 
@@ -176,12 +302,21 @@ export function RealtimeMonitorSection() {
           <p className="text-sm text-[#395886]/60">Kontrol sesi kelas, timer, dan pantau progres seluruh siswa.</p>
         </div>
         <div className="flex items-center gap-3">
-          <select value={lessonId} onChange={e => setLessonId(e.target.value)}
-            className="px-4 py-2 text-sm border border-[#D5DEEF] rounded-xl bg-white text-[#395886] font-semibold">
+          <div className="flex gap-2">
             {Object.keys(lessons).map(id => (
-              <option key={id} value={id}>Pertemuan {id}: {lessons[id].topic}</option>
+              <button
+                key={id}
+                onClick={() => setLessonId(id)}
+                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                  lessonId === id
+                    ? 'bg-[#395886] text-white shadow-sm'
+                    : 'bg-white border border-[#D5DEEF] text-[#395886]/60 hover:text-[#395886] hover:border-[#628ECB]'
+                }`}
+              >
+                Pertemuan {id}
+              </button>
             ))}
-          </select>
+          </div>
           <button onClick={refresh}
             className="p-2.5 rounded-xl border border-[#D5DEEF] bg-white hover:bg-[#F0F3FA] text-[#628ECB] transition-colors">
             <RefreshCw className="w-4 h-4" />
@@ -471,6 +606,130 @@ export function RealtimeMonitorSection() {
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#628ECB]" /> Proses</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#10B981]" /> Selesai</span>
         <span className="ml-auto flex items-center gap-1"><RefreshCw className="w-3 h-3 text-[#395886]/30" /> Auto-refresh 5 detik</span>
+      </div>
+
+      {/* ── Detail Logical Thinking Indicators ── */}
+      <div className="bg-white rounded-2xl border border-[#D5DEEF] shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#D5DEEF]">
+          <h3 className="font-bold text-[#395886]">Detail Indikator Berpikir Logis</h3>
+          <p className="text-xs text-[#395886]/50 mt-0.5">Keruntutan Berpikir · Kemampuan Berargumen · Penarikan Kesimpulan</p>
+        </div>
+
+        {/* Stage tab selector */}
+        <div className="flex gap-0 overflow-x-auto border-b border-[#D5DEEF]">
+          {STAGE_LABELS.map((label, i) => (
+            <button
+              key={i}
+              onClick={() => setDetailStageIndex(i)}
+              className={`px-4 py-3 text-[10px] font-black uppercase tracking-widest whitespace-nowrap border-b-2 -mb-px transition-colors flex-shrink-0 ${
+                detailStageIndex === i
+                  ? 'border-[#628ECB] text-[#628ECB] bg-[#F0F5FF]'
+                  : 'border-transparent text-[#395886]/40 hover:text-[#395886]/70 hover:bg-[#F8FAFD]'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Per-student rows */}
+        <div className="divide-y divide-[#D5DEEF]">
+          {(() => {
+            const stageSessions = detailedSessions.filter(s => s.stageIndex === detailStageIndex);
+            const studentNameMap = new Map(allStudents.map(s => [s.userId, s]));
+            const sorted = [...stageSessions].sort((a, b) => {
+              const na = studentNameMap.get(a.userId)?.userName ?? a.userId;
+              const nb = studentNameMap.get(b.userId)?.userName ?? b.userId;
+              return na.localeCompare(nb, 'id');
+            });
+
+            if (sorted.length === 0) {
+              return (
+                <div className="px-5 py-10 text-center text-sm text-[#395886]/35">
+                  {loading ? 'Memuat data...' : 'Belum ada data aktivitas untuk tahap ini.'}
+                </div>
+              );
+            }
+
+            return sorted.map(session => {
+              const info = studentNameMap.get(session.userId);
+              const consistency = extractConsistencySummary(session, lessonId);
+              const argument = extractArgumentText(session);
+              const conclusion = extractConclusionText(session);
+
+              return (
+                <div key={session.userId} className="px-5 py-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-[#628ECB]/10 flex items-center justify-center text-[#628ECB] text-xs font-black shrink-0">
+                      {(info?.userName ?? 'S')[0].toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-[#395886] truncate">{info?.userName ?? session.userId}</p>
+                      <div className="flex items-center gap-2 text-[9px]">
+                        <span className="text-[#395886]/40">{info?.groupName ?? '—'}</span>
+                        <span className="text-[#395886]/20">·</span>
+                        <span className={`font-bold ${
+                          session.status === 'completed' ? 'text-[#10B981]'
+                            : session.status === 'in_progress' ? 'text-[#628ECB]'
+                            : 'text-[#395886]/30'
+                        }`}>
+                          {session.status === 'completed' ? 'Selesai' : session.status === 'in_progress' ? 'Sedang proses' : 'Belum dimulai'}
+                        </span>
+                        {session.totalAttempts > 0 && (
+                          <>
+                            <span className="text-[#395886]/20">·</span>
+                            <span className="text-[#395886]/40">{session.totalAttempts} percobaan</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                    {/* Keruntutan Berpikir */}
+                    <div className="rounded-xl border border-[#D5DEEF] overflow-hidden">
+                      <div className="px-3 py-2 bg-[#628ECB]/5 border-b border-[#D5DEEF]">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-[#628ECB]">Keruntutan Berpikir</p>
+                      </div>
+                      <div className="px-3 py-2.5">
+                        {consistency === '—'
+                          ? <p className="text-xs text-[#395886]/30 italic">Belum ada data aktivitas</p>
+                          : <p className="text-xs text-[#395886] leading-relaxed">{consistency}</p>
+                        }
+                      </div>
+                    </div>
+
+                    {/* Kemampuan Berargumen */}
+                    <div className="rounded-xl border border-[#D5DEEF] overflow-hidden">
+                      <div className="px-3 py-2 bg-[#10B981]/5 border-b border-[#D5DEEF]">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-[#10B981]">Kemampuan Berargumen</p>
+                      </div>
+                      <div className="px-3 py-2.5">
+                        {argument
+                          ? <p className="text-xs text-[#395886] leading-relaxed line-clamp-4">"{argument}"</p>
+                          : <p className="text-xs text-[#395886]/30 italic">Belum ada argumen tertulis</p>
+                        }
+                      </div>
+                    </div>
+
+                    {/* Penarikan Kesimpulan */}
+                    <div className="rounded-xl border border-[#D5DEEF] overflow-hidden">
+                      <div className="px-3 py-2 bg-[#8B5CF6]/5 border-b border-[#D5DEEF]">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-[#8B5CF6]">Penarikan Kesimpulan</p>
+                      </div>
+                      <div className="px-3 py-2.5">
+                        {conclusion
+                          ? <p className="text-xs text-[#395886] leading-relaxed line-clamp-4">"{conclusion}"</p>
+                          : <p className="text-xs text-[#395886]/30 italic">Belum ada kesimpulan tertulis</p>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            });
+          })()}
+        </div>
       </div>
     </div>
   );
