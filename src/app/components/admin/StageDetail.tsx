@@ -572,6 +572,7 @@ function ReflectionReview({ answer, snap }: { answer: any; snap?: Record<string,
   const argumentText = snap?.argumentText ?? answer?.argumentText;
   const evaluationData = snap?.evaluationData ?? answer?.evaluationData;
   const conclusion = snap?.conclusionText ?? answer?.conclusionText ?? answer?.conclusion;
+  const isPipelineMode = mapData?.mode === 'tcp-pipeline';
 
   const hasAny = mapData || argumentText || conclusion || (evaluationData && Object.keys(evaluationData).length > 0);
   if (!hasAny) return <MissingData />;
@@ -582,13 +583,17 @@ function ReflectionReview({ answer, snap }: { answer: any; snap?: Record<string,
   return (
     <div className="space-y-3">
       {mapData && (
-        <ReviewCard title="Peta Konsep" icon={<Layers className="w-3.5 h-3.5" />} accentColor="text-[#6366F1]" borderColor="border-[#6366F1]/20" bgColor="bg-[#EEF2FF]/40">
+        <ReviewCard title={isPipelineMode ? 'TCP Blueprint Constructor' : 'Peta Konsep'} icon={<Layers className="w-3.5 h-3.5" />} accentColor="text-[#6366F1]" borderColor="border-[#6366F1]/20" bgColor="bg-[#EEF2FF]/40">
           <div className="flex items-center gap-2 p-3 rounded-xl bg-[#EEF2FF] border border-[#6366F1]/15">
             <CheckCircle className="w-4 h-4 text-[#6366F1] shrink-0" />
             <p className="text-xs font-bold text-[#3730A3]">
-              {mapData.correctCount !== undefined
-                ? `${mapData.correctCount}/${mapData.totalConnections ?? mapData.total ?? '?'} koneksi benar`
-                : 'Peta konsep selesai dikerjakan'}
+              {isPipelineMode
+                ? mapData.isCorrect
+                  ? 'Pipeline keandalan TCP tersusun dengan benar'
+                  : `${mapData.correctCount ?? '?'} dari ${mapData.total ?? '?'} langkah pipeline benar`
+                : mapData.correctCount !== undefined
+                  ? `${mapData.correctCount}/${mapData.totalConnections ?? mapData.total ?? '?'} koneksi benar`
+                  : 'Peta konsep selesai dikerjakan'}
             </p>
           </div>
         </ReviewCard>

@@ -208,6 +208,21 @@ export interface Stage {
   // ── REFLECTION (extended) ──────────────────────────────────────────────
   conceptMapNodes?: Array<{ id: string; label: string; description?: string; colorClass?: string }>;
   conceptMapConnections?: Array<{ from: string; to: string; label: string; options: string[] }>;
+  tcpReliabilityPipeline?: {
+    instruction: string;
+    items: Array<{ id: string; label: string; description: string; correctOrder: number }>;
+    successMessage: string;
+  };
+  reliabilityArguingQuestion?: string;
+  dropdownConclusion?: {
+    instruction: string;
+    templateParts: string[];
+    dropdowns: Array<{
+      id: string;
+      placeholder: string;
+      options: Array<{ value: string; label: string; isCorrect: boolean }>;
+    }>;
+  };
 
   // ── AUTHENTIC ASSESSMENT ────────────────────────────────────────────────
   branchingScenario?: {

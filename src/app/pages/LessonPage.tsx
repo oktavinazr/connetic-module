@@ -503,6 +503,10 @@ export function LessonPage() {
             selfEvaluationCriteria={currentStage.selfEvaluationCriteria}
             previousStageResults={previousStageResults}
             conclusionPrompt={currentStage.conclusionPrompt}
+            tcpReliabilityPipeline={currentStage.tcpReliabilityPipeline}
+            reliabilityArguingQuestion={currentStage.reliabilityArguingQuestion}
+            dropdownConclusion={currentStage.dropdownConclusion}
+            onTrackerPhase={(phase) => setTrackerPhase(phase)}
           />
         );
       }
