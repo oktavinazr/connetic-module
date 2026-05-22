@@ -608,8 +608,8 @@ export function RealtimeMonitorSection() {
         <span className="ml-auto flex items-center gap-1"><RefreshCw className="w-3 h-3 text-[#395886]/30" /> Auto-refresh 5 detik</span>
       </div>
 
-      {/* ── Detail Logical Thinking Indicators ── */}
-      <div className="bg-white rounded-2xl border border-[#D5DEEF] shadow-sm overflow-hidden">
+      {/* Detail Indikator telah dipindah ke halaman Hasil Belajar */}
+      {false && <div className="bg-white rounded-2xl border border-[#D5DEEF] shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-[#D5DEEF]">
           <h3 className="font-bold text-[#395886]">Detail Indikator Berpikir Logis</h3>
           <p className="text-xs text-[#395886]/50 mt-0.5">Keruntutan Berpikir · Kemampuan Berargumen · Penarikan Kesimpulan</p>
@@ -730,7 +730,7 @@ export function RealtimeMonitorSection() {
             });
           })()}
         </div>
-      </div>
+      </div>}
     </div>
   );
 }
