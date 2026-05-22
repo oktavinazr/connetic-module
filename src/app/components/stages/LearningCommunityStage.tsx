@@ -123,6 +123,7 @@ function TwhAnimationSection() {
   const [step, setStep] = useState(-1);
   const [packetIdx, setPacketIdx] = useState<number | null>(null);
   const [advancing, setAdvancing] = useState(false);
+  const [replayCount, setReplayCount] = useState(0);
 
   const completedStep = step >= 0 ? TWH_ANIM_STEPS[step] : null;
   const clientStatus = completedStep ? completedStep.clientStatus : 'CLOSED';
@@ -142,6 +143,13 @@ function TwhAnimationSection() {
     }, 950);
   };
 
+  const handleReplay = () => {
+    setStep(-1);
+    setPacketIdx(null);
+    setAdvancing(false);
+    setReplayCount(prev => prev + 1);
+  };
+
   return (
     <div className="space-y-4">
       {/* Diagram card */}
@@ -155,10 +163,17 @@ function TwhAnimationSection() {
             <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#628ECB]">Animasi Interaktif</p>
             <h3 className="text-sm font-bold text-[#395886]">Three-Way Handshake TCP</h3>
           </div>
-          <div className="ml-auto flex gap-1">
-            {TWH_ANIM_STEPS.map((_, i) => (
-              <div key={i} className={`rounded-full transition-all duration-400 ${i <= step ? 'w-5 h-2 bg-[#10B981]' : 'w-2 h-2 bg-[#D5DEEF]'}`} />
-            ))}
+          <div className="ml-auto flex items-center gap-2">
+            {replayCount > 0 && (
+              <span className="text-[9px] font-black text-[#628ECB] bg-[#628ECB]/10 px-2 py-0.5 rounded-full border border-[#628ECB]/20">
+                Ulangan ke-{replayCount}
+              </span>
+            )}
+            <div className="flex gap-1">
+              {TWH_ANIM_STEPS.map((_, i) => (
+                <div key={i} className={`rounded-full transition-all duration-400 ${i <= step ? 'w-5 h-2 bg-[#10B981]' : 'w-2 h-2 bg-[#D5DEEF]'}`} />
+              ))}
+            </div>
           </div>
         </div>
 
@@ -241,12 +256,15 @@ function TwhAnimationSection() {
           <AnimatePresence>
             {allDone && (
               <motion.div
+                key={`done-r${replayCount}`}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-4 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#10B981]/10 border-2 border-[#10B981]/25"
+                className="mt-4 space-y-2"
               >
-                <CheckCircle className="w-4 h-4 text-[#10B981]" />
-                <span className="text-xs font-black text-[#065F46]">Koneksi TCP Berhasil Terbentuk — ESTABLISHED!</span>
+                <div className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#10B981]/10 border-2 border-[#10B981]/25">
+                  <CheckCircle className="w-4 h-4 text-[#10B981]" />
+                  <span className="text-xs font-black text-[#065F46]">Koneksi TCP Berhasil Terbentuk — ESTABLISHED!</span>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -257,13 +275,14 @@ function TwhAnimationSection() {
       <AnimatePresence mode="wait">
         {completedStep && (
           <motion.div
-            key={completedStep.id}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
+            key={`${completedStep.id}-r${replayCount}`}
+            initial={{ opacity: 0, y: 8, scale: replayCount > 0 ? 0.97 : 1 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.3 }}
             className="bg-white rounded-2xl border-2 shadow-sm overflow-hidden"
-            style={{ borderColor: `${completedStep.packet.color}40` }}
+            style={{ borderColor: replayCount > 0 ? completedStep.packet.color : `${completedStep.packet.color}40`,
+                     boxShadow: replayCount > 0 ? `0 0 0 3px ${completedStep.packet.color}25` : undefined }}
           >
             <div className="flex items-center gap-3 px-4 py-3 border-b"
               style={{ backgroundColor: `${completedStep.packet.color}10`, borderColor: `${completedStep.packet.color}20` }}>
@@ -306,8 +325,8 @@ function TwhAnimationSection() {
         </div>
       )}
 
-      {/* Advance button */}
-      {!allDone && (
+      {/* Advance / replay buttons */}
+      {!allDone ? (
         <button
           onClick={advance}
           disabled={advancing}
@@ -323,6 +342,42 @@ function TwhAnimationSection() {
               : <>Langkah Berikutnya ({step + 2} / {TWH_ANIM_STEPS.length}) <ChevronRight className="w-4 h-4" /></>
           }
         </button>
+      ) : (
+        <AnimatePresence>
+          <motion.div
+            key={`replay-panel-r${replayCount}`}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.15 }}
+            className="space-y-3"
+          >
+            {/* Discussion prompt (shown after first watch) */}
+            <div className="flex items-start gap-3 p-4 bg-[#EEF4FF] rounded-2xl border border-[#628ECB]/25">
+              <Users className="w-4 h-4 text-[#628ECB] shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-xs font-black text-[#395886]">Diskusikan bersama kelompokmu!</p>
+                <p className="text-[11px] text-[#395886]/70 leading-relaxed">
+                  Coba jelaskan kepada teman kelompokmu: apa yang terjadi pada tiap langkah SYN → SYN-ACK → ACK?
+                  Ulangi animasi jika perlu agar kamu benar-benar paham alurnya.
+                </p>
+              </div>
+            </div>
+
+            {/* Replay button */}
+            <button
+              onClick={handleReplay}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-black text-sm transition-all active:scale-95 bg-white border-2 border-[#628ECB]/30 text-[#395886] hover:bg-[#EEF4FF] hover:border-[#628ECB]/50"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Ulangi Animasi
+              {replayCount > 0 && (
+                <span className="ml-1 text-[10px] font-black text-[#628ECB] bg-[#628ECB]/10 px-2 py-0.5 rounded-full">
+                  {replayCount}×
+                </span>
+              )}
+            </button>
+          </motion.div>
+        </AnimatePresence>
       )}
     </div>
   );

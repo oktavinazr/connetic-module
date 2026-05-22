@@ -1118,41 +1118,134 @@ function QuestioningOriginal({
   );
 }
 
-// -- Questioning Lesson 2 (TCP Sequence Number / Out-of-Order Packets) ----------
+// -- Two-Way Connection Chat — Lesson 2 data ------------------------------------
+
+const L2_SERVER_LOGS = [
+  { t: 'info',   time: '10:42:01', msg: 'Connection established: Client 192.168.1.5 ↔ Server 10.0.0.2' },
+  { t: 'info',   time: '10:42:02', msg: 'Sending Seq=100 (100 bytes) → ACK=200 received ✓' },
+  { t: 'info',   time: '10:42:03', msg: 'Sending Seq=200 (100 bytes)...' },
+  { t: 'warn',   time: '10:42:04', msg: 'Warning: Received duplicate ACK for Seq 200!' },
+  { t: 'warn',   time: '10:42:04', msg: 'Warning: Received duplicate ACK for Seq 200!' },
+  { t: 'warn',   time: '10:42:04', msg: 'Warning: Received duplicate ACK for Seq 200!' },
+  { t: 'action', time: '10:42:05', msg: 'Fast Retransmit triggered → Retransmitting Seq=200' },
+] as const;
+
+interface L2Q { id: string; level: 1|2|3; text: string; requires: string[] }
+
+const L2_QUESTIONS: L2Q[] = [
+  { id: 'qa', level: 1, requires: [],           text: 'Apa yang dimaksud duplicate ACK, dan mengapa server mencatatnya sebagai peringatan?' },
+  { id: 'qb', level: 2, requires: ['qa'],       text: 'Berapa nilai Sequence Number yang hilang berdasarkan pola duplicate ACK di log ini?' },
+  { id: 'qc', level: 3, requires: ['qa','qb'],  text: 'Apa tindakan server setelah menerima 3 duplicate ACK berturut-turut?' },
+  { id: 'qd', level: 2, requires: ['qa'],       text: 'Mengapa threshold-nya 3 duplicate ACK? Apakah 1 atau 2 tidak cukup?' },
+  { id: 'qe', level: 3, requires: ['qa','qb'],  text: 'Bagaimana Fast Retransmit berbeda dari retransmission timeout biasa?' },
+];
+
+const L2_REQUIRED = ['qa', 'qb', 'qc'];
+
+function L2ServerData({ qId }: { qId: string }) {
+  if (qId === 'qa') return (
+    <div className="space-y-2 text-xs text-[#395886]/80 leading-relaxed">
+      <p><strong>Duplicate ACK</strong> adalah konfirmasi berulang yang dikirim penerima ketika menerima segmen dengan Sequence Number yang tidak sesuai urutan — menandakan ada segmen yang hilang sebelumnya.</p>
+      <p>Setiap kali segmen "lompat" tiba, penerima kembali mengirim ACK untuk posisi byte terakhir yang berurutan (ACK=200). Server mencatatnya sebagai warning karena ini sinyal kuat bahwa Seq=200 hilang di jaringan.</p>
+    </div>
+  );
+  if (qId === 'qb') return (
+    <div className="space-y-3">
+      <div className="overflow-x-auto rounded-xl border border-[#D5DEEF] text-xs">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-[#395886] text-white text-[10px]">
+              {['Waktu','Segmen','ACK Diterima','Status'].map(h => (
+                <th key={h} className="px-3 py-2 text-left font-black uppercase tracking-wide">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#D5DEEF]">
+            {([
+              ['10:42:02','Seq=100','ACK=200','✓ Diterima'],
+              ['10:42:03','Seq=200','— (tidak ada)','✗ Hilang'],
+              ['10:42:03','Seq=300','ACK=200 (dup #1)','⚠ Tidak berurutan'],
+              ['10:42:03','Seq=400','ACK=200 (dup #2)','⚠ Tidak berurutan'],
+              ['10:42:04','Seq=500','ACK=200 (dup #3)','⚠ Tidak berurutan'],
+            ] as const).map(([time,seg,ack,status],i) => (
+              <tr key={i} className={i===1?'bg-red-50':i%2===0?'bg-white':'bg-[#F8FAFD]'}>
+                <td className="px-3 py-2 text-[#395886]/60">{time}</td>
+                <td className={`px-3 py-2 font-bold ${i===1?'text-red-600':'text-[#395886]'}`}>{seg}</td>
+                <td className={`px-3 py-2 font-bold ${i===0?'text-[#10B981]':i===1?'text-red-500':'text-amber-600'}`}>{ack}</td>
+                <td className={`px-3 py-2 text-[10px] font-bold ${i===0?'text-[#10B981]':i===1?'text-red-600':'text-amber-700'}`}>{status}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] font-bold text-amber-800 flex items-start gap-2">
+        <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+        <span>Seq=200 tidak pernah dikonfirmasi — inilah segmen yang hilang. Klien terus mengirim ACK=200 sebagai sinyal bahwa ia menunggu byte ke-200.</span>
+      </div>
+    </div>
+  );
+  if (qId === 'qc') return (
+    <div className="space-y-2 text-xs text-[#395886]/80 leading-relaxed">
+      <p>Setelah 3 duplicate ACK, server mengaktifkan <strong>Fast Retransmit</strong>: mengirim ulang Seq=200 secara langsung tanpa menunggu retransmission timer.</p>
+      <p>Setelah retransmisi berhasil, klien mengirim <strong>ACK=600</strong> — mengkonfirmasi semua segmen (200–500) sekaligus. Data stream kembali normal.</p>
+      <div className="flex items-center gap-2 mt-2 p-2.5 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20">
+        <CheckCircle className="w-4 h-4 text-[#10B981] shrink-0" />
+        <span className="text-[11px] font-bold text-[#065F46]">Error recovery berhasil — koneksi TCP kembali stabil.</span>
+      </div>
+    </div>
+  );
+  if (qId === 'qd') return (
+    <div className="space-y-2 text-xs text-[#395886]/80 leading-relaxed">
+      <p>1–2 duplicate ACK bisa disebabkan <strong>packet reordering</strong> — segmen tiba tidak berurutan sementara, bukan benar-benar hilang. TCP menunggu 3 dup-ACK untuk memastikan ada segmen yang memang hilang.</p>
+      <p>Threshold 3 menyeimbangkan kecepatan respons (tidak menunggu timeout) dengan akurasi (tidak salah mengira reordering sebagai kehilangan).</p>
+    </div>
+  );
+  if (qId === 'qe') return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className="p-2.5 rounded-xl bg-[#628ECB]/8 border border-[#628ECB]/20">
+          <p className="text-[9px] font-black uppercase tracking-widest text-[#628ECB] mb-1">Fast Retransmit</p>
+          <p className="text-[#395886]/80 leading-relaxed">Triggered oleh 3 dup-ACK. Respons dalam milidetik setelah sinyal diterima.</p>
+        </div>
+        <div className="p-2.5 rounded-xl bg-[#8B5CF6]/8 border border-[#8B5CF6]/20">
+          <p className="text-[9px] font-black uppercase tracking-widest text-[#8B5CF6] mb-1">Retransmission Timeout</p>
+          <p className="text-[#395886]/80 leading-relaxed">Triggered saat tidak ada ACK sama sekali. Waktu tunggu 200ms–3 detik.</p>
+        </div>
+      </div>
+      <p className="text-xs text-[#395886]/80 leading-relaxed">Fast Retransmit jauh lebih efisien karena memanfaatkan sinyal eksplisit dari penerima, bukan timer pasif.</p>
+    </div>
+  );
+  return null;
+}
+
+// -- Questioning Lesson 2 — Two-Way Connection Chat ----------------------------
 
 function QuestioningLesson2({
-  lessonId, stageIndex, onComplete, scenario, problemVisual, teacherQuestion, questionBank = [],
-  whyQuestion, hint, reasonOptions = [], onTrackerPhase,
+  lessonId, stageIndex, onComplete, onTrackerPhase,
 }: QuestioningStageProps) {
   const tracker = useActivityTracker({ lessonId, stageIndex, stageType: 'questioning' });
 
   const [phase, setPhase] = useState<'consistency' | 'arguing' | 'conclusion'>('consistency');
-  const [activeQAId, setActiveQAId] = useState<string | null>(null);
-  const [openedQAIds, setOpenedQAIds] = useState<string[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [validated, setValidated] = useState(false);
+  const [answeredQIds, setAnsweredQIds] = useState<string[]>([]);
+  const [activeQId, setActiveQId] = useState<string | null>(null);
+  const [isBlockedResponse, setIsBlockedResponse] = useState(false);
   const [essay, setEssay] = useState('');
+  const [showClue, setShowClue] = useState(false);
   const [conclusionText, setConclusionText] = useState('');
   const [isRestored, setIsRestored] = useState(false);
 
   const trackerRef = useRef(tracker);
   trackerRef.current = tracker;
 
-  // Emit tracker phase to parent (LogicalThinkingTracker)
-  useEffect(() => {
-    if (!isRestored) return;
-    onTrackerPhase?.(phase);
-  }, [phase, isRestored, onTrackerPhase]);
+  useEffect(() => { if (!isRestored) return; onTrackerPhase?.(phase); }, [phase, isRestored, onTrackerPhase]);
 
   useEffect(() => {
     if (!tracker.isLoading && !isRestored) {
       const snap = tracker.session?.latestSnapshot;
       if (snap) {
         if (snap.phase) setPhase(snap.phase as typeof phase);
-        if (snap.openedQAIds) setOpenedQAIds(snap.openedQAIds as string[]);
-        if (snap.activeQAId) setActiveQAId(snap.activeQAId as string);
-        if (snap.selectedId) setSelectedId(snap.selectedId as string);
-        if (snap.validated) setValidated(snap.validated as boolean);
+        if (Array.isArray(snap.answeredQIds)) setAnsweredQIds(snap.answeredQIds as string[]);
+        if (snap.activeQId) setActiveQId(snap.activeQId as string);
         if (snap.essay) setEssay(snap.essay as string);
         if (snap.conclusionText) setConclusionText(snap.conclusionText as string);
       }
@@ -1162,16 +1255,17 @@ function QuestioningLesson2({
 
   useEffect(() => {
     if (!isRestored) return;
+    const reqDone = answeredQIds.filter(id => L2_REQUIRED.includes(id)).length;
     const progress =
       phase === 'conclusion' ? (conclusionText ? 100 : 90)
-      : phase === 'arguing' ? (essay ? 85 : validated ? 65 : selectedId ? 40 : 30)
-      : (openedQAIds.length >= 2 ? 25 : openedQAIds.length > 0 ? 15 : 10);
+      : phase === 'arguing' ? (essay ? 85 : 30)
+      : Math.round((reqDone / L2_REQUIRED.length) * 25);
     void trackerRef.current.saveSnapshot(
-      { phase, openedQAIds, activeQAId, selectedId, validated, essay, conclusionText },
+      { phase, answeredQIds, activeQId, essay, conclusionText },
       { progressPercent: progress },
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, openedQAIds, activeQAId, selectedId, validated, essay, conclusionText, isRestored]);
+  }, [phase, answeredQIds, activeQId, essay, conclusionText, isRestored]);
 
   if (tracker.isLoading || !isRestored) {
     return (
@@ -1182,99 +1276,166 @@ function QuestioningLesson2({
     );
   }
 
-  const isCorrect = reasonOptions.find(o => o.id === selectedId)?.isCorrect ?? false;
-  const canProceedPhase1 = openedQAIds.length >= 2;
-  const activeResponse = questionBank.find(q => q.id === activeQAId)?.response;
+  const allRequired = L2_REQUIRED.every(id => answeredQIds.includes(id));
 
-  // ── Phase 1: Keruntutan Berpikir ───────────────────────────────────────────
+  const handleQuestionClick = (qId: string) => {
+    const q = L2_QUESTIONS.find(q => q.id === qId);
+    if (!q) return;
+    const missingReqs = q.requires.filter(id => !answeredQIds.includes(id));
+    const blocked = missingReqs.length > 0;
+    setActiveQId(qId);
+    setIsBlockedResponse(blocked);
+    if (!blocked && !answeredQIds.includes(qId)) {
+      const next = [...answeredQIds, qId];
+      setAnsweredQIds(next);
+      const reqDone = next.filter(id => L2_REQUIRED.includes(id)).length;
+      void tracker.trackEvent('l2_question_answered', { qId }, { progressPercent: Math.round(reqDone / L2_REQUIRED.length * 25) });
+    } else if (blocked) {
+      void tracker.trackEvent('l2_question_blocked', { qId, missing: missingReqs });
+    }
+  };
+
+  // ── Phase 1: Keruntutan Berpikir ───────────────────────────────────────────────
   if (phase === 'consistency') {
     return (
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+      <div className="space-y-5 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+        {/* Phase header */}
         <div className="bg-white rounded-2xl border-2 border-[#8B5CF6]/25 shadow-sm overflow-hidden">
           <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#8B5CF6]/10 to-transparent border-b border-[#8B5CF6]/15">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#8B5CF6]/15">
-              <AlertCircle className="w-5 h-5 text-[#8B5CF6]" />
+              <MessageSquare className="w-5 h-5 text-[#8B5CF6]" />
             </div>
             <div className="flex-1">
               <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#8B5CF6]">Keruntutan Berpikir (Consistency of Thinking)</p>
-              <h3 className="text-sm font-bold text-[#395886]">Analisis Skenario Out-of-Order Packets</h3>
+              <h3 className="text-sm font-bold text-[#395886]">The Two-Way Connection Chat</h3>
             </div>
+            <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border shrink-0 ${
+              allRequired ? 'bg-[#10B981]/10 border-[#10B981]/20 text-[#10B981]' : 'bg-[#D5DEEF] border-transparent text-[#395886]/40'
+            }`}>
+              {answeredQIds.filter(id => L2_REQUIRED.includes(id)).length}/{L2_REQUIRED.length} terjawab
+            </span>
           </div>
           <div className="px-5 py-3 bg-gradient-to-br from-[#8B5CF6]/3 to-transparent">
             <p className="text-xs text-[#395886]/70 leading-relaxed">
-              Pelajari skenario masalah TCP berikut dan buka minimal 2 pertanyaan eksplorasi untuk mengumpulkan bukti sebelum menentukan penyebabnya.
+              Server jaringan mendeteksi anomali dan menampilkan log error. Ajukan pertanyaan secara <strong>bertahap dan runtut</strong> untuk memahami akar masalah. Pertanyaan lanjutan hanya bisa dibuka setelah pertanyaan dasarnya dijawab.
             </p>
           </div>
         </div>
 
-        {/* Problem visual */}
-        {problemVisual && (
-          <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-5">
-            <div className="flex items-start gap-4">
-              <div className="h-12 w-12 shrink-0 rounded-2xl bg-[#FEF3C7] flex items-center justify-center text-2xl">
-                ⚠️
-              </div>
-              <div className="flex-1">
-                <p className="text-xs font-black uppercase tracking-widest text-[#F59E0B] mb-1">Gejala Jaringan</p>
-                <h3 className="text-sm font-bold text-[#395886] mb-1">{problemVisual.title}</h3>
-                <p className="text-xs text-[#395886]/70 leading-relaxed">{problemVisual.description}</p>
-              </div>
+        {/* Server Terminal Log */}
+        <div className="rounded-2xl overflow-hidden border-2 border-[#1E3A5F] shadow-lg">
+          <div className="flex items-center gap-3 px-4 py-3 bg-[#1A2B40]">
+            <div className="flex gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-red-500/80" />
+              <div className="w-3 h-3 rounded-full bg-amber-400/80" />
+              <div className="w-3 h-3 rounded-full bg-[#10B981]/80" />
             </div>
+            <Activity className="w-3.5 h-3.5 text-[#628ECB]/80" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/80">Server Log — TCP Connection Monitor</p>
           </div>
-        )}
-
-        {/* Scenario */}
-        {scenario && (
-          <div className="flex items-start gap-3 p-4 bg-[#EEF4FF] rounded-2xl border border-[#628ECB]/20">
-            <Info className="w-4 h-4 text-[#628ECB] mt-0.5 shrink-0" />
-            <p className="text-xs text-[#395886]/80 leading-relaxed italic">"{scenario}"</p>
+          <div className="bg-[#0D1B2A] p-4 space-y-1.5 font-mono">
+            {L2_SERVER_LOGS.map((log, i) => (
+              <div key={i} className="flex items-start gap-3 text-[11px]">
+                <span className="text-[#395886]/50 shrink-0">[{log.time}]</span>
+                <span className={
+                  log.t === 'warn' ? 'text-amber-400 font-bold'
+                  : log.t === 'action' ? 'text-[#10B981] font-bold'
+                  : 'text-[#8BA8C8]'
+                }>{log.msg}</span>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
 
-        {/* Question bank */}
-        {questionBank.length > 0 && (
-          <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <HelpCircle className="w-4 h-4 text-[#628ECB]" />
-              <h3 className="text-sm font-bold text-[#395886]">{teacherQuestion || 'Buka pertanyaan eksplorasi:'}</h3>
-              <span className={`ml-auto text-[10px] font-black px-2 py-0.5 rounded-full
-                ${openedQAIds.length >= 2 ? 'bg-[#10B981]/10 text-[#10B981]' : 'bg-[#D5DEEF] text-[#395886]/40'}`}>
-                {openedQAIds.length} / 2 dibuka
-              </span>
-            </div>
-            <div className="space-y-2 mb-4">
-              {questionBank.map(q => (
-                <button key={q.id}
-                  onClick={() => {
-                    setActiveQAId(q.id);
-                    if (!openedQAIds.includes(q.id)) {
-                      setOpenedQAIds(prev => [...prev, q.id]);
-                      void tracker.trackEvent('qa_opened', { questionId: q.id }, { progressPercent: 18 });
-                    }
-                  }}
-                  className={`w-full p-3 rounded-xl border-2 text-left text-xs font-bold transition-all
-                    ${activeQAId === q.id ? 'border-[#628ECB] bg-[#EEF4FF] text-[#395886]'
-                    : openedQAIds.includes(q.id) ? 'border-[#10B981]/40 bg-[#F0FDF4] text-[#065F46]'
+        {/* Question selection */}
+        <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <HelpCircle className="w-4 h-4 text-[#628ECB]" />
+            <h3 className="text-sm font-bold text-[#395886]">Ajukan pertanyaan ke server:</h3>
+            <span className="ml-auto text-[10px] text-[#395886]/35">● = wajib dijawab berurutan</span>
+          </div>
+          <div className="space-y-2">
+            {L2_QUESTIONS.map(q => {
+              const isAnswered = answeredQIds.includes(q.id);
+              const isActive = activeQId === q.id;
+              const prereqsMet = q.requires.every(id => answeredQIds.includes(id));
+              const isRequired = L2_REQUIRED.includes(q.id);
+              const showBlocked = isActive && isBlockedResponse;
+              return (
+                <button key={q.id} onClick={() => handleQuestionClick(q.id)}
+                  className={`w-full p-3.5 rounded-xl border-2 text-left text-xs font-bold transition-all flex items-start gap-2.5
+                    ${showBlocked ? 'border-red-300 bg-red-50'
+                    : isActive ? 'border-[#628ECB] bg-[#EEF4FF]'
+                    : isAnswered ? 'border-[#10B981]/40 bg-[#F0FDF4] text-[#065F46]'
                     : 'border-[#D5DEEF] bg-white hover:border-[#628ECB]/40 text-[#395886]'}`}>
-                  <span className="flex items-center gap-2">
-                    {openedQAIds.includes(q.id) && <CheckCircle className="w-3.5 h-3.5 text-[#10B981] shrink-0" />}
-                    {q.text}
-                  </span>
+                  <div className="shrink-0 mt-0.5">
+                    {isAnswered
+                      ? <CheckCircle className="w-4 h-4 text-[#10B981]" />
+                      : showBlocked
+                        ? <WifiOff className="w-4 h-4 text-red-400" />
+                        : <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center text-[8px] font-black
+                            ${prereqsMet ? 'border-[#628ECB] text-[#628ECB]' : 'border-[#D5DEEF] text-[#395886]/25'}`}>
+                            {isRequired ? '●' : '○'}
+                          </div>
+                    }
+                  </div>
+                  <span className="flex-1 leading-relaxed">{q.text}</span>
+                  {isRequired && !isAnswered && (
+                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full shrink-0 self-start
+                      ${prereqsMet ? 'bg-[#628ECB]/10 text-[#628ECB]' : 'bg-gray-100 text-gray-400'}`}>
+                      Lv.{q.level}
+                    </span>
+                  )}
                 </button>
-              ))}
-            </div>
-            {activeResponse && (
-              <div className="p-4 rounded-xl bg-[#F0FDF4] border-2 border-[#10B981]/20 animate-in fade-in slide-in-from-top-2">
-                <p className="text-[10px] font-black text-[#10B981] uppercase mb-1 flex items-center gap-1.5">
-                  <CheckCircle className="w-3 h-3" /> Fakta Ditemukan
-                </p>
-                <p className="text-xs font-bold text-[#065F46] leading-relaxed">{activeResponse}</p>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Server response area */}
+        {activeQId && (
+          <div className={`rounded-2xl border-2 overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-300
+            ${isBlockedResponse ? 'border-red-200' : 'border-[#10B981]/30'}`}>
+            <div className={`flex items-center gap-3 px-5 py-3 border-b
+              ${isBlockedResponse ? 'bg-red-50 border-red-200' : 'bg-[#10B981]/8 border-[#10B981]/20'}`}>
+              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl
+                ${isBlockedResponse ? 'bg-red-100' : 'bg-[#10B981]/15'}`}>
+                {isBlockedResponse ? <WifiOff className="w-4 h-4 text-red-500" /> : <Activity className="w-4 h-4 text-[#10B981]" />}
               </div>
-            )}
+              <div className="flex-1 min-w-0">
+                <p className={`text-[9px] font-black uppercase tracking-widest ${isBlockedResponse ? 'text-red-500' : 'text-[#10B981]'}`}>
+                  {isBlockedResponse ? 'Server: Akses Ditolak' : 'Server: Data Response'}
+                </p>
+                <p className="text-xs font-bold text-[#395886] truncate">
+                  {L2_QUESTIONS.find(q => q.id === activeQId)?.text}
+                </p>
+              </div>
+            </div>
+            <div className="p-5 bg-white">
+              {isBlockedResponse ? (
+                <div className="flex items-start gap-3">
+                  <WifiOff className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-red-700 mb-1">Data tidak dapat diakses saat ini.</p>
+                    <p className="text-[11px] text-red-600/80 leading-relaxed">
+                      Pertanyaan ini membutuhkan pemahaman dari langkah sebelumnya.{' '}
+                      {(() => {
+                        const q = L2_QUESTIONS.find(q => q.id === activeQId);
+                        const missing = q?.requires.filter(id => !answeredQIds.includes(id)) ?? [];
+                        if (!missing.length) return '';
+                        return `Jawab dulu: "${missing.map(id => L2_QUESTIONS.find(q => q.id === id)?.text.slice(0, 55) + '...').join('"; "')}"`;
+                      })()}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <L2ServerData qId={activeQId} />
+              )}
+            </div>
           </div>
         )}
 
-        {canProceedPhase1 && (
+        {allRequired && (
           <ContinueActivityButton
             onClick={() => {
               void tracker.trackEvent('questioning_consistency_completed', {}, { progressPercent: 30 });
@@ -1287,7 +1448,7 @@ function QuestioningLesson2({
     );
   }
 
-  // ── Phase 2: Kemampuan Berargumen ──────────────────────────────────────────
+  // ── Phase 2: Kemampuan Berargumen ──────────────────────────────────────────────
   if (phase === 'arguing') {
     return (
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
@@ -1298,77 +1459,67 @@ function QuestioningLesson2({
             </div>
             <div className="flex-1">
               <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#F59E0B]">Kemampuan Berargumen (Arguing Ability)</p>
-              <h3 className="text-sm font-bold text-[#395886]">Identifikasi & Argumen Logis</h3>
+              <h3 className="text-sm font-bold text-[#395886]">Respons Terhadap Pertanyaan Server</h3>
             </div>
           </div>
           <div className="px-5 py-3 bg-gradient-to-br from-[#F59E0B]/3 to-transparent">
             <p className="text-xs text-[#395886]/70 leading-relaxed">
-              Pilih field TCP Header yang paling berperan, periksa pilihanmu, lalu tulis argumen logis berdasarkan fakta yang kamu temukan.
+              Berdasarkan data sequence number yang telah kamu analisis, server mengajukan pertanyaan pemantik. Tuliskan argumenmu secara logis dan teknis.
             </p>
           </div>
         </div>
 
-        {/* Reason options */}
-        <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm p-5">
-          <h3 className="text-sm font-bold text-[#395886] mb-3 flex items-center gap-2">
-            <Zap className="w-4 h-4 text-[#F59E0B]" /> {whyQuestion || 'Field TCP Header mana yang paling berperan?'}
-          </h3>
-          {hint && (
-            <div className="mb-3 flex items-start gap-2 p-3 bg-[#FFFBEB] rounded-xl border border-[#F59E0B]/20">
-              <Lightbulb className="w-4 h-4 text-[#F59E0B] shrink-0 mt-0.5" />
-              <p className="text-xs text-[#78350F] leading-relaxed">{hint}</p>
-            </div>
-          )}
-          <div className="space-y-2 mb-4">
-            {reasonOptions.map(opt => (
-              <button key={opt.id}
-                onClick={() => !validated && setSelectedId(opt.id)}
-                disabled={validated}
-                className={`w-full p-4 rounded-xl border-2 text-left transition-all
-                  ${selectedId === opt.id
-                    ? (validated ? (opt.isCorrect ? 'border-[#10B981] bg-[#F0FDF4]' : 'border-red-400 bg-red-50') : 'border-[#628ECB] bg-[#EEF4FF]')
-                    : 'border-[#D5DEEF] bg-white hover:border-[#628ECB]/30'}`}>
-                <p className="text-xs font-bold text-[#395886]">{opt.text}</p>
-                {validated && selectedId === opt.id && (
-                  <p className={`text-[10px] font-bold mt-2 ${opt.isCorrect ? 'text-[#10B981]' : 'text-red-500'}`}>{opt.feedback}</p>
-                )}
-              </button>
-            ))}
+        {/* Server trigger question */}
+        <div className="rounded-2xl border-2 border-[#628ECB]/25 overflow-hidden shadow-sm">
+          <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#628ECB]/10 to-transparent border-b border-[#628ECB]/15">
+            <Activity className="w-4 h-4 text-[#628ECB]" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Pertanyaan dari Server</p>
           </div>
-          {!validated && (
-            <button
-              onClick={() => {
-                if (!selectedId) return;
-                setValidated(true);
-                void tracker.trackEvent('questioning_validation', { selectedId }, {
-                  isCorrect: reasonOptions.find(o => o.id === selectedId)?.isCorrect ?? false,
-                  progressPercent: 55,
-                });
-              }}
-              disabled={!selectedId}
-              className={`w-full py-3 rounded-xl font-bold text-sm transition-all
-                ${selectedId ? 'bg-[#395886] text-white hover:bg-[#628ECB]' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}>
-              Periksa Pilihan
-            </button>
-          )}
+          <div className="bg-white p-5">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-[#395886] flex items-center justify-center text-white text-[10px] font-black shrink-0 mt-0.5">S</div>
+              <div className="flex-1 bg-[#EEF4FF] rounded-2xl rounded-tl-sm px-4 py-3">
+                <p className="text-xs font-bold text-[#395886] leading-relaxed">
+                  Berdasarkan data sequence number yang telah kamu lihat, jelaskan mengapa terjadi <em>error recovery</em> pada kondisi tersebut — dan bagaimana Fast Retransmit bekerja untuk menyelesaikannya.
+                </p>
+              </div>
+            </div>
+            {/* Clue button */}
+            <div className="mt-3 pl-11">
+              <button
+                onClick={() => setShowClue(v => !v)}
+                className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-full border transition-all
+                  ${showClue ? 'bg-amber-100 text-amber-700 border-amber-200' : 'border-transparent text-[#395886]/50 hover:text-[#F59E0B] hover:bg-amber-50'}`}>
+                <Lightbulb className="w-3.5 h-3.5" />
+                {showClue ? 'Sembunyikan Clue' : 'Minta Clue'}
+              </button>
+              {showClue && (
+                <div className="mt-2 p-3.5 rounded-xl bg-amber-50 border border-amber-200 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1.5 flex items-center gap-1">
+                    <Lightbulb className="w-3 h-3" /> Analogi Kehidupan Sehari-hari
+                  </p>
+                  <p className="text-[11px] text-amber-800 leading-relaxed">
+                    Bayangkan kamu menerima amplop berpenomoran dari kurir: 1, 2, 4, 5, 6. Amplop nomor 3 hilang! Kamu terus memberitahu pengirim: "Aku masih menunggu amplop nomor 3!" — itulah duplicate ACK. Pengirim yang menerima sinyal ini sebanyak 3 kali langsung tahu: kirim ulang nomor 3 sekarang, tanpa menunggu berjam-jam.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Essay after validation */}
-        {validated && (
-          <EssayBox
-            objectiveLabel="X.TCP.11"
-            headerLabel="Argumen Logis"
-            prompt="Berdasarkan skenario out-of-order packets dan pilihan field TCP Header yang baru saja kamu analisis, jelaskan secara teknis: (1) Mengapa field tersebut (bukan yang lain) yang memungkinkan penerima merekonstruksi data dengan benar? (2) Apa yang terjadi jika TCP tidak memiliki field tersebut?"
-            submitLabel="Simpan Argumen"
-            minWords={20}
-            defaultValue={essay}
-            disabled={!!essay}
-            onSubmit={(text) => {
-              setEssay(text);
-              void tracker.trackEvent('questioning_essay_done', {}, { progressPercent: 80 });
-            }}
-          />
-        )}
+        <EssayBox
+          objectiveLabel="X.TCP.11"
+          headerLabel="Argumen Logis"
+          prompt="Berdasarkan data sequence number yang telah kamu lihat, jelaskan mengapa terjadi error recovery pada kondisi tersebut — dan bagaimana Fast Retransmit bekerja untuk menyelesaikannya."
+          submitLabel="Kirim Argumen ke Server"
+          minWords={20}
+          defaultValue={essay}
+          disabled={!!essay}
+          onSubmit={(text) => {
+            setEssay(text);
+            void tracker.trackEvent('questioning_essay_done', {}, { progressPercent: 80 });
+          }}
+        />
 
         {essay && (
           <ContinueActivityButton
@@ -1383,9 +1534,59 @@ function QuestioningLesson2({
     );
   }
 
-  // ── Phase 3: Penarikan Kesimpulan ──────────────────────────────────────────
+  // ── Phase 3: Penarikan Kesimpulan ──────────────────────────────────────────────
+  const essayLower = essay.toLowerCase();
+  const positiveKw = ['duplicate ack', 'seq', 'sequence', 'error recovery', 'retransmit', 'ack=', 'fast retransmit', 'hilang', 'segmen', 'kembali'];
+  const essayIsGood = positiveKw.filter(kw => essayLower.includes(kw)).length >= 3;
+
   return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+      {/* Server feedback */}
+      <div className={`rounded-2xl border-2 overflow-hidden ${essayIsGood ? 'border-[#10B981]/30' : 'border-[#F59E0B]/30'}`}>
+        <div className={`flex items-center gap-3 px-5 py-3 border-b
+          ${essayIsGood ? 'bg-[#10B981]/8 border-[#10B981]/15' : 'bg-amber-50 border-amber-200'}`}>
+          <Activity className={`w-4 h-4 ${essayIsGood ? 'text-[#10B981]' : 'text-amber-600'}`} />
+          <p className={`text-[10px] font-black uppercase tracking-widest ${essayIsGood ? 'text-[#10B981]' : 'text-amber-700'}`}>
+            Feedback Server
+          </p>
+        </div>
+        <div className="bg-white p-5">
+          <div className="flex items-start gap-3">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-[10px] font-black shrink-0 mt-0.5
+              ${essayIsGood ? 'bg-[#10B981]' : 'bg-amber-500'}`}>S</div>
+            <div className={`flex-1 rounded-2xl rounded-tl-sm px-4 py-3 ${essayIsGood ? 'bg-[#F0FDF4]' : 'bg-amber-50'}`}>
+              {essayIsGood ? (
+                <p className="text-xs font-bold text-[#065F46] leading-relaxed">
+                  Analisis kamu tepat! Kamu telah menghubungkan konsep duplicate ACK, Sequence Number, dan Fast Retransmit dengan benar. Pemahaman ini mencerminkan bagaimana error recovery TCP bekerja secara efisien dalam kondisi gangguan jaringan nyata.
+                </p>
+              ) : (
+                <p className="text-xs font-bold text-amber-800 leading-relaxed">
+                  Argumenmu sudah ada, tapi perlu lebih spesifik. Sertakan: (1) bagaimana Sequence Number menandai segmen yang hilang, (2) mengapa 3 duplicate ACK menjadi trigger, dan (3) apa yang terjadi setelah Fast Retransmit dilakukan. Data di fase sebelumnya bisa membantumu.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Category guide */}
+      <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] p-5 space-y-3">
+        <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/50">Panduan Kategori Kesimpulan:</p>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { label: 'Kondisi Normal', desc: 'Segmen berurutan, ACK normal', color: 'bg-[#10B981]/8 border-[#10B981]/20 text-[#065F46]' },
+            { label: 'Duplicate ACK', desc: 'Segmen hilang, sinyal berulang', color: 'bg-amber-50 border-amber-200 text-amber-800' },
+            { label: 'Error Recovery', desc: 'Fast Retransmit, stream pulih', color: 'bg-[#628ECB]/8 border-[#628ECB]/20 text-[#395886]' },
+          ].map(c => (
+            <div key={c.label} className={`rounded-xl border-2 px-3 py-2.5 text-center ${c.color}`}>
+              <p className="text-[10px] font-black uppercase tracking-wide">{c.label}</p>
+              <p className="text-[9px] font-medium mt-0.5 opacity-70">{c.desc}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-[11px] text-[#395886]/55 leading-relaxed">Tuliskan kesimpulanmu mencakup ketiga kondisi ini dan hubungannya satu sama lain.</p>
+      </div>
+
       <ATPConclusionBox
         atpBehavior="mampu membedakan kondisi pengiriman data normal dengan kondisi yang memerlukan error recovery pada TCP berdasarkan nilai Sequence Number"
         objectiveCode="X.TCP.11"
@@ -1394,7 +1595,7 @@ function QuestioningLesson2({
         disabled={!!conclusionText}
         onSubmit={(text) => {
           setConclusionText(text);
-          const finalAnswer = { selectedId: selectedId ?? '', isCorrect, askedQuestions: openedQAIds, justification: essay, conclusion: text };
+          const finalAnswer = { selectedId: 'two-way-chat', isCorrect: true, askedQuestions: answeredQIds, justification: essay, conclusion: text };
           void tracker.complete(finalAnswer, { phase: 'conclusion', finalAnswer });
           onComplete(finalAnswer);
         }}
