@@ -250,12 +250,17 @@ export function ReviewPage() {
                         </div>
                       </div>
 
-                      <div className="bg-[#F8FAFD] rounded-[2rem] border border-[#D5DEEF] p-8">
-                        <div className="flex items-center gap-2 mb-6">
+                      <div className="bg-[#F8FAFD] rounded-[2rem] border border-[#D5DEEF] p-6">
+                        <div className="flex items-center gap-2 mb-5">
                           <MessageSquare className="w-4 h-4 text-[#628ECB]" />
-                          <h4 className="text-sm font-black text-[#395886]">Review Jawaban Kamu</h4>
+                          <h4 className="text-sm font-black text-[#395886]">Ringkasan Aktivitas Kamu</h4>
                         </div>
-                        <StageAnswerDetail stage={stage} answer={answer} />
+                        <StageAnswerDetail
+                          stage={stage}
+                          answer={answer}
+                          snapshot={tracking?.latestSnapshot}
+                          lessonId={lessonId}
+                        />
                       </div>
 
                       {tracking && (

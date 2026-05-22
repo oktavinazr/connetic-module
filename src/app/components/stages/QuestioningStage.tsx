@@ -30,6 +30,7 @@ interface QuestioningStageProps {
   lessonId: string;
   stageIndex: number;
   onComplete: (answer: { selectedId: string; isCorrect: boolean; askedQuestions: string[]; justification: string }) => void;
+  onTrackerPhase?: (phase: 'consistency' | 'arguing' | 'conclusion') => void;
 }
 
 // -- Pizza Layers ---------------------------------------------------------------
@@ -760,7 +761,7 @@ function LayerQASection({ questionBank, activeId, openedIds, onOpen }: {
 
 // -- Questioning Lesson 1 (3-phase: Consistency → Arguing → Conclusion) ---------
 
-function QuestioningLesson1({ lessonId, stageIndex, onComplete, questionBank = [] }: QuestioningStageProps) {
+function QuestioningLesson1({ lessonId, stageIndex, onComplete, questionBank = [], onTrackerPhase }: QuestioningStageProps) {
   const tracker = useActivityTracker({ lessonId, stageIndex, stageType: 'questioning' });
 
   const [phase, setPhase] = useState<'consistency' | 'arguing' | 'conclusion'>('consistency');
@@ -776,6 +777,11 @@ function QuestioningLesson1({ lessonId, stageIndex, onComplete, questionBank = [
   // Always keep a stable ref to tracker so the snapshot effect doesn't re-fire on every render
   const trackerRef = useRef(tracker);
   trackerRef.current = tracker;
+
+  // Emit tracker phase to parent (LogicalThinkingTracker)
+  useEffect(() => {
+    onTrackerPhase?.(phase);
+  }, [phase, onTrackerPhase]);
 
   useEffect(() => {
     if (!tracker.isLoading && !isRestored) {
@@ -1116,7 +1122,7 @@ function QuestioningOriginal({
 
 function QuestioningLesson2({
   lessonId, stageIndex, onComplete, scenario, problemVisual, teacherQuestion, questionBank = [],
-  whyQuestion, hint, reasonOptions = [],
+  whyQuestion, hint, reasonOptions = [], onTrackerPhase,
 }: QuestioningStageProps) {
   const tracker = useActivityTracker({ lessonId, stageIndex, stageType: 'questioning' });
 
@@ -1131,6 +1137,12 @@ function QuestioningLesson2({
 
   const trackerRef = useRef(tracker);
   trackerRef.current = tracker;
+
+  // Emit tracker phase to parent (LogicalThinkingTracker)
+  useEffect(() => {
+    if (!isRestored) return;
+    onTrackerPhase?.(phase);
+  }, [phase, isRestored, onTrackerPhase]);
 
   useEffect(() => {
     if (!tracker.isLoading && !isRestored) {

@@ -38,6 +38,7 @@ import { getCurrentUser } from '../utils/auth';
 import { getCachedProgress, getLessonProgress, saveStageProgress } from '../utils/progress';
 import { getStudentGroup } from '../utils/groups';
 import { StageAnswerDetail } from '../components/admin/StageDetail';
+import { getLessonActivitySessions, type CTLActivitySession } from '../utils/activityTracking';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DragAutoScroll } from '../components/DragAutoScroll';
@@ -228,6 +229,7 @@ export function LessonPage() {
   const [stageInitDone, setStageInitDone] = useState(false);
   const [trackerPhase, setTrackerPhase] = useState<'consistency' | 'arguing' | 'conclusion'>('consistency');
   const [showStageSummary, setShowStageSummary] = useState(false);
+  const [activitySessions, setActivitySessions] = useState<CTLActivitySession[]>([]);
   // Activity guide is always open
   const [pendingReflection, setPendingReflection] = useState<{ stageAnswer: unknown } | null>(null);
 
@@ -245,6 +247,7 @@ export function LessonPage() {
         setProgress(value);
         setProgressLoaded(true);
       });
+      getLessonActivitySessions(user.id, lessonId).then(setActivitySessions);
     }
   }, [lessonId, user]);
 
@@ -335,8 +338,12 @@ export function LessonPage() {
 
   const handleStageComplete = async (answer: unknown) => {
     await saveStageProgress(user!.id, lessonId!, currentStageIndex, answer);
-    const updatedProgress = await getLessonProgress(user!.id, lessonId!);
+    const [updatedProgress, updatedSessions] = await Promise.all([
+      getLessonProgress(user!.id, lessonId!),
+      getLessonActivitySessions(user!.id, lessonId!),
+    ]);
     setProgress(updatedProgress);
+    setActivitySessions(updatedSessions);
     setPendingReflection(null);
     window.scrollTo(0, 0);
   };
@@ -427,6 +434,7 @@ export function LessonPage() {
             teacherQuestion={currentStage.teacherQuestion}
             questionBank={currentStage.questionBank}
             problemVisual={currentStage.problemVisual}
+            onTrackerPhase={(phase) => setTrackerPhase(phase as 'consistency' | 'arguing' | 'conclusion')}
           />
         );
       case 'learning-community':
@@ -771,7 +779,7 @@ export function LessonPage() {
                 </div>
               </div>
 
-              {/* Hasil Refleksi — single clean card */}
+              {/* Ringkasan Aktivitas — comprehensive review card */}
               {currentStageAnswer && (
                 <div className="rounded-2xl border-2 border-[#10B981]/25 bg-gradient-to-br from-[#ECFDF5] to-white shadow-sm overflow-hidden">
                   <div className="flex items-center gap-3 px-5 py-3.5 border-b border-[#10B981]/15">
@@ -781,12 +789,17 @@ export function LessonPage() {
                       </svg>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[11px] font-black text-[#065F46] uppercase tracking-widest">Hasil Refleksi Kamu</p>
+                      <p className="text-[11px] font-black text-[#065F46] uppercase tracking-widest">Ringkasan Aktivitas Kamu</p>
                       <p className="text-[10px] text-[#10B981]/60 font-medium mt-0.5">Jawabanmu telah tersimpan dengan aman</p>
                     </div>
                   </div>
                   <div className="px-5 py-4">
-                    <StageAnswerDetail stage={currentStage} answer={currentStageAnswer} />
+                    <StageAnswerDetail
+                      stage={currentStage}
+                      answer={currentStageAnswer}
+                      snapshot={activitySessions.find(s => s.stageIndex === currentStageIndex)?.latestSnapshot}
+                      lessonId={lessonId}
+                    />
                   </div>
                 </div>
               )}
