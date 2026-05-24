@@ -1899,7 +1899,7 @@ export const lessons: Record<string, Lesson> = {
     title: 'Pertemuan 3',
     topic: 'Internet Protocol Version 4 (IPv4)',
     description: 'IP Header, Struktur, Kelas, Range Kelas, dan Pengalamatan IPv4 pada TCP/IP',
-    objectives: ['X.IP.1', 'X.IP.3', 'X.IP.4', 'X.IP.9', 'X.IP.10'],
+    objectives: ['X.IP.1', 'X.IP.2', 'X.IP.3', 'X.IP.4', 'X.IP.5', 'X.IP.6', 'X.IP.7', 'X.IP.8'],
     initialCompetencies: ['Dasar IP', 'Biner Dasar'],
     materials: ['Struktur IPv4', 'Kelas IP (A, B, C)', 'Konversi Biner-Desimal', 'Manajemen IP'],
     pretest: {

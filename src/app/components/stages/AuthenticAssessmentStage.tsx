@@ -774,7 +774,7 @@ export function AuthenticAssessmentStage({
 }: AuthenticAssessmentStageProps) {
   if (!branchingScenario) return null;
 
-  if (branchingScenario.mode === 'tcp-branching' && branchingScenario.steps) {
+  if (branchingScenario.mode === 'tcp-branching') {
     return (
       <TcpBranchingAuthenticAssessment
         lessonId={lessonId}

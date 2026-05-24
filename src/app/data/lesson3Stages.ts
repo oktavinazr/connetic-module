@@ -1,16 +1,28 @@
 import type { Stage } from './lessons';
 
 export const lesson3Stages: Stage[] = [
+  // ─── Constructivism — X.IP.1 ──────────────────────────────────────────────
   {
     type: 'constructivism',
     title: 'Constructivism',
     description:
-      'Siswa membangun pemahaman awal tentang kebutuhan alamat unik di jaringan melalui analogi sistem pengalamatan surat dan komponen-komponen alamat IPv4.',
+      'Siswa membangun pemahaman awal tentang peran Internet Protocol (IP) pada Network Layer melalui animasi analogi interaktif dan aktivitas mencocokkan fungsi komponen IP.',
     objectiveCode: 'X.IP.1',
     activityGuide: [
-      'Susun 6 potongan cerita tentang bagaimana alamat IP memungkinkan data menemukan tujuannya.',
-      'Tulis refleksi: mengapa alamat IP harus unik dan tidak boleh ada duplikasi di jaringan yang sama.',
-      'Urutkan komponen-komponen alamat IPv4 sesuai hierarki dari yang paling umum ke paling spesifik.',
+      'Saksikan animasi interaktif tentang bagaimana IP Address memungkinkan data menemukan tujuannya di jaringan.',
+      'Pasangkan setiap komponen/konsep IP Address dengan fungsinya yang tepat menggunakan klik kiri-kanan (tarik garis).',
+      'Tulis argumen logis tentang mengapa IP Address harus unik di setiap jaringan.',
+      'Tulis kesimpulan mengenai peran IP dalam komunikasi jaringan berdasarkan seluruh aktivitas.',
+    ],
+    logicalThinkingIndicators: [
+      'Keruntutan Berpikir: mengeksplorasi peran IP Address pada Network Layer melalui animasi interaktif dan mencocokkan komponen dengan fungsinya secara runtut.',
+      'Kemampuan Berargumen: menjelaskan alasan mengapa IP Address harus unik dan bagaimana perannya dalam proses pengiriman data antar jaringan.',
+      'Penarikan Kesimpulan: menyimpulkan apa yang telah dipelajari tentang peran Internet Protocol pada Network Layer dalam komunikasi jaringan.',
+    ],
+    facilitatorNotes: [
+      'Guru menggambarkan IP Address sebagai "alamat rumah di dunia digital" — tanpa alamat unik, data tidak tahu ke mana harus pergi.',
+      'Guru menekankan bahwa IP bekerja di Network Layer, bukan Transport Layer (TCP) — IP mengurus ALAMAT, TCP mengurus KEANDALAN pengiriman.',
+      'Guru meminta siswa membandingkan: apa bedanya IP Address dengan MAC Address dalam konteks jaringan?',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
@@ -19,119 +31,67 @@ export const lesson3Stages: Stage[] = [
       degree: 'dengan tepat',
     },
     apersepsi:
-      'Bayangkan kamu mengirim surat ke teman, tapi kamu hanya menuliskan nama "Budi" tanpa nomor rumah, nama jalan, atau nama kota. Apakah surat itu akan sampai ke Budi yang tepat? Di internet, miliaran perangkat butuh alamat yang sangat spesifik dan unik agar data tidak salah kirim. Inilah fungsi Internet Protocol (IP)!',
-    storyScramble: {
-      instruction:
-        'Bagaimana sebuah paket data bisa menemukan perangkat tujuannya di antara miliaran perangkat di seluruh dunia? Susun 6 potongan cerita berikut menjadi alur yang logis tentang peran alamat IP.',
-      fragments: [
-        {
-          id: 'f1',
-          text: 'Seorang pengguna ingin mengirim file ke rekan kerjanya yang berada di kota berbeda melalui internet.',
-          order: 1,
-        },
-        {
-          id: 'f2',
-          text: 'Aplikasi pengirim menyiapkan data dan menyerahkannya ke lapisan Transport (TCP/UDP) untuk dipecah menjadi segmen.',
-          order: 2,
-        },
-        {
-          id: 'f3',
-          text: 'Network Layer (IP) menambahkan alamat IP sumber dan tujuan pada setiap paket — seperti menulis alamat lengkap di amplop surat.',
-          order: 3,
-        },
-        {
-          id: 'f4',
-          text: 'Router membaca alamat IP tujuan dan menentukan jalur terbaik untuk meneruskan paket menuju jaringan yang tepat.',
-          order: 4,
-        },
-        {
-          id: 'f5',
-          text: 'Paket melewati beberapa router hingga akhirnya tiba di jaringan lokal tujuan, di mana router terakhir mengidentifikasi perangkat penerimanya.',
-          order: 5,
-        },
-        {
-          id: 'f6',
-          text: 'Perangkat penerima mengenali alamat IP-nya sendiri, menerima paket, dan menyerahkannya ke aplikasi yang tepat.',
-          order: 6,
-        },
-      ],
-      successMessage:
-        'Tepat! Alamat IP adalah "alamat lengkap" perangkat di internet — tanpanya, data tidak tahu ke mana harus pergi.',
-    },
-    constructivismEssay1:
-      'Berdasarkan alur cerita yang baru saja kamu susun, jelaskan mengapa setiap perangkat di internet harus memiliki alamat IP yang unik! Apa yang terjadi jika dua perangkat menggunakan alamat IP yang sama?',
-    analogySortGroups: [
-      { id: 'ipv4', label: 'Hierarki Komponen Alamat IPv4', colorClass: 'blue' },
-    ],
-    analogySortItems: [
+      'Bayangkan kamu ingin mengirim surat ke temanmu di kota lain. Kamu menulis namanya di amplop, tapi tanpa alamat lengkap — tanpa nama jalan, nomor rumah, atau nama kota. Kurir pasti bingung! Di internet, miliaran perangkat saling berkomunikasi setiap detik. Agar data tidak nyasar, setiap perangkat butuh "alamat digital" yang unik dan jelas. Inilah yang disebut IP Address — dan IP (Internet Protocol) adalah protokol yang bertugas memberikan, membaca, dan menggunakan alamat tersebut.',
+    constructivismMatching: [
       {
-        id: 'ap1',
-        text: 'Network ID (Identitas Jaringan) — bagian awal alamat IP yang menunjukkan jaringan mana perangkat ini berada.',
-        courierAnalogy: 'Seperti nama kota dan nama jalan: "Jl. Merdeka, Bandung" — menunjukkan blok kawasan, bukan rumah spesifik.',
-        correctGroup: 'ipv4',
-        correctOrder: 1,
+        id: 'm1',
+        left: 'Internet Protocol (IP)',
+        right: 'Protokol pada Network Layer yang bertugas mengalamati paket data dengan alamat sumber dan tujuan, serta menentukan jalur terbaik (routing) ke tujuan.',
       },
       {
-        id: 'ap2',
-        text: 'Subnet Mask — "topeng" yang memisahkan bagian Network ID dari Host ID dalam sebuah alamat IP.',
-        courierAnalogy: 'Seperti kode pos: membantu router memahami mana bagian "kota" dan mana bagian "nomor rumah" dari suatu alamat.',
-        correctGroup: 'ipv4',
-        correctOrder: 2,
+        id: 'm2',
+        left: 'IP Address',
+        right: 'Alamat logis unik 32-bit yang diberikan kepada setiap perangkat jaringan agar dapat diidentifikasi dan dihubungi dalam satu atau lebih jaringan.',
       },
       {
-        id: 'ap3',
-        text: 'Host ID (Identitas Perangkat) — bagian akhir alamat IP yang mengidentifikasi perangkat spesifik dalam jaringan tersebut.',
-        courierAnalogy: 'Seperti nomor rumah spesifik di dalam blok jalan: "No. 42" — inilah perangkat yang tepat yang dituju.',
-        correctGroup: 'ipv4',
-        correctOrder: 3,
+        id: 'm3',
+        left: 'Network Layer',
+        right: 'Lapisan ke-3 dalam model TCP/IP yang bertanggung jawab atas pengalamatan logis dan routing paket antar jaringan yang berbeda.',
       },
       {
-        id: 'ap4',
-        text: 'Network Address — alamat pertama dalam blok jaringan (Host ID semua 0), digunakan sebagai identitas jaringan itu sendiri.',
-        courierAnalogy: 'Seperti nama komplek perumahan itu sendiri: "Komplek Merdeka" — bukan rumah individu, tapi nama kawasannya.',
-        correctGroup: 'ipv4',
-        correctOrder: 4,
+        id: 'm4',
+        left: 'Router',
+        right: 'Perangkat jaringan yang membaca IP Address tujuan pada setiap paket dan meneruskannya ke jaringan berikutnya menuju tujuan akhir.',
       },
       {
-        id: 'ap5',
-        text: 'Broadcast Address — alamat terakhir dalam blok jaringan (Host ID semua 1), digunakan untuk mengirim pesan ke SEMUA perangkat di jaringan.',
-        courierAnalogy: 'Seperti pengumuman pengeras suara di komplek: "Perhatian warga Komplek Merdeka!" — pesan diterima semua orang sekaligus.',
-        correctGroup: 'ipv4',
-        correctOrder: 5,
+        id: 'm5',
+        left: 'Routing',
+        right: 'Proses pemilihan jalur terbaik untuk mengirimkan paket data dari sumber ke tujuan melalui satu atau lebih router berdasarkan tabel routing.',
       },
       {
-        id: 'ap6',
-        text: 'Usable Host Range — rentang alamat antara Network Address dan Broadcast Address yang bisa diberikan ke perangkat.',
-        courierAnalogy: 'Seperti nomor rumah yang bisa dihuni: No. 1 sampai No. 254 (tapi No. 0 dan No. 255 dicadangkan untuk keperluan lain).',
-        correctGroup: 'ipv4',
-        correctOrder: 6,
+        id: 'm6',
+        left: 'Packet (Paket IP)',
+        right: 'Unit data pada Network Layer — berisi IP Header (alamat sumber, tujuan, TTL) dan payload data dari Transport Layer yang dibungkus oleh IP.',
       },
     ],
     constructivismEssay2:
-      'Berdasarkan komponen-komponen IPv4 yang baru saja kamu urutkan, jelaskan mengapa kita perlu Subnet Mask dan apa bedanya Network Address dengan Broadcast Address!',
-    conclusionPrompt: 'Berdasarkan aktivitas Story Scramble dan Analogy Sorting tentang pengalamatan IPv4 yang telah kamu lakukan, jelaskan bagaimana kamu mampu menjelaskan peran Internet Protocol lapisan Network dalam protokol TCP/IP. Tuliskan dengan tepat menggunakan kata-katamu sendiri.',
+      'Berdasarkan animasi dan aktivitas memasangkan yang telah kamu selesaikan, jelaskan secara singkat dan logis: Mengapa setiap perangkat yang berkomunikasi di jaringan wajib memiliki IP Address? Apa yang terjadi jika dua perangkat menggunakan IP Address yang sama, dan bagaimana hal tersebut mengganggu proses komunikasi jaringan? Gunakan minimal satu konsep dari aktivitas matching sebagai dasar argumenmu.',
+    conclusionPrompt:
+      'Berdasarkan animasi interaktif dan aktivitas memasangkan fungsi komponen IP yang telah kamu lakukan, tuliskan refleksimu: (1) Jelaskan peran Internet Protocol pada Network Layer dalam komunikasi jaringan. (2) Mengapa IP Address harus unik pada setiap perangkat? (3) Bagaimana Router menggunakan IP Address untuk meneruskan paket data ke tujuan? Tuliskan dengan tepat menggunakan kata-katamu sendiri.',
   },
 
+  // ─── Inquiry — X.IP.2 ────────────────────────────────────────────────────
   {
     type: 'inquiry',
     title: 'Inquiry',
     description:
-      'Siswa mengeksplorasi struktur 32-bit IPv4, komponen IP Header, dan sistem klasifikasi alamat IP (Kelas A, B, C) melalui eksplorasi interaktif.',
+      'Siswa mengeksplorasi komponen IP Header beserta fungsinya secara mendalam melalui eksplorasi materi interaktif dan aktivitas merangkai urutan pemrosesan paket IP.',
     objectiveCode: 'X.IP.2',
     activityGuide: [
-      'Buka dan pelajari struktur IPv4 serta komponen IP Header melalui panel eksplorasi.',
-      'Urutkan 5 elemen sistem pengalamatan IPv4 dari lapisan paling dasar ke paling spesifik.',
-      'Kelompokkan contoh alamat IP ke dalam kelas yang sesuai (A, B, atau C) menggunakan drag & drop.',
-      'Tulis refleksi untuk memperkuat pemahaman tentang logika di balik sistem kelas IP.',
+      'Buka dan pelajari setiap field IP Header melalui panel eksplorasi interaktif.',
+      'Urutkan 5 tahapan pemrosesan paket IP oleh router menggunakan drag & drop.',
+      'Tulis argumen logis tentang pentingnya field TTL dan Destination IP dalam IP Header.',
+      'Tulis kesimpulan tentang fungsi IP Header yang telah kamu pelajari.',
     ],
     logicalThinkingIndicators: [
-      'Keruntutan Berpikir: mengurutkan elemen pengalamatan IPv4 berdasarkan hierarki fungsinya.',
-      'Analisis Klasifikasi: mengidentifikasi kelas IP berdasarkan rentang oktet pertama.',
-      'Refleksi Konsep: menjelaskan mengapa sistem kelas IP diciptakan dan keterbatasannya.',
+      'Keruntutan Berpikir: mengurutkan tahapan pemrosesan paket IP oleh router secara sistematis berdasarkan fungsi setiap field IP Header.',
+      'Kemampuan Berargumen: menjelaskan mengapa field TTL dan Destination IP merupakan komponen kritis dalam IP Header yang tidak dapat dihilangkan.',
+      'Penarikan Kesimpulan: menyimpulkan bagaimana IP Header memungkinkan paket data menemukan jalur yang tepat dari sumber ke tujuan.',
     ],
     facilitatorNotes: [
-      'Guru menekankan perbedaan antara Network ID dan Host ID, dan mengapa pembagian ini penting untuk routing.',
-      'Guru mendorong siswa menghitung jumlah host maksimal untuk setiap kelas IP menggunakan formula 2^n - 2.',
+      'Guru menekankan perbedaan IP Header dengan TCP Header: IP Header mengurus ALAMAT & RUTE, TCP Header mengurus URUTAN & KEANDALAN.',
+      'Guru menjelaskan TTL dengan analogi "tanggal kedaluwarsa paket" — mencegah paket berputar selamanya jika terjadi routing loop.',
+      'Guru meminta siswa menghitung: jika TTL awal = 64 dan paket melewati 10 router, berapakah TTL saat tiba di tujuan?',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
@@ -140,107 +100,113 @@ export const lesson3Stages: Stage[] = [
       degree: 'secara runtut',
     },
     material: {
-      title: 'Struktur Alamat IPv4 & IP Header',
+      title: 'Komponen IP Header',
       content: [
-        'IPv4 menggunakan 32-bit yang dibagi menjadi 4 oktet (8-bit per oktet). Untuk memudahkan manusia, biner ini ditulis dalam format dotted decimal: angka 0–255 dipisahkan titik (contoh: 192.168.1.1).',
-        'IP Header adalah informasi kontrol yang ditambahkan oleh Internet Layer pada setiap paket. Selain alamat sumber dan tujuan, IP Header juga memuat informasi TTL, protokol, dan checksum untuk memastikan paket sampai ke tujuan yang benar.',
+        'IP Header adalah bagian awal setiap paket IP yang berisi informasi kontrol penting. Router di sepanjang jalur membaca IP Header untuk memutuskan ke mana paket harus diteruskan selanjutnya.',
+        'Field terpenting dalam IP Header adalah Destination IP Address (menentukan tujuan), Source IP Address (mengidentifikasi pengirim), TTL (membatasi usia paket), dan Protocol (menunjukkan protokol Transport Layer yang membawa data).',
       ],
       examples: [
-        'Kelas A (1–126): Network 8-bit, Host 24-bit — untuk jaringan sangat besar (ISP, militer).',
-        'Kelas B (128–191): Network 16-bit, Host 16-bit — untuk organisasi besar/kampus.',
-        'Kelas C (192–223): Network 24-bit, Host 8-bit — untuk jaringan kecil/rumah/kantor.',
-        'IP Header: Version, IHL, TTL, Protocol, Source IP, Destination IP.',
+        'Version (4 bit): Nilai 4 untuk IPv4. Router memeriksa field ini pertama untuk memastikan paket adalah IPv4.',
+        'TTL (8 bit): Berkurang 1 di setiap router. Jika mencapai 0, paket dibuang dan pengirim diberi notifikasi ICMP "Time Exceeded".',
+        'Protocol (8 bit): 6 = TCP, 17 = UDP, 1 = ICMP. Menunjukkan isi payload agar layer di atas IP bisa memprosesnya.',
+        'Source IP (32 bit): Alamat IP perangkat pengirim — digunakan penerima untuk mengirim balasan.',
+        'Destination IP (32 bit): Alamat IP perangkat tujuan — digunakan setiap router untuk routing decision.',
+        'Header Checksum (16 bit): Nilai verifikasi integritas IP Header. Dihitung ulang di setiap router — jika tidak cocok, paket dibuang.',
       ],
     },
     explorationSections: [
       {
         id: 'e1',
-        title: 'Format Penulisan IPv4 (Dotted Decimal)',
+        title: 'Version & IHL — Identitas Paket',
         content:
-          'IPv4 terdiri dari 32 bit biner yang dibagi menjadi 4 kelompok 8-bit (oktet). Setiap oktet dikonversi ke desimal (0–255) dan dipisahkan tanda titik. Jika ada oktet bernilai 256 atau lebih, itu bukan alamat IPv4 yang valid.',
+          'Field Version (4 bit) menyatakan versi protokol IP. Nilai 4 berarti IPv4. IHL (Internet Header Length, 4 bit) menunjukkan panjang IP Header dalam unit 32-bit. Nilai minimum IHL = 5 (berarti 20 byte header tanpa opsi). Router memeriksa kedua field ini pertama kali untuk memvalidasi paket.',
         example:
-          'Biner: 11000000.10101000.00000001.00000001 → Desimal: 192.168.1.1. Setiap bagian adalah "blok 8 bit" yang nilainya 0 sampai 255.',
+          'Jika Version = 4 dan IHL = 5, artinya paket ini adalah IPv4 dengan header 20 byte (5 × 4 = 20 byte). Semua paket IPv4 biasa memiliki IHL = 5 kecuali menggunakan Options field.',
       },
       {
         id: 'e2',
-        title: 'Komponen IP Header',
+        title: 'TTL — Batas Usia Paket',
         content:
-          'IP Header memuat: Version (IPv4=4), TTL (Time to Live — berkurang 1 di setiap router), Protocol (6=TCP, 17=UDP), Source IP (alamat pengirim), dan Destination IP (alamat tujuan). TTL mencegah paket berputar selamanya di jaringan.',
+          'TTL (Time to Live) adalah counter 8-bit yang berkurang 1 setiap kali paket melewati sebuah router (hop). Jika TTL mencapai 0, router membuang paket tersebut dan mengirim pesan ICMP "Time Exceeded" ke pengirim. Mekanisme ini mencegah paket "hidup selamanya" akibat routing loop.',
         example:
-          'Bayangkan amplop surat dengan: tanggal kedaluwarsa (TTL), kode jenis isi (Protocol), alamat pengirim (Source IP), dan alamat tujuan (Destination IP). Router membaca "amplop" ini untuk meneruskan paket.',
+          'Paket dikirim dengan TTL=64. Melewati Router 1 → TTL=63. Melewati Router 2 → TTL=62. Setelah 64 router, TTL=0 dan paket dibuang. Perintah "traceroute" memanfaatkan TTL untuk memetakan jalur paket.',
       },
       {
         id: 'e3',
-        title: 'Kelas A — Jaringan Sangat Besar',
+        title: 'Protocol — Penanda Protokol Transport',
         content:
-          'Kelas A: oktet pertama bernilai 1–126. Format: Network.Host.Host.Host. Subnet Mask default: 255.0.0.0 (/8). Mendukung 126 jaringan dengan masing-masing ~16 juta host. Digunakan oleh organisasi sangat besar seperti ISP besar atau lembaga pemerintah.',
+          'Field Protocol (8 bit) mengidentifikasi protokol Transport Layer yang membawa payload dalam paket ini. Nilai umum: 6 = TCP, 17 = UDP, 1 = ICMP. Perangkat penerima menggunakan nilai ini untuk menyerahkan payload ke protokol yang tepat setelah IP Header dilepas (dekapsulasi).',
         example:
-          '10.0.0.1, 8.8.8.8 (Google DNS), 1.1.1.1 (Cloudflare) — semua ini adalah alamat Kelas A.',
+          'Paket HTTP (web) menggunakan TCP (Protocol=6). Paket DNS menggunakan UDP (Protocol=17). Paket ping menggunakan ICMP (Protocol=1). Tanpa field Protocol, komputer penerima tidak tahu cara memproses payload yang diterimanya.',
       },
       {
         id: 'e4',
-        title: 'Kelas B — Jaringan Menengah',
+        title: 'Source & Destination IP Address',
         content:
-          'Kelas B: oktet pertama bernilai 128–191. Format: Network.Network.Host.Host. Subnet Mask default: 255.255.0.0 (/16). Mendukung 16.384 jaringan dengan masing-masing ~65.534 host. Cocok untuk universitas dan perusahaan besar.',
+          'Source IP Address (32 bit) adalah alamat IP perangkat pengirim, digunakan oleh penerima untuk mengirim balasan. Destination IP Address (32 bit) adalah alamat IP tujuan, dibaca oleh setiap router untuk membuat routing decision. Kedua field ini adalah "label amplop" yang menentukan siapa pengirim dan ke mana paket harus pergi.',
         example:
-          '172.16.0.1, 172.31.255.254, 191.0.1.1 — semua ini adalah alamat Kelas B. Rentang 172.16.0.0–172.31.255.255 adalah blok Private Kelas B.',
+          'Saat kamu mengakses www.google.com, Source IP = IP-mu (misal 192.168.1.5), Destination IP = IP server Google (misal 142.250.185.68). Setiap router di sepanjang jalur hanya membaca Destination IP untuk memutuskan ke router mana paket diteruskan.',
       },
       {
         id: 'e5',
-        title: 'Kelas C — Jaringan Kecil',
+        title: 'Header Checksum — Verifikasi Integritas',
         content:
-          'Kelas C: oktet pertama bernilai 192–223. Format: Network.Network.Network.Host. Subnet Mask default: 255.255.255.0 (/24). Mendukung ~2 juta jaringan dengan masing-masing 254 host. Paling umum digunakan di rumah, kantor kecil, dan laboratorium sekolah.',
+          'Header Checksum (16 bit) adalah nilai yang dihitung dari semua field IP Header. Setiap router yang menerima paket menghitung ulang checksum dan membandingkannya dengan nilai yang ada. Jika tidak cocok, header dianggap rusak dan paket dibuang. Checksum ini HANYA melindungi IP Header, bukan payload (data di dalamnya).',
         example:
-          '192.168.1.1, 192.168.0.1, 200.100.50.1 — alamat Kelas C. Range 192.168.0.0–192.168.255.255 adalah blok Private Kelas C yang paling sering dipakai di jaringan lokal.',
+          'Bayangkan Checksum sebagai "sidik jari" IP Header. Jika bit mana pun dalam header berubah selama transmisi (misal akibat gangguan elektromagnetik), checksum yang dihitung ulang akan berbeda dan paket langsung dibuang sebelum diteruskan.',
       },
     ],
     flowInstruction:
-      'Urutkan 5 elemen sistem pengalamatan IPv4 berikut dari yang paling mendasar (fondasi) ke yang paling spesifik (identitas perangkat individual).',
+      'Urutkan 5 tahapan yang dilakukan router saat memproses sebuah paket IP yang masuk, mulai dari penerimaan hingga penelusuran tabel routing.',
     flowItems: [
-      { id: 'fl1', text: 'Format Biner 32-bit', correctOrder: 1, description: 'Representasi dasar semua alamat IPv4.', colorClass: 'purple' },
-      { id: 'fl2', text: 'Kelas IP (A / B / C)', correctOrder: 2, description: 'Kategori berdasarkan rentang oktet pertama.', colorClass: 'blue' },
-      { id: 'fl3', text: 'Subnet Mask', correctOrder: 3, description: 'Pemisah antara Network ID dan Host ID.', colorClass: 'green' },
-      { id: 'fl4', text: 'Network Address', correctOrder: 4, description: 'Identitas jaringan (Host ID semua 0).', colorClass: 'amber' },
-      { id: 'fl5', text: 'Host Address (IP Perangkat)', correctOrder: 5, description: 'Alamat spesifik satu perangkat dalam jaringan.', colorClass: 'pink' },
+      { id: 'fl1', text: 'Router menerima paket dan memeriksa field Version — memastikan ini adalah paket IPv4 yang valid.', correctOrder: 1, description: 'Verifikasi versi protokol.', colorClass: 'purple' },
+      { id: 'fl2', text: 'Router memeriksa nilai TTL; jika TTL = 0, paket dibuang dan ICMP "Time Exceeded" dikirim ke pengirim.', correctOrder: 2, description: 'Pengecekan TTL dan decrement.', colorClass: 'blue' },
+      { id: 'fl3', text: 'Router memvalidasi Header Checksum; jika tidak cocok, paket dianggap rusak dan langsung dibuang.', correctOrder: 3, description: 'Verifikasi integritas header.', colorClass: 'green' },
+      { id: 'fl4', text: 'Router membaca Destination IP Address dan mencocokannya dengan entri dalam tabel routing untuk menentukan interface keluar.', correctOrder: 4, description: 'Lookup tabel routing berdasarkan Destination IP.', colorClass: 'amber' },
+      { id: 'fl5', text: 'Router mengupdate TTL (kurangi 1), hitung ulang Checksum, lalu teruskan paket ke interface yang sesuai.', correctOrder: 5, description: 'Update header dan forward paket.', colorClass: 'pink' },
     ],
     inquiryReflection1:
-      'Jelaskan pemahamanmu tentang hierarki 5 elemen IPv4 tersebut. Mengapa Subnet Mask harus diketahui sebelum kita bisa menentukan Network Address suatu perangkat?',
+      'Jelaskan mengapa urutan 5 tahapan pemrosesan paket IP tersebut tidak bisa dibalik atau dilewati. Apa dampaknya jika router langsung meneruskan paket tanpa memeriksa TTL terlebih dahulu?',
     groups: [
-      { id: 'clA', label: 'Kelas A (Oktet 1: 1–126)', colorClass: 'blue' },
-      { id: 'clB', label: 'Kelas B (Oktet 1: 128–191)', colorClass: 'green' },
-      { id: 'clC', label: 'Kelas C (Oktet 1: 192–223)', colorClass: 'purple' },
+      { id: 'hdr_ident', label: 'Identitas & Kontrol Paket', colorClass: 'blue' },
+      { id: 'hdr_addr', label: 'Pengalamatan Sumber & Tujuan', colorClass: 'green' },
+      { id: 'hdr_int', label: 'Integritas & Protokol', colorClass: 'purple' },
     ],
     groupItems: [
-      { id: 'i1', text: '10.10.10.1', correctGroup: 'clA' },
-      { id: 'i2', text: '172.16.50.10', correctGroup: 'clB' },
-      { id: 'i3', text: '192.168.1.100', correctGroup: 'clC' },
-      { id: 'i4', text: '8.8.8.8', correctGroup: 'clA' },
-      { id: 'i5', text: '150.100.200.5', correctGroup: 'clB' },
-      { id: 'i6', text: '200.50.25.1', correctGroup: 'clC' },
+      { id: 'i1', text: 'Version (4 = IPv4)', correctGroup: 'hdr_ident' },
+      { id: 'i2', text: 'TTL (Time to Live)', correctGroup: 'hdr_ident' },
+      { id: 'i3', text: 'Source IP Address', correctGroup: 'hdr_addr' },
+      { id: 'i4', text: 'Destination IP Address', correctGroup: 'hdr_addr' },
+      { id: 'i5', text: 'Protocol (6=TCP, 17=UDP)', correctGroup: 'hdr_int' },
+      { id: 'i6', text: 'Header Checksum', correctGroup: 'hdr_int' },
     ],
     inquiryReflection2:
-      'Setelah mengklasifikasikan alamat-alamat IP tersebut, jelaskan pola apa yang membedakan Kelas A, B, dan C! Mengapa semakin tinggi kelas (A→C), semakin sedikit host yang bisa ditampung per jaringan?',
-    conclusionPrompt: 'Berdasarkan eksplorasi materi IPv4 dan aktivitas klasifikasi kelas IP yang telah kamu lakukan, jelaskan bagaimana kamu mampu menguraikan komponen IP Header beserta fungsinya. Tuliskan secara runtut dengan kata-katamu sendiri.',
+      'Setelah mengklasifikasikan field-field IP Header tersebut, jelaskan mengapa setiap kategori (Identitas & Kontrol, Pengalamatan, Integritas & Protokol) harus ada secara bersamaan dalam satu IP Header. Apa yang terjadi jika salah satu kategori dihilangkan?',
+    conclusionPrompt: 'Berdasarkan eksplorasi materi IP Header dan aktivitas penyusunan tahapan pemrosesan paket yang telah kamu lakukan, jelaskan bagaimana kamu mampu menguraikan komponen IP Header beserta fungsinya. Tuliskan secara runtut dengan kata-katamu sendiri.',
   },
 
+  // ─── Questioning — X.IP.3 ────────────────────────────────────────────────
   {
     type: 'questioning',
     title: 'Questioning',
     description:
-      'Siswa menganalisis skenario konflik alamat IP dan mengidentifikasi mekanisme yang paling relevan dalam mendeteksi serta menyelesaikan konflik tersebut.',
+      'Siswa menganalisis skenario format alamat IPv4 yang tidak valid dan mengidentifikasi aturan format penulisan IPv4 yang benar melalui tanya jawab dua arah.',
     objectiveCode: 'X.IP.3',
     activityGuide: [
-      'Amati skenario "IP Address Conflict": dua perangkat menggunakan alamat IP yang identik.',
-      'Pilih mekanisme atau field yang paling relevan untuk memahami mengapa router kebingungan.',
-      'Jelaskan solusi teknis untuk menyelesaikan konflik tanpa mengganggu keseluruhan jaringan.',
+      'Amati skenario "IPv4 Validation": sebuah alamat IPv4 ditolak sistem karena formatnya tidak valid.',
+      'Pilih alasan teknis yang paling tepat mengapa alamat tersebut tidak valid.',
+      'Tanyakan pertanyaan lanjutan untuk memperdalam pemahaman tentang aturan format IPv4.',
+      'Tulis kesimpulan tentang aturan format IPv4 yang valid.',
     ],
     logicalThinkingIndicators: [
-      'Kemampuan Berargumen: memilih alasan teknis yang tepat berdasarkan cara kerja router dan tabel ARP.',
-      'Penarikan Kesimpulan: menghubungkan gejala konflik IP dengan mekanisme routing yang terganggu.',
+      'Keruntutan Berpikir: menganalisis skenario format IPv4 tidak valid secara sistematis melalui tanya jawab terarah.',
+      'Kemampuan Berargumen: memilih alasan teknis yang tepat dan menjelaskan mengapa suatu format IPv4 tidak valid berdasarkan aturan 8-bit per oktet.',
+      'Penarikan Kesimpulan: menghubungkan aturan format IPv4 (4 oktet, nilai 0–255) dengan cara komputer merepresentasikan alamat dalam sistem biner.',
     ],
     facilitatorNotes: [
-      'Guru menjelaskan bahwa router menggunakan ARP (Address Resolution Protocol) untuk menghubungkan IP address dengan MAC address fisik perangkat.',
-      'Guru memancing: "Jika dua perangkat menjawab ARP request yang sama, apa yang terjadi pada tabel routing router?"',
+      'Guru menekankan bahwa IPv4 adalah bilangan 32-bit: 4 oktet × 8-bit = 32-bit. Setiap oktet bisa menampung nilai 0 (00000000) hingga 255 (11111111).',
+      'Guru memancing: "Mengapa nilai 256 tidak bisa direpresentasikan dalam 8 bit? Berapa bit yang dibutuhkan untuk angka 256?"',
+      'Guru mendorong siswa mengidentifikasi format-format tidak valid lainnya: nilai > 255, jumlah oktet ≠ 4, karakter non-angka.',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
@@ -250,182 +216,212 @@ export const lesson3Stages: Stage[] = [
     },
     problemVisual: {
       icon: '!',
-      title: 'IP Address Conflict — Dua Perangkat, Satu Alamat',
+      title: 'IPv4 Validation Error — Format Tidak Valid',
       description:
-        'Laptop A (192.168.1.10) dan Printer Server (192.168.1.10) memiliki alamat IP yang sama! Akibatnya koneksi keduanya putus bergantian dan tidak stabil.',
+        'Seorang siswa mengetikkan "256.168.1.1" sebagai alamat IP komputernya. Sistem jaringan menolak alamat tersebut dengan pesan error. Mengapa alamat ini tidak valid?',
       problemType: 'collision',
     },
     teacherQuestion:
-      'Jika dua perangkat berbeda menggunakan IP yang sama, mengapa router tidak bisa memutuskan ke perangkat mana data harus dikirimkan?',
+      'Mengapa alamat "256.168.1.1" tidak dapat diterima sebagai alamat IPv4 yang valid, meskipun formatnya mirip dengan IPv4 biasa?',
     scenario:
-      'Di kantor sebuah sekolah, teknisi baru menyeting IP laptop-nya secara manual menjadi 192.168.1.10. Tanpa sadar, alamat tersebut sudah digunakan oleh Printer Server yang selalu online. Karyawan di seluruh kantor tiba-tiba tidak bisa mencetak dokumen, dan laptop teknisi baru juga sering kehilangan koneksi.',
+      'Di laboratorium komputer sekolah, seorang siswa diminta menyeting IP address komputernya secara manual agar bisa terhubung ke jaringan. Ia mengetikkan "256.168.1.1" dan "192.168.1.300" sebagai percobaan. Kedua alamat itu langsung ditolak oleh sistem operasi komputer. Namun saat mencoba "192.168.1.100", komputer berhasil terhubung ke jaringan.',
     whyQuestion:
-      'Mengapa Router menjadi kebingungan dan tidak bisa melayani kedua perangkat yang menggunakan IP yang sama secara normal?',
+      'Mengapa nilai 256 tidak bisa menjadi oktet yang valid dalam sebuah alamat IPv4, sedangkan nilai 255 masih bisa diterima?',
     hint:
-      'Router menggunakan tabel ARP yang memetakan setiap IP Address ke satu MAC Address fisik. Bayangkan apa yang terjadi jika dua MAC Address berbeda mengklaim IP yang sama.',
+      'Ingat bahwa setiap oktet IPv4 terdiri dari tepat 8 bit. Berapakah nilai desimal terbesar yang bisa direpresentasikan oleh 8 bit? (Petunjuk: 2^8 = 256, artinya 8 bit bisa menampung 256 nilai berbeda, yaitu 0 sampai 255.)',
     reasonOptions: [
       {
         id: 'r1',
-        text: 'Router tidak tahu harus mengirimkan data ke MAC Address yang mana karena tabel ARP-nya terus-menerus diperbarui oleh dua perangkat yang berbeda.',
+        text: 'Karena setiap oktet IPv4 hanya memiliki 8 bit, dan nilai maksimum 8 bit adalah 255 (= 11111111 dalam biner). Nilai 256 membutuhkan 9 bit sehingga tidak bisa direpresentasikan dalam satu oktet.',
         isCorrect: true,
         feedback:
-          'Tepat! Router mengirim data berdasarkan tabel ARP. Jika dua perangkat mengklaim IP yang sama, tabel ARP terus-menerus "direbut" — satu saat menunjuk ke MAC Laptop, saat berikutnya ke MAC Printer. Hasilnya, data dikirim ke perangkat yang salah secara acak.',
+          'Tepat! IPv4 adalah sistem pengalamatan 32-bit: 4 oktet × 8-bit. Nilai 8-bit berkisar 0–255. Angka 256 membutuhkan bit ke-9 (100000000 dalam biner = 9 bit), sehingga tidak muat dalam satu oktet IPv4.',
       },
       {
         id: 'r2',
-        text: 'Router akan meledak atau rusak secara fisik jika menerima dua sinyal dari IP yang sama secara bersamaan.',
+        text: 'Karena 256 adalah alamat broadcast khusus yang dicadangkan oleh IANA dan tidak boleh diberikan ke perangkat manapun.',
         isCorrect: false,
         feedback:
-          'Tentu tidak. Router hanya mengalami kegagalan logika pengiriman data, bukan kerusakan fisik. Perangkat jaringan dirancang untuk menangani situasi ini tanpa kerusakan hardware.',
+          'Tidak tepat. Alamat broadcast IPv4 adalah nilai terakhir dalam setiap subnet (misalnya 192.168.1.255 untuk jaringan /24), bukan angka 256. Penolakan 256 bukan karena reservasi, melainkan karena batasan fisik 8-bit.',
       },
       {
         id: 'r3',
-        text: 'Router akan menggabungkan data dari kedua perangkat menjadi satu aliran data dan mengirimkannya ke keduanya secara bersamaan.',
+        text: 'Karena sistem operasi memblokir angka di atas 200 dalam oktet pertama untuk alasan keamanan jaringan.',
         isCorrect: false,
         feedback:
-          'Router tidak bekerja seperti itu. Setiap paket dikirim ke satu tujuan berdasarkan satu MAC Address. Penggabungan data seperti yang disebutkan tidak terjadi dalam mekanisme IP routing.',
+          'Tidak tepat. Sistem operasi tidak memblokir berdasarkan ambang keamanan seperti itu. Oktet pertama bahkan bisa bernilai hingga 255 (seperti Kelas E: 240–255). Penolakan murni karena batasan matematis 8-bit.',
       },
       {
         id: 'r4',
-        text: 'Kedua perangkat dengan IP sama akan otomatis diblock oleh firewall router karena terdeteksi sebagai ancaman keamanan.',
+        text: 'Karena format IPv4 hanya menerima angka genap dalam setiap oktet untuk menjaga keselarasan bit.',
         isCorrect: false,
         feedback:
-          'Firewall tidak otomatis memblokir perangkat hanya karena konflik IP. Konflik IP adalah masalah administrasi jaringan, bukan ancaman keamanan yang ditangani firewall.',
+          'Tidak tepat sama sekali. IPv4 menerima semua nilai desimal dari 0 hingga 255 di setiap oktet, baik genap maupun ganjil. Tidak ada aturan "hanya angka genap" dalam pengalamatan IPv4.',
       },
     ],
     questionBank: [
       {
         id: 'q1',
-        text: 'Apa itu ARP dan mengapa penting dalam kasus konflik IP?',
+        text: 'Apa format penulisan IPv4 yang valid?',
         response:
-          'ARP (Address Resolution Protocol) adalah mekanisme yang menghubungkan alamat IP (logis) ke MAC Address (fisik). Router menggunakan tabel ARP ini untuk mengirim data ke perangkat yang tepat. Saat dua perangkat punya IP sama, tabel ARP terus berubah dan pengiriman data menjadi tidak konsisten.',
+          'Format IPv4 yang valid terdiri dari tepat 4 oktet desimal (0–255), dipisahkan oleh tanda titik. Contoh valid: 192.168.1.1, 10.0.0.1, 172.16.254.100. Tidak valid: nilai > 255 (misal 256.0.0.1), oktet kurang dari 4 (misal 192.168.1), atau karakter non-angka (misal 192.168.a.1).',
       },
       {
         id: 'q2',
-        text: 'Bagaimana cara mencegah konflik IP di jaringan yang besar?',
+        text: 'Mengapa nilai 0 dan 255 tetap valid sebagai oktet IPv4?',
         response:
-          'Gunakan DHCP (Dynamic Host Configuration Protocol) untuk memberikan IP secara otomatis — DHCP server memastikan tidak ada dua perangkat mendapat IP yang sama. Untuk perangkat penting seperti server dan printer, gunakan IP statis di luar range DHCP.',
+          '0 valid karena merepresentasikan 00000000 (8 bit, semua nol) — digunakan dalam Network Address. 255 valid karena merepresentasikan 11111111 (8 bit, semua satu) — digunakan dalam Broadcast Address dan Subnet Mask. Keduanya masih dalam rentang 8-bit yang valid (0 sampai 255).',
       },
       {
         id: 'q3',
-        text: 'Apakah dua perangkat di jaringan yang BERBEDA bisa menggunakan IP yang sama?',
+        text: 'Apakah "192.168.01.1" (dengan angka nol di depan) adalah IPv4 yang valid?',
         response:
-          'Ya! Dua perangkat di jaringan yang berbeda (Network ID berbeda) bisa menggunakan Host ID yang sama karena alamat penuhnya tetap berbeda. Inilah juga mengapa IP Private (seperti 192.168.x.x) bisa digunakan ulang di jutaan jaringan rumah dan kantor di seluruh dunia.',
+          'Bergantung pada konteks! Secara teknis, "01" bisa diinterpretasikan sebagai angka octal (= 1 dalam desimal) oleh beberapa sistem, yang bisa menyebabkan ambiguitas. Praktik terbaik adalah TIDAK menggunakan leading zero dalam oktet IPv4. Tulis "192.168.1.1" tanpa angka nol di depan untuk menghindari kebingungan.',
       },
     ],
-    conclusionPrompt: 'Berdasarkan analisis skenario IP Address Conflict dan tanya jawab yang telah kamu lakukan, jelaskan bagaimana kamu mampu membedakan struktur alamat IPv4 berdasarkan format penulisannya. Tuliskan secara tepat dengan kata-katamu sendiri.',
+    conclusionPrompt: 'Berdasarkan analisis skenario IPv4 Validation Error dan tanya jawab yang telah kamu lakukan, jelaskan bagaimana kamu mampu membedakan struktur alamat IPv4 berdasarkan format penulisannya. Jelaskan aturan yang menentukan apakah suatu format IPv4 valid atau tidak valid. Tuliskan secara tepat dengan kata-katamu sendiri.',
   },
 
+  // ─── Learning Community — X.IP.4 & X.IP.5 ───────────────────────────────
   {
     type: 'learning-community',
     title: 'Learning Community',
     description:
-      'Siswa berkolaborasi dalam kelompok untuk merancang skema pengalamatan IP yang efisien untuk jaringan sekolah berdasarkan kebutuhan nyata.',
+      'Siswa berkolaborasi dalam kelompok untuk mengidentifikasi kelas IPv4, jenis alamat (Private/Public), dan menghitung range host berdasarkan studi kasus jaringan nyata.',
     objectiveCode: 'X.IP.4 & X.IP.5',
     activityGuide: [
-      'Baca kebutuhan Lab Komputer: jumlah perangkat, jenis perangkat, dan kebutuhan administrasi.',
-      'Analisis Studi Kasus 1 (Desain IP Lab): pilih strategi, tulis argumen, kirim ke kelompok.',
-      'Analisis Studi Kasus 2 (Isolasi Jaringan): pilih strategi, tulis argumen, kirim ke kelompok.',
+      'Susun 3 kelas IPv4 (A, B, C) ke dalam urutan berdasarkan rentang oktet pertamanya menggunakan Interactive Timeline.',
+      'Analisis Studi Kasus 1 (Klasifikasi & Jenis IP Jaringan Sekolah): pilih jawaban, tulis argumen, kirim ke kelompok.',
+      'Analisis Studi Kasus 2 (Menghitung Range Host Jaringan Rumah): pilih jawaban, tulis argumen, kirim ke kelompok.',
       'Diskusikan dan beri vote pada argumen terbaik di papan diskusi kelompok.',
     ],
     logicalThinkingIndicators: [
-      'Kemampuan Berargumen: menyampaikan alasan teknis berbasis prinsip pengalamatan IP.',
-      'Validasi Komunal: mengevaluasi strategi rekan dan memberikan vote berdasarkan kelayakan teknis.',
+      'Keruntutan Berpikir: mengurutkan kelas IPv4 berdasarkan rentang oktet pertama dan menerapkan kriteria identifikasi kelas secara logis.',
+      'Kemampuan Berargumen: menyampaikan alasan teknis yang jelas dalam diskusi kelompok berdasarkan studi kasus kelas IP dan perhitungan range host.',
+      'Penarikan Kesimpulan: menyimpulkan kembali perbedaan kelas IPv4 dan cara menghitung range host berdasarkan hasil aktivitas dan diskusi kelompok.',
+    ],
+    facilitatorNotes: [
+      'Guru memastikan setiap siswa menyelesaikan Timeline Flowchart sebelum masuk ke papan kolaboratif.',
+      'Guru menekankan perbedaan Private IP vs Public IP: Private digunakan dalam jaringan lokal (tidak dapat dirutekan di internet), Public digunakan untuk komunikasi antar jaringan global.',
+      'Guru menunjukkan formula range host: 2^(jumlah bit Host ID) − 2, di mana −2 untuk Network Address dan Broadcast Address.',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
       behavior: 'mampu menerapkan pengetahuan kelas IPv4 beserta rentang alamat Private & Public serta konsep range host IPv4',
-      condition: 'melalui aktivitas learning community berupa papan kolaborasi studi kasus pada CONNETIC Module',
+      condition: 'melalui aktivitas learning community berupa Interactive Timeline Flowchart dan papan kolaboratif studi kasus pada CONNETIC Module',
       degree: 'secara logis',
     },
+    timelineFlowchart: {
+      instruction: 'Susun ketiga kelas IPv4 berikut ke dalam urutan yang benar berdasarkan rentang nilai oktet pertamanya (dari nilai paling kecil ke paling besar). Tarik dan letakkan setiap blok ke slot Langkah 1, Langkah 2, dan Langkah 3.',
+      blocks: [
+        { id: 'block_a', label: 'Blok A', text: 'Kelas A — Oktet pertama: 1–126. Format N.H.H.H. Subnet mask default: /8 (255.0.0.0). Mendukung jaringan sangat besar: hingga ~16 juta host per jaringan.', correctSlot: 1 },
+        { id: 'block_b', label: 'Blok B', text: 'Kelas B — Oktet pertama: 128–191. Format N.N.H.H. Subnet mask default: /16 (255.255.0.0). Mendukung jaringan menengah: hingga ~65.534 host per jaringan.', correctSlot: 2 },
+        { id: 'block_c', label: 'Blok C', text: 'Kelas C — Oktet pertama: 192–223. Format N.N.N.H. Subnet mask default: /24 (255.255.255.0). Mendukung jaringan kecil: hingga 254 host per jaringan.', correctSlot: 3 },
+      ],
+      successMessage: '✅ Klasifikasi Kelas IPv4 Benar! Kelas A (1–126) untuk jaringan besar → Kelas B (128–191) untuk jaringan menengah → Kelas C (192–223) untuk jaringan kecil. Semakin tinggi kelas, semakin kecil jumlah host yang bisa ditampung per jaringan.',
+      errorFeedback: 'Urutan belum tepat. Ingat: kelas IP dibedakan berdasarkan nilai oktet pertama. Kelas A memiliki rentang oktet pertama paling rendah (1–126), diikuti Kelas B (128–191), lalu Kelas C (192–223). Susun ulang dari nilai paling kecil ke paling besar.',
+    },
     layers5: [
-      { id: 'L5', name: 'Application', pdu: 'Data', color: '#8B5CF6', desc: 'Browser siswa mengakses aplikasi e-learning sekolah.' },
-      { id: 'L4', name: 'Transport', pdu: 'Segment', color: '#628ECB', desc: 'TCP memastikan data halaman web sampai utuh ke browser.' },
-      { id: 'L3', name: 'Network (IP)', pdu: 'Packet', color: '#10B981', desc: 'IP membawa paket dari laptop siswa ke server menggunakan alamat IP.' },
-      { id: 'L2', name: 'Data Link', pdu: 'Frame', color: '#F59E0B', desc: 'Ethernet mengidentifikasi perangkat dalam jaringan lokal via MAC Address.' },
-      { id: 'L1', name: 'Physical', pdu: 'Bits', color: '#395886', desc: 'Kabel UTP atau Wi-Fi mentransmisikan sinyal bit secara fisik.' },
+      { id: 'L5', name: 'Application', pdu: 'Data', color: '#8B5CF6', desc: 'Siswa mengakses e-learning sekolah melalui browser menggunakan HTTP.' },
+      { id: 'L4', name: 'Transport (TCP)', pdu: 'Segment', color: '#628ECB', desc: 'TCP memecah halaman web menjadi segmen dan memastikan semua tiba utuh.' },
+      { id: 'L3', name: 'Network (IP)', pdu: 'Packet', color: '#10B981', desc: 'IP menambahkan alamat sumber (IP siswa) dan tujuan (IP server) pada setiap paket.' },
+      { id: 'L2', name: 'Data Link', pdu: 'Frame', color: '#F59E0B', desc: 'Ethernet membungkus paket dengan MAC Address untuk pengiriman di jaringan lokal.' },
+      { id: 'L1', name: 'Physical', pdu: 'Bits', color: '#395886', desc: 'Kabel UTP atau Wi-Fi mengalirkan bit sebagai sinyal listrik atau gelombang radio.' },
     ],
     encapsulationCase: {
       id: 'X.IP.4.A',
-      title: 'Studi Kasus: Desain Pengalamatan IP Lab Komputer',
+      title: 'Studi Kasus: Klasifikasi IP Jaringan Sekolah',
       concept:
-        'Merancang skema IP yang baik memerlukan pertimbangan: urutan yang logis (mudah diingat dan ditelusuri), pemisahan perangkat infrastruktur dari perangkat client, dan cadangan alamat untuk pengembangan.',
+        'Setiap alamat IPv4 dapat diklasifikasikan berdasarkan nilai oktet pertama (Kelas A: 1–126, Kelas B: 128–191, Kelas C: 192–223). Selain kelas, alamat IP juga dibedakan menjadi Private (hanya berlaku di jaringan lokal, tidak bisa dirutekan di internet) dan Public (dapat diakses dari seluruh internet). Range Private: Kelas A = 10.0.0.0–10.255.255.255; Kelas B = 172.16.0.0–172.31.255.255; Kelas C = 192.168.0.0–192.168.255.255.',
       scenario:
-        'Sekolah akan membangun Lab Komputer dengan 30 PC siswa, 1 PC guru, 1 server e-learning, dan 1 printer. Teknisi memilih segmen 192.168.10.0/24. Bagaimana cara pemberian IP yang paling rapi dan mudah dikelola?',
+        'Seorang teknisi jaringan baru di SMA Nusantara menemukan bahwa seluruh komputer di sekolah menggunakan alamat IP dalam rentang 192.168.10.0/24. Server e-learning sekolah memiliki alamat 192.168.10.5, dan komputer guru menggunakan 192.168.10.20. Teknisi tersebut perlu melaporkan: kelas IP apa yang digunakan, apakah termasuk Private atau Public, dan subnet mask defaultnya.',
       question:
-        'Strategi pemberian IP mana yang paling profesional dan mudah untuk ditelusuri saat troubleshooting?',
+        'Berdasarkan skenario di atas, identifikasi kelas IP, jenis (Private/Public), dan subnet mask default jaringan sekolah tersebut.',
       options: [
         {
           id: 'A',
-          text: 'Server (.10), Guru (.20), Printer (.30), PC Siswa (.100–.129) — dengan pemisahan range yang jelas antara infrastruktur dan client.',
-          logic: 'Pemisahan range memudahkan identifikasi: semua perangkat infrastruktur di range rendah, semua client di range tinggi. Ini praktik industri yang diakui.',
+          isCorrect: true,
+          text: 'Kelas C (oktet pertama = 192, masuk rentang 192–223), Private IP (192.168.x.x masuk range Private Kelas C: 192.168.0.0–192.168.255.255), Subnet Mask Default: 255.255.255.0 (/24).',
+          logic: 'Tepat. 192 berada di rentang 192–223 → Kelas C. Rentang 192.168.0.0–192.168.255.255 adalah Private Kelas C. Subnet Mask /24 = 255.255.255.0 adalah default untuk Kelas C.',
         },
         {
           id: 'B',
-          text: 'Beri IP secara acak ke semua perangkat karena yang penting semua bisa terhubung.',
-          logic: 'IP acak mempersulit troubleshooting. Saat ada masalah, teknisi harus memeriksa satu per satu tanpa pola yang jelas.',
+          isCorrect: false,
+          text: 'Kelas B (karena angka 192 mendekati 191), Private IP, Subnet Mask: 255.255.0.0 (/16).',
+          logic: 'Tidak tepat. Kelas B berakhir di 191; angka 192 sudah masuk Kelas C. Satu pun angka tidak boleh "mendekati" batas — kelas ditentukan persis berdasarkan nilai oktet pertama.',
         },
         {
           id: 'C',
-          text: 'Beri semua perangkat range yang sama (100–133) dan biarkan DHCP yang mengaturnya secara otomatis tanpa reservasi.',
-          logic: 'DHCP tanpa reservasi untuk server dan printer berisiko — alamat mereka bisa berubah setiap kali restart, menyebabkan koneksi client gagal.',
+          isCorrect: false,
+          text: 'Kelas C, Public IP (karena digunakan di sekolah yang terhubung ke internet), Subnet Mask: 255.255.255.0.',
+          logic: 'Kelas C-nya benar, tapi jenis IP-nya salah. 192.168.x.x adalah Private IP — tidak bisa diakses langsung dari internet. Sekolah terhubung ke internet melalui NAT (Network Address Translation) yang mengkonversi Private ke Public di router.',
         },
       ],
+      argumentPrompt:
+        'Jelaskan alasan teknismu: Mengapa jaringan sekolah menggunakan Private IP (192.168.x.x) dan bukan Public IP untuk komputer-komputer internalnya? Apa keuntungannya?',
     },
     decapsulationCase: {
-      id: 'X.IP.9.B',
-      title: 'Studi Kasus: Memisahkan Lab A dan Lab B',
+      id: 'X.IP.5.B',
+      title: 'Studi Kasus: Menghitung Range Host Jaringan Rumah',
       concept:
-        'Dua lab komputer di sekolah yang sama bisa dipisahkan jaringannya menggunakan Network ID yang berbeda. Ini mencegah broadcast storm dan memudahkan manajemen bandwidth per lab.',
+        'Range host (usable host range) adalah rentang alamat IP yang bisa diberikan ke perangkat aktual dalam suatu jaringan. Formula: Usable Hosts = 2^(jumlah bit Host ID) − 2. Pengurangan 2 adalah untuk Network Address (Host ID semua 0) dan Broadcast Address (Host ID semua 1) yang tidak bisa digunakan perangkat. Untuk jaringan /24 (Kelas C), Host ID = 8 bit, sehingga Usable Hosts = 2^8 − 2 = 254.',
       scenario:
-        'Sekolah memiliki Lab A (untuk Multimedia, 25 PC) dan Lab B (untuk Pemrograman, 20 PC). Keduanya berbagi satu router yang sama. Pengelola ingin memastikan trafik Lab A tidak mengganggu Lab B dan sebaliknya.',
+        'Sebuah keluarga memiliki jaringan rumah dengan alamat jaringan 192.168.1.0/24. Router rumah mereka beralamat 192.168.1.1. Keluarga tersebut ingin tahu: berapa banyak perangkat yang bisa dihubungkan ke jaringan ini? Apa alamat pertama dan terakhir yang bisa diberikan ke perangkat (misal laptop, HP, TV)?',
       question:
-        'Cara teknis mana yang paling tepat untuk memisahkan jaringan Lab A dan Lab B secara logis?',
+        'Hitung Network Address, Broadcast Address, dan Usable Host Range untuk jaringan 192.168.1.0/24.',
       options: [
         {
           id: 'A',
-          text: 'Menggunakan Network ID yang berbeda: Lab A = 192.168.1.0/24, Lab B = 192.168.2.0/24 — dengan router yang mengatur lalu lintas antar segmen.',
-          logic: 'Ini solusi teknis yang benar. Network ID berbeda memastikan broadcast masing-masing lab tidak menyeberang ke lab lain, dan router bisa mengatur kebijakan trafik antar segmen.',
+          isCorrect: true,
+          text: 'Network Address: 192.168.1.0 | Broadcast Address: 192.168.1.255 | Usable Host Range: 192.168.1.1 – 192.168.1.254 | Jumlah host: 254 perangkat.',
+          logic: 'Tepat. /24 berarti 24 bit Network + 8 bit Host. Network Address = Host ID semua 0 = .0. Broadcast = Host ID semua 1 = .255. Usable = .1 sampai .254 = 254 alamat.',
         },
         {
           id: 'B',
-          text: 'Mengecat kabel LAN Lab A warna merah dan Lab B warna biru agar tidak tertukar.',
-          logic: 'Perbedaan warna hanya identitas fisik untuk memudahkan pemasangan — tidak ada pengaruh pada logika jaringan atau pemisahan trafik.',
+          isCorrect: false,
+          text: 'Network Address: 192.168.1.0 | Broadcast Address: 192.168.1.255 | Usable Host Range: 192.168.1.0 – 192.168.1.255 | Jumlah host: 256 perangkat.',
+          logic: 'Hampir benar tapi salah di jumlah! Network Address (.0) dan Broadcast Address (.255) tidak bisa diberikan ke perangkat. Usable range dimulai dari .1 dan berakhir di .254, bukan .0–.255.',
         },
         {
           id: 'C',
-          text: 'Membatasi jam operasional Lab A pagi hari dan Lab B siang hari agar tidak bersamaan.',
-          logic: 'Solusi manajemen waktu ini tidak menyelesaikan masalah teknis pemisahan jaringan. Jika keduanya beroperasi bersamaan, trafik tetap saling mengganggu.',
+          isCorrect: false,
+          text: 'Network Address: 192.168.1.1 | Broadcast Address: 192.168.1.254 | Usable Host Range: 192.168.1.2 – 192.168.1.253 | Jumlah host: 252 perangkat.',
+          logic: 'Salah. Network Address selalu Host ID semua 0 (= .0), bukan .1. Broadcast selalu Host ID semua 1 (= .255), bukan .254. Usable range adalah .1 hingga .254.',
         },
       ],
+      argumentPrompt:
+        'Jelaskan mengapa dua alamat dalam setiap jaringan (Network Address dan Broadcast Address) tidak bisa diberikan ke perangkat aktual. Apa fungsi masing-masing alamat tersebut dalam operasional jaringan?',
     },
     groupActivity: {
       groupNames: ['Kelompok 1', 'Kelompok 2', 'Kelompok 3', 'Kelompok 4', 'Kelompok 5', 'Kelompok 6', 'Kelompok 7', 'Kelompok 8'],
       discussionPrompt:
-        'Diskusikan: Jika Lab A dan Lab B dipisahkan jaringannya, bagaimana siswa Lab A bisa tetap mengakses server e-learning yang ada di Lab B? Berikan vote pada solusi teknis yang paling realistis.',
+        'Diskusikan bersama kelompok menggunakan pertanyaan pemandu berikut:\n1. Mengapa Private IP lebih banyak digunakan di jaringan lokal (rumah, sekolah, kantor) dibanding Public IP?\n2. Jika jaringan rumah /24 memiliki 254 usable host, mengapa kita masih membatasi DHCP pool-nya (misalnya hanya .100–.200)?\n3. Bagaimana cara teknisi mengetahui kelas IP hanya dari melihat oktet pertama?\n\nBerikan vote pada argumen teknis terkuat dari kelompokmu!',
     },
-    conclusionPrompt: 'Berdasarkan diskusi kelompok tentang perancangan skema pengalamatan IP yang telah kamu lakukan, jelaskan bagaimana kamu mampu menerapkan pengetahuan kelas IPv4 beserta rentang alamat Private & Public serta konsep range host IPv4. Tuliskan secara logis dengan kata-katamu sendiri.',
+    conclusionPrompt: 'Berdasarkan aktivitas penyusunan Timeline Kelas IPv4 dan diskusi kelompok tentang studi kasus jaringan sekolah dan rumah, jelaskan bagaimana kamu mampu menerapkan pengetahuan kelas IPv4 beserta rentang alamat Private & Public serta konsep range host IPv4. Tuliskan secara logis dengan kata-katamu sendiri.',
   },
 
+  // ─── Modeling — X.IP.6 ───────────────────────────────────────────────────
   {
     type: 'modeling',
-    title: 'Modeling — Konversi Desimal ke Biner IPv4',
+    title: 'Demonstrasi Konversi Desimal ↔ Biner IPv4',
     description:
-      'Siswa mempraktikkan konversi format IPv4 dari notasi desimal bertitik ke representasi biner 32-bit untuk memahami cara komputer membaca dan memproses alamat IP.',
+      'Siswa mempraktikkan secara interaktif proses konversi alamat IPv4 dari format desimal bertitik ke representasi biner 32-bit, memahami sistem bobot bit, dan menerapkan konversi pada oktet nyata.',
     objectiveCode: 'X.IP.6',
     activityGuide: [
-      'Ikuti demonstrasi sistem bobot bit (128, 64, 32, 16, 8, 4, 2, 1) untuk satu oktet.',
-      'Praktikkan konversi oktet: ubah angka 192 dan 10 ke bentuk biner 8-bit.',
-      'Gabungkan keempat oktet menjadi representasi biner 32-bit alamat IPv4 yang utuh.',
+      'Ikuti demonstrasi sistem bobot bit (128–64–32–16–8–4–2–1) untuk memahami cara kerja konversi biner.',
+      'Amati contoh konversi angka 192 → 11000000 secara step-by-step.',
+      'Praktikkan konversi mandiri: ubah oktet 168 ke biner 8-bit menggunakan tabel bobot bit.',
+      'Gabungkan hasil konversi untuk membentuk representasi biner 32-bit alamat IPv4 lengkap.',
     ],
     logicalThinkingIndicators: [
-      'Keruntutan Berpikir: mengikuti proses konversi desimal ke biner secara sistematis.',
-      'Penerapan Konsep: menghubungkan nilai desimal dengan posisi bit yang aktif.',
+      'Keruntutan Berpikir: mengikuti proses konversi desimal ke biner secara sistematis menggunakan tabel bobot bit, langkah demi langkah.',
+      'Kemampuan Berargumen: menjelaskan mengapa pemahaman konversi biner penting bagi seorang administrator jaringan dalam konteks subnet mask dan pengalamatan IPv4.',
+      'Penarikan Kesimpulan: menyimpulkan hubungan antara format desimal IPv4 dan representasi biner 32-bit, serta kaitannya dengan batasan nilai oktet (0–255).',
     ],
     facilitatorNotes: [
-      'Guru menggunakan analogi timbangan biner: setiap bit adalah "batu timbangan" dengan berat 128, 64, 32, 16, 8, 4, 2, 1.',
-      'Guru meminta siswa menghitung berapa host maksimal dalam /24 (jaringan Kelas C): 2^8 - 2 = 254 host.',
-      'Guru menunjukkan bahwa 255.255.255.0 sebagai subnet mask berarti: Network ID = 24 bit pertama.',
+      'Guru menggunakan analogi "timbangan biner": setiap bit adalah batu timbangan dengan berat 128, 64, 32, 16, 8, 4, 2, 1. Kita pilih kombinasi yang totalnya sama dengan angka desimal.',
+      'Guru menunjukkan bahwa 255 = 11111111 (semua bit aktif) dan 0 = 00000000 (semua bit mati) — ini kenapa oktet IPv4 tidak pernah melebihi 255.',
+      'Guru meminta siswa membuktikan: mengapa subnet mask 255.255.255.0 ditulis /24? (Hitung berapa bit yang bernilai 1: 8+8+8+0 = 24 bit aktif).',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
@@ -435,14 +431,14 @@ export const lesson3Stages: Stage[] = [
     },
     practiceInstructions: {
       forTeacher: [
-        'Gunakan papan tulis untuk menampilkan tabel bobot bit: 128 | 64 | 32 | 16 | 8 | 4 | 2 | 1.',
-        'Demonstrasikan: 192 = 128 + 64 → bit posisi 7 dan 6 aktif (1), sisanya 0: 11000000.',
-        'Tunjukkan bahwa 255 = semua bit 1 = 11111111, dan 0 = semua bit 0 = 00000000.',
+        'Tampilkan tabel bobot bit di papan tulis: 128 | 64 | 32 | 16 | 8 | 4 | 2 | 1.',
+        'Demonstrasikan: 192 = 128 + 64. Aktifkan bit posisi 128 (→1) dan 64 (→1), sisanya 0. Hasilnya: 11000000.',
+        'Tunjukkan konversi subnet mask: 255 = 11111111 (semua 1), 0 = 00000000 (semua 0). Sehingga 255.255.255.0 = 11111111.11111111.11111111.00000000.',
       ],
       forStudent: [
-        'Identifikasi bit-bit yang harus bernilai "1" untuk menghasilkan angka desimal yang diminta.',
-        'Verifikasi bahwa setiap oktet selalu tepat 8 bit, dan total IPv4 selalu tepat 32 bit.',
-        'Klik "Jalankan Proses" untuk melihat hasil konversi dan validasi jawabanmu.',
+        'Mulai dari bobot bit terbesar (128). Tanya: apakah angka desimalmu ≥ 128? Jika ya, aktifkan bit tersebut (1) dan kurangi angka dengan 128.',
+        'Lanjutkan ke bobot berikutnya (64, 32, ..., 1). Ulangi langkah yang sama.',
+        'Setelah semua 8 bit ditentukan (1 atau 0), gabungkan hasilnya — itulah representasi biner oktet tersebut.',
       ],
     },
     modelingSteps: [
@@ -451,107 +447,129 @@ export const lesson3Stages: Stage[] = [
         type: 'example',
         title: 'Langkah 1: Memahami Sistem Bobot Bit',
         content:
-          'Setiap oktet IPv4 terdiri dari 8 posisi bit. Nilai setiap posisi (dari kiri ke kanan): 128, 64, 32, 16, 8, 4, 2, 1. Total maksimum = 128+64+32+16+8+4+2+1 = 255. Inilah mengapa oktet IPv4 tidak bisa melebihi 255.',
-        interactiveAction: 'Amati tabel bobot bit dan pahami nilai setiap posisi.',
+          'Setiap oktet IPv4 terdiri dari 8 posisi bit. Nilai bobot setiap posisi (dari kiri ke kanan): 128, 64, 32, 16, 8, 4, 2, 1. Nilai total maksimum = 128+64+32+16+8+4+2+1 = 255. Minimum = semua bit 0 = nilai 0. Inilah mengapa setiap oktet IPv4 hanya bisa bernilai antara 0 dan 255.',
+        interactiveAction: 'Amati tabel bobot bit dan pastikan kamu memahami nilai setiap posisi sebelum melanjutkan.',
       },
       {
         id: 'ipm2',
         type: 'example',
-        title: 'Langkah 2: Konversi Angka 192 ke Biner',
+        title: 'Langkah 2: Konversi 192 → Biner (Demonstrasi)',
         content:
-          '192 = 128 + 64. Aktifkan bit posisi 128 (nilai 1) dan bit posisi 64 (nilai 1). Semua posisi lain bernilai 0. Hasil: 11000000. Verifikasi: 128+64 = 192 ✓.',
-        interactiveAction: 'Simak demonstrasi aktivasi bit untuk angka 192.',
+          '192 = 128 + 64. Periksa setiap bobot dari terbesar: 128 ≤ 192 → aktifkan bit (1), sisa = 192−128 = 64. 64 ≤ 64 → aktifkan bit (1), sisa = 0. Semua bobot berikutnya (32, 16, 8, 4, 2, 1) > 0 sehingga bit = 0. Hasil: 11000000. Verifikasi: 128+64 = 192 ✓',
+        interactiveAction: 'Simak demonstrasi aktivasi bit untuk angka 192 secara visual step-by-step.',
       },
       {
         id: 'ipm3',
         type: 'practice',
-        title: 'Langkah 3: Tantangan Konversi Mandiri',
+        title: 'Langkah 3: Konversi 168 → Biner (Mandiri)',
         content:
-          'Sekarang giliranmu! Konversikan angka 168 ke biner 8-bit. (Petunjuk: 168 = 128 + 32 + 8. Aktifkan bit posisi 128, 32, dan 8 — sisanya 0. Hasilnya: 10101000).',
-        interactiveAction: 'Klik "Jalankan Proses" setelah kamu menentukan posisi bit yang aktif untuk angka 168.',
+          'Sekarang giliranmu! Konversi 168 ke biner 8-bit. Petunjuk: 168 = 128 + 32 + 8. Aktifkan bit posisi 128, 32, dan 8 (bernilai 1), sisanya 0. Hasil: 10101000. Verifikasi: 128+32+8 = 168 ✓',
+        interactiveAction: 'Ikuti langkah-langkah konversi untuk angka 168 menggunakan metode yang sama seperti demonstrasi angka 192.',
+      },
+      {
+        id: 'ipm4',
+        type: 'practice',
+        title: 'Langkah 4: Merangkai IPv4 Biner 32-bit',
+        content:
+          'Alamat IPv4 192.168.1.1 dalam biner penuh: 192=11000000, 168=10101000, 1=00000001, 1=00000001. Gabungkan: 11000000.10101000.00000001.00000001 (32 bit total). Inilah cara komputer "melihat" alamat IP — bukan sebagai angka desimal, melainkan sebagai deretan 32 bit biner.',
+        interactiveAction: 'Susun keempat oktet hasil konversimu menjadi representasi biner IPv4 lengkap 32-bit.',
       },
     ],
-    conclusionPrompt: 'Berdasarkan simulasi konversi desimal ke biner IPv4 yang telah kamu praktikkan, jelaskan bagaimana kamu mampu mensimulasikan proses konversi alamat IPv4 dari format desimal ke biner. Tuliskan secara sistematis dengan kata-katamu sendiri.',
+    conclusionPrompt: 'Berdasarkan simulasi konversi desimal ke biner IPv4 yang telah kamu praktikkan, jelaskan bagaimana kamu mampu mensimulasikan proses konversi alamat IPv4 dari format desimal ke biner. Jelaskan juga hubungan antara sistem biner 8-bit per oktet dan batasan nilai 0–255 dalam IPv4. Tuliskan secara sistematis dengan kata-katamu sendiri.',
   },
 
+  // ─── Reflection — X.IP.7 ────────────────────────────────────────────────
   {
     type: 'reflection',
     title: 'Reflection',
     description:
-      'Siswa menyusun peta konsep menyeluruh yang menghubungkan semua konsep IPv4 yang dipelajari: struktur, kelas, range alamat, komponen header, dan implikasinya.',
+      'Siswa menyusun pipeline konsep IPv4, menganalisis dampak jika pengalamatan IP tidak terstruktur, dan menyimpulkan sistem IPv4 sebagai fondasi konfigurasi jaringan yang terstruktur.',
     objectiveCode: 'X.IP.7',
     activityGuide: [
-      'Hubungkan konsep-konsep IPv4 dengan memilih label penghubung yang paling tepat.',
-      'Pastikan peta konsepmu mencerminkan hubungan antara format IPv4, Kelas IP, Subnet Mask, dan Range Host.',
-      'Tulis ringkasan menyeluruh tentang semua konsep IPv4 yang dipelajari hari ini secara runtut dan logis.',
+      'Tinjau kembali hasil pembelajaran dari tahapan sebelumnya (Peran IP, IP Header, Kelas IPv4, Konversi Biner).',
+      'Susun komponen sistem IPv4 secara berurutan menggunakan drag-and-drop pipeline.',
+      'Tulis argumen analisis tentang pentingnya penggunaan Private IP di jaringan lokal.',
+      'Lengkapi kesimpulan rumpang menggunakan dropdown yang tersedia.',
     ],
     logicalThinkingIndicators: [
-      'Penarikan Kesimpulan: menghubungkan semua konsep IPv4 menjadi gambaran utuh sistem pengalamatan jaringan.',
+      'Keruntutan Berpikir: menyusun komponen sistem IPv4 (Pengalamatan IP, Klasifikasi Kelas, Manajemen Range Host) secara berurutan sesuai hierarki konsep.',
+      'Kemampuan Berargumen: menganalisis dampak penggunaan Public IP untuk semua perangkat di jaringan lokal dan mengapa Private IP lebih tepat.',
+      'Penarikan Kesimpulan: menyimpulkan sistem pengalamatan IPv4 bekerja pada Network Layer sebagai fondasi identifikasi dan routing perangkat dalam jaringan.',
     ],
     facilitatorNotes: [
-      'Guru mendorong siswa merefleksikan keterbatasan IPv4 (hanya 4,3 miliar alamat) sebagai jembatan ke materi IPv6.',
-      'Guru menggunakan peta konsep untuk mengevaluasi kedalaman pemahaman siswa tentang hierarki pengalamatan.',
+      'Guru mendorong siswa merefleksikan keterbatasan IPv4 (hanya ~4,3 miliar alamat unik) sebagai jembatan ke materi IPv6 pada pertemuan berikutnya.',
+      'Guru menekankan bahwa ketiga komponen IPv4 (Pengalamatan, Klasifikasi, Range Host) adalah satu kesatuan — tidak bisa ada yang dilewati.',
+      'Guru mendorong siswa menjawab: "Jika IPv4 hanya punya ~4,3 miliar alamat, mengapa masih bisa mencukupi miliaran perangkat di dunia?" (Jawaban: NAT + Private IP).',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
       behavior: 'mampu menyimpulkan sistem pengalamatan IPv4 sebagai fondasi konfigurasi jaringan yang terstruktur',
-      condition: 'melalui aktivitas reflection berupa konstruksi rekap materi pada CONNETIC Module',
+      condition: 'melalui aktivitas reflection berupa IPv4 Blueprint Constructor pada CONNETIC Module',
       degree: 'secara tepat',
     },
-    conceptMapNodes: [
-      { id: 'cn1', label: 'IPv4', description: 'Protokol pengalamatan 32-bit di Internet Layer.', colorClass: 'blue' },
-      { id: 'cn2', label: 'Format Dotted Decimal', description: '4 oktet desimal dipisahkan titik (0–255 per oktet).', colorClass: 'purple' },
-      { id: 'cn3', label: 'Kelas IP (A/B/C)', description: 'Pengelompokan berdasarkan oktet pertama.', colorClass: 'green' },
-      { id: 'cn4', label: 'Network ID', description: 'Bagian alamat yang mengidentifikasi jaringan.', colorClass: 'amber' },
-      { id: 'cn5', label: 'Host ID', description: 'Bagian alamat yang mengidentifikasi perangkat.', colorClass: 'amber' },
-      { id: 'cn6', label: 'Subnet Mask', description: 'Pemisah antara Network ID dan Host ID.', colorClass: 'indigo' },
-      { id: 'cn7', label: 'IP Header', description: 'Informasi kontrol paket: TTL, Protocol, Src/Dst IP.', colorClass: 'pink' },
-      { id: 'cn8', label: 'Range Host', description: 'Alamat yang bisa diberikan ke perangkat dalam jaringan.', colorClass: 'green' },
-    ],
-    conceptMapConnections: [
-      { from: 'cn1', to: 'cn2', label: 'ditulis dalam format', options: ['ditulis dalam format', 'menghapus', 'mengabaikan', 'bertentangan dengan'] },
-      { from: 'cn1', to: 'cn3', label: 'dibagi menjadi', options: ['dibagi menjadi', 'menyatukan', 'melewatkan', 'menyamakan'] },
-      { from: 'cn1', to: 'cn7', label: 'memiliki struktur', options: ['memiliki struktur', 'meniadakan', 'mengabaikan', 'mengganti'] },
-      { from: 'cn3', to: 'cn4', label: 'menentukan panjang', options: ['menentukan panjang', 'menolak', 'menghapus', 'melewatkan'] },
-      { from: 'cn6', to: 'cn4', label: 'memisahkan dari Host ID', options: ['memisahkan dari Host ID', 'menghambat', 'menggantikan', 'menghilangkan'] },
-      { from: 'cn4', to: 'cn8', label: 'membatasi jumlah', options: ['membatasi jumlah', 'sama dengan', 'lebih tinggi dari', 'tidak terkait dengan'] },
-      { from: 'cn1', to: 'cn5', label: 'menggunakan bagian', options: ['menggunakan bagian', 'menghindari', 'mengganti', 'merusak'] },
-    ],
-    essayReflection: {
-      materialSummaryPrompt:
-        'Jelaskan secara runtut semua konsep IPv4 yang kamu pelajari hari ini: dimulai dari format penulisan IPv4, cara membaca IP Header, sistem kelas IP (A/B/C) beserta range-nya, fungsi Subnet Mask dalam memisahkan Network ID dan Host ID, hingga cara menghitung range host yang tersedia. Tulis dengan bahasamu sendiri secara lengkap.',
-      easyPartPrompt: 'Konsep IPv4 mana yang paling mudah kamu pahami? Mengapa?',
-      hardPartPrompt: 'Bagian IPv4 mana yang masih terasa sulit dan perlu kamu perdalam lagi?',
+    tcpReliabilityPipeline: {
+      instruction: 'Susun ketiga komponen sistem pengalamatan IPv4 berikut ke dalam urutan yang benar — dari konsep paling mendasar ke paling operasional. Seret dan letakkan setiap komponen ke slot Langkah 1, Langkah 2, dan Langkah 3.',
+      items: [
+        { id: 'ipaddr', label: 'Pengalamatan IP (IP Addressing)', description: 'Memberikan identitas unik (IP Address) kepada setiap perangkat dalam jaringan agar dapat diidentifikasi dan dirutekan secara logis pada Network Layer.', correctOrder: 1 },
+        { id: 'ipclass', label: 'Klasifikasi Kelas IPv4', description: 'Mengelompokkan alamat IP ke dalam Kelas A, B, atau C berdasarkan oktet pertama, serta membedakan Private IP (untuk jaringan lokal) dari Public IP (untuk internet).', correctOrder: 2 },
+        { id: 'hostrange', label: 'Manajemen Range Host', description: 'Menghitung Network Address, Broadcast Address, dan Usable Host Range dari suatu subnet untuk menentukan berapa perangkat yang bisa dialamatkan dalam jaringan tersebut.', correctOrder: 3 },
+      ],
+      successMessage: 'Sistem IPv4 Utuh! Pengalamatan IP memberikan identitas → Klasifikasi Kelas menentukan ukuran dan jenis jaringan → Manajemen Range Host mengoptimalkan penggunaan alamat. Ketiganya bekerja sebagai satu kesatuan.',
     },
-    selfEvaluationCriteria: [
-      { id: 'sc1', label: 'Saya memahami format penulisan IPv4 dalam notasi desimal bertitik.' },
-      { id: 'sc2', label: 'Saya dapat membedakan Kelas A, B, dan C berdasarkan oktet pertama.' },
-      { id: 'sc3', label: 'Saya memahami fungsi setiap field dalam IP Header.' },
-      { id: 'sc4', label: 'Saya dapat menentukan Network ID dan Host ID menggunakan Subnet Mask.' },
-      { id: 'sc5', label: 'Saya memahami dampak konflik IP terhadap operasional jaringan.' },
-    ],
-    conclusionPrompt: 'Berdasarkan penyusunan peta konsep dan refleksi yang telah kamu lakukan, jelaskan bagaimana kamu mampu menyimpulkan sistem pengalamatan IPv4 sebagai fondasi konfigurasi jaringan yang terstruktur. Tuliskan secara tepat dengan kata-katamu sendiri.',
+    reliabilityArguingQuestion: 'Apa yang terjadi jika seluruh perangkat di jaringan sekolah (komputer, printer, server internal) menggunakan Public IP Address, bukan Private IP? Apakah jaringan tetap bisa berfungsi? Jelaskan argumenmu secara logis beserta risikonya.',
+    dropdownConclusion: {
+      instruction: 'Lengkapi kesimpulan berikut dengan memilih jawaban yang tepat pada setiap dropdown.',
+      templateParts: [
+        'Saya menyimpulkan sistem pengalamatan IPv4 bekerja pada ',
+        ' Layer. Jika dua perangkat dalam satu jaringan lokal menggunakan alamat IP yang identik, maka dampaknya adalah ',
+        '.',
+      ],
+      dropdowns: [
+        {
+          id: 'layer',
+          placeholder: 'Pilih Layer',
+          options: [
+            { value: 'application', label: 'Application', isCorrect: false },
+            { value: 'transport', label: 'Transport', isCorrect: false },
+            { value: 'network', label: 'Network', isCorrect: true },
+            { value: 'data_link', label: 'Data Link', isCorrect: false },
+          ],
+        },
+        {
+          id: 'dampak',
+          placeholder: 'Pilih Dampak',
+          options: [
+            { value: 'konflik', label: 'Konflik IP — koneksi keduanya tidak stabil dan data bisa salah kirim', isCorrect: true },
+            { value: 'berbagi', label: 'Kedua perangkat saling berbagi bandwidth secara otomatis', isCorrect: false },
+            { value: 'aman', label: 'Data tetap terkirim dengan aman karena MAC Address berbeda', isCorrect: false },
+            { value: 'router', label: 'Router otomatis mengganti salah satu IP agar tidak bentrok', isCorrect: false },
+          ],
+        },
+      ],
+    },
+    conclusionPrompt: 'Berdasarkan penyusunan pipeline sistem IPv4 dan analisis yang telah kamu lakukan, simpulkan bagaimana sistem pengalamatan IPv4 (Pengalamatan IP, Klasifikasi Kelas, Manajemen Range Host) bekerja sebagai satu kesatuan yang utuh pada Network Layer dalam mendukung komunikasi jaringan yang terstruktur.',
   },
 
+  // ─── Authentic Assessment — X.IP.8 ──────────────────────────────────────
   {
     type: 'authentic-assessment',
     title: 'Authentic Assessment',
     description:
-      'Siswa merancang skema pengalamatan IP untuk jaringan kantor UMKM dan mendiagnosis masalah koneksi berdasarkan pemahaman tentang kelas IP dan range host.',
+      'Siswa menganalisis skenario perancangan pengalamatan IPv4 Private & Public pada jaringan nyata (warnet) melalui studi kasus bercabang yang menuntut keputusan runtut, argumen teknis, dan kesimpulan yang tepat.',
     objectiveCode: 'X.IP.8',
     activityGuide: [
-      'Baca data aset UMKM: jumlah perangkat, kebutuhan koneksi, dan segmen jaringan yang tersedia.',
-      'Pilih desain pengalamatan IP yang paling logis dan sesuai standar industri.',
-      'Jelaskan alasanmu dan ikuti cabang keputusan hingga solusi final.',
+      'Baca studi kasus utama tentang perancangan jaringan warnet dengan kebutuhan IP statis dan dinamis.',
+      'Ikuti percabangan langkah perencanaan IPv4 dari pemilihan kelas hingga penentuan range DHCP secara bertahap.',
+      'Tuliskan argumen logis saat diminta, lalu pilih kesimpulan terbaik tentang prinsip pengalamatan IPv4.',
     ],
     logicalThinkingIndicators: [
-      'Keruntutan Berpikir: menentukan urutan desain jaringan yang paling sistematis.',
-      'Kemampuan Berargumen: memberi alasan teknis pada setiap keputusan desain IP.',
-      'Penarikan Kesimpulan: memilih solusi yang tidak hanya jalan, tapi juga rapi dan scalable.',
+      'Keruntutan Berpikir: menentukan langkah perencanaan IPv4 yang tepat secara berurutan dari pemilihan kelas IP hingga pembagian range statis dan dinamis.',
+      'Kemampuan Berargumen: menjelaskan alasan teknis mengapa server dan perangkat infrastruktur harus menggunakan IP statis, bukan IP dinamis.',
+      'Penarikan Kesimpulan: memilih kesimpulan terbaik tentang prinsip pengalamatan IPv4 yang benar dalam jaringan nyata.',
     ],
     facilitatorNotes: [
-      'Guru memosisikan diri sebagai pemilik UMKM yang meminta rekomendasi desain jaringan.',
-      'Guru mendorong siswa mempertimbangkan skalabilitas: bagaimana jika perangkat bertambah di masa depan?',
+      'Guru menekankan bahwa setiap keputusan pada percabangan mencerminkan satu prinsip pengalamatan IPv4 yang sesungguhnya diterapkan di industri.',
+      'Guru mendorong siswa mempertimbangkan skalabilitas: bagaimana jika warnet bertambah menjadi 100 komputer?',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
@@ -560,91 +578,138 @@ export const lesson3Stages: Stage[] = [
       degree: 'secara logis',
     },
     branchingScenario: {
+      mode: 'tcp-branching',
+      caseTitle: 'Perancangan IPv4 Jaringan Warnet',
       context:
-        'Sebuah kedai kopi butuh bantuanmu menyeting jaringan. Aset mereka: 1 WiFi Router (Gateway), 1 Server Kasir (IP statis wajib), 1 Printer Struk (IP statis wajib), dan 8 tablet untuk pelayan (IP dinamis). Teknisi sebelumnya meninggalkan catatan: "Gunakan segmen 192.168.1.0/24 — sisa subnet Kelas C."',
+        'Seorang teknisi diminta membangun jaringan untuk warnet baru yang memiliki 30 komputer client, 1 server billing, 1 server game, dan 1 printer jaringan. Semua perangkat harus bisa saling berkomunikasi di jaringan lokal, dan komputer client harus bisa mengakses internet. Teknisi memilih subnet 192.168.0.0/24 sebagai jaringan lokal (Private IP Kelas C).',
       initialQuestion:
-        'Berapakah alamat IP yang paling standar dan profesional untuk diberikan kepada WiFi Router sebagai default gateway jaringan ini?',
-      focusAreas: ['Gateway Assignment', 'Static IP Planning', 'DHCP Range'],
-      choices: [
+        'Ikuti tiap percabangan berikut dan tentukan keputusan perencanaan IPv4 yang paling tepat untuk warnet ini.',
+      focusAreas: ['Pemilihan Kelas & Subnet', 'IP Statis vs DHCP', 'Range Planning'],
+      choices: [],
+      steps: [
         {
-          id: 'c1',
-          text: '192.168.1.1 — alamat pertama yang lazim digunakan sebagai gateway di jaringan Kelas C.',
-          isOptimal: true,
-          consequence:
-            'Pilihan yang sangat umum dan profesional. Alamat .1 sudah menjadi konvensi industri untuk gateway — mudah diingat dan setiap teknisi baru langsung paham tanpa perlu penjelasan.',
-          followUpQuestion:
-            'Untuk Server Kasir dan Printer Struk yang membutuhkan IP statis tetap, range mana yang paling profesional agar tidak tertukar dengan tablet yang pakai DHCP?',
-          followUpChoices: [
+          id: 'step-1',
+          prompt: 'Langkah pertama: Berapa jumlah usable host pada subnet 192.168.0.0/24? Pilih perhitungan yang benar.',
+          options: [
             {
-              id: 'f1a',
-              text: 'Server Kasir = .10, Printer = .11 (range rendah untuk infrastruktur statis), tablet DHCP di .100–.200.',
+              id: 'step-1-correct',
+              text: '254 usable host (= 2^8 − 2 = 256 − 2). Cukup untuk 30 client + 1 server billing + 1 server game + 1 printer + gateway router = 34 perangkat.',
               isCorrect: true,
-              explanation:
-                'Sangat bagus! Memisahkan range statis (rendah) dan dinamis (tinggi) adalah praktik manajemen IP terbaik. Teknisi mana pun bisa langsung tahu: .1–.50 adalah infrastruktur statis, .100–.200 adalah client dinamis.',
+              feedback: 'Tepat! /24 berarti 8 bit untuk Host ID. 2^8 = 256 kemungkinan, dikurangi 2 (Network Address .0 dan Broadcast .255) = 254 usable host. Jauh lebih dari cukup untuk 34 perangkat.',
             },
             {
-              id: 'f1b',
-              text: 'Server Kasir = .254, Printer = .253 (range akhir) agar tidak konflik dengan DHCP yang mulai dari depan.',
+              id: 'step-1-wrong1',
+              text: '256 usable host (= 2^8 = 256). Karena subnet /24 memiliki 256 alamat.',
               isCorrect: false,
-              explanation:
-                'Boleh saja teknis-nya, tapi .254 adalah Broadcast Address — tidak bisa diberikan ke perangkat! (.255 untuk Kelas C /24 adalah broadcast, bukan .254). Hati-hati dengan nilai batas range.',
+              feedback: 'Hampir benar, tapi /24 punya 256 TOTAL alamat, bukan 256 usable host. Network Address (.0) dan Broadcast (.255) tidak bisa diberikan ke perangkat, sehingga usable = 254.',
+            },
+            {
+              id: 'step-1-wrong2',
+              text: '252 usable host — karena Gateway Router dan beberapa alamat cadangan harus dikurangi terlebih dahulu.',
+              isCorrect: false,
+              feedback: 'Tidak tepat. Usable host dihitung murni dari formula 2^n − 2. Gateway Router tetap menggunakan salah satu dari 254 alamat tersebut — tidak ada pengurangan khusus sebelum dihitung.',
             },
           ],
         },
         {
-          id: 'c2',
-          text: '192.168.1.50 — angka tengah agar lebih "aman" dan tidak mudah ditebak.',
-          isOptimal: false,
-          consequence:
-            'Boleh saja secara teknis, tapi sangat tidak lazim. Gateway biasanya di .1 atau .254. Angka tengah (.50) akan membingungkan teknisi lain saat troubleshooting di masa depan.',
-          followUpQuestion:
-            'Jika ingin mengikuti standar industri, ke alamat mana seharusnya kamu pindahkan gateway?',
-          followUpChoices: [
+          id: 'step-2',
+          prompt: 'Langkah kedua: Mana strategi pemberian IP yang paling profesional untuk warnet ini?',
+          options: [
             {
-              id: 'f2a',
-              text: '192.168.1.1 — mengikuti konvensi industri yang paling universal.',
+              id: 'step-2-correct',
+              text: 'Gateway Router = .1 (statis), Server Billing = .10 (statis), Server Game = .11 (statis), Printer = .20 (statis), Client 30 PC = .100–.200 (DHCP dinamis).',
               isCorrect: true,
-              explanation:
-                'Tepat. Konsistensi dengan standar industri sangat penting untuk kemudahan pengelolaan jangka panjang. Teknisi siapa pun yang datang pertama kali akan langsung mencoba .1 sebagai gateway.',
+              feedback: 'Sangat profesional! Memisahkan range statis (infrastruktur di .1–.50) dari range DHCP dinamis (client di .100–.200) adalah praktik industri terbaik. Teknisi mana pun langsung paham strukturnya.',
             },
             {
-              id: 'f2b',
-              text: 'Tetap di .50 saja karena sudah terlanjur diseting dan mengubahnya merepotkan.',
+              id: 'step-2-wrong1',
+              text: 'Semua perangkat menggunakan DHCP — biarkan router mengatur semuanya secara otomatis agar lebih mudah.',
               isCorrect: false,
-              explanation:
-                'Resistensi terhadap perbaikan bukan sikap profesional. Mengubah gateway saat setup awal jauh lebih mudah daripada nanti saat sudah banyak perangkat terhubung.',
+              feedback: 'Server dan printer tidak boleh menggunakan DHCP! Jika IP-nya berubah setiap restart, semua client yang sudah dikonfigurasi untuk terhubung ke IP tertentu akan kehilangan koneksi. Infrastruktur kritis wajib menggunakan IP statis.',
+            },
+            {
+              id: 'step-2-wrong2',
+              text: 'Beri IP secara urut: Gateway .1, Server Billing .2, Server Game .3, Printer .4, lalu Client .5–.34 (DHCP).',
+              isCorrect: false,
+              feedback: 'Boleh secara teknis, tapi tidak direkomendasikan. DHCP mulai dari .5 langsung setelah infrastruktur statis berisiko tumpang tindih jika dikonfigurasi sembarangan. Lebih aman memberikan gap yang jelas antara range statis dan dinamis.',
             },
           ],
         },
         {
-          id: 'c3',
-          text: '192.168.1.100 — di tengah range agar bisa diapit oleh perangkat statis di kiri dan kanan.',
-          isOptimal: false,
-          consequence:
-            'Ini menunjukkan perencanaan yang tidak sistematis. Menempatkan gateway di tengah range mempersulit pengelolaan karena range statis dan dinamis menjadi tidak jelas batasnya.',
-          followUpQuestion:
-            'Mengapa penempatan gateway di range tengah (.100) mempersulit manajemen jaringan jangka panjang?',
-          followUpChoices: [
+          id: 'step-3',
+          prompt: 'Langkah ketiga: Agar komputer client di warnet bisa mengakses internet, mekanisme apa yang dibutuhkan di router?',
+          options: [
             {
-              id: 'f3a',
-              text: 'Karena DHCP tidak tahu harus mengecualikan .100 saat memberikan IP ke perangkat baru, sehingga berpotensi terjadi konflik IP.',
+              id: 'step-3-correct',
+              text: 'NAT (Network Address Translation) — mengkonversi Private IP (192.168.0.x) milik client menjadi satu Public IP yang diberikan ISP saat mengakses internet.',
               isCorrect: true,
-              explanation:
-                'Tepat. Saat gateway berada di tengah range DHCP, kamu harus secara manual mengecualikan .100 dari pool DHCP — langkah ekstra yang mudah terlupakan dan berisiko konflik.',
+              feedback: 'Tepat! Private IP (192.168.0.x) tidak bisa dirutekan di internet global. NAT di router mengkonversi alamat Private ke Public sehingga client bisa mengakses internet sambil tetap menggunakan Private IP di jaringan lokal.',
             },
             {
-              id: 'f3b',
-              text: 'Tidak ada masalah, asalkan semua perangkat lain diberi IP yang berbeda.',
+              id: 'step-3-wrong1',
+              text: 'Berikan Public IP langsung ke setiap komputer client menggantikan Private IP mereka.',
               isCorrect: false,
-              explanation:
-                'Secara teknis bisa jalan, tetapi ini mengabaikan prinsip desain jaringan yang scalable dan mudah dikelola. Jaringan yang baik harus mudah dipahami oleh siapa pun yang mengelolanya.',
+              feedback: 'Tidak efisien dan tidak aman. Public IP sangat terbatas dan mahal. Selain itu, perangkat dengan Public IP langsung terekspos ke internet tanpa perlindungan NAT — rentan terhadap serangan dari luar.',
+            },
+            {
+              id: 'step-3-wrong2',
+              text: 'Tidak perlu mekanisme khusus — Private IP otomatis bisa dirutekan ke internet melalui router biasa.',
+              isCorrect: false,
+              feedback: 'Salah. Private IP (10.x.x.x, 172.16.x.x, 192.168.x.x) secara eksplisit TIDAK dapat dirutekan di internet global. Router internet akan membuang paket yang menggunakan alamat Private sebagai source IP.',
+            },
+          ],
+        },
+        {
+          id: 'step-4',
+          prompt: 'Langkah keempat: Seorang client warnet tidak bisa terhubung ke server game. Langkah diagnostik pertama yang paling logis adalah...',
+          options: [
+            {
+              id: 'step-4-correct',
+              text: 'Cek IP Address komputer client tersebut: apakah sudah mendapatkan IP dari DHCP? Apakah IP-nya berada di range yang benar (.100–.200) dan bukan konflik dengan IP statis?',
+              isCorrect: true,
+              feedback: 'Tepat! Langkah pertama diagnostik jaringan selalu dimulai dari layer paling bawah — pastikan perangkat mendapat IP yang valid dan tidak ada konflik. Baru kemudian periksa konektivitas ke server, firewall, dan sebagainya.',
+            },
+            {
+              id: 'step-4-wrong1',
+              text: 'Langsung restart server game karena kemungkinan besar masalah ada di server.',
+              isCorrect: false,
+              feedback: 'Restart server tanpa diagnosa lebih dulu tidak profesional — bisa mengganggu puluhan client yang sedang bermain. Selalu diagnosa dari layer paling bawah (IP Address) sebelum mengambil tindakan yang mempengaruhi banyak pengguna.',
+            },
+            {
+              id: 'step-4-wrong2',
+              text: 'Ganti kabel LAN komputer client tersebut karena masalah fisik paling sering terjadi.',
+              isCorrect: false,
+              feedback: 'Mengganti kabel tanpa bukti masalah fisik adalah pendekatan yang tidak sistematis. Jika komputer client mendapat IP yang valid dan bisa ping ke gateway, kabel kemungkinan besar bukan masalahnya.',
             },
           ],
         },
       ],
+      argumentAfterStepId: 'step-2',
+      argumentPrompt: 'Mengapa server billing dan server game di warnet HARUS menggunakan IP statis (tetap), bukan IP dinamis dari DHCP? Jelaskan konsekuensi teknis yang terjadi jika server menggunakan IP dinamis.',
+      conclusionQuestion: 'Prinsip utama perancangan pengalamatan IPv4 yang benar pada jaringan nyata seperti warnet adalah...',
+      conclusionOptions: [
+        {
+          id: 'ip-conclusion-1',
+          text: 'Gunakan Private IP untuk jaringan lokal, pisahkan range IP statis (infrastruktur) dari dinamis (client), dan terapkan NAT untuk akses internet',
+          isCorrect: true,
+          feedback: 'Tepat! Inilah tiga prinsip inti: (1) Private IP untuk jaringan lokal, (2) Pemisahan range statis/dinamis untuk kemudahan manajemen, (3) NAT agar Private IP bisa mengakses internet.',
+        },
+        {
+          id: 'ip-conclusion-2',
+          text: 'Gunakan Public IP untuk semua perangkat agar lebih mudah diakses dari mana saja',
+          isCorrect: false,
+          feedback: 'Menggunakan Public IP untuk semua perangkat lokal sangat tidak efisien (Public IP terbatas dan mahal), tidak aman (terekspos langsung ke internet), dan tidak perlu — NAT sudah memungkinkan Private IP mengakses internet.',
+        },
+        {
+          id: 'ip-conclusion-3',
+          text: 'Berikan semua perangkat IP dalam satu range tanpa memisahkan statis dan dinamis untuk menyederhanakan konfigurasi',
+          isCorrect: false,
+          feedback: 'Tanpa pemisahan range statis/dinamis, risiko konflik IP sangat tinggi. DHCP bisa memberikan IP yang sama dengan server statis, menyebabkan koneksi server tidak stabil. Pemisahan range adalah praktik wajib jaringan profesional.',
+        },
+      ],
       finalEvaluation:
-        'Tunjukkan bahwa kamu tidak hanya bisa membuat jaringan "bisa jalan", tapi juga bisa merancang jaringan yang rapi, mengikuti standar industri, dan mudah dikelola oleh siapa pun yang meneruskannya.',
+        'Tunjukkan bahwa kamu tidak hanya bisa "mengisi IP" pada perangkat, tapi juga mampu merancang skema pengalamatan IPv4 yang terstruktur, aman, dan dapat dikelola dengan baik — sesuai standar jaringan profesional.',
     },
-    conclusionPrompt: 'Berdasarkan studi kasus bercabang tentang perancangan IP kedai kopi yang telah kamu analisis, jelaskan bagaimana kamu mampu menganalisis skenario perancangan pengalamatan IPv4 Private & Public pada arsitektur TCP/IP. Tuliskan secara logis dengan kata-katamu sendiri.',
+    conclusionPrompt: 'Berdasarkan studi kasus bercabang tentang perancangan IPv4 warnet yang telah kamu analisis, jelaskan bagaimana kamu mampu menganalisis skenario perancangan pengalamatan IPv4 Private & Public pada arsitektur TCP/IP. Tuliskan secara logis dengan kata-katamu sendiri.',
   },
 ];

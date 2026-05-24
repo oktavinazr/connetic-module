@@ -514,7 +514,7 @@ export function LessonPage() {
         return (
           <AuthenticAssessmentStage
             {...commonProps}
-            branchingScenario={currentStage.branchingScenario}
+            branchingScenario={currentStage.branchingScenario as any}
             onTrackerPhase={(phase) => setTrackerPhase(phase)}
           />
         );

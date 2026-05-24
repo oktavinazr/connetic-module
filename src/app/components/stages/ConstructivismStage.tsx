@@ -11,6 +11,7 @@ import { getLessonProgress, saveStageAttempt } from '../../utils/progress';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
 import { CourierDefinition } from './CourierDefinition';
 import { TcpHeaderIntro } from './TcpHeaderIntro';
+import { IpAddressIntro } from './IpAddressIntro';
 import { EssayBox, ContinueActivityButton, ATPConclusionBox } from './StageKit';
 
 // -- Types ----------------------------------------------------------------------
@@ -1658,9 +1659,10 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
   const [courierCompleted, setCourierCompleted] = useState(false);
 
   const [phase, setPhase] = useState<'scramble' | 'analogy' | 'mcq' | 'conclusion'>(() => {
-    if ((lessonId === '1' || lessonId === '2') && !courierCompleted) return 'scramble'; // Interactive intro first
+    if ((lessonId === '1' || lessonId === '2' || lessonId === '3') && !courierCompleted) return 'scramble'; // Interactive intro first
     if (storyScramble) return 'scramble';
     if (analogySortGroups?.length) return 'analogy';
+    if (constructivismMatching?.length) return 'analogy';
     return 'mcq';
   });
 
@@ -1686,7 +1688,13 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
   useEffect(() => {
     if (!tracker.isLoading && tracker.session?.latestSnapshot && !isRestored) {
       const snap = tracker.session.latestSnapshot;
-      if (snap.phase) setPhase(snap.phase);
+      if (snap.phase) {
+        // Stale 'mcq' snapshot from old code (L3 used to fall through to MCQ) → restart animation
+        const restoredPhase = (snap.phase === 'mcq' && constructivismMatching?.length && !props.question)
+          ? 'scramble'
+          : snap.phase;
+        setPhase(restoredPhase);
+      }
       if (snap.pendingNextPhase) setPendingNextPhase(snap.pendingNextPhase);
       if (snap.essay1Text) setEssay1Text(snap.essay1Text);
       if (snap.essay2Text) setEssay2Text(snap.essay2Text);
@@ -1784,6 +1792,18 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
       );
     }
 
+    // Lesson 3: show IpAddressIntro animation, then proceed to matching
+    if (lessonId === '3' && !courierCompleted) {
+      return (
+        <div className="space-y-4">
+          <IpAddressIntro onComplete={() => {
+            setCourierCompleted(true);
+            setPhase('analogy');
+          }} />
+        </div>
+      );
+    }
+
     if (!storyScramble) {
       // No story scramble → go to analogy
       if (analogySortGroups?.length) {
@@ -1872,7 +1892,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
             if (essayText !== undefined) {
               setEssay2Text(essayText);
               void tracker.trackEvent('constructivism_matching_completed', { hasEssay: true }, { progressPercent: 75 });
-              if (lessonId === '2') {
+              if (lessonId === '2' || lessonId === '3') {
                 setPhase('conclusion');
                 return;
               }
