@@ -142,7 +142,6 @@ function OrderingActivity({ onComplete }: { onComplete: () => void }) {
   };
 
   const showCorrectOrder = checked && !isCorrect && attempts >= MAX_ATTEMPTS;
-  const displayCards = showCorrectOrder ? [...ORDER_CARDS] : cards;
   const isTerminal = checked && (isCorrect || attempts >= MAX_ATTEMPTS);
 
   return (
@@ -172,7 +171,7 @@ function OrderingActivity({ onComplete }: { onComplete: () => void }) {
             </p>
           </div>
           <div className="space-y-2">
-            {displayCards.map((card, i) => (
+            {cards.map((card, i) => (
               <DragCard key={card.id} card={card} index={i} onMove={moveCard} locked={isTerminal} />
             ))}
           </div>
@@ -199,8 +198,8 @@ function OrderingActivity({ onComplete }: { onComplete: () => void }) {
                 </>
               ) : showCorrectOrder ? (
                 <>
-                  <p className="text-sm font-bold text-red-700">Percobaan habis — urutan yang benar ditampilkan</p>
-                  <p className="text-xs text-red-600/80 mt-1">Perhatikan urutan di atas sebelum melanjutkan.</p>
+                  <p className="text-sm font-bold text-red-700">Percobaan habis.</p>
+                  <p className="text-xs text-red-600/80 mt-1">Pelajari urutan yang benar di bawah sebelum melanjutkan.</p>
                 </>
               ) : (
                 <>
@@ -214,6 +213,28 @@ function OrderingActivity({ onComplete }: { onComplete: () => void }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {showCorrectOrder && (
+        <div className="rounded-xl border border-[#10B981]/25 overflow-hidden animate-in fade-in duration-400">
+          <div className="px-4 py-2.5 bg-[#10B981]/8 border-b border-[#10B981]/15">
+            <p className="text-[10px] font-black text-[#10B981] uppercase tracking-widest">Jawaban Benar — Urutan yang Tepat</p>
+          </div>
+          <div className="divide-y divide-[#D5DEEF]">
+            {ORDER_CARDS.map((card, idx) => (
+              <div key={card.id} className="flex items-center gap-3 px-4 py-3 bg-white">
+                <div className="h-6 w-6 rounded-lg flex items-center justify-center text-[10px] font-black text-white shrink-0 bg-[#395886]">
+                  {idx + 1}
+                </div>
+                <span className="text-lg shrink-0">{card.icon}</span>
+                <div className="min-w-0">
+                  <p className="text-xs font-black text-[#395886]">{card.text}</p>
+                  <p className="text-[10px] text-[#395886]/50 font-medium leading-tight">{card.sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {!checked && (
         <button

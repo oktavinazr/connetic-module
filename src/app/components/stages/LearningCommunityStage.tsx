@@ -7,6 +7,7 @@ import {
   Vote, Award, Sparkles, Monitor, PenLine, BookOpen, GraduationCap, Lightbulb,
   Clock, Server, Lock, Unlock, ArrowDown, ArrowUp, Shuffle
 } from 'lucide-react';
+import { LearningCommunityLesson3 } from './LearningCommunityLesson3';
 import { getCurrentUser } from '../../utils/auth';
 import {
   upsertGroupDiscussion,
@@ -136,10 +137,6 @@ function TimelineFlowchartSection({
     if (allCorrect) {
       setStatus('correct');
     } else if (newAttempts >= MAX_ATTEMPTS) {
-      // Reveal correct answer
-      const correctSlots = [...slots];
-      data.blocks.forEach(b => { correctSlots[b.correctSlot - 1] = b.id; });
-      setSlots(correctSlots);
       setStatus('locked');
     } else {
       setStatus('incorrect');
@@ -302,9 +299,32 @@ function TimelineFlowchartSection({
               <div>
                 <p className="text-sm font-bold text-amber-800 mb-1">Batas Percobaan Tercapai (3×)</p>
                 <p className="text-xs text-amber-600/80 leading-relaxed">
-                  Kamu telah menggunakan semua kesempatan. Urutan yang benar telah ditampilkan di atas.
-                  Pelajari alurnya: <strong>SYN → SYN-ACK → ACK</strong>, lalu lanjutkan ke papan kolaboratif.
+                  Kamu telah menggunakan semua kesempatan. Pelajari urutan yang benar di bawah, lalu lanjutkan.
                 </p>
+              </div>
+            </div>
+
+            {/* Correct answer shown below */}
+            <div className="rounded-2xl border border-[#10B981]/25 overflow-hidden">
+              <div className="px-4 py-2.5 bg-[#10B981]/8 border-b border-[#10B981]/15">
+                <p className="text-[10px] font-black text-[#10B981] uppercase tracking-widest">Jawaban Benar</p>
+              </div>
+              <div className="divide-y divide-[#D5DEEF]">
+                {data.blocks
+                  .slice()
+                  .sort((a, b) => a.correctSlot - b.correctSlot)
+                  .map((block, idx) => (
+                    <div key={block.id} className="flex items-center gap-3 px-4 py-3 bg-white">
+                      <div
+                        className="h-6 w-6 rounded-lg flex items-center justify-center text-[10px] font-black text-white shrink-0"
+                        style={{ backgroundColor: idx === 0 ? '#628ECB' : idx === 1 ? '#8B5CF6' : '#10B981' }}
+                      >
+                        {block.correctSlot}
+                      </div>
+                      <span className="text-xs font-bold text-[#395886]">{block.text}</span>
+                    </div>
+                  ))
+                }
               </div>
             </div>
 
@@ -1412,6 +1432,19 @@ export function LearningCommunityStage({
     else if (subStage === 'individual_summary') phase = 'conclusion';
     onTrackerPhase?.(phase);
   }, [subStage, onTrackerPhase]);
+
+  if (lessonId === '3') {
+    return (
+      <LearningCommunityLesson3
+        lessonId={lessonId}
+        stageIndex={stageIndex}
+        groupName={groupName}
+        isCompleted={isCompleted}
+        onComplete={onComplete}
+        onTrackerPhase={onTrackerPhase}
+      />
+    );
+  }
 
   if (!groupName) return (
     <div className="w-full py-12 text-center bg-white rounded-lg border-2 border-dashed border-[#D5DEEF] shadow-inner">
