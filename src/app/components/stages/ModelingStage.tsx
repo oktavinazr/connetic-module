@@ -7,7 +7,7 @@ import {
   Cable, Wifi, Radio, Lock, PenLine, Server, Monitor,
 } from 'lucide-react';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
-import { ContinueActivityButton, ATPConclusionBox, IndicatorSummaryCard, StageCompletedOverlay } from './StageKit';
+import { ContinueActivityButton, ATPConclusionBox, IndicatorSummaryCard } from './StageKit';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1124,14 +1124,15 @@ function ModelingLesson3({
   const [reverseTotal, setReverseTotal] = useState(0);
   const [reverseFeedback, setReverseFeedback] = useState<{ title: string; text: string } | null>(null);
   const [conclusionText, setConclusionText] = useState('');
-  const [submittedFinalAnswer, setSubmittedFinalAnswer] = useState<any>(null);
-  const [showCompletionScreen, setShowCompletionScreen] = useState(false);
+  const [isSubmittingConclusion, setIsSubmittingConclusion] = useState(false);
   const [isRestored, setIsRestored] = useState(false);
 
   const isDecimalModeDone = activeBitIndex >= MAGIC_SCALE_BITS.length && bits.every((bit) => bit !== null);
   const binaryResult = bits.map((bit) => bit ?? 0).join('');
   const checkpointWordCount = checkpointText.trim().split(/\s+/).filter(Boolean).length;
-  const canOpenReverseMode = isDecimalModeDone && checkpointWordCount >= 10 && !checkpointOpen;
+  const hasReverseAccess =
+    checkpointWordCount >= 10 || mode === 'binToDec' || reverseStepIndex > 0 || phase === 'reflection';
+  const canOpenReverseMode = isDecimalModeDone && !checkpointOpen && hasReverseAccess;
   const isReverseDone = reverseStepIndex >= MAGIC_SCALE_BITS.length;
   const logicalPhase: 'consistency' | 'arguing' | 'conclusion' =
     phase === 'reflection' ? 'conclusion' : checkpointOpen ? 'arguing' : 'consistency';
@@ -1160,8 +1161,6 @@ function ModelingLesson3({
         if (typeof snap.reverseTotal === 'number') setReverseTotal(snap.reverseTotal);
         if (snap.reverseFeedback) setReverseFeedback(snap.reverseFeedback);
         if (typeof snap.conclusionText === 'string') setConclusionText(snap.conclusionText);
-        if (snap.submittedFinalAnswer) setSubmittedFinalAnswer(snap.submittedFinalAnswer);
-        if (typeof snap.showCompletionScreen === 'boolean') setShowCompletionScreen(snap.showCompletionScreen);
       }
       setIsRestored(true);
     }
@@ -1192,8 +1191,6 @@ function ModelingLesson3({
         reverseTotal,
         reverseFeedback,
         conclusionText,
-        submittedFinalAnswer,
-        showCompletionScreen,
       },
       { progressPercent },
     );
@@ -1210,10 +1207,8 @@ function ModelingLesson3({
     reverseFeedback,
     reverseStepIndex,
     reverseTotal,
-    showCompletionScreen,
     showIntro,
     stepFeedback,
-    submittedFinalAnswer,
     tracker,
   ]);
 
@@ -1290,8 +1285,10 @@ function ModelingLesson3({
     });
   };
 
-  const handleConclusionSubmit = (text: string) => {
-    setConclusionText(text);
+  const handleConclusionSubmit = async (text: string) => {
+    if (isSubmittingConclusion) return;
+
+    setIsSubmittingConclusion(true);
     const finalAnswer = {
       targetDecimal: MAGIC_SCALE_TARGET,
       binaryResult,
@@ -1308,24 +1305,26 @@ function ModelingLesson3({
       conclusion: text,
     };
 
-    setSubmittedFinalAnswer(finalAnswer);
-    setShowCompletionScreen(true);
-    void tracker.complete(finalAnswer, {
-      completed: true,
-      phase: 'reflection',
-      mode,
-      activeBitIndex,
-      bits,
-      remainder,
-      checkpointText,
-      reverseStepIndex,
-      reverseTotal,
-      binaryResult,
-      conclusionText: text,
-      submittedFinalAnswer: finalAnswer,
-      showCompletionScreen: true,
-    });
-    setTimeout(() => onComplete(finalAnswer), 450);
+    try {
+      await tracker.complete(finalAnswer, {
+        completed: true,
+        phase: 'reflection',
+        mode,
+        activeBitIndex,
+        bits,
+        remainder,
+        checkpointText,
+        reverseStepIndex,
+        reverseTotal,
+        binaryResult,
+        conclusionText: text,
+      });
+      setConclusionText(text);
+      onComplete(finalAnswer);
+    } catch (error) {
+      console.error('[ModelingLesson3] failed to save conclusion:', error);
+      setIsSubmittingConclusion(false);
+    }
   };
 
   const completedSteps = bits.filter((bit) => bit !== null).length;
@@ -1333,6 +1332,13 @@ function ModelingLesson3({
   const shouldCurrentBitBeOne = currentWeight !== null ? remainder >= currentWeight : false;
   const activeReverseWeight = !isReverseDone ? MAGIC_SCALE_BITS[reverseStepIndex] : null;
   const activeReverseBit = activeReverseWeight !== null ? bits[reverseStepIndex] ?? 0 : 0;
+  const processedReverseWeights = MAGIC_SCALE_BITS.slice(0, reverseStepIndex);
+  const activeReverseContributors = processedReverseWeights.filter((_, index) => (bits[index] ?? 0) === 1);
+  const reverseBreakdownText = activeReverseContributors.length > 0
+    ? `${activeReverseContributors.join(' + ')} = ${reverseTotal}`
+    : reverseStepIndex > 0
+    ? `Belum ada bobot aktif yang ditambahkan. Total masih ${reverseTotal}.`
+    : 'Belum ada bobot yang dijumlahkan. Mulai dari bit 128 terlebih dahulu.';
   const phaseSteps = [
     {
       key: 'consistency',
@@ -1451,48 +1457,55 @@ function ModelingLesson3({
     );
   }
 
-  if (showCompletionScreen && submittedFinalAnswer) {
+  if (phase === 'reflection') {
     return (
-      <div className="w-full space-y-4 animate-in fade-in duration-500">
-        <StageCompletedOverlay stageName="Tahap Modeling" />
-        <IndicatorSummaryCard
-          title="Rekap Aktivitas Modeling IPv4"
-          consistency={
-            <div className="space-y-2">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#628ECB]/8 border border-[#628ECB]/15">
-                  <CheckCircle className="w-4 h-4 text-[#628ECB] shrink-0" />
-                  <span className="text-xs font-bold text-[#395886]">
-                    Konversi desimal ke biner selesai dengan hasil {MAGIC_SCALE_TARGET} menjadi {binaryResult}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#628ECB]/8 border border-[#628ECB]/15">
-                  <CheckCircle className="w-4 h-4 text-[#628ECB] shrink-0" />
-                  <span className="text-xs font-bold text-[#395886]">
-                    Konversi biner ke desimal selesai dengan hasil {binaryResult} menjadi {reverseTotal}
-                  </span>
-                </div>
+      <div className="w-full space-y-5 animate-in fade-in duration-500">
+        <div className="rounded-2xl border-2 border-[#D5DEEF] bg-white px-4 py-3 shadow-sm">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#628ECB]/65">Progress Modeling</p>
+              <h3 className="text-sm font-bold text-[#395886]">Konversi IPv4 Dua Arah</h3>
             </div>
-          }
-          arguing={
-            <div className="px-3 py-2.5 rounded-xl bg-[#FFFBEB] border border-[#F59E0B]/20">
-              <p className="text-xs text-[#78350F] leading-relaxed">{checkpointText}</p>
+            <div className="grid gap-2 lg:grid-cols-3 xl:min-w-[620px]">
+              {phaseSteps.map((item, index) => {
+                const isActive = logicalPhase === item.key;
+                const isDone = item.key === 'consistency'
+                  ? isDecimalModeDone && isReverseDone
+                  : item.key === 'arguing'
+                  ? checkpointWordCount >= 10
+                  : !!conclusionText;
+                return (
+                  <div
+                    key={item.key}
+                    className={`rounded-xl border px-3 py-2.5 transition-all ${isActive ? 'border-[#628ECB]/40 bg-[#EEF4FF]' : isDone ? 'border-[#10B981]/25 bg-[#ECFDF5]' : 'border-[#D5DEEF] bg-[#F8FAFF]'}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-black ${
+                        isDone ? 'bg-[#10B981] text-white' : isActive ? 'bg-[#628ECB] text-white' : 'bg-[#E2E8F0] text-[#64748B]'
+                      }`}>
+                        {isDone ? <CheckCircle className="w-3.5 h-3.5" /> : index + 1}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-[#395886]">{item.title}</div>
+                        <p className="text-[11px] text-[#395886]/60 leading-relaxed">{item.desc}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          }
-          conclusion={
-            <div className="px-3 py-2.5 rounded-xl bg-[#ECFDF5] border border-[#10B981]/20">
-              <p className="text-xs text-[#065F46] leading-relaxed">{conclusionText}</p>
-            </div>
-          }
-        />
-        <div className="rounded-2xl border-2 border-[#F59E0B]/20 bg-gradient-to-br from-amber-50 to-white p-5 text-center shadow-sm">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
-            <CheckCircle className="h-6 w-6 text-amber-500" />
           </div>
-          <p className="text-sm font-bold text-[#395886]">Jawaban berhasil disimpan. Masuk ke ruang tunggu tahap selesai...</p>
-          <p className="mt-1 text-xs text-[#395886]/55">
-            Rekap aktivitasmu sudah siap dan tahap berikutnya akan mengikuti alur lesson seperti biasa.
-          </p>
         </div>
+
+        <ATPConclusionBox
+          atpBehavior="mampu mensimulasikan konversi alamat IPv4 dari desimal ke biner dan dari biner ke desimal secara sistematis"
+          objectiveCode={objectiveCode}
+          stageType="modeling"
+          defaultValue={conclusionText}
+          disabled={!!conclusionText || isSubmittingConclusion}
+          minWords={12}
+          onSubmit={(text) => { void handleConclusionSubmit(text); }}
+        />
       </div>
     );
   }
@@ -1568,7 +1581,7 @@ function ModelingLesson3({
             <div className="grid grid-cols-2 gap-2">
               <div className="rounded-2xl border border-[#628ECB]/20 bg-white px-4 py-3 shadow-sm">
                 <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#628ECB]/60">
-                  {mode === 'decToBin' ? 'Sisa Angka' : 'Total Desimal'}
+                  {mode === 'decToBin' ? 'Sisa Angka' : isReverseDone ? 'Hasil Desimal' : 'Total Sementara'}
                 </div>
                 <div className="mt-1 text-2xl font-black text-[#395886]">
                   {mode === 'decToBin' ? remainder : reverseTotal}
@@ -1678,7 +1691,7 @@ function ModelingLesson3({
                         : isReverseDone
                         ? 'Semua bobot aktif sudah dijumlahkan. Hasil akhirnya kembali menjadi 192.'
                         : activeReverseWeight !== null
-                        ? `Periksa bit ${activeReverseWeight}. ${activeReverseBit === 1 ? 'Tambahkan bobotnya ke total.' : 'Lewati karena bit bernilai 0.'}`
+                        ? `Periksa bit ${activeReverseWeight}. ${activeReverseBit === 1 ? 'Tambahkan bobotnya ke total sementara.' : 'Lewati karena bit bernilai 0, jadi total sementara tidak berubah.'}`
                         : 'Periksa hasil desimalmu.'}
                     </div>
                   </div>
@@ -1733,6 +1746,21 @@ function ModelingLesson3({
               <div className="mt-4 rounded-2xl border border-[#10B981]/20 bg-[#ECFDF5] p-4">
                 <div className="text-sm font-bold text-[#065F46]">{reverseFeedback.title}</div>
                 <p className="mt-1 text-sm text-[#065F46]/80 leading-relaxed">{reverseFeedback.text}</p>
+              </div>
+            )}
+
+            {mode === 'binToDec' && (
+              <div className="mt-4 rounded-2xl border border-[#628ECB]/15 bg-white p-4">
+                <div className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60">Rincian Penjumlahan</div>
+                <p className="mt-2 text-sm font-semibold leading-relaxed text-[#395886]">{reverseBreakdownText}</p>
+                {!isReverseDone && activeReverseWeight !== null && (
+                  <p className="mt-2 text-xs leading-relaxed text-[#395886]/65">
+                    Langkah aktif: bit {activeReverseWeight} bernilai {activeReverseBit}.{' '}
+                    {activeReverseBit === 1
+                      ? 'Jika kamu lanjutkan, bobot ini akan ditambahkan ke total sementara.'
+                      : 'Karena bernilai 0, bobot ini hanya dilewati dan total sementara tetap sama.'}
+                  </p>
+                )}
               </div>
             )}
 
@@ -1838,7 +1866,9 @@ function ModelingLesson3({
                     <div className="text-base font-bold text-[#395886] tracking-[0.18em]">{binaryResult}</div>
                   </div>
                   <div className="rounded-xl bg-[#F8FAFF] px-3 py-2">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60">Desimal</div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60">
+                      {mode === 'binToDec' && !isReverseDone ? 'Total Sementara' : 'Desimal'}
+                    </div>
                     <div className="text-base font-bold text-[#395886]">{mode === 'binToDec' ? reverseTotal : MAGIC_SCALE_TARGET}</div>
                   </div>
                 </div>
@@ -1920,17 +1950,6 @@ function ModelingLesson3({
         </div>
       )}
 
-      {phase === 'reflection' && (
-        <ATPConclusionBox
-          atpBehavior="mampu mensimulasikan konversi alamat IPv4 dari desimal ke biner dan dari biner ke desimal secara sistematis"
-          objectiveCode={objectiveCode}
-          stageType="modeling"
-          defaultValue={conclusionText}
-          disabled={!!conclusionText}
-          minWords={12}
-          onSubmit={handleConclusionSubmit}
-        />
-      )}
     </div>
   );
 }

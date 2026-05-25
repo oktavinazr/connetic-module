@@ -93,6 +93,9 @@ export function getStageAnswerSummary(stage: Stage, answer: any): string {
       }
       case 'questioning': {
         const a = answer as any;
+        if (a.conclusionText) return a.conclusionText.slice(0, 40) + '...';
+        if (a.summary) return a.summary.slice(0, 40) + '...';
+        if (a.essayText) return a.essayText.slice(0, 40) + '...';
         if (a.conclusion) return a.conclusion.slice(0, 40) + '...';
         if (a.justification) return a.justification.slice(0, 40) + '...';
         return 'Analisis Selesai';
@@ -101,6 +104,13 @@ export function getStageAnswerSummary(stage: Stage, answer: any): string {
         const a = answer as any;
         if (a.finalConclusion) return a.finalConclusion.slice(0, 40) + '...';
         return 'Diskusi Selesai';
+      }
+      case 'modeling': {
+        const a = answer as any;
+        if (a.conclusion) return a.conclusion.slice(0, 40) + '...';
+        if (a.checkpointArgument) return a.checkpointArgument.slice(0, 40) + '...';
+        if (a.argument) return a.argument.slice(0, 40) + '...';
+        return 'Simulasi Selesai';
       }
       case 'reflection': {
         const a = answer as any;
@@ -426,6 +436,12 @@ const LAYER_FUNC_DESCS: Record<string, string> = {
 function QuestioningReview({ answer, snap, stage, lessonId }: { answer: any; snap?: Record<string, any>; stage: Stage; lessonId?: string }) {
   const isLesson1 = lessonId === '1' || snap?.matchPlacements !== undefined || answer?.selectedId === 'function_matching';
   const isLesson2 = !isLesson1 && (lessonId === '2' || (snap?.openedQAIds !== undefined && snap?.matchPlacements === undefined));
+  const isLesson3 = !isLesson1 && !isLesson2 && (
+    lessonId === '3'
+    || snap?.l3QPhase !== undefined
+    || answer?.reflectionAnswers !== undefined
+    || answer?.conclusionText !== undefined
+  );
 
   const essay = snap?.essay ?? answer?.justification;
   const conclusion = snap?.conclusionText ?? answer?.conclusion;
@@ -551,6 +567,61 @@ function QuestioningReview({ answer, snap, stage, lessonId }: { answer: any; sna
     );
   }
 
+  if (isLesson3) {
+    const askedQuestions = (answer?.askedQuestions ?? []) as string[];
+    const overloadDone = Boolean(snap?.l3QOverloadDone ?? answer?.overloadExperiment);
+    const argumentText = snap?.l3QEssayText ?? answer?.essayText;
+    const reflectionAnswers = (snap?.l3QDropAnswers ?? answer?.reflectionAnswers ?? {}) as Record<string, string>;
+    const finalConclusion = snap?.l3QConclusionText ?? answer?.conclusionText ?? answer?.summary;
+
+    const reflectionSummary = [
+      reflectionAnswers.totalBit ? `IPv4 terdiri dari ${reflectionAnswers.totalBit}` : null,
+      reflectionAnswers.jumlahOktet ? `dibagi menjadi ${reflectionAnswers.jumlahOktet}` : null,
+      reflectionAnswers.bitPerOktet ? `dan setiap oktet berisi ${reflectionAnswers.bitPerOktet}` : null,
+    ].filter(Boolean).join(', ');
+
+    const hasAny = askedQuestions.length > 0 || overloadDone || argumentText || reflectionSummary || finalConclusion;
+    if (!hasAny) return <MissingData />;
+
+    return (
+      <div className="space-y-3">
+        {(askedQuestions.length > 0 || overloadDone) && (
+          <ReviewCard title="Eksplorasi Struktur IPv4" icon={<Search className="w-3.5 h-3.5" />} accentColor="text-[#8B5CF6]" borderColor="border-[#8B5CF6]/20" bgColor="bg-[#F5F3FF]/40">
+            <div className="space-y-2">
+              {askedQuestions.length > 0 && <ActivityBadge label={`${askedQuestions.length} pertanyaan chat dua arah berhasil dijawab`} />}
+              {overloadDone && <ActivityBadge label="Oktet Overload Experiment diselesaikan" />}
+            </div>
+          </ReviewCard>
+        )}
+
+        {argumentText && (
+          <ReviewCard title="Argumen Logis" icon={<PenLine className="w-3.5 h-3.5" />} accentColor="text-[#628ECB]" borderColor="border-[#628ECB]/20" bgColor="bg-[#EEF4FF]/40">
+            <EssayDisplay text={argumentText} />
+          </ReviewCard>
+        )}
+
+        {(reflectionSummary || Object.keys(reflectionAnswers).length > 0) && (
+          <ReviewCard title="Refleksi Struktur IPv4" icon={<Layers className="w-3.5 h-3.5" />} accentColor="text-[#10B981]" borderColor="border-[#10B981]/20" bgColor="bg-[#F0FDF9]/40">
+            <div className="space-y-2">
+              {reflectionSummary && <EssayDisplay text={reflectionSummary} />}
+              <div className="grid gap-2 sm:grid-cols-3">
+                <ActivityBadge label={`Total bit: ${reflectionAnswers.totalBit ?? '-'}`} done={!!reflectionAnswers.totalBit} />
+                <ActivityBadge label={`Jumlah oktet: ${reflectionAnswers.jumlahOktet ?? '-'}`} done={!!reflectionAnswers.jumlahOktet} />
+                <ActivityBadge label={`Bit per oktet: ${reflectionAnswers.bitPerOktet ?? '-'}`} done={!!reflectionAnswers.bitPerOktet} />
+              </div>
+            </div>
+          </ReviewCard>
+        )}
+
+        {finalConclusion && (
+          <ReviewCard title="Penarikan Kesimpulan" icon={<Lightbulb className="w-3.5 h-3.5" />} accentColor="text-[#8B5CF6]" borderColor="border-[#8B5CF6]/20" bgColor="bg-[#F5F3FF]/40">
+            <EssayDisplay text={finalConclusion} />
+          </ReviewCard>
+        )}
+      </div>
+    );
+  }
+
   // Original questioning (non-lesson-specific)
   const selectedId = snap?.selectedId ?? answer?.selectedId;
   const isCorrect = answer?.isCorrect;
@@ -644,6 +715,55 @@ function LearningCommunityReview({ answer, snap }: { answer: any; snap?: Record<
 }
 
 function ModelingReview({ answer, snap }: { answer: any; snap?: Record<string, any> }) {
+  const isLesson3Modeling = answer?.bitDecisions !== undefined || answer?.reverseConversion !== undefined || answer?.checkpointArgument !== undefined;
+  if (isLesson3Modeling) {
+    const bitDecisions = (answer?.bitDecisions ?? []) as Array<{ weight: number; bit: number }>;
+    const checkpointArgument = answer?.checkpointArgument as string | undefined;
+    const reverseConversion = answer?.reverseConversion as { binary?: string; decimal?: number; processedSteps?: number } | undefined;
+    const conclusion = snap?.conclusionText ?? answer?.conclusion;
+
+    const hasAny = bitDecisions.length > 0 || checkpointArgument || reverseConversion || conclusion;
+    if (!hasAny) return <MissingData />;
+
+    const activeBits = bitDecisions.filter((item) => item.bit === 1).map((item) => item.weight);
+
+    return (
+      <div className="space-y-3">
+        {bitDecisions.length > 0 && (
+          <ReviewCard title="Progres Simulasi" icon={<MonitorPlay className="w-3.5 h-3.5" />} accentColor="text-[#EC4899]" borderColor="border-[#EC4899]/20" bgColor="bg-[#FDF2F8]/40">
+            <div className="space-y-2">
+              <ActivityBadge label={`${bitDecisions.length} langkah bit berhasil diproses`} />
+              <ActivityBadge label={`Hasil biner: ${bitDecisions.map((item) => item.bit).join('')}`} />
+              {activeBits.length > 0 && <ActivityBadge label={`Bobot aktif: ${activeBits.join(' + ')}`} />}
+            </div>
+          </ReviewCard>
+        )}
+
+        {checkpointArgument && (
+          <ReviewCard title="Argumen Checkpoint" icon={<PenLine className="w-3.5 h-3.5" />} accentColor="text-[#628ECB]" borderColor="border-[#628ECB]/20" bgColor="bg-[#EEF4FF]/40">
+            <EssayDisplay text={checkpointArgument} />
+          </ReviewCard>
+        )}
+
+        {reverseConversion && (
+          <ReviewCard title="Hasil Biner ke Desimal" icon={<Layers className="w-3.5 h-3.5" />} accentColor="text-[#EC4899]" borderColor="border-[#EC4899]/20" bgColor="bg-[#FDF2F8]/40">
+            <div className="space-y-2">
+              {reverseConversion.binary && <ActivityBadge label={`Biner: ${reverseConversion.binary}`} />}
+              {typeof reverseConversion.decimal === 'number' && <ActivityBadge label={`Desimal akhir: ${reverseConversion.decimal}`} />}
+              {typeof reverseConversion.processedSteps === 'number' && <ActivityBadge label={`${reverseConversion.processedSteps} langkah reverse diproses`} />}
+            </div>
+          </ReviewCard>
+        )}
+
+        {conclusion && (
+          <ReviewCard title="Penarikan Kesimpulan" icon={<Lightbulb className="w-3.5 h-3.5" />} accentColor="text-[#8B5CF6]" borderColor="border-[#8B5CF6]/20" bgColor="bg-[#F5F3FF]/40">
+            <EssayDisplay text={conclusion} />
+          </ReviewCard>
+        )}
+      </div>
+    );
+  }
+
   const essay = snap?.essay ?? answer?.essay ?? answer?.argument;
   const conclusion = snap?.conclusionText ?? answer?.conclusion;
   const completedSteps = (snap?.completedSteps ?? answer?.completedSteps) as number[] | undefined;

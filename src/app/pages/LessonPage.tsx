@@ -174,7 +174,7 @@ const stageNeedsExternalReflection = (type: StageType, lid: string): boolean => 
   // Stages that handle their own conclusion internally
   if (type === 'reflection') return false;
   if (type === 'learning-community') return false;
-  if (type === 'modeling' && lid === '2') return false;
+  if (type === 'modeling' && (lid === '2' || lid === '3')) return false;
   if (type === 'constructivism' && (lid === '1' || lid === '2' || lid === '3')) return false;
   if (type === 'questioning' && (lid === '1' || lid === '2' || lid === '3')) return false;
   if (type === 'inquiry' && (lid === '1' || lid === '2' || lid === '3')) return false;
@@ -249,8 +249,28 @@ export function LessonPage() {
         setProgress(value);
         setProgressLoaded(true);
       });
-      getLessonActivitySessions(user.id, lessonId).then(setActivitySessions);
+      getLessonActivitySessions(user.id, lessonId, { forceRefresh: true }).then(setActivitySessions);
     }
+  }, [lessonId, user]);
+
+  useEffect(() => {
+    if (!user || !lessonId) return;
+
+    const loadSessions = () => {
+      void getLessonActivitySessions(user.id, lessonId, { forceRefresh: true }).then(setActivitySessions);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') loadSessions();
+    };
+
+    window.addEventListener('focus', loadSessions);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', loadSessions);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [lessonId, user]);
 
   useEffect(() => {
@@ -324,7 +344,12 @@ export function LessonPage() {
   if (!lesson || currentStageIndex === null || !lesson.stages[currentStageIndex]) return null;
 
   const currentStage = lesson.stages[currentStageIndex];
-  const currentStageAnswer = progress.answers[`stage_${currentStageIndex}`] ?? progress.answers[currentStageIndex];
+  const currentStageSession = activitySessions.find((session) => session.stageIndex === currentStageIndex);
+  const currentStageAnswer =
+    progress.answers[`stage_${currentStageIndex}`]
+    ?? progress.answers[currentStageIndex]
+    ?? currentStageSession?.finalAnswer
+    ?? currentStageSession?.latestSnapshot?.finalAnswer;
   const isLastStage = currentStageIndex === lesson.stages.length - 1;
   const guide = stageGuides[currentStage.type as StageType];
   const displayTitle = getStageDisplayTitle(currentStage.type);
@@ -342,7 +367,7 @@ export function LessonPage() {
     await saveStageProgress(user!.id, lessonId!, currentStageIndex, answer);
     const [updatedProgress, updatedSessions] = await Promise.all([
       getLessonProgress(user!.id, lessonId!),
-      getLessonActivitySessions(user!.id, lessonId!),
+      getLessonActivitySessions(user!.id, lessonId!, { forceRefresh: true }),
     ]);
     setProgress(updatedProgress);
     setActivitySessions(updatedSessions);
@@ -808,7 +833,7 @@ export function LessonPage() {
                     <StageAnswerDetail
                       stage={currentStage}
                       answer={currentStageAnswer}
-                      snapshot={activitySessions.find(s => s.stageIndex === currentStageIndex)?.latestSnapshot}
+                      snapshot={currentStageSession?.latestSnapshot}
                       lessonId={lessonId}
                     />
                   </div>

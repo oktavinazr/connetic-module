@@ -1390,33 +1390,18 @@ export function LearningCommunityLesson3({
 
       {/* ── Phase: a1_conclusion ── */}
       {phase === 'a1_conclusion' && (
-        <ActivityCard
-          icon={<PenLine className="w-5 h-5 text-[#10B981]" />}
-          label="X.IP.4 — Penarikan Kesimpulan"
-          title="Refleksi Akhir Aktivitas X.IP.4"
-          headerBg="bg-[#10B981]/5"
-          headerBorder="border-[#10B981]/20"
-          iconBg="bg-[#10B981]/10"
-          labelCls="text-[#10B981]"
-        >
-          <div className="space-y-4">
-            <InstructionBox accent="text-[#10B981]">
-              Tuliskan refleksi singkat tentang cara membedakan kelas IPv4 serta private/public berdasarkan aktivitas dan diskusi kelompok yang sudah dilakukan.
-            </InstructionBox>
-            <EssayBox
-              prompt="Setelah menyelesaikan klasifikasi IP dan diskusi kelompok, jelaskan bagaimana kamu membedakan IP Private dan IP Public serta mengapa oktet pertama penting untuk mengenali kelas IPv4."
-              objectiveLabel="X.IP.4"
-              submitLabel="Simpan Refleksi X.IP.4"
-              defaultValue={a1ReflectionText}
-              disabled={!!a1ReflectionText}
-              minWords={10}
-              onSubmit={text => {
-                setA1ReflectionText(text);
-                setTimeout(() => goTo('a1_done'), 600);
-              }}
-            />
-          </div>
-        </ActivityCard>
+        <ATPConclusionBox
+          atpBehavior="mampu mengidentifikasi kelas alamat IPv4 serta membedakan alamat IP Private dan IP Public berdasarkan karakteristik oktet pertamanya"
+          objectiveCode="X.IP.4"
+          stageType="learning-community"
+          defaultValue={a1ReflectionText}
+          disabled={!!a1ReflectionText}
+          minWords={10}
+          onSubmit={text => {
+            setA1ReflectionText(text);
+            setTimeout(() => goTo('a1_done'), 600);
+          }}
+        />
       )}
 
       {/* ── Phase: a1_done ── */}
@@ -1572,33 +1557,18 @@ export function LearningCommunityLesson3({
 
       {/* ── Phase: a2_conclusion ── */}
       {phase === 'a2_conclusion' && (
-        <ActivityCard
-          icon={<PenLine className="w-5 h-5 text-[#10B981]" />}
-          label="X.IP.5 — Penarikan Kesimpulan"
-          title="Refleksi Akhir Aktivitas X.IP.5"
-          headerBg="bg-[#10B981]/5"
-          headerBorder="border-[#10B981]/20"
-          iconBg="bg-[#10B981]/10"
-          labelCls="text-[#10B981]"
-        >
-          <div className="space-y-4">
-            <InstructionBox accent="text-[#10B981]">
-              Tuliskan refleksi singkat tentang peran Network ID, Broadcast ID, dan perhitungan usable host setelah kamu menyelesaikan puzzle dan diskusi kelompok.
-            </InstructionBox>
-            <EssayBox
-              prompt="Jelaskan mengapa Network ID dan Broadcast ID tidak boleh dipakai sebagai host biasa, serta bagaimana hal itu memengaruhi jumlah usable host pada subnet 192.168.1.0/24."
-              objectiveLabel="X.IP.5"
-              submitLabel="Simpan Refleksi X.IP.5"
-              defaultValue={a2ReflectionText}
-              disabled={!!a2ReflectionText}
-              minWords={10}
-              onSubmit={text => {
-                setA2ReflectionText(text);
-                setTimeout(() => goTo('group_result'), 600);
-              }}
-            />
-          </div>
-        </ActivityCard>
+        <ATPConclusionBox
+          atpBehavior="mampu menjelaskan peran Network ID, Broadcast ID, dan jumlah usable host pada sebuah subnet IPv4 secara logis"
+          objectiveCode="X.IP.5"
+          stageType="learning-community"
+          defaultValue={a2ReflectionText}
+          disabled={!!a2ReflectionText}
+          minWords={10}
+          onSubmit={text => {
+            setA2ReflectionText(text);
+            setTimeout(() => goTo('group_result'), 600);
+          }}
+        />
       )}
 
       {phase === 'group_result' && (

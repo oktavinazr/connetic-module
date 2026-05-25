@@ -211,7 +211,7 @@ export const lesson3Stages: Stage[] = [
     ],
     atpAbcd: {
       audience: 'Peserta didik',
-      behavior: 'mampu menjelaskan struktur alamat IPv4 sebagai bilangan 32-bit yang terdiri dari 4 oktet masing-masing 8 bit',
+      behavior: 'mampu membedakan struktur alamat IPv4 berdasarkan format penulisannya ',
       condition: 'melalui aktivitas questioning berupa Chat Dua Arah, Oktet Overload Experiment, dan Reflection Dropdown pada CONNETIC Module',
       degree: 'secara tepat dan runtut',
     },

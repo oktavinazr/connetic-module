@@ -548,6 +548,7 @@ export function IpCourierConstructivism({
   onComplete: (answer: any) => void;
 }) {
   const [phase, setPhase] = useState<Phase>(() => {
+    if (snapshot?.l3Phase === 'conclusion' && !snapshot?.l3EssayText?.trim()) return 'essay';
     if (snapshot?.l3Phase) return snapshot.l3Phase as Phase;
     if (isCompleted) return 'conclusion';
     return 'animation';
@@ -577,6 +578,13 @@ export function IpCourierConstructivism({
       { progressPercent: progressMap[phase] },
     );
   }, [phase, essayText, conclusionAnswers, tracker]);
+
+  useEffect(() => {
+    if (phase === 'conclusion' && !essayText.trim()) {
+      setShowSummary(false);
+      setPhase('essay');
+    }
+  }, [phase, essayText]);
 
   if (phase === 'animation') {
     return (
@@ -626,12 +634,47 @@ export function IpCourierConstructivism({
   }
 
   if (phase === 'conclusion') {
+    if (!essayText.trim()) {
+      return (
+        <div className="rounded-[28px] border border-[#F59E0B]/25 bg-gradient-to-br from-[#FFF7ED] via-white to-[#FFFBEB] p-6 shadow-lg shadow-[#F59E0B]/10">
+          <div className="flex items-start gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#F59E0B]/12 text-[#D97706]">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.25em] text-[#D97706]">Refleksi Wajib Disimpan</p>
+                <h3 className="mt-1 text-lg font-black text-[#7C2D12]">Isi argumen logis terlebih dahulu</h3>
+              </div>
+              <p className="max-w-2xl text-sm leading-relaxed text-[#9A3412]">
+                Kamu belum menyimpan jawaban refleksi pada bagian Argumen Logis. Tahap Selesai baru bisa dibuka
+                setelah esai refleksi diisi dan disubmit.
+              </p>
+              <button
+                type="button"
+                onClick={() => setPhase('essay')}
+                className="inline-flex items-center gap-2 rounded-2xl bg-[#F59E0B] px-5 py-3 text-sm font-black text-white transition-all hover:bg-[#D97706] active:scale-[0.98]"
+              >
+                Kembali ke Refleksi
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     const completedText = buildCompletedText(conclusionAnswers);
     return (
       <div className="space-y-4">
         <ConclusionDropdown
           defaultAnswers={conclusionAnswers}
           onComplete={(answers, text) => {
+            if (!essayText.trim()) {
+              setShowSummary(false);
+              setPhase('essay');
+              return;
+            }
             setConclusionAnswers(answers);
             setShowSummary(true);
             const finalAnswer = { essayText, conclusionAnswers: answers, summary: text };

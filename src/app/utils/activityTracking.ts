@@ -322,10 +322,14 @@ export async function completeActivitySession(params: {
   });
 }
 
-export async function getLessonActivitySessions(userId: string, lessonId: string): Promise<CTLActivitySession[]> {
+export async function getLessonActivitySessions(
+  userId: string,
+  lessonId: string,
+  options?: { forceRefresh?: boolean },
+): Promise<CTLActivitySession[]> {
   const key = `${userId}:${lessonId}`;
   const cached = lessonCache.get(key);
-  if (cached) return cached.map(cloneSession);
+  if (cached && !options?.forceRefresh) return cached.map(cloneSession);
   if (!isUuid(userId)) return [];
 
   const { data, error } = await supabase
