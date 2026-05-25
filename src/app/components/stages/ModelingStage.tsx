@@ -7,7 +7,7 @@ import {
   Cable, Wifi, Radio, Lock, PenLine, Server, Monitor,
 } from 'lucide-react';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
-import { ContinueActivityButton, ATPConclusionBox, IndicatorSummaryCard } from './StageKit';
+import { ContinueActivityButton, ATPConclusionBox, IndicatorSummaryCard, StageCompletedOverlay } from './StageKit';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1094,6 +1094,846 @@ function ModelingLesson2({ lessonId, stageIndex, onComplete, objectiveCode = 'X.
 }
 
 // ─── ModelingStageOriginal (Lesson 1) ─────────────────────────────────────────
+
+const MAGIC_SCALE_BITS = [128, 64, 32, 16, 8, 4, 2, 1] as const;
+const MAGIC_SCALE_TARGET = 192;
+
+function ModelingLesson3({
+  lessonId,
+  stageIndex,
+  onComplete,
+  title = 'The 8-Bit Magic Scale',
+  description,
+  objectiveCode = 'X.IP.6',
+  activityNumber,
+  onTrackerPhase,
+}: ModelingStageProps) {
+  const tracker = useActivityTracker({ lessonId, stageIndex, stageType: 'modeling' });
+
+  const [showIntro, setShowIntro] = useState(true);
+  const [phase, setPhase] = useState<'simulation' | 'reflection'>('simulation');
+  const [mode, setMode] = useState<'decToBin' | 'binToDec'>('decToBin');
+  const [activeBitIndex, setActiveBitIndex] = useState(0);
+  const [bits, setBits] = useState<Array<0 | 1 | null>>(Array(8).fill(null));
+  const [remainder, setRemainder] = useState(MAGIC_SCALE_TARGET);
+  const [stepFeedback, setStepFeedback] = useState<{ type: 'success' | 'error' | 'info'; title: string; text: string } | null>(null);
+  const [checkpointOpen, setCheckpointOpen] = useState(false);
+  const [checkpointSeen, setCheckpointSeen] = useState(false);
+  const [checkpointText, setCheckpointText] = useState('');
+  const [reverseStepIndex, setReverseStepIndex] = useState(0);
+  const [reverseTotal, setReverseTotal] = useState(0);
+  const [reverseFeedback, setReverseFeedback] = useState<{ title: string; text: string } | null>(null);
+  const [conclusionText, setConclusionText] = useState('');
+  const [submittedFinalAnswer, setSubmittedFinalAnswer] = useState<any>(null);
+  const [showCompletionScreen, setShowCompletionScreen] = useState(false);
+  const [isRestored, setIsRestored] = useState(false);
+
+  const isDecimalModeDone = activeBitIndex >= MAGIC_SCALE_BITS.length && bits.every((bit) => bit !== null);
+  const binaryResult = bits.map((bit) => bit ?? 0).join('');
+  const checkpointWordCount = checkpointText.trim().split(/\s+/).filter(Boolean).length;
+  const canOpenReverseMode = isDecimalModeDone && checkpointWordCount >= 10 && !checkpointOpen;
+  const isReverseDone = reverseStepIndex >= MAGIC_SCALE_BITS.length;
+  const logicalPhase: 'consistency' | 'arguing' | 'conclusion' =
+    phase === 'reflection' ? 'conclusion' : checkpointOpen ? 'arguing' : 'consistency';
+
+  useEffect(() => {
+    onTrackerPhase?.(logicalPhase);
+  }, [logicalPhase, onTrackerPhase]);
+
+  useEffect(() => {
+    if (!tracker.isLoading && !isRestored) {
+      const snap = tracker.session?.latestSnapshot;
+      if (snap) {
+        if (typeof snap.showIntro === 'boolean') setShowIntro(snap.showIntro);
+        if (snap.phase === 'simulation' || snap.phase === 'reflection') setPhase(snap.phase);
+        if (snap.mode === 'decToBin' || snap.mode === 'binToDec') setMode(snap.mode);
+        if (typeof snap.activeBitIndex === 'number') setActiveBitIndex(snap.activeBitIndex);
+        if (Array.isArray(snap.bits) && snap.bits.length === 8) {
+          setBits(snap.bits as Array<0 | 1 | null>);
+        }
+        if (typeof snap.remainder === 'number') setRemainder(snap.remainder);
+        if (snap.stepFeedback) setStepFeedback(snap.stepFeedback);
+        if (typeof snap.checkpointOpen === 'boolean') setCheckpointOpen(snap.checkpointOpen);
+        if (typeof snap.checkpointSeen === 'boolean') setCheckpointSeen(snap.checkpointSeen);
+        if (typeof snap.checkpointText === 'string') setCheckpointText(snap.checkpointText);
+        if (typeof snap.reverseStepIndex === 'number') setReverseStepIndex(snap.reverseStepIndex);
+        if (typeof snap.reverseTotal === 'number') setReverseTotal(snap.reverseTotal);
+        if (snap.reverseFeedback) setReverseFeedback(snap.reverseFeedback);
+        if (typeof snap.conclusionText === 'string') setConclusionText(snap.conclusionText);
+        if (snap.submittedFinalAnswer) setSubmittedFinalAnswer(snap.submittedFinalAnswer);
+        if (typeof snap.showCompletionScreen === 'boolean') setShowCompletionScreen(snap.showCompletionScreen);
+      }
+      setIsRestored(true);
+    }
+  }, [isRestored, tracker.isLoading, tracker.session?.latestSnapshot]);
+
+  useEffect(() => {
+    const progressPercent = showIntro
+      ? 5
+      : phase === 'simulation'
+      ? mode === 'decToBin'
+        ? Math.min(72, 12 + Math.round((activeBitIndex / MAGIC_SCALE_BITS.length) * 45))
+        : Math.min(88, 52 + Math.round((reverseStepIndex / MAGIC_SCALE_BITS.length) * 30))
+      : 92;
+
+    void tracker.saveSnapshot(
+      {
+        showIntro,
+        phase,
+        mode,
+        activeBitIndex,
+        bits,
+        remainder,
+        stepFeedback,
+        checkpointOpen,
+        checkpointSeen,
+        checkpointText,
+        reverseStepIndex,
+        reverseTotal,
+        reverseFeedback,
+        conclusionText,
+        submittedFinalAnswer,
+        showCompletionScreen,
+      },
+      { progressPercent },
+    );
+  }, [
+    activeBitIndex,
+    bits,
+    checkpointOpen,
+    checkpointSeen,
+    checkpointText,
+    conclusionText,
+    mode,
+    phase,
+    remainder,
+    reverseFeedback,
+    reverseStepIndex,
+    reverseTotal,
+    showCompletionScreen,
+    showIntro,
+    stepFeedback,
+    submittedFinalAnswer,
+    tracker,
+  ]);
+
+  const handleDecision = (selectedBit: 0 | 1) => {
+    if (showIntro || phase !== 'simulation' || mode !== 'decToBin' || checkpointOpen || isDecimalModeDone) return;
+
+    const weight = MAGIC_SCALE_BITS[activeBitIndex];
+    const shouldBeOne = remainder >= weight;
+
+    if ((selectedBit === 1) !== shouldBeOne) {
+      setStepFeedback({
+        type: 'error',
+        title: 'Keputusan belum tepat',
+        text: shouldBeOne
+          ? `Sisa angka ${remainder} masih cukup untuk mengambil bobot ${weight}, jadi bit ini harus bernilai 1.`
+          : `Sisa angka ${remainder} lebih kecil dari bobot ${weight}, jadi bit ini harus bernilai 0.`,
+      });
+      return;
+    }
+
+    const nextBits = [...bits];
+    nextBits[activeBitIndex] = selectedBit;
+    const nextRemainder = selectedBit === 1 ? remainder - weight : remainder;
+    const nextIndex = activeBitIndex + 1;
+
+    setBits(nextBits);
+    setRemainder(nextRemainder);
+    setActiveBitIndex(nextIndex);
+    setStepFeedback({
+      type: selectedBit === 1 ? 'success' : 'info',
+      title: selectedBit === 1 ? 'Bit 1 dinyalakan' : 'Bit 0 dipertahankan',
+      text:
+        selectedBit === 1
+          ? `Bobot ${weight} dipakai, jadi karung Miko berkurang menjadi ${nextRemainder}.`
+          : `Bobot ${weight} tidak dipakai karena sisa ${remainder} tidak cukup untuk dikurangi lagi.`,
+    });
+
+    if (nextRemainder === 0 && nextIndex < MAGIC_SCALE_BITS.length && !checkpointSeen) {
+      setCheckpointSeen(true);
+      setCheckpointOpen(true);
+    }
+  };
+
+  const handleCheckpointSubmit = () => {
+    if (checkpointWordCount < 10) return;
+    setCheckpointOpen(false);
+    setStepFeedback({
+      type: 'success',
+      title: 'Argumen logismu tersimpan',
+      text: isDecimalModeDone
+        ? 'Mode desimal ke biner sudah lengkap. Sekarang kamu bisa lanjut ke biner ke desimal.'
+        : 'Lanjutkan bit berikutnya. Karena sisa angka sudah 0, semua bobot setelahnya pasti bernilai 0.',
+    });
+    if (isDecimalModeDone) {
+      setMode('binToDec');
+    }
+  };
+
+  const handleReverseAdvance = () => {
+    if (phase !== 'simulation' || mode !== 'binToDec' || isReverseDone) return;
+
+    const weight = MAGIC_SCALE_BITS[reverseStepIndex];
+    const isActiveBit = (bits[reverseStepIndex] ?? 0) === 1;
+    const nextTotal = isActiveBit ? reverseTotal + weight : reverseTotal;
+    const nextIndex = reverseStepIndex + 1;
+
+    setReverseTotal(nextTotal);
+    setReverseStepIndex(nextIndex);
+    setReverseFeedback({
+      title: isActiveBit ? `Bobot ${weight} ditambahkan` : `Bobot ${weight} dilewati`,
+      text: isActiveBit
+        ? `Bit bernilai 1, jadi jumlah desimal bertambah menjadi ${nextTotal}.`
+        : `Bit bernilai 0, jadi total tetap ${nextTotal}.`,
+    });
+  };
+
+  const handleConclusionSubmit = (text: string) => {
+    setConclusionText(text);
+    const finalAnswer = {
+      targetDecimal: MAGIC_SCALE_TARGET,
+      binaryResult,
+      bitDecisions: MAGIC_SCALE_BITS.map((weight, index) => ({
+        weight,
+        bit: bits[index] ?? 0,
+      })),
+      checkpointArgument: checkpointText.trim(),
+      reverseConversion: {
+        binary: binaryResult,
+        decimal: reverseTotal,
+        processedSteps: reverseStepIndex,
+      },
+      conclusion: text,
+    };
+
+    setSubmittedFinalAnswer(finalAnswer);
+    setShowCompletionScreen(true);
+    void tracker.complete(finalAnswer, {
+      completed: true,
+      phase: 'reflection',
+      mode,
+      activeBitIndex,
+      bits,
+      remainder,
+      checkpointText,
+      reverseStepIndex,
+      reverseTotal,
+      binaryResult,
+      conclusionText: text,
+      submittedFinalAnswer: finalAnswer,
+      showCompletionScreen: true,
+    });
+    setTimeout(() => onComplete(finalAnswer), 450);
+  };
+
+  const completedSteps = bits.filter((bit) => bit !== null).length;
+  const currentWeight = !isDecimalModeDone ? MAGIC_SCALE_BITS[activeBitIndex] : null;
+  const shouldCurrentBitBeOne = currentWeight !== null ? remainder >= currentWeight : false;
+  const activeReverseWeight = !isReverseDone ? MAGIC_SCALE_BITS[reverseStepIndex] : null;
+  const activeReverseBit = activeReverseWeight !== null ? bits[reverseStepIndex] ?? 0 : 0;
+  const phaseSteps = [
+    {
+      key: 'consistency',
+      title: 'Keruntutan Berpikir',
+      desc: mode === 'decToBin' ? `${completedSteps}/8 bit diproses berurutan` : `${reverseStepIndex}/8 bit dijumlahkan`,
+    },
+    {
+      key: 'arguing',
+      title: 'Kemampuan Berargumen',
+      desc: checkpointText ? 'Argumen checkpoint sudah tersimpan' : 'Checkpoint logis akan muncul saat sisa angka menjadi 0',
+    },
+    {
+      key: 'conclusion',
+      title: 'Penarikan Kesimpulan',
+      desc: conclusionText ? 'Kesimpulan akhir sudah tersimpan' : 'Kesimpulan akhir dibuka setelah dua mode selesai',
+    },
+  ] as const;
+
+  const guideTitle =
+    phase === 'reflection'
+      ? 'Penarikan Kesimpulan'
+      : checkpointOpen
+      ? 'Checkpoint Tantangan Miko'
+      : mode === 'decToBin'
+      ? `Mode Desimal ke Biner - Langkah ${Math.min(activeBitIndex + 1, 8)}`
+      : `Mode Biner ke Desimal - Langkah ${Math.min(reverseStepIndex + 1, 8)}`;
+
+  const guideText =
+    phase === 'reflection'
+      ? 'Gunakan kotak kesimpulan yang sama seperti pertemuan sebelumnya untuk merangkum hubungan dua arah antara desimal dan biner.'
+      : checkpointOpen
+      ? 'Miko berhenti sejenak untuk memastikan kamu memahami alasan logis mengapa bit berikutnya otomatis bernilai 0.'
+      : mode === 'decToBin'
+      ? currentWeight === null
+        ? 'Mode pertama selesai. Sekarang kamu bisa membalik hasil biner kembali menjadi desimal.'
+        : shouldCurrentBitBeOne
+        ? `Bandingkan sisa angka ${remainder} dengan bobot ${currentWeight}. Karena sisa masih cukup, pilih 1 lalu kurangi.`
+        : `Bandingkan sisa angka ${remainder} dengan bobot ${currentWeight}. Karena sisa lebih kecil, bit ini harus 0.`
+      : activeReverseWeight === null
+      ? 'Semua bobot sudah dijumlahkan. Hasil akhirnya harus kembali menjadi 192.'
+      : activeReverseBit === 1
+      ? `Bit ${activeReverseWeight} bernilai 1, jadi bobot ini perlu ditambahkan ke total desimal.`
+      : `Bit ${activeReverseWeight} bernilai 0, jadi bobot ini dilewati dan total tidak berubah.`;
+
+  if (showIntro) {
+    return (
+      <div className="w-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="bg-white rounded-2xl border-2 border-[#628ECB]/20 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-[#628ECB]/10 to-transparent border-b border-[#628ECB]/20">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#628ECB]/15">
+              <BookOpen className="w-5 h-5 text-[#628ECB]" />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-black uppercase tracking-widest text-[#628ECB]">
+                Aktivitas {activityNumber || 8} - {objectiveCode}
+              </p>
+              <h3 className="text-base font-bold text-[#395886]">{title}</h3>
+            </div>
+          </div>
+
+          <div className="px-5 py-5 space-y-4">
+            <div className="flex items-start gap-3 p-4 bg-[#628ECB]/5 rounded-xl border border-[#628ECB]/15">
+              <Lightbulb className="w-5 h-5 text-[#628ECB] mt-0.5 shrink-0" />
+              <p className="text-sm text-[#395886]/80 leading-relaxed">
+                {description ||
+                  'Kamu akan membantu Miko mengubah angka desimal 192 menjadi biner 8-bit melalui simulasi yang runtut. Fokusnya bukan hanya hasil 11000000, tetapi alasan logis di balik setiap keputusan bit.'}
+              </p>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              {[
+                { title: 'Keruntutan Berpikir', desc: 'Bandingkan bobot bit dari kiri ke kanan secara terkunci.', color: '#628ECB' },
+                { title: 'Kemampuan Berargumen', desc: 'Jelaskan mengapa bit setelah sisa 0 harus bernilai 0.', color: '#F59E0B' },
+                { title: 'Penarikan Kesimpulan', desc: 'Rangkum aturan umum konversi 8-bit IPv4.', color: '#10B981' },
+              ].map((item) => (
+                <div
+                  key={item.title}
+                  className="rounded-xl border p-4"
+                  style={{ backgroundColor: `${item.color}0D`, borderColor: `${item.color}30` }}
+                >
+                  <div className="text-xs font-black uppercase tracking-widest mb-1" style={{ color: item.color }}>
+                    {item.title}
+                  </div>
+                  <div className="text-sm text-[#395886]/75 leading-relaxed">{item.desc}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-2xl border border-[#D5DEEF] bg-[#F8FAFF] p-4">
+              <div className="flex flex-wrap items-center gap-2">
+                {MAGIC_SCALE_BITS.map((bit) => (
+                  <div
+                    key={bit}
+                    className="min-w-[54px] rounded-xl border border-[#628ECB]/20 bg-white px-3 py-2 text-center shadow-sm"
+                  >
+                    <div className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60">Bit</div>
+                    <div className="text-sm font-bold text-[#395886]">{bit}</div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-sm text-[#395886]/70 leading-relaxed">
+                Miko akan mengosongkan karung angka <span className="font-bold text-[#395886]">192</span> dengan
+                memeriksa bobot 128, lalu 64, kemudian 32, dan seterusnya sampai 1.
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowIntro(false)}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-[#395886] to-[#628ECB] text-white font-bold text-sm hover:opacity-90 transition-all shadow-md shadow-[#628ECB]/20 active:scale-95"
+            >
+              Mulai The 8-Bit Magic Scale <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (showCompletionScreen && submittedFinalAnswer) {
+    return (
+      <div className="w-full space-y-4 animate-in fade-in duration-500">
+        <StageCompletedOverlay stageName="Tahap Modeling" />
+        <IndicatorSummaryCard
+          title="Rekap Aktivitas Modeling IPv4"
+          consistency={
+            <div className="space-y-2">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#628ECB]/8 border border-[#628ECB]/15">
+                  <CheckCircle className="w-4 h-4 text-[#628ECB] shrink-0" />
+                  <span className="text-xs font-bold text-[#395886]">
+                    Konversi desimal ke biner selesai dengan hasil {MAGIC_SCALE_TARGET} menjadi {binaryResult}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#628ECB]/8 border border-[#628ECB]/15">
+                  <CheckCircle className="w-4 h-4 text-[#628ECB] shrink-0" />
+                  <span className="text-xs font-bold text-[#395886]">
+                    Konversi biner ke desimal selesai dengan hasil {binaryResult} menjadi {reverseTotal}
+                  </span>
+                </div>
+            </div>
+          }
+          arguing={
+            <div className="px-3 py-2.5 rounded-xl bg-[#FFFBEB] border border-[#F59E0B]/20">
+              <p className="text-xs text-[#78350F] leading-relaxed">{checkpointText}</p>
+            </div>
+          }
+          conclusion={
+            <div className="px-3 py-2.5 rounded-xl bg-[#ECFDF5] border border-[#10B981]/20">
+              <p className="text-xs text-[#065F46] leading-relaxed">{conclusionText}</p>
+            </div>
+          }
+        />
+        <div className="rounded-2xl border-2 border-[#F59E0B]/20 bg-gradient-to-br from-amber-50 to-white p-5 text-center shadow-sm">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
+            <CheckCircle className="h-6 w-6 text-amber-500" />
+          </div>
+          <p className="text-sm font-bold text-[#395886]">Jawaban berhasil disimpan. Masuk ke ruang tunggu tahap selesai...</p>
+          <p className="mt-1 text-xs text-[#395886]/55">
+            Rekap aktivitasmu sudah siap dan tahap berikutnya akan mengikuti alur lesson seperti biasa.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full space-y-5 animate-in fade-in duration-500">
+      <div className="rounded-2xl border-2 border-[#D5DEEF] bg-white px-4 py-3 shadow-sm">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#628ECB]/65">Progress Modeling</p>
+            <h3 className="text-sm font-bold text-[#395886]">Konversi IPv4 Dua Arah</h3>
+          </div>
+          <div className="grid gap-2 lg:grid-cols-3 xl:min-w-[620px]">
+            {phaseSteps.map((item, index) => {
+              const isActive = logicalPhase === item.key;
+              const isDone = item.key === 'consistency'
+                ? isDecimalModeDone && isReverseDone
+                : item.key === 'arguing'
+                ? checkpointWordCount >= 10
+                : !!conclusionText;
+              return (
+                <div
+                  key={item.key}
+                  className={`rounded-xl border px-3 py-2.5 transition-all ${isActive ? 'border-[#628ECB]/40 bg-[#EEF4FF]' : isDone ? 'border-[#10B981]/25 bg-[#ECFDF5]' : 'border-[#D5DEEF] bg-[#F8FAFF]'}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-black ${
+                      isDone ? 'bg-[#10B981] text-white' : isActive ? 'bg-[#628ECB] text-white' : 'bg-[#E2E8F0] text-[#64748B]'
+                    }`}>
+                      {isDone ? <CheckCircle className="w-3.5 h-3.5" /> : index + 1}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-[#395886]">{item.title}</div>
+                      <p className="text-[11px] text-[#395886]/60 leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border-2 border-[#D5DEEF] shadow-sm overflow-hidden">
+        <div className="flex flex-col gap-4 px-5 py-4 border-b border-[#D5DEEF] bg-gradient-to-r from-[#628ECB]/10 to-transparent xl:flex-row xl:items-center xl:justify-between">
+          <div className="space-y-1">
+            <p className="text-xs font-black uppercase tracking-widest text-[#628ECB]">Modeling Step-by-Step</p>
+            <h3 className="text-base font-bold text-[#395886]">Bantu Miko Mengosongkan Karung Angka</h3>
+          </div>
+          <div className="flex w-full flex-col gap-3 xl:w-auto xl:items-end">
+            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-[#D5DEEF] bg-white p-1">
+            <button
+              onClick={() => setMode('decToBin')}
+              disabled={phase === 'reflection'}
+              className={`rounded-xl px-3 py-2 text-xs font-bold transition-all ${mode === 'decToBin' ? 'bg-[#395886] text-white shadow-sm' : 'text-[#395886]/70 hover:bg-[#F1F5F9]'}`}
+            >
+              Desimal ke Biner
+            </button>
+            <button
+              onClick={() => canOpenReverseMode && setMode('binToDec')}
+              disabled={!canOpenReverseMode || phase === 'reflection'}
+              className={`rounded-xl px-3 py-2 text-xs font-bold transition-all ${
+                mode === 'binToDec'
+                  ? 'bg-[#10B981] text-white shadow-sm'
+                  : canOpenReverseMode
+                  ? 'text-[#395886]/70 hover:bg-[#F1F5F9]'
+                  : 'text-[#94A3B8] cursor-not-allowed'
+              }`}
+            >
+              Biner ke Desimal
+            </button>
+          </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-2xl border border-[#628ECB]/20 bg-white px-4 py-3 shadow-sm">
+                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#628ECB]/60">
+                  {mode === 'decToBin' ? 'Sisa Angka' : 'Total Desimal'}
+                </div>
+                <div className="mt-1 text-2xl font-black text-[#395886]">
+                  {mode === 'decToBin' ? remainder : reverseTotal}
+                </div>
+              </div>
+              <div className="rounded-2xl border border-[#10B981]/20 bg-white px-4 py-3 shadow-sm">
+                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#10B981]/70">Hasil Biner</div>
+                <div className="mt-1 text-xl font-black tracking-[0.22em] text-[#395886]">{binaryResult}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-5 p-4 lg:p-5 xl:grid-cols-[minmax(0,1.9fr)_320px]">
+          <div className="rounded-3xl border-2 border-[#D5DEEF] bg-[#F8FAFF] p-5 lg:p-6">
+            <div className="mb-5 flex flex-col gap-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#628ECB]">The 8-Bit Magic Scale</p>
+                <p className="text-sm leading-relaxed text-[#395886]/78">
+                  {mode === 'decToBin'
+                    ? 'Bandingkan angka dengan bobot bit dari kiri ke kanan.'
+                    : 'Jumlahkan bobot bit aktif untuk kembali ke nilai desimal.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              {MAGIC_SCALE_BITS.map((weight, index) => {
+                const bitValue = bits[index];
+                const isActive = phase === 'simulation' && !checkpointOpen && (
+                  mode === 'decToBin' ? index === activeBitIndex : index === reverseStepIndex
+                );
+                const isDone = mode === 'decToBin' ? bitValue !== null : index < reverseStepIndex;
+                const isLocked = mode === 'decToBin' ? !isDone && index > activeBitIndex : false;
+                const cardTone =
+                  mode === 'binToDec' && (bitValue ?? 0) === 1
+                    ? 'border-[#10B981]/35 bg-[#ECFDF5]'
+                    : isActive
+                    ? 'border-[#628ECB] bg-white'
+                    : isDone && bitValue === 1
+                    ? 'border-[#10B981]/30 bg-[#ECFDF5]'
+                    : 'border-[#D5DEEF] bg-white';
+                return (
+                  <motion.div
+                    key={weight}
+                    layout
+                    animate={{
+                      y: isActive ? -6 : 0,
+                      boxShadow: isActive ? '0 18px 36px rgba(98,142,203,0.18)' : '0 8px 20px rgba(57,88,134,0.08)',
+                      scale: isActive ? 1.02 : 1,
+                    }}
+                    className={`rounded-3xl border-2 p-4 lg:p-5 transition-all ${cardTone}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-black uppercase tracking-widest text-[#628ECB]/70">Bit</span>
+                      {isLocked ? <Lock className="w-3.5 h-3.5 text-[#395886]/25" /> : null}
+                    </div>
+                    <div className="mt-3 rounded-2xl border border-[#D5DEEF] bg-[#F8FAFF] px-2 py-4 text-center">
+                      <div className="text-[28px] font-black leading-none text-[#395886]">{weight}</div>
+                    </div>
+                    <div className={`mt-3 rounded-2xl px-3 py-3 text-center text-xl font-black ${
+                      bitValue === 1
+                        ? 'bg-[#10B981] text-white'
+                        : bitValue === 0
+                        ? 'bg-[#E2E8F0] text-[#395886]'
+                        : isActive
+                        ? 'bg-[#628ECB]/10 text-[#628ECB]'
+                        : 'bg-[#F3F4F6] text-[#9CA3AF]'
+                    }`}>
+                      {bitValue ?? (mode === 'decToBin' ? '?' : 0)}
+                    </div>
+                    <p className="mt-2 text-center text-xs font-semibold leading-relaxed text-[#395886]/65">
+                      {mode === 'decToBin'
+                        ? bitValue === 1
+                          ? `Dipakai: -${weight}`
+                          : bitValue === 0
+                          ? 'Tidak dipakai'
+                          : isActive
+                          ? 'Sedang diproses'
+                          : 'Menunggu giliran'
+                        : (bitValue ?? 0) === 1
+                        ? `Aktif: +${weight}`
+                        : 'Lewati'}
+                    </p>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            <div className="mt-5 rounded-3xl border border-[#628ECB]/15 bg-white p-4 lg:p-5">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-14 w-14 rounded-2xl bg-[#628ECB]/10 flex items-center justify-center text-2xl shrink-0">
+                    🎒
+                  </div>
+                  <div>
+                    <div className="text-xs font-black uppercase tracking-widest text-[#628ECB]">
+                      {mode === 'decToBin' ? 'Karung Angka Miko' : 'Kalkulator Bobot Miko'}
+                    </div>
+                    <div className="text-sm leading-relaxed text-[#395886]/78">
+                      {mode === 'decToBin'
+                        ? isDecimalModeDone
+                          ? 'Mode pertama selesai. Hasil binernya siap dibalik lagi ke desimal.'
+                          : currentWeight !== null
+                          ? `Bandingkan sisa ${remainder} dengan bobot ${currentWeight}.`
+                          : 'Periksa hasil binermu.'
+                        : isReverseDone
+                        ? 'Semua bobot aktif sudah dijumlahkan. Hasil akhirnya kembali menjadi 192.'
+                        : activeReverseWeight !== null
+                        ? `Periksa bit ${activeReverseWeight}. ${activeReverseBit === 1 ? 'Tambahkan bobotnya ke total.' : 'Lewati karena bit bernilai 0.'}`
+                        : 'Periksa hasil desimalmu.'}
+                    </div>
+                  </div>
+                </div>
+
+                {phase === 'simulation' && mode === 'decToBin' && !isDecimalModeDone && currentWeight !== null && (
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                    <button
+                      onClick={() => handleDecision(1)}
+                      disabled={checkpointOpen}
+                      className="px-4 py-3 rounded-2xl bg-[#10B981] text-white text-sm font-bold shadow-sm hover:bg-[#059669] transition-all active:scale-95 disabled:opacity-40"
+                    >
+                      Pilih 1
+                    </button>
+                    <button
+                      onClick={() => handleDecision(0)}
+                      disabled={checkpointOpen}
+                      className="px-4 py-3 rounded-2xl bg-[#E2E8F0] text-[#395886] text-sm font-bold shadow-sm hover:bg-[#CBD5E1] transition-all active:scale-95 disabled:opacity-40"
+                    >
+                      Pilih 0
+                    </button>
+                  </div>
+                )}
+
+                {phase === 'simulation' && mode === 'binToDec' && !isReverseDone && (
+                  <button
+                    onClick={handleReverseAdvance}
+                    className="w-full px-4 py-3 rounded-2xl bg-[#10B981] text-white text-sm font-bold shadow-sm hover:bg-[#059669] transition-all active:scale-95 sm:w-auto"
+                  >
+                    {activeReverseBit === 1 ? `Tambah ${activeReverseWeight}` : `Lewati ${activeReverseWeight}`}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {stepFeedback && (
+              <div
+                className={`mt-4 rounded-2xl border px-4 py-3 ${
+                  stepFeedback.type === 'error'
+                    ? 'border-[#FCA5A5] bg-[#FEF2F2]'
+                    : stepFeedback.type === 'success'
+                    ? 'border-[#86EFAC] bg-[#ECFDF5]'
+                    : 'border-[#BFDBFE] bg-[#EFF6FF]'
+                }`}
+              >
+                <div className="text-sm font-bold text-[#395886]">{stepFeedback.title}</div>
+                <p className="mt-1 text-sm text-[#395886]/75 leading-relaxed">{stepFeedback.text}</p>
+              </div>
+            )}
+
+            {mode === 'binToDec' && reverseFeedback && (
+              <div className="mt-4 rounded-2xl border border-[#10B981]/20 bg-[#ECFDF5] p-4">
+                <div className="text-sm font-bold text-[#065F46]">{reverseFeedback.title}</div>
+                <p className="mt-1 text-sm text-[#065F46]/80 leading-relaxed">{reverseFeedback.text}</p>
+              </div>
+            )}
+
+            {isDecimalModeDone && mode === 'decToBin' && phase === 'simulation' && (
+              <div className="mt-4 rounded-2xl border-2 border-[#10B981]/25 bg-gradient-to-r from-[#ECFDF5] to-white p-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <div className="text-xs font-black uppercase tracking-widest text-[#10B981]">Mode 1 Selesai</div>
+                    <div className="text-base font-bold text-[#065F46]">192 berhasil dikonversi menjadi {binaryResult}</div>
+                    <p className="mt-1 text-sm text-[#065F46]/80">
+                      Lanjutkan ke mode biner ke desimal untuk membuktikan hubungan dua arah.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setMode('binToDec')}
+                    disabled={!canOpenReverseMode}
+                    className={`px-5 py-3 rounded-xl text-sm font-bold transition-all active:scale-95 ${
+                      canOpenReverseMode
+                        ? 'bg-gradient-to-r from-[#10B981] to-[#059669] text-white shadow-sm hover:opacity-90'
+                        : 'bg-[#E5E7EB] text-[#395886]/35 cursor-not-allowed'
+                    }`}
+                  >
+                      Lanjut ke Biner ke Desimal
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {mode === 'binToDec' && isReverseDone && phase === 'simulation' && (
+              <div className="mt-4 rounded-2xl border-2 border-[#10B981]/25 bg-gradient-to-r from-[#ECFDF5] to-white p-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <div className="text-xs font-black uppercase tracking-widest text-[#10B981]">Mode 2 Selesai</div>
+                    <div className="text-base font-bold text-[#065F46]">{binaryResult} berhasil dijumlahkan kembali menjadi {reverseTotal}</div>
+                    <p className="mt-1 text-sm text-[#065F46]/80">
+                      Sekarang simpulkan hubungan dua arah antara bentuk desimal dan bentuk biner.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setPhase('reflection')}
+                    className="px-5 py-3 rounded-xl bg-gradient-to-r from-[#10B981] to-[#059669] text-white text-sm font-bold shadow-sm hover:opacity-90 transition-all active:scale-95"
+                  >
+                    Lanjut ke Penarikan Kesimpulan
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-3xl border-2 border-[#D5DEEF] bg-white p-4 lg:p-5 space-y-3 xl:space-y-4">
+            <div className="flex items-center gap-3 pb-3 border-b border-[#D5DEEF]">
+              <div className="h-10 w-10 rounded-2xl bg-[#F59E0B]/12 flex items-center justify-center text-xl">🧭</div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#F59E0B]">Panel Panduan Miko</p>
+                <h4 className="text-sm font-bold text-[#395886]">{guideTitle}</h4>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[#F59E0B]/20 bg-[#FFFBEB] p-4">
+              <p className="text-sm text-[#78350F] leading-relaxed">{guideText}</p>
+            </div>
+
+            <div className="grid gap-3">
+              <div className="rounded-2xl border border-[#D5DEEF] bg-[#F8FAFF] p-4">
+                <div className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60">Status Saat Ini</div>
+                <div className="mt-2 text-sm font-semibold leading-relaxed text-[#395886]">
+                  {mode === 'decToBin'
+                    ? isDecimalModeDone
+                      ? `Semua bit selesai dipilih. Hasilnya ${binaryResult}.`
+                      : `Sedang memproses bobot ${currentWeight} dengan sisa angka ${remainder}.`
+                    : isReverseDone
+                    ? `Semua bit sudah dijumlahkan. Total akhir ${reverseTotal}.`
+                    : `Sedang memproses bobot ${activeReverseWeight} dengan total sementara ${reverseTotal}.`}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-[#D5DEEF] bg-[#F8FAFF] p-4">
+                <div className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60">Alur Berpikir</div>
+                <ol className="mt-2 space-y-2 text-sm text-[#395886]/76 leading-relaxed">
+                  {mode === 'decToBin' ? (
+                    <>
+                      <li>1. Mulai dari bobot terbesar, yaitu 128.</li>
+                      <li>2. Jika sisa angka masih cukup, pilih 1 lalu kurangi.</li>
+                      <li>3. Jika sisa angka lebih kecil, pilih 0 dan lanjut ke bobot berikutnya.</li>
+                      <li>4. Setelah sisa menjadi 0, semua bobot sisanya akan bernilai 0.</li>
+                    </>
+                  ) : (
+                    <>
+                      <li>1. Baca bit dari kiri ke kanan pada hasil 11000000.</li>
+                      <li>2. Jika bit bernilai 1, tambahkan bobotnya ke total.</li>
+                      <li>3. Jika bit bernilai 0, lewati bobot tersebut.</li>
+                      <li>4. Jumlah akhir harus kembali ke nilai desimal semula.</li>
+                    </>
+                  )}
+                </ol>
+              </div>
+
+              <div className="rounded-2xl border border-[#D5DEEF] bg-white p-4">
+                <div className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60">Ringkasan Cepat</div>
+                <div className="mt-2 grid gap-2">
+                  <div className="rounded-xl bg-[#F8FAFF] px-3 py-2">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60">Biner</div>
+                    <div className="text-base font-bold text-[#395886] tracking-[0.18em]">{binaryResult}</div>
+                  </div>
+                  <div className="rounded-xl bg-[#F8FAFF] px-3 py-2">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60">Desimal</div>
+                    <div className="text-base font-bold text-[#395886]">{mode === 'binToDec' ? reverseTotal : MAGIC_SCALE_TARGET}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {checkpointOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/35 px-4 backdrop-blur-[1px]">
+          <div className="w-full max-w-xl rounded-3xl border-2 border-[#F59E0B]/25 bg-white shadow-2xl overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-[#F59E0B]/12 to-transparent border-b border-[#F59E0B]/15">
+              <div className="h-10 w-10 rounded-2xl bg-[#F59E0B]/15 flex items-center justify-center text-xl">🕵️</div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#F59E0B]">Checkpoint Tantangan Miko</p>
+                <h4 className="text-sm font-bold text-[#395886]">Mengapa bit berikutnya otomatis bernilai 0?</h4>
+              </div>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <div className="rounded-2xl border border-[#F59E0B]/20 bg-[#FFFBEB] p-4">
+                <p className="text-sm text-[#78350F] leading-relaxed">
+                  Sisa karung Miko sekarang <span className="font-bold">0</span>. Saat Miko mencoba memasukkan angka 0 ke
+                  bobot berikutnya <span className="font-bold">{MAGIC_SCALE_BITS[activeBitIndex]}</span>, timbangan langsung
+                  menolak: <span className="font-bold">Zonk!</span>
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-[#D5DEEF] bg-[#F8FAFF] p-4">
+                <div className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60">Mini Simulasi</div>
+                <div className="mt-3 flex items-center justify-between rounded-2xl border border-[#D5DEEF] bg-white px-4 py-3">
+                  <div>
+                    <div className="text-xs font-black uppercase tracking-widest text-[#628ECB]/60">Sisa angka</div>
+                    <div className="text-lg font-black text-[#395886]">0</div>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-[#F59E0B]" />
+                  <div>
+                    <div className="text-xs font-black uppercase tracking-widest text-[#628ECB]/60">Bit berikutnya</div>
+                    <div className="text-lg font-black text-[#395886]">{MAGIC_SCALE_BITS[activeBitIndex]}</div>
+                  </div>
+                </div>
+                <div className="mt-3 rounded-xl border border-[#FCA5A5] bg-[#FEF2F2] px-3 py-2 text-sm font-bold text-[#B91C1C]">
+                  Zonk! 0 tidak cukup untuk mengurangi bobot berikutnya.
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-[#D5DEEF] bg-white p-4">
+                <div className="text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">Argumen Logis</div>
+                <p className="mt-2 text-sm text-[#395886]/75 leading-relaxed">
+                  Jelaskan singkat mengapa bit berikutnya wajib bernilai 0 dan apa hubungan sisa angka dengan nilai bit.
+                </p>
+                <textarea
+                  value={checkpointText}
+                  onChange={(event) => setCheckpointText(event.target.value)}
+                  rows={4}
+                  className="mt-3 w-full rounded-2xl border-2 border-[#D5DEEF] p-4 text-sm text-[#395886] outline-none transition-all resize-none focus:border-[#F59E0B] focus:ring-4 focus:ring-[#F59E0B]/10"
+                  placeholder="Tuliskan argumenmu di sini... (minimal 10 kata)"
+                />
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <span className={`text-[11px] font-bold ${checkpointWordCount >= 10 ? 'text-[#10B981]' : 'text-[#395886]/45'}`}>
+                    {checkpointWordCount} / 10 kata
+                  </span>
+                  <button
+                    onClick={handleCheckpointSubmit}
+                    disabled={checkpointWordCount < 10}
+                    className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 ${
+                      checkpointWordCount >= 10
+                        ? 'bg-[#F59E0B] text-white hover:bg-[#D97706]'
+                        : 'bg-[#E5E7EB] text-[#395886]/35 cursor-not-allowed'
+                    }`}
+                  >
+                    Simpan Argumen
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {phase === 'reflection' && (
+        <ATPConclusionBox
+          atpBehavior="mampu mensimulasikan konversi alamat IPv4 dari desimal ke biner dan dari biner ke desimal secara sistematis"
+          objectiveCode={objectiveCode}
+          stageType="modeling"
+          defaultValue={conclusionText}
+          disabled={!!conclusionText}
+          minWords={12}
+          onSubmit={handleConclusionSubmit}
+        />
+      )}
+    </div>
+  );
+}
 
 function ModelingStageOriginal({
   lessonId,
@@ -2241,5 +3081,6 @@ function ModelingStageOriginal({
 
 export function ModelingStage(props: ModelingStageProps) {
   if (props.lessonId === '2') return <ModelingLesson2 {...props} />;
+  if (props.lessonId === '3') return <ModelingLesson3 {...props} />;
   return <ModelingStageOriginal {...props} />;
 }
