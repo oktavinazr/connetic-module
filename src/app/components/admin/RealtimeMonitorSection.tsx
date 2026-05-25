@@ -9,12 +9,14 @@ import {
   getAdminStageSync,
   calcTimerRemaining,
   clearSyncCache,
+  getStudentFreeModes,
+  setStudentFreeMode,
   type StudentStageStatus,
   type AdminStageSync,
 } from '../../utils/adminStageSync';
 import { getStageTimers } from '../../utils/stageTimer';
 import { lessons } from '../../data/lessons';
-import { RefreshCw, SkipForward, Users, Clock, Timer, Filter, Play, Pause, RotateCcw, CheckCircle } from 'lucide-react';
+import { RefreshCw, SkipForward, Users, Clock, Timer, Filter, Play, Pause, RotateCcw, CheckCircle, BookOpen, X } from 'lucide-react';
 import { supabase } from '../../utils/supabase';
 import { getAllLessonSessionsDetailed, type AdminDetailedSession } from '../../utils/activityTracking';
 
@@ -156,6 +158,8 @@ export function RealtimeMonitorSection() {
   const [filterGroup, setFilterGroup] = useState('all');
   const [detailedSessions, setDetailedSessions] = useState<AdminDetailedSession[]>([]);
   const [detailStageIndex, setDetailStageIndex] = useState(0);
+  const [freeModes, setFreeModes] = useState<Record<string, boolean>>({});
+  const [freeModeLoading, setFreeModeLoading] = useState<string | null>(null);
 
   const lesson = lessons[lessonId];
   const stageCount = lesson?.stages?.length ?? 7;
@@ -191,6 +195,7 @@ export function RealtimeMonitorSection() {
     results.forEach((r, i) => { statusMap[i] = r; });
     setAllStatuses(statusMap);
     getAllLessonSessionsDetailed(lessonId).then(setDetailedSessions);
+    getStudentFreeModes(lessonId).then(setFreeModes);
     setLoading(false);
   }, [lessonId, stageCount]);
 
@@ -200,6 +205,23 @@ export function RealtimeMonitorSection() {
     const interval = setInterval(refresh, 3000);
     return () => clearInterval(interval);
   }, [refresh]);
+
+  // ── Realtime for free mode changes ──
+  useEffect(() => {
+    const channel = supabase
+      .channel(`free_mode_monitor:${lessonId}`)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'student_free_mode',
+        filter: `lesson_id=eq.${lessonId}`,
+      }, (payload) => {
+        const newData = payload.new as any;
+        if (newData?.user_id) {
+          setFreeModes(prev => ({ ...prev, [newData.user_id]: newData.enabled ?? false }));
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [lessonId]);
 
   // ── Realtime subscription (instant sync from DB changes) ──
   useEffect(() => {
@@ -551,6 +573,9 @@ export function RealtimeMonitorSection() {
                   <th className="sticky left-[40px] z-10 bg-[#F8FAFD] px-3 py-2.5 text-left text-[10px] font-black uppercase tracking-widest text-[#395886]/50 min-w-[150px]">Nama</th>
                   <th className="px-2 py-2.5 text-left text-[10px] font-black uppercase tracking-widest text-[#395886]/50 min-w-[60px]">Kelas</th>
                   <th className="px-2 py-2.5 text-left text-[10px] font-black uppercase tracking-widest text-[#395886]/50 min-w-[90px]">Kelompok</th>
+                  <th className="px-2 py-2.5 text-center text-[10px] font-black uppercase tracking-widest text-[#8B5CF6]/70 min-w-[110px]">
+                    <span className="flex items-center justify-center gap-1"><BookOpen className="w-3 h-3" />Mandiri</span>
+                  </th>
                   {Array.from({ length: stageCount }, (_, i) => (
                     <th key={i} className="px-2 py-2.5 text-center text-[9px] font-black uppercase tracking-wider min-w-[64px]">
                       <span className={i === currentSyncStage ? 'text-[#628ECB]' : 'text-[#395886]/50'}>{STAGE_LABELS[i]?.split(' ')[0]}</span>
@@ -564,10 +589,56 @@ export function RealtimeMonitorSection() {
                     <td className="sticky left-0 z-10 bg-white px-1 py-2 text-center text-[10px] font-bold text-[#395886]/30 border-r border-[#D5DEEF]/50 w-[40px]">{rowIdx + 1}</td>
                     <td className="sticky left-[40px] z-10 bg-white px-3 py-2 border-r border-[#D5DEEF]/50">
                       <p className="font-semibold text-[#395886] truncate max-w-[140px]">{student.userName}</p>
-                      <p className="text-[9px] text-[#395886]/40">{student.userNis}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-[9px] text-[#395886]/40">{student.userNis}</p>
+                        {freeModes[student.userId] && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-[#8B5CF6]/10 px-1.5 py-0.5 text-[8px] font-black text-[#8B5CF6]">
+                            ✦ Mandiri
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-2 py-2 text-[10px] text-[#395886]/60">{student.userClass || '—'}</td>
                     <td className="px-2 py-2"><span className="inline-block rounded-full bg-[#628ECB]/8 px-2 py-0.5 text-[9px] font-bold text-[#628ECB]">{student.groupName || '—'}</span></td>
+                    <td className="px-2 py-2 text-center">
+                      {freeModes[student.userId] ? (
+                        <button
+                          onClick={async () => {
+                            setFreeModeLoading(student.userId);
+                            await setStudentFreeMode(lessonId, student.userId, false);
+                            setFreeModes(prev => ({ ...prev, [student.userId]: false }));
+                            setFreeModeLoading(null);
+                          }}
+                          disabled={freeModeLoading === student.userId}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#8B5CF6]/10 text-[#8B5CF6] text-[9px] font-black hover:bg-[#8B5CF6]/20 transition-colors disabled:opacity-50"
+                          title="Nonaktifkan Mode Mandiri"
+                        >
+                          {freeModeLoading === student.userId ? (
+                            <RefreshCw className="w-2.5 h-2.5 animate-spin" />
+                          ) : (
+                            <>Mandiri Aktif <X className="w-2.5 h-2.5" /></>
+                          )}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={async () => {
+                            setFreeModeLoading(student.userId);
+                            await setStudentFreeMode(lessonId, student.userId, true);
+                            setFreeModes(prev => ({ ...prev, [student.userId]: true }));
+                            setFreeModeLoading(null);
+                          }}
+                          disabled={freeModeLoading === student.userId}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 text-gray-400 text-[9px] font-bold hover:bg-[#8B5CF6]/8 hover:text-[#8B5CF6] transition-colors disabled:opacity-50"
+                          title="Izinkan Belajar Mandiri"
+                        >
+                          {freeModeLoading === student.userId ? (
+                            <RefreshCw className="w-2.5 h-2.5 animate-spin" />
+                          ) : (
+                            'Izinkan Mandiri'
+                          )}
+                        </button>
+                      )}
+                    </td>
                     {Array.from({ length: stageCount }, (_, stageIdx) => {
                       const statuses = allStatuses[stageIdx] ?? [];
                       const st = statuses.find(s => s.userId === student.userId);
@@ -591,7 +662,7 @@ export function RealtimeMonitorSection() {
                   </tr>
                 ))}
                 {filteredStudents.length === 0 && !loading && (
-                  <tr><td colSpan={4 + stageCount} className="px-5 py-12 text-center text-sm text-[#395886]/35">
+                  <tr><td colSpan={5 + stageCount} className="px-5 py-12 text-center text-sm text-[#395886]/35">
                     {filterGroup !== 'all' ? `Tidak ada siswa di kelompok "${filterGroup}".` : 'Belum ada data.'}
                   </td></tr>
                 )}

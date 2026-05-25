@@ -39,6 +39,8 @@ import { getCachedProgress, getLessonProgress, saveStageProgress } from '../util
 import { getStudentGroup } from '../utils/groups';
 import { StageAnswerDetail } from '../components/admin/StageDetail';
 import { getLessonActivitySessions, type CTLActivitySession } from '../utils/activityTracking';
+import { getMyFreeMode } from '../utils/adminStageSync';
+import { supabase } from '../utils/supabase';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DragAutoScroll } from '../components/DragAutoScroll';
@@ -235,13 +237,40 @@ export function LessonPage() {
   // Activity guide is always open
   const [pendingReflection, setPendingReflection] = useState<{ stageAnswer: unknown } | null>(null);
 
+  const [freeModeLoaded, setFreeModeLoaded] = useState(false);
+  const [isFreeMode, setIsFreeMode] = useState(false);
+
   // ── Global Stage Sync (timer + force-advance + waiting) ──
   const isStageCompleted = progress.completedStages.some(idx => Number(idx) === currentStageIndex);
   const globalSync = useGlobalStageSync(
     lessonId ?? '',
     currentStageIndex ?? 0,
     isStageCompleted || pendingReflection !== null,
+    isFreeMode,
   );
+
+  useEffect(() => {
+    if (!user || !lessonId) { setFreeModeLoaded(true); return; }
+    getMyFreeMode(lessonId, user.id).then(fm => {
+      setIsFreeMode(fm);
+      setFreeModeLoaded(true);
+    });
+  }, [lessonId, user]);
+
+  useEffect(() => {
+    if (!user || !lessonId) return;
+    const channel = supabase
+      .channel(`free_mode:${user.id}:${lessonId}`)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'student_free_mode',
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        const newData = payload.new as any;
+        if (newData?.lesson_id === lessonId) setIsFreeMode(newData.enabled ?? false);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, lessonId]);
 
   useEffect(() => {
     if (user && lessonId) {
@@ -299,14 +328,14 @@ export function LessonPage() {
       return;
     }
 
-    if (!stageInitDone && globalSync.loaded && progressLoaded) {
+    if (!stageInitDone && globalSync.loaded && progressLoaded && freeModeLoaded) {
       const maxIdx = lesson.stages.length - 1;
-      if (!globalSync.isIdle && globalSync.sync?.current_stage_index !== undefined) {
-        // Sesi aktif → ikuti tahap admin (clamp to valid range)
+      if (!isFreeMode && !globalSync.isIdle && globalSync.sync?.current_stage_index !== undefined) {
+        // Sesi aktif + bukan free mode → ikuti tahap admin
         const syncIdx = globalSync.sync.current_stage_index;
         setCurrentStageIndex(Math.max(0, Math.min(syncIdx, maxIdx)));
       } else {
-        // Sesi idle → cari tahap pertama yang belum selesai
+        // Free mode atau sesi idle → cari tahap pertama yang belum selesai
         const firstIncomplete = lesson.stages.findIndex(
           (_, index) => !progress.completedStages.includes(index),
         );
@@ -314,16 +343,16 @@ export function LessonPage() {
       }
       setStageInitDone(true);
     }
-  }, [stageInitDone, lesson, lessonId, navigate, progress, progressLoaded, globalSync.loaded, globalSync.isIdle, globalSync.sync?.current_stage_index]);
+  }, [stageInitDone, lesson, lessonId, navigate, progress, progressLoaded, freeModeLoaded, isFreeMode, globalSync.loaded, globalSync.isIdle, globalSync.sync?.current_stage_index]);
 
   useEffect(() => {
     setPendingReflection(null);
     setTrackerPhase('consistency');
   }, [currentStageIndex]);
 
-  // Sync to admin stage when session is active
+  // Sync to admin stage when session is active (skipped in free mode)
   useEffect(() => {
-    if (!globalSync.loaded || globalSync.isIdle || currentStageIndex === null || !lesson) return;
+    if (isFreeMode || !globalSync.loaded || globalSync.isIdle || currentStageIndex === null || !lesson) return;
     const syncStage = globalSync.sync?.current_stage_index;
     if (syncStage === undefined || syncStage === currentStageIndex) return;
 
@@ -339,7 +368,7 @@ export function LessonPage() {
       setCurrentStageIndex(clampedStage);
       window.scrollTo(0, 0);
     }
-  }, [globalSync.sync?.current_stage_index, globalSync.sync?.status, globalSync.loaded, globalSync.isIdle, currentStageIndex, lesson, lessonId, navigate]);
+  }, [isFreeMode, globalSync.sync?.current_stage_index, globalSync.sync?.status, globalSync.loaded, globalSync.isIdle, currentStageIndex, lesson, lessonId, navigate]);
 
   if (!lesson || currentStageIndex === null || !lesson.stages[currentStageIndex]) return null;
 
@@ -376,26 +405,23 @@ export function LessonPage() {
   };
 
   const handleStageClick = (index: number) => {
-    // Block if session is idle
+    if (isFreeMode) {
+      setCurrentStageIndex(index);
+      window.scrollTo(0, 0);
+      return;
+    }
     if (globalSync.isIdle) return;
-
-    const isCompleted = progress.completedStages.includes(index);
     const syncStage = globalSync.sync?.current_stage_index ?? 0;
-    const isCurrentSyncStage = index === syncStage;
-    
-    // Allow clicking ONLY the current admin-synced stage
-    // Completed stages from PREVIOUS sessions are NOT accessible until admin advances
-    if (!isCurrentSyncStage) return;
-    
+    if (index !== syncStage) return;
     setCurrentStageIndex(index);
     window.scrollTo(0, 0);
   };
 
-  const handleStageActivityComplete = (answer: unknown) => {
+  const handleStageActivityComplete = async (answer: unknown) => {
     if (stageNeedsExternalReflection(currentStage.type as StageType, lessonId!)) {
       setPendingReflection({ stageAnswer: answer });
     } else {
-      handleStageComplete(answer);
+      await handleStageComplete(answer);
     }
   };
 
@@ -500,13 +526,50 @@ export function LessonPage() {
         );
       }
       case 'reflection': {
-        // Build previous stage results from progress answers
+        const extractPreviousStageConclusion = (rawAnswer: any, sessionSnapshot?: Record<string, any>) => {
+          const answer = rawAnswer && typeof rawAnswer === 'object' ? rawAnswer as Record<string, any> : {};
+          const snapshot = sessionSnapshot && typeof sessionSnapshot === 'object' ? sessionSnapshot : {};
+          const snapshotFinalAnswer =
+            snapshot.finalAnswer && typeof snapshot.finalAnswer === 'object'
+              ? snapshot.finalAnswer as Record<string, any>
+              : {};
+
+          const candidates = [
+            answer.conclusion,
+            answer.conclusionText,
+            answer.summary,
+            answer.finalConclusion,
+            answer.reflection2,
+            answer.reflection1,
+            answer.argumentText,
+            answer.essayText,
+            snapshot.conclusionText,
+            snapshot.summary,
+            snapshot.finalConclusion,
+            snapshot.reflection2,
+            snapshot.reflection1,
+            snapshot.argumentText,
+            snapshot.essayText,
+            snapshotFinalAnswer.conclusion,
+            snapshotFinalAnswer.conclusionText,
+            snapshotFinalAnswer.summary,
+            snapshotFinalAnswer.finalConclusion,
+          ];
+
+          const found = candidates.find((value) => typeof value === 'string' && value.trim().length > 0);
+          return typeof found === 'string' ? found.trim() : '';
+        };
+
+        // Build previous stage results from progress answers + activity sessions
         const previousStageResults = lesson.stages.slice(0, currentStageIndex).map((stage, idx) => {
-          const answer = progress.answers[`stage_${idx}`] ?? progress.answers[idx];
-          const conclusion =
-            (answer && typeof answer === 'object' && 'conclusion' in (answer as Record<string, unknown>))
-              ? (answer as Record<string, unknown>).conclusion as string
-              : (typeof answer === 'string' ? answer : '');
+          const sessionForStage = activitySessions.find((session) => session.stageIndex === idx);
+          const answer =
+            progress.answers[`stage_${idx}`]
+            ?? progress.answers[idx]
+            ?? sessionForStage?.finalAnswer
+            ?? sessionForStage?.latestSnapshot?.finalAnswer
+            ?? {};
+          const conclusion = extractPreviousStageConclusion(answer, sessionForStage?.latestSnapshot);
           return {
             stageIndex: idx,
             stageType: stage.type,
@@ -610,7 +673,7 @@ export function LessonPage() {
                 const completed = progress.completedStages.includes(index);
                 const isCurrent = index === currentStageIndex;
                 const syncStage = globalSync.sync?.current_stage_index ?? 0;
-                const isAllowed = index === syncStage;
+                const isAllowed = isFreeMode || index === syncStage;
                 return (
                   <button
                     key={index}
@@ -735,7 +798,7 @@ export function LessonPage() {
                 <div className="mt-3 h-4 w-64 mx-auto rounded-lg bg-[#D5DEEF]" />
               </div>
             </div>
-          ) : globalSync.isIdle ? (
+          ) : globalSync.isIdle && !isFreeMode ? (
             <div className="w-full">
               <div className="rounded-2xl border-2 border-[#628ECB]/20 bg-gradient-to-br from-[#F0F3FA] to-white p-10 text-center shadow-sm">
                 <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-[#628ECB]/10">
@@ -841,17 +904,23 @@ export function LessonPage() {
               )}
 
               {/* Waiting indicator OR advance button */}
-              <div className="rounded-2xl border-2 border-[#F59E0B]/20 bg-gradient-to-br from-amber-50 to-white p-5 text-center shadow-sm">
-                {(globalSync.forceAdvanced || globalSync.sync?.status === 'advanced') ? (
-                  /* Admin has advanced — show go button */
+              <div className={`rounded-2xl border-2 p-5 text-center shadow-sm ${
+                isFreeMode
+                  ? 'border-[#8B5CF6]/20 bg-gradient-to-br from-purple-50 to-white'
+                  : 'border-[#F59E0B]/20 bg-gradient-to-br from-amber-50 to-white'
+              }`}>
+                {(isFreeMode || globalSync.forceAdvanced || globalSync.sync?.status === 'advanced') ? (
+                  /* Free mode or admin advanced — show go button immediately */
                   <>
                     <div className="flex items-center justify-center gap-2 mb-3">
-                      <CheckCircle className="w-4 h-4 text-[#10B981]" />
-                      <p className="text-sm font-bold text-[#10B981]">Guru telah melanjutkan ke tahap berikutnya!</p>
+                      <CheckCircle className={`w-4 h-4 ${isFreeMode ? 'text-[#8B5CF6]' : 'text-[#10B981]'}`} />
+                      <p className={`text-sm font-bold ${isFreeMode ? 'text-[#8B5CF6]' : 'text-[#10B981]'}`}>
+                        {isFreeMode ? 'Mode Belajar Mandiri — lanjutkan sesukamu' : 'Guru telah melanjutkan ke tahap berikutnya!'}
+                      </p>
                     </div>
                     <button
                       onClick={() => {
-                        globalSync.acknowledgeAdvance();
+                        if (!isFreeMode) globalSync.acknowledgeAdvance();
                         if (isLastStage) {
                           setShowStageSummary(true);
                         } else {
@@ -859,7 +928,11 @@ export function LessonPage() {
                           window.scrollTo(0, 0);
                         }
                       }}
-                      className="inline-flex items-center gap-2 bg-[#628ECB] text-white px-6 py-2.5 rounded-xl hover:bg-[#395886] transition-all font-bold text-sm shadow-md active:scale-95"
+                      className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all font-bold text-sm shadow-md active:scale-95 ${
+                        isFreeMode
+                          ? 'bg-[#8B5CF6] text-white hover:bg-[#7C3AED]'
+                          : 'bg-[#628ECB] text-white hover:bg-[#395886]'
+                      }`}
                     >
                       {isLastStage ? 'Lanjut ke Post-Test' : `Lanjut ke ${getStageDisplayTitle(lesson.stages[currentStageIndex + 1].type)}`}
                       <ArrowRight className="h-4 w-4" />
@@ -885,7 +958,7 @@ export function LessonPage() {
                 )}
               </div>
             </div>
-          ) : (globalSync.timerExpired && !globalSync.forceAdvanced) ? (
+          ) : (globalSync.timerExpired && !globalSync.forceAdvanced && !isFreeMode) ? (
             /* ── Timer Expired — non-completed students wait ── */
             <div className="w-full">
               <div className="rounded-2xl border-2 border-red-200 bg-gradient-to-br from-red-50 to-white p-8 text-center shadow-sm">

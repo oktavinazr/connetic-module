@@ -351,3 +351,43 @@ export function clearSyncCache(lessonId?: string) {
   if (lessonId) cache.delete(lessonId);
   else cache.clear();
 }
+
+// ── Student Free Mode ─────────────────────────────────────────────────────────
+
+export async function getStudentFreeModes(lessonId: string): Promise<Record<string, boolean>> {
+  const { data, error } = await supabase
+    .from('student_free_mode')
+    .select('user_id, enabled')
+    .eq('lesson_id', lessonId);
+
+  if (error || !data) return {};
+  const result: Record<string, boolean> = {};
+  data.forEach(row => { result[row.user_id] = row.enabled; });
+  return result;
+}
+
+export async function setStudentFreeMode(lessonId: string, userId: string, enabled: boolean): Promise<void> {
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from('student_free_mode')
+    .upsert({
+      user_id: userId,
+      lesson_id: lessonId,
+      enabled,
+      enabled_at: enabled ? now : null,
+    }, { onConflict: 'user_id,lesson_id' });
+
+  if (error) console.error('[setStudentFreeMode]', error.message);
+}
+
+export async function getMyFreeMode(lessonId: string, userId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('student_free_mode')
+    .select('enabled')
+    .eq('lesson_id', lessonId)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error || !data) return false;
+  return data.enabled ?? false;
+}

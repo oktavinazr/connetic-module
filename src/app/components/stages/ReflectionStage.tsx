@@ -256,6 +256,7 @@ function ReviewPreviousResults({
   completedPhases,
   arguingPhase,
   conclusionPhase,
+  isIpv4Reflection = false,
 }: {
   previousStageResults: PreviousStageResult[];
   pipelineItems?: PipelineItem[];
@@ -263,6 +264,7 @@ function ReviewPreviousResults({
   completedPhases: Set<number>;
   arguingPhase: number;
   conclusionPhase: number;
+  isIpv4Reflection?: boolean;
 }) {
   const validResults = previousStageResults.filter((result) => result.hasData);
   const reviewCards = (pipelineItems || []).map((item) => ({
@@ -282,10 +284,12 @@ function ReviewPreviousResults({
           </div>
           <div className="flex-1">
             <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#6366F1]">
-              Rekap Reflection Pertemuan 2
+              {isIpv4Reflection ? 'Rekap Reflection Pertemuan 3' : 'Rekap Reflection Pertemuan 2'}
             </p>
             <p className="text-sm font-bold text-[#395886]">
-              Tinjau hasil TCP sebelum masuk ke TCP Blueprint Constructor
+              {isIpv4Reflection
+                ? 'Tinjau hasil IPv4 sebelum masuk ke IPv4 Blueprint Constructor'
+                : 'Tinjau hasil TCP sebelum masuk ke TCP Blueprint Constructor'}
             </p>
           </div>
         </div>
@@ -293,8 +297,9 @@ function ReviewPreviousResults({
         <div className="p-5 space-y-4">
           <div className="rounded-xl border border-[#6366F1]/10 bg-white/80 p-4">
             <p className="text-sm text-[#395886]/70 leading-relaxed">
-              Rekap ini menghubungkan hasil Three-Way Handshake, analisis Sequence & ACK Number, dan Error Recovery
-              agar siswa melihat keandalan TCP sebagai satu sistem yang utuh.
+              {isIpv4Reflection
+                ? 'Rekap ini menghubungkan hasil peran IP, struktur IP Header, validasi format IPv4, kelas alamat, range host, dan konversi biner agar siswa melihat sistem pengalamatan IPv4 sebagai satu konsep yang utuh.'
+                : 'Rekap ini menghubungkan hasil Three-Way Handshake, analisis Sequence & ACK Number, dan Error Recovery agar siswa melihat keandalan TCP sebagai satu sistem yang utuh.'}
             </p>
           </div>
 
@@ -641,10 +646,12 @@ function TcpReliabilityPipelinePhase({
   pipeline,
   initialData,
   onSave,
+  isIpv4Reflection = false,
 }: {
   pipeline: TcpReliabilityPipeline;
   initialData?: any;
   onSave: (data: any) => void;
+  isIpv4Reflection?: boolean;
 }) {
   const restoredState = useMemo(() => {
     const itemMap = new Map(pipeline.items.map((item) => [item.id, item]));
@@ -759,9 +766,11 @@ function TcpReliabilityPipelinePhase({
           </div>
           <div className="flex-1">
             <p className={`text-[9px] font-black uppercase tracking-[0.2em] ${isSolved ? 'text-[#628ECB]' : 'text-[#6366F1]'}`}>
-              TCP Blueprint Constructor
+              {isIpv4Reflection ? 'IPv4 Blueprint Constructor' : 'TCP Blueprint Constructor'}
             </p>
-            <p className="text-sm font-bold text-[#395886]">Susun pipeline keandalan TCP secara berurutan</p>
+            <p className="text-sm font-bold text-[#395886]">
+              {isIpv4Reflection ? 'Susun pipeline konsep IPv4 secara berurutan' : 'Susun pipeline keandalan TCP secara berurutan'}
+            </p>
           </div>
           <span className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold border ${
             isSolved
@@ -826,7 +835,9 @@ function TcpReliabilityPipelinePhase({
 
           <div className={`rounded-2xl border-2 p-4 transition-all ${isSolved ? 'border-[#628ECB]/25 bg-[#EEF4FF]/65 shadow-[0_0_0_1px_rgba(98,142,203,0.08)]' : 'border-[#D5DEEF] bg-white'}`}>
             <div className="flex items-center justify-between gap-3 mb-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/45">Pipeline TCP</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/45">
+                {isIpv4Reflection ? 'Pipeline IPv4' : 'Pipeline TCP'}
+              </p>
               {!isSolved && (
                 <button
                   onClick={() => resetPipeline(false)}
@@ -899,7 +910,9 @@ function TcpReliabilityPipelinePhase({
               <div>
                 <p className="text-sm font-bold text-red-700">Urutan pipeline belum tepat.</p>
                 <p className="text-xs text-red-600/90 mt-1">
-                  Periksa lagi fondasi koneksi, pelacakan nomor urut, lalu mekanisme pemulihan error sebelum memvalidasi ulang. Sisa {MAX_ATTEMPTS - attempts} percobaan.
+                  {isIpv4Reflection
+                    ? `Periksa lagi urutan konsep mulai dari pengalamatan IP, klasifikasi kelas, lalu manajemen range host sebelum memvalidasi ulang. Sisa ${MAX_ATTEMPTS - attempts} percobaan.`
+                    : `Periksa lagi fondasi koneksi, pelacakan nomor urut, lalu mekanisme pemulihan error sebelum memvalidasi ulang. Sisa ${MAX_ATTEMPTS - attempts} percobaan.`}
                 </p>
               </div>
             </div>
@@ -929,6 +942,7 @@ function TcpReliabilityPipelinePhase({
               <CheckCircle className="w-5 h-5 text-[#628ECB] shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-bold text-[#395886]">Sistem Keandalan TCP Utuh</p>
+                <p className="text-sm font-bold text-[#395886]">{isIpv4Reflection ? 'Sistem Pengalamatan IPv4 Utuh' : 'Sistem Keandalan TCP Utuh'}</p>
                 <p className="text-xs text-[#395886]/75 mt-1 leading-relaxed">{pipeline.successMessage}</p>
               </div>
             </div>
@@ -960,6 +974,7 @@ function ArguingPhase({
   disabled,
   question,
   isTcpReflection,
+  isIpv4Reflection = false,
   minWords = 20,
 }: {
   initialText: string;
@@ -967,6 +982,7 @@ function ArguingPhase({
   disabled: boolean;
   question: string;
   isTcpReflection: boolean;
+  isIpv4Reflection?: boolean;
   minWords?: number;
 }) {
   const [text, setText] = useState(initialText);
@@ -985,7 +1001,11 @@ function ArguingPhase({
           <div className="flex-1 min-w-0">
             <p className="text-[9px] font-black uppercase tracking-widest text-[#8B5CF6]/70">Kemampuan Berargumen</p>
             <p className="text-xs font-bold text-[#395886]">
-              {isTcpReflection ? 'Analisis dampak jika fondasi koneksi dihilangkan' : 'Jelaskan argumenmu berdasarkan hasil refleksi'}
+              {isIpv4Reflection
+                ? 'Analisis dampak jika pengalamatan IPv4 tidak dirancang dengan benar'
+                : isTcpReflection
+                ? 'Analisis dampak jika fondasi koneksi dihilangkan'
+                : 'Jelaskan argumenmu berdasarkan hasil refleksi'}
             </p>
           </div>
           {isLocked && (
@@ -1003,7 +1023,9 @@ function ArguingPhase({
           {isTcpReflection && (
             <div className="mb-4 rounded-xl border border-[#8B5CF6]/12 bg-[#FAF7FF] p-4">
               <p className="text-xs text-[#395886]/70 leading-relaxed">
-                Tunjukkan bahwa tanpa pembentukan koneksi yang valid, pelacakan nomor urut dan retransmission tidak punya dasar sinkronisasi yang benar.
+                {isIpv4Reflection
+                  ? 'Tunjukkan bahwa tanpa pengalamatan IP yang tepat, klasifikasi jaringan dan pengelolaan range host tidak dapat bekerja konsisten dalam jaringan lokal maupun antarjaringan.'
+                  : 'Tunjukkan bahwa tanpa pembentukan koneksi yang valid, pelacakan nomor urut dan retransmission tidak punya dasar sinkronisasi yang benar.'}
               </p>
             </div>
           )}
@@ -1065,6 +1087,7 @@ function DropdownConclusionPhase({
   onSave,
   disabled,
   definition,
+  isIpv4Reflection = false,
   minWords = 20,
 }: {
   initialAnswers: Record<string, string>;
@@ -1072,6 +1095,7 @@ function DropdownConclusionPhase({
   onSave: (answers: Record<string, string>, summaryText: string, essayText: string) => void;
   disabled: boolean;
   definition: DropdownConclusion;
+  isIpv4Reflection?: boolean;
   minWords?: number;
 }) {
   const [answers, setAnswers] = useState<Record<string, string>>(initialAnswers);
@@ -1104,7 +1128,9 @@ function DropdownConclusionPhase({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[9px] font-black uppercase tracking-widest text-[#10B981]/70">Penarikan Kesimpulan</p>
-            <p className="text-xs font-bold text-[#065F46]">Lengkapi kesimpulan TCP yang benar</p>
+            <p className="text-xs font-bold text-[#065F46]">
+              {isIpv4Reflection ? 'Lengkapi kesimpulan IPv4 yang benar' : 'Lengkapi kesimpulan TCP yang benar'}
+            </p>
           </div>
           {isLocked && (
             <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#10B981] bg-[#10B981]/10 px-3 py-1.5 rounded-full border border-[#10B981]/20">
@@ -1171,9 +1197,9 @@ function DropdownConclusionPhase({
               <div className="mb-3 rounded-xl border border-[#D5DEEF]/80 bg-[#F8FAFF] p-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981] mb-1">Refleksi Esai</p>
                 <p className="text-sm font-semibold text-[#395886] leading-relaxed text-justify">
-                  Sekarang tuliskan kesimpulanmu sendiri dalam bentuk esai. Gunakan hasil dropdown tadi sebagai dasar,
-                  lalu jelaskan bagaimana Three-Way Handshake, Sequence & ACK Number, dan Error Recovery bekerja sebagai
-                  satu sistem keandalan TCP.
+                  {isIpv4Reflection
+                    ? 'Sekarang tuliskan kesimpulanmu sendiri dalam bentuk esai. Gunakan hasil dropdown tadi sebagai dasar, lalu jelaskan bagaimana pengalamatan IP, klasifikasi kelas, dan manajemen range host bekerja sebagai satu sistem pengalamatan IPv4 yang utuh pada Network Layer.'
+                    : 'Sekarang tuliskan kesimpulanmu sendiri dalam bentuk esai. Gunakan hasil dropdown tadi sebagai dasar, lalu jelaskan bagaimana Three-Way Handshake, Sequence & ACK Number, dan Error Recovery bekerja sebagai satu sistem keandalan TCP.'}
                 </p>
               </div>
 
@@ -1445,6 +1471,7 @@ export function ReflectionStage({
   const EVAL_PHASE = hasEval ? 2 : -1;
   const CONCLUSION_PHASE = hasEval ? 4 : 3;
   const isTcpReflection = Boolean(tcpReliabilityPipeline && dropdownConclusion);
+  const isIpv4Reflection = lessonId === '3' && isTcpReflection;
 
   const [activePhase, setActivePhase] = useState(0);
   const [completedPhases, setCompletedPhases] = useState<Set<number>>(new Set());
@@ -1595,6 +1622,7 @@ export function ReflectionStage({
             completedPhases={completedPhases}
             arguingPhase={ARGUING_PHASE}
             conclusionPhase={CONCLUSION_PHASE}
+            isIpv4Reflection={isIpv4Reflection}
           />
           <div className="flex justify-center mt-6">
             <button
@@ -1604,7 +1632,7 @@ export function ReflectionStage({
               }}
               className="flex items-center gap-2 px-8 py-3 rounded-xl bg-[#6366F1] text-white font-black text-sm shadow-lg hover:bg-[#4F46E5] active:scale-95 transition-all"
             >
-              Lanjut ke TCP Blueprint Constructor
+              {isIpv4Reflection ? 'Lanjut ke IPv4 Blueprint Constructor' : 'Lanjut ke TCP Blueprint Constructor'}
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -1614,7 +1642,12 @@ export function ReflectionStage({
       {activePhase === 1 && (
         <>
           {isTcpReflection && tcpReliabilityPipeline ? (
-            <TcpReliabilityPipelinePhase pipeline={tcpReliabilityPipeline} initialData={mapData} onSave={handleMapDataChange} />
+            <TcpReliabilityPipelinePhase
+              pipeline={tcpReliabilityPipeline}
+              initialData={mapData}
+              onSave={handleMapDataChange}
+              isIpv4Reflection={isIpv4Reflection}
+            />
           ) : (
             <ConceptMapPhase
               nodes={nodes}
@@ -1669,6 +1702,7 @@ export function ReflectionStage({
             disabled={Boolean(isCompleted)}
             question={arguingQuestion}
             isTcpReflection={isTcpReflection}
+            isIpv4Reflection={isIpv4Reflection}
             minWords={lessonId === '3' || lessonId === '4' ? 10 : 20}
           />
           {completedPhases.has(ARGUING_PHASE) && (
@@ -1697,6 +1731,7 @@ export function ReflectionStage({
               }}
               disabled={Boolean(isCompleted)}
               definition={dropdownConclusion}
+              isIpv4Reflection={isIpv4Reflection}
               minWords={lessonId === '3' || lessonId === '4' ? 10 : 20}
             />
           ) : (

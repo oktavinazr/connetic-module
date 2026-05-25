@@ -21,6 +21,7 @@ interface GlobalStageSyncState {
   isIdle: boolean;
   shouldWait: boolean;
   wasReset: boolean;
+  isFreeMode: boolean;
   refresh: () => void;
   acknowledgeAdvance: () => void;
   clearReset: () => void;
@@ -30,6 +31,7 @@ export function useGlobalStageSync(
   lessonId: string,
   stageIndex: number,
   isStageCompleted: boolean,
+  isFreeMode = false,
 ): GlobalStageSyncState {
   const [sync, setSync] = useState<AdminStageSync | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -172,19 +174,23 @@ export function useGlobalStageSync(
 
   const clearReset = useCallback(() => setWasReset(false), []);
 
-  const shouldWait =
+  const shouldWait = isFreeMode ? false : (
     isStageCompleted &&
     !isIdle &&
     sync?.session_status !== 'idle' &&
     sync?.status !== 'advanced' &&
     !forceAdvanced &&
-    sync?.current_stage_index === stageIndex;
+    sync?.current_stage_index === stageIndex
+  );
 
   return {
     loaded, sync,
     timerMinutes,
-    timerRemaining, timerExpired, isPaused, isUnlimited,
+    timerRemaining, timerExpired,
+    isPaused: isFreeMode ? false : isPaused,
+    isUnlimited,
     forceAdvanced, isIdle, shouldWait, wasReset,
+    isFreeMode,
     refresh, acknowledgeAdvance, clearReset,
   };
 }

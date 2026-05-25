@@ -23,7 +23,7 @@ interface ModelingStageProps {
   modelingSteps?: ModelingStep[];
   lessonId: string;
   stageIndex: number;
-  onComplete: (answer: any) => void;
+  onComplete: (answer: any) => void | Promise<void>;
   title?: string;
   description?: string;
   objectiveCode?: string;
@@ -1125,6 +1125,7 @@ function ModelingLesson3({
   const [reverseFeedback, setReverseFeedback] = useState<{ title: string; text: string } | null>(null);
   const [conclusionText, setConclusionText] = useState('');
   const [isSubmittingConclusion, setIsSubmittingConclusion] = useState(false);
+  const [isRedirectingToComplete, setIsRedirectingToComplete] = useState(false);
   const [isRestored, setIsRestored] = useState(false);
 
   const isDecimalModeDone = activeBitIndex >= MAGIC_SCALE_BITS.length && bits.every((bit) => bit !== null);
@@ -1286,7 +1287,7 @@ function ModelingLesson3({
   };
 
   const handleConclusionSubmit = async (text: string) => {
-    if (isSubmittingConclusion) return;
+    if (isSubmittingConclusion || isRedirectingToComplete) return;
 
     setIsSubmittingConclusion(true);
     const finalAnswer = {
@@ -1320,10 +1321,12 @@ function ModelingLesson3({
         conclusionText: text,
       });
       setConclusionText(text);
-      onComplete(finalAnswer);
+      setIsRedirectingToComplete(true);
+      await Promise.resolve(onComplete(finalAnswer));
     } catch (error) {
       console.error('[ModelingLesson3] failed to save conclusion:', error);
       setIsSubmittingConclusion(false);
+      setIsRedirectingToComplete(false);
     }
   };
 
@@ -1458,6 +1461,23 @@ function ModelingLesson3({
   }
 
   if (phase === 'reflection') {
+    if (isRedirectingToComplete) {
+      return (
+        <div className="w-full space-y-5 animate-in fade-in duration-500">
+          <div className="rounded-2xl border-2 border-[#10B981]/25 bg-gradient-to-br from-[#ECFDF5] to-white p-8 text-center shadow-sm">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#10B981]/10">
+              <div className="h-7 w-7 rounded-full border-[3px] border-[#10B981] border-t-transparent animate-spin" />
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981]">Refleksi Tersimpan</p>
+            <h3 className="mt-1 text-lg font-black text-[#065F46]">Mengarahkan ke Tahap Selesai</h3>
+            <p className="mt-2 text-sm leading-relaxed text-[#395886]/70">
+              Jawaban refleksimu sudah disimpan. Tunggu sebentar, sistem sedang menyiapkan halaman tahap selesai dan ruang tunggu guru.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="w-full space-y-5 animate-in fade-in duration-500">
         <div className="rounded-2xl border-2 border-[#D5DEEF] bg-white px-4 py-3 shadow-sm">
