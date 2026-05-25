@@ -431,6 +431,7 @@ export function ATPConclusionBox({
   onSubmit,
   defaultValue = '',
   disabled = false,
+  minWords = 15,
 }: {
   atpBehavior: string;
   objectiveCode: string;
@@ -438,10 +439,10 @@ export function ATPConclusionBox({
   onSubmit: (text: string) => void;
   defaultValue?: string;
   disabled?: boolean;
+  minWords?: number;
 }) {
   const [text, setText] = useState(defaultValue);
   const [submitted, setSubmitted] = useState(!!defaultValue && disabled);
-  const minWords = 15;
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
   const ready = wordCount >= minWords;
   const isLocked = disabled || submitted;

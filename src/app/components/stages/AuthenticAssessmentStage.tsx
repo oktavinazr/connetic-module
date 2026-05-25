@@ -361,6 +361,7 @@ function TcpBranchingAuthenticAssessment({
   onTrackerPhase?: (phase: 'consistency' | 'arguing' | 'conclusion') => void;
   onComplete: (answer: any) => void;
 }) {
+  const minWords = lessonId === '3' || lessonId === '4' ? 10 : 20;
   const tracker = useActivityTracker({ lessonId, stageIndex, stageType: 'authentic-assessment' });
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
@@ -659,17 +660,17 @@ function TcpBranchingAuthenticAssessment({
               onChange={(event) => setArgumentText(event.target.value)}
               rows={5}
               className="w-full resize-none rounded-xl border-2 border-[#D5DEEF] p-4 text-sm text-[#395886] outline-none transition-all focus:border-[#8B5CF6] focus:ring-4 focus:ring-[#8B5CF6]/5"
-              placeholder="Tuliskan argumenmu di sini... (minimal 20 kata)"
+              placeholder={`Tuliskan argumenmu di sini... (minimal ${minWords} kata)`}
             />
             <div className="mt-3 flex items-center justify-between">
-              <span className={`text-[10px] font-bold ${countWords(argumentText) >= 20 ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
-                {countWords(argumentText)} / 20 kata{countWords(argumentText) >= 20 ? ' ✓' : ''}
+              <span className={`text-[10px] font-bold ${countWords(argumentText) >= minWords ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
+                {countWords(argumentText)} / {minWords} kata{countWords(argumentText) >= minWords ? ' ✓' : ''}
               </span>
               <button
                 onClick={handleArgumentSave}
-                disabled={countWords(argumentText) < 20}
+                disabled={countWords(argumentText) < minWords}
                 className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-black transition-all ${
-                  countWords(argumentText) >= 20 ? 'bg-[#8B5CF6] text-white hover:bg-[#7C3AED] shadow-md' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'
+                  countWords(argumentText) >= minWords ? 'bg-[#8B5CF6] text-white hover:bg-[#7C3AED] shadow-md' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'
                 }`}
               >
                 Simpan Argumen

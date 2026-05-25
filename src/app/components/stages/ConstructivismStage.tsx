@@ -774,7 +774,7 @@ function OrderedProcessChain({ items, essayPrompt, lessonId, stageIndex, onCompl
       )}
 
       {showEssay && essayPrompt && (
-        <EssayBox prompt={essayPrompt} objectiveLabel="X.TCP.1" submitLabel="Simpan Argumen" headerLabel="Argumen Logis" onSubmit={(text) => onComplete(text)} />
+        <EssayBox prompt={essayPrompt} objectiveLabel="X.TCP.1" submitLabel="Simpan Argumen" headerLabel="Argumen Logis" minWords={lessonId === '3' || lessonId === '4' ? 10 : 20} onSubmit={(text) => onComplete(text)} />
       )}
       {showEssay && !essayPrompt && (
         <button onClick={() => onComplete(undefined)} className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm">
@@ -995,7 +995,7 @@ function GroupBucketContent({
         )}
 
         {showEssay && essayPrompt && (
-          <EssayBox prompt={essayPrompt} objectiveLabel="X.TCP.1" submitLabel="Simpan Argumen" headerLabel="Argumen Logis" onSubmit={(text) => onComplete(text)} />
+          <EssayBox prompt={essayPrompt} objectiveLabel="X.TCP.1" submitLabel="Simpan Argumen" headerLabel="Argumen Logis" minWords={lessonId === '3' || lessonId === '4' ? 10 : 20} onSubmit={(text) => onComplete(text)} />
         )}
         {showExplanation && !essayPrompt && (
           <button onClick={() => onComplete(undefined)} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#628ECB] text-white font-bold text-sm hover:bg-[#395886] shadow-sm transition-all">
@@ -1628,7 +1628,7 @@ function MatchingLinesActivity({
             objectiveLabel="X.TCP.9"
             submitLabel="Simpan Argumen"
             headerLabel="Argumen Logis"
-            minWords={20}
+            minWords={lessonId === '3' || lessonId === '4' ? 10 : 20}
             onSubmit={(text) => onComplete(text)}
           />
         </>
@@ -1834,7 +1834,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
             prompt={constructivismEssay1}
             objectiveLabel="X.TCP.1"
             submitLabel="Submit Refleksi X.TCP.1"
-            minWords={20}
+            minWords={props.lessonId === '3' || props.lessonId === '4' ? 10 : 20}
             defaultValue={essay1Text}
             disabled={!!essay1Text}
             onSubmit={(text) => {
@@ -1967,6 +1967,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
           atpBehavior={props.atpBehavior || 'mampu mendefinisikan konsep dasar TCP/IP sebagai fondasi komunikasi jaringan komputer'}
           objectiveCode={props.objectiveCode || 'X.TCP.1'}
           stageType="constructivism"
+          minWords={props.lessonId === '3' || props.lessonId === '4' ? 10 : 15}
           defaultValue={conclusionText}
           disabled={!!conclusionText}
           onSubmit={(text) => {

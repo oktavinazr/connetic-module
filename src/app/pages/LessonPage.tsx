@@ -893,6 +893,7 @@ export function LessonPage() {
                     atpBehavior={currentStage.atpAbcd.behavior}
                     objectiveCode={currentStage.objectiveCode || ''}
                     stageType={currentStage.type}
+                    minWords={lessonId === '3' || lessonId === '4' ? 10 : 15}
                     onSubmit={(text) => {
                       handleStageComplete({ ...(pendingReflection.stageAnswer as object || {}), conclusion: text });
                     }}

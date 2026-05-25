@@ -1551,7 +1551,7 @@ function InquiryStageGeneric(props: InquiryStageProps) {
                 headerLabel={props.lessonId === '2' ? 'Argumen Logis' : undefined}
                 prompt={props.inquiryReflection1}
                 submitLabel={props.lessonId === '2' ? 'Simpan Argumen' : 'Submit Refleksi Aktivitas 1'}
-                minWords={20}
+                minWords={props.lessonId === '3' || props.lessonId === '4' ? 10 : 20}
                 defaultValue={reflection1}
                 disabled={!!reflection1}
                 onSubmit={(text) => {
@@ -1597,7 +1597,7 @@ function InquiryStageGeneric(props: InquiryStageProps) {
                 objectiveLabel="Refleksi Aktivitas 2"
                 prompt={props.inquiryReflection2}
                 submitLabel="Submit Aktivitas Inquiry"
-                minWords={20}
+                minWords={props.lessonId === '3' || props.lessonId === '4' ? 10 : 20}
                 onSubmit={(text) => {
                   setReflection2(text);
                   const finalAnswer = { flowData, groupData, reflection1, reflection2: text, summary: text };
@@ -1625,7 +1625,7 @@ function InquiryStageGeneric(props: InquiryStageProps) {
                 objectiveLabel="Refleksi Aktivitas 2"
                 prompt={props.inquiryReflection2}
                 submitLabel="Submit Aktivitas Inquiry"
-                minWords={20}
+                minWords={props.lessonId === '3' || props.lessonId === '4' ? 10 : 20}
                 onSubmit={(text) => {
                   setReflection2(text);
                   const finalAnswer = { flowData, matchingData, reflection1, reflection2: text, summary: text };
@@ -1653,6 +1653,7 @@ function InquiryStageGeneric(props: InquiryStageProps) {
           atpBehavior={atpBehaviorMap[props.lessonId] ?? props.conclusionPrompt}
           objectiveCode={objectiveCodeMap[props.lessonId] ?? ''}
           stageType="inquiry"
+          minWords={props.lessonId === '3' || props.lessonId === '4' ? 10 : 15}
           defaultValue={conclusionText}
           disabled={!!conclusionText}
           onSubmit={(text) => {

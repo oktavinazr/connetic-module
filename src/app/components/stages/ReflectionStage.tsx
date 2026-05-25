@@ -959,16 +959,17 @@ function ArguingPhase({
   disabled,
   question,
   isTcpReflection,
+  minWords = 20,
 }: {
   initialText: string;
   onSave: (text: string) => void;
   disabled: boolean;
   question: string;
   isTcpReflection: boolean;
+  minWords?: number;
 }) {
   const [text, setText] = useState(initialText);
   const [saved, setSaved] = useState(!!initialText);
-  const minWords = 20;
   const wordCount = wordCountOf(text);
   const ready = wordCount >= minWords;
   const isLocked = disabled || saved;
@@ -1016,7 +1017,7 @@ function ArguingPhase({
                 ? 'border-[#10B981]/20 bg-[#ECFDF5] text-[#065F46] cursor-not-allowed'
                 : 'border-[#D5DEEF] bg-white text-[#395886] focus:border-[#8B5CF6] focus:ring-4 focus:ring-[#8B5CF6]/5'
             }`}
-            placeholder="Tuliskan argumenmu di sini... (minimal 20 kata)"
+            placeholder={`Tuliskan argumenmu di sini... (minimal ${minWords} kata)`}
           />
 
           <div className="mt-3 px-1 flex items-center justify-between">
@@ -1063,17 +1064,18 @@ function DropdownConclusionPhase({
   onSave,
   disabled,
   definition,
+  minWords = 20,
 }: {
   initialAnswers: Record<string, string>;
   initialEssay: string;
   onSave: (answers: Record<string, string>, summaryText: string, essayText: string) => void;
   disabled: boolean;
   definition: DropdownConclusion;
+  minWords?: number;
 }) {
   const [answers, setAnswers] = useState<Record<string, string>>(initialAnswers);
   const [essayText, setEssayText] = useState(initialEssay);
   const [saved, setSaved] = useState(Object.keys(initialAnswers).length > 0 && !!initialEssay);
-  const minWords = 20;
 
   const allAnswered = definition.dropdowns.every((dropdown) => answers[dropdown.id]);
   const isCorrect = definition.dropdowns.every((dropdown) => {
@@ -1184,7 +1186,7 @@ function DropdownConclusionPhase({
                     ? 'border-[#10B981]/20 bg-[#ECFDF5] text-[#065F46] cursor-not-allowed'
                     : 'border-[#D5DEEF] bg-white text-[#395886] focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/5'
                 }`}
-                placeholder="Tuliskan kesimpulan esaimu di sini... (minimal 20 kata)"
+                placeholder={`Tuliskan kesimpulan esaimu di sini... (minimal ${minWords} kata)`}
               />
 
               <div className="mt-3 flex items-center gap-2 px-1">
@@ -1236,16 +1238,17 @@ function FinalConclusionPhase({
   disabled,
   conclusionPrompt,
   atpBehavior,
+  minWords = 20,
 }: {
   initialText: string;
   onSave: (text: string) => void;
   disabled: boolean;
   conclusionPrompt: string;
   atpBehavior: string;
+  minWords?: number;
 }) {
   const [text, setText] = useState(initialText);
   const [saved, setSaved] = useState(!!initialText);
-  const minWords = 20;
   const wordCount = wordCountOf(text);
   const ready = wordCount >= minWords;
   const isLocked = disabled || saved;
@@ -1295,7 +1298,7 @@ function FinalConclusionPhase({
                 ? 'border-[#10B981]/20 bg-[#ECFDF5] text-[#065F46] cursor-not-allowed'
                 : 'border-[#D5DEEF] bg-white text-[#395886] focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/5'
             }`}
-            placeholder="Tuliskan kesimpulan akhir pembelajaranmu di sini... (minimal 20 kata)"
+            placeholder={`Tuliskan kesimpulan akhir pembelajaranmu di sini... (minimal ${minWords} kata)`}
           />
 
           <div className="mt-3 px-1 flex items-center justify-between">
@@ -1665,6 +1668,7 @@ export function ReflectionStage({
             disabled={Boolean(isCompleted)}
             question={arguingQuestion}
             isTcpReflection={isTcpReflection}
+            minWords={lessonId === '3' || lessonId === '4' ? 10 : 20}
           />
           {completedPhases.has(ARGUING_PHASE) && (
             <div className="flex justify-center mt-6">
@@ -1692,6 +1696,7 @@ export function ReflectionStage({
               }}
               disabled={Boolean(isCompleted)}
               definition={dropdownConclusion}
+              minWords={lessonId === '3' || lessonId === '4' ? 10 : 20}
             />
           ) : (
             <FinalConclusionPhase
@@ -1700,6 +1705,7 @@ export function ReflectionStage({
               disabled={Boolean(isCompleted)}
               conclusionPrompt={conclusionPrompt || 'Berdasarkan seluruh aktivitas yang telah kamu lakukan pada pertemuan ini, tuliskan kesimpulan umum tentang materi yang telah dipelajari.'}
               atpBehavior="mampu menyimpulkan seluruh materi yang telah dipelajari dalam pertemuan ini"
+              minWords={lessonId === '3' || lessonId === '4' ? 10 : 20}
             />
           )}
         </>

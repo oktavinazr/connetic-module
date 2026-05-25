@@ -984,6 +984,7 @@ function QuestioningOriginal({
     stageIndex,
     stageType: 'questioning',
   });
+  const minWords = lessonId === '3' || lessonId === '4' ? 10 : 20;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [justification, setJustification] = useState('');
   const [validated, setValidated] = useState(false);
@@ -1097,14 +1098,14 @@ function QuestioningOriginal({
             <label className="block text-xs font-bold text-[#395886]">Berikan alasan logismu:</label>
             <textarea value={justification} onChange={e => setJustification(e.target.value)} rows={3}
               className="w-full p-4 rounded-xl border-2 border-[#D5DEEF] text-xs font-medium focus:border-[#628ECB] outline-none resize-none"
-              placeholder="Tuliskan alasan teknismu... (minimal 20 kata)" />
-            <p className={`text-[10px] ${justification.trim().split(/\s+/).filter(Boolean).length >= 20 ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
-              {justification.trim().split(/\s+/).filter(Boolean).length} / 20 kata{justification.trim().split(/\s+/).filter(Boolean).length >= 20 ? ' ✓' : ' — minimal 20 kata untuk mengirim'}
+              placeholder={`Tuliskan alasan teknismu... (minimal ${minWords} kata)`} />
+            <p className={`text-[10px] ${justification.trim().split(/\s+/).filter(Boolean).length >= minWords ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
+              {justification.trim().split(/\s+/).filter(Boolean).length} / {minWords} kata{justification.trim().split(/\s+/).filter(Boolean).length >= minWords ? ' ✓' : ` — minimal ${minWords} kata untuk mengirim`}
             </p>
             <button
               onClick={() => { const finalAnswer = { selectedId: selectedId!, isCorrect, askedQuestions, justification }; void tracker.complete(finalAnswer, { finalAnswer, selectedId, askedQuestions, justification }); onComplete(finalAnswer); }}
-              disabled={justification.trim().split(/\s+/).filter(Boolean).length < 20}
-              className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${justification.trim().split(/\s+/).filter(Boolean).length >= 20 ? 'bg-[#628ECB] text-white hover:bg-[#395886]' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}>
+              disabled={justification.trim().split(/\s+/).filter(Boolean).length < minWords}
+              className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${justification.trim().split(/\s+/).filter(Boolean).length >= minWords ? 'bg-[#628ECB] text-white hover:bg-[#395886]' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}>
               Submit Aktivitas
             </button>
           </div>

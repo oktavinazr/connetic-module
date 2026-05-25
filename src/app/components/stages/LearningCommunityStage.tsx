@@ -799,12 +799,12 @@ function ConceptPhase({
 
 // -- Phase 2: Case Study + Argument Input --------------------------------------
 
-function CasePhase({ study, isSubmitted, submitError, onNext }: { study: CaseStudy; isSubmitted?: boolean; submitError?: string | null; onNext: (choiceId: string, choiceText: string, argument: string) => void }) {
+function CasePhase({ study, isSubmitted, submitError, onNext, minWords = 20 }: { study: CaseStudy; isSubmitted?: boolean; submitError?: string | null; onNext: (choiceId: string, choiceText: string, argument: string) => void; minWords?: number }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [argument, setArgument] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const wordCount = argument.trim() ? argument.trim().split(/\s+/).length : 0;
-  const ready = selected && wordCount >= 20;
+  const ready = selected && wordCount >= minWords;
 
   return (
     <div className={`space-y-6 ${anim.zoomIn}`}>
@@ -862,11 +862,11 @@ function CasePhase({ study, isSubmitted, submitError, onNext }: { study: CaseStu
                   </div>
                 ) : (
                   <>
-                    <p className={`text-[10px] font-bold ${wordCount >= 20 ? 'text-[#10B981]' : 'text-[#395886]/30'}`}>
-                      {wordCount} / 20 Kata Minimal
+                    <p className={`text-[10px] font-bold ${wordCount >= minWords ? 'text-[#10B981]' : 'text-[#395886]/30'}`}>
+                      {wordCount} / {minWords} Kata Minimal
                     </p>
-                    {wordCount > 0 && wordCount < 20 && (
-                      <p className="text-[10px] text-amber-600 font-medium mt-1">Argumen minimal 20 kata ya! Baru {20 - wordCount} kata lagi.</p>
+                    {wordCount > 0 && wordCount < minWords && (
+                      <p className="text-[10px] text-amber-600 font-medium mt-1">Argumen minimal {minWords} kata ya! Baru {minWords - wordCount} kata lagi.</p>
                     )}
                   </>
                 )}
@@ -1308,7 +1308,7 @@ function ModuleFlow({
     <div className="w-full space-y-6">
       <StepTracker steps={steps} current={currentStep} />
       {phase === 'concept' && <ConceptPhase lessonId={lessonId} title={title} concept={concept} layers={layers} isEncapsulation={isEncapsulation} onNext={() => setPhase('case')} />}
-      {phase === 'case' && <CasePhase study={study} isSubmitted={isSubmitted} submitError={submitError} onNext={handleCaseSubmit} />}
+      {phase === 'case' && <CasePhase study={study} isSubmitted={isSubmitted} submitError={submitError} onNext={handleCaseSubmit} minWords={lessonId === '3' || lessonId === '4' ? 10 : 20} />}
       {phase === 'discussion' && <DiscussionPhase lessonId={lessonId} moduleId={moduleId} groupName={groupName} onNext={finalizeModule} />}
       {phase === 'result' && <ResultPhase moduleId={moduleId} discussions={discussions} onDone={handleResultDone} />}
     </div>
@@ -1558,6 +1558,7 @@ export function LearningCommunityStage({
         }
         objectiveCode={moduleId}
         stageType="learning-community"
+        minWords={lessonId === '3' || lessonId === '4' ? 10 : 15}
         onSubmit={essay => {
           const finalAnswer = { module1Data, module2Data, flowchartCompleted, finalConclusion: essay };
           void tracker.complete(finalAnswer, { finalAnswer });
