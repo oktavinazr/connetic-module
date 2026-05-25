@@ -16,6 +16,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
+import { IndicatorSummaryCard } from './StageKit';
 
 interface ConceptMapNode {
   id: string;
@@ -1706,6 +1707,49 @@ export function ReflectionStage({
               conclusionPrompt={conclusionPrompt || 'Berdasarkan seluruh aktivitas yang telah kamu lakukan pada pertemuan ini, tuliskan kesimpulan umum tentang materi yang telah dipelajari.'}
               atpBehavior="mampu menyimpulkan seluruh materi yang telah dipelajari dalam pertemuan ini"
               minWords={lessonId === '3' || lessonId === '4' ? 10 : 20}
+            />
+          )}
+          {conclusionText && lessonId === '3' && (
+            <IndicatorSummaryCard
+              consistency={
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#628ECB]/8 border border-[#628ECB]/15">
+                    <CheckCircle className="w-4 h-4 text-[#628ECB] shrink-0" />
+                    <span className="text-xs font-bold text-[#395886]">
+                      {mapData
+                        ? 'Pipeline sistem IPv4 berhasil disusun: Pengalamatan IP → Klasifikasi Kelas → Manajemen Range Host'
+                        : 'Aktivitas pipeline sistem IPv4 diselesaikan'}
+                    </span>
+                  </div>
+                </div>
+              }
+              arguing={
+                <div className="px-3 py-2.5 rounded-xl bg-[#FFFBEB] border border-[#F59E0B]/20">
+                  <p className="text-xs text-[#78350F] leading-relaxed">{argumentText}</p>
+                </div>
+              }
+              conclusion={
+                <div className="space-y-1.5">
+                  {Object.keys(dropdownAnswers).length > 0 && (
+                    <div className="px-3 py-2 rounded-xl bg-[#ECFDF5] border border-[#10B981]/15">
+                      <p className="text-[10px] font-black text-[#10B981] mb-1">Isian Dropdown</p>
+                      <p className="text-xs text-[#065F46] leading-relaxed">
+                        Sistem pengalamatan IPv4 bekerja pada{' '}
+                        <span className="font-black">
+                          {dropdownConclusion?.dropdowns?.[0]?.options?.find(o => o.value === dropdownAnswers.layer)?.label ?? '—'}
+                        </span>{' '}
+                        Layer. Jika dua perangkat menggunakan IP yang sama, dampaknya:{' '}
+                        <span className="font-black">
+                          {dropdownConclusion?.dropdowns?.[1]?.options?.find(o => o.value === dropdownAnswers.dampak)?.label ?? '—'}
+                        </span>.
+                      </p>
+                    </div>
+                  )}
+                  <div className="px-3 py-2.5 rounded-xl bg-[#ECFDF5] border border-[#10B981]/20">
+                    <p className="text-xs text-[#065F46] leading-relaxed">{conclusionText}</p>
+                  </div>
+                </div>
+              }
             />
           )}
         </>

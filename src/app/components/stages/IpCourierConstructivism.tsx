@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useDrag, useDrop } from 'react-dnd';
 import { IpAddressIntro } from './IpAddressIntro';
-import { EssayBox } from './StageKit';
+import { EssayBox, IndicatorSummaryCard } from './StageKit';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -51,6 +51,16 @@ const TEMPLATE_PARTS = [
 
 const DRAG_TYPE = 'IP_COURIER_ORDER';
 const MAX_ATTEMPTS = 3;
+
+function buildCompletedText(answers: Record<string, string>): string {
+  return TEMPLATE_PARTS.map((part, i) => {
+    if (i < DROPDOWNS.length) {
+      const opt = DROPDOWNS[i].options.find(o => o.value === answers[DROPDOWNS[i].id]);
+      return part + (opt?.label ?? '___');
+    }
+    return part;
+  }).join('');
+}
 
 // ── Drag-and-Drop Card ────────────────────────────────────────────────────────
 
@@ -525,6 +535,9 @@ export function IpCourierConstructivism({
   const [conclusionAnswers, setConclusionAnswers] = useState<Record<string, string>>(
     () => snapshot?.l3ConclusionAnswers || {},
   );
+  const [showSummary, setShowSummary] = useState<boolean>(
+    () => Object.keys(snapshot?.l3ConclusionAnswers ?? {}).length > 0,
+  );
 
   // Report tracker phase to parent for indicator tracking
   useEffect(() => {
@@ -592,16 +605,46 @@ export function IpCourierConstructivism({
   }
 
   if (phase === 'conclusion') {
+    const completedText = buildCompletedText(conclusionAnswers);
     return (
-      <ConclusionDropdown
-        defaultAnswers={conclusionAnswers}
-        onComplete={(answers, text) => {
-          setConclusionAnswers(answers);
-          const finalAnswer = { essayText, conclusionAnswers: answers, summary: text };
-          void tracker.complete(finalAnswer, { phase: 'conclusion', finalAnswer });
-          onComplete(finalAnswer);
-        }}
-      />
+      <div className="space-y-4">
+        <ConclusionDropdown
+          defaultAnswers={conclusionAnswers}
+          onComplete={(answers, text) => {
+            setConclusionAnswers(answers);
+            setShowSummary(true);
+            const finalAnswer = { essayText, conclusionAnswers: answers, summary: text };
+            void tracker.complete(finalAnswer, { phase: 'conclusion', finalAnswer });
+            onComplete(finalAnswer);
+          }}
+        />
+        {showSummary && (
+          <IndicatorSummaryCard
+            consistency={
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#628ECB]/8 border border-[#628ECB]/15">
+                  <CheckCircle className="w-4 h-4 text-[#628ECB] shrink-0" />
+                  <span className="text-xs font-bold text-[#395886]">Animasi IP Courier diselesaikan</span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#628ECB]/8 border border-[#628ECB]/15">
+                  <CheckCircle className="w-4 h-4 text-[#628ECB] shrink-0" />
+                  <span className="text-xs font-bold text-[#395886]">Urutan logis: TCP membungkus → IP menentukan rute → Paket sampai tujuan</span>
+                </div>
+              </div>
+            }
+            arguing={
+              <div className="px-3 py-2.5 rounded-xl bg-[#FFFBEB] border border-[#F59E0B]/20">
+                <p className="text-xs text-[#78350F] leading-relaxed">{essayText}</p>
+              </div>
+            }
+            conclusion={
+              <div className="px-3 py-2.5 rounded-xl bg-[#ECFDF5] border border-[#10B981]/20">
+                <p className="text-xs text-[#065F46] leading-relaxed italic">"{completedText}"</p>
+              </div>
+            }
+          />
+        )}
+      </div>
     );
   }
 

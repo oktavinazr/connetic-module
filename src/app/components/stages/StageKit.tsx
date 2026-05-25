@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   AlertCircle, CheckCircle, Info, XCircle, RotateCcw, ChevronRight,
   PenLine, Clock, LockKeyhole, ArrowRight, Trophy, Brain,
-  ChevronDown, MessageSquare, Lightbulb as LightbulbIcon, Eye,
+  ChevronDown, MessageSquare, Lightbulb as LightbulbIcon, Eye, Zap,
 } from 'lucide-react';
 
 // ── Animation class strings ───────────────────────────────────────────────────
@@ -723,6 +723,74 @@ export function LogicalThinkingTracker({
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// ── IndicatorSummaryCard ──────────────────────────────────────────────────────
+// Completion card with 3 logical-thinking indicator sections.
+// Pass React nodes for each indicator's content.
+export function IndicatorSummaryCard({
+  title = 'Rekap Aktivitas — 3 Indikator Berpikir Logis',
+  consistency,
+  arguing,
+  conclusion,
+}: {
+  title?: string;
+  consistency: React.ReactNode;
+  arguing: React.ReactNode;
+  conclusion: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border-2 border-[#10B981]/30 bg-white shadow-md overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-700">
+      <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-[#10B981]/15 to-transparent border-b border-[#10B981]/15">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#10B981]/20">
+          <CheckCircle className="w-5 h-5 text-[#10B981]" />
+        </div>
+        <div>
+          <p className="text-[9px] font-black uppercase tracking-widest text-[#10B981]">Tahap Selesai ✓</p>
+          <h3 className="text-sm font-bold text-[#395886]">{title}</h3>
+        </div>
+      </div>
+
+      <div className="p-5 space-y-5">
+        {/* Indicator 1 — Keruntutan Berpikir */}
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full bg-[#628ECB]/15 flex items-center justify-center shrink-0">
+              <MessageSquare className="w-3.5 h-3.5 text-[#628ECB]" />
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Indikator 1 — Keruntutan Berpikir</p>
+          </div>
+          <div className="pl-9">{consistency}</div>
+        </div>
+
+        <div className="h-px bg-[#395886]/8" />
+
+        {/* Indicator 2 — Kemampuan Berargumen */}
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full bg-[#F59E0B]/15 flex items-center justify-center shrink-0">
+              <Zap className="w-3.5 h-3.5 text-[#F59E0B]" />
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">Indikator 2 — Kemampuan Berargumen</p>
+          </div>
+          <div className="pl-9">{arguing}</div>
+        </div>
+
+        <div className="h-px bg-[#395886]/8" />
+
+        {/* Indicator 3 — Penarikan Kesimpulan */}
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full bg-[#10B981]/15 flex items-center justify-center shrink-0">
+              <PenLine className="w-3.5 h-3.5 text-[#10B981]" />
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981]">Indikator 3 — Penarikan Kesimpulan</p>
+          </div>
+          <div className="pl-9">{conclusion}</div>
+        </div>
+      </div>
     </div>
   );
 }

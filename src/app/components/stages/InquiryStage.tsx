@@ -9,7 +9,7 @@ import { getCurrentUser } from '../../utils/auth';
 import { getLessonProgress, saveStageAttempt } from '../../utils/progress';
 import { Ipv4Analyzer } from '../ui/Ipv4Analyzer';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
-import { EssayBox, ContinueActivityButton, ATPConclusionBox } from './StageKit';
+import { EssayBox, ContinueActivityButton, ATPConclusionBox, IndicatorSummaryCard } from './StageKit';
 
 // -- Types ----------------------------------------------------------------------
 
@@ -1961,14 +1961,26 @@ function InquiryLesson3Page(props: InquiryStageProps) {
         />
 
         {conclusionText && (
-          <div className="rounded-2xl border-2 border-[#10B981]/25 bg-gradient-to-br from-[#ECFDF5] to-white p-5 shadow-sm animate-in fade-in zoom-in-95 duration-300">
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981] mb-3">Hasil Refleksi Kamu</p>
-            <p className="text-sm font-semibold italic leading-relaxed text-[#065F46]">"{conclusionText}"</p>
-            <div className="mt-3 flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-[#10B981]" />
-              <span className="text-xs font-black text-[#10B981]">Tahap Inquiry selesai!</span>
-            </div>
-          </div>
+          <IndicatorSummaryCard
+            consistency={
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#628ECB]/8 border border-[#628ECB]/15">
+                  <CheckCircle className="w-4 h-4 text-[#628ECB] shrink-0" />
+                  <span className="text-xs font-bold text-[#395886]">14 komponen IP Header dikategorikan ke 5 kelompok fungsi (Identitas, Pengalamatan, Pengaturan Pengiriman, Pemeriksaan Kesalahan, Fragmentasi)</span>
+                </div>
+              </div>
+            }
+            arguing={
+              <div className="px-3 py-2.5 rounded-xl bg-[#FFFBEB] border border-[#F59E0B]/20">
+                <p className="text-xs text-[#78350F] leading-relaxed">{argumentText}</p>
+              </div>
+            }
+            conclusion={
+              <div className="px-3 py-2.5 rounded-xl bg-[#ECFDF5] border border-[#10B981]/20">
+                <p className="text-xs text-[#065F46] leading-relaxed">{conclusionText}</p>
+              </div>
+            }
+          />
         )}
       </div>
     );

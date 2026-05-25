@@ -18,7 +18,7 @@ import {
 import { supabase } from '../../utils/supabase';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
 import { TcpIpInteractive } from '../ui/TcpIpInteractive';
-import { StepTracker, ActivityCard, InstructionBox, EssayBox, ATPConclusionBox, anim, SectionDivider } from './StageKit';
+import { StepTracker, ActivityCard, InstructionBox, EssayBox, ATPConclusionBox, IndicatorSummaryCard, anim, SectionDivider } from './StageKit';
 
 // -- Types ----------------------------------------------------------------------
 
@@ -1387,6 +1387,7 @@ export function LearningCommunityStage({
   const [flowchartCompleted, setFlowchartCompleted] = useState(false);
   const [module1Data, setModule1Data] = useState<any>(null);
   const [module2Data, setModule2Data] = useState<any>(null);
+  const [conclusionEssay, setConclusionEssay] = useState('');
   const [members, setMembers] = useState<{ user_id: string; user_name: string }[]>([]);
 
   useEffect(() => {
@@ -1554,17 +1555,64 @@ export function LearningCommunityStage({
             ? 'mampu menerapkan proses TCP Three-Way Handshake untuk menentukan nilai SYN, SYN-ACK, dan ACK pada setiap langkah pembentukan koneksi'
             : isLesson2
               ? 'mampu menganalisis mekanisme TCP Three-Way Handshake dan Flow Control dalam proses komunikasi jaringan'
-              : 'mampu menganalisis proses enkapsulasi dan dekapsulasi data dalam komunikasi jaringan komputer')
+              : lessonId === '3'
+                ? 'mampu menerapkan pengetahuan kelas IPv4 beserta rentang alamat Private & Public serta konsep range host IPv4'
+                : 'mampu menganalisis proses enkapsulasi dan dekapsulasi data dalam komunikasi jaringan komputer')
         }
         objectiveCode={moduleId}
         stageType="learning-community"
+        defaultValue={conclusionEssay}
+        disabled={!!conclusionEssay}
         minWords={lessonId === '3' || lessonId === '4' ? 10 : 15}
         onSubmit={essay => {
+          setConclusionEssay(essay);
           const finalAnswer = { module1Data, module2Data, flowchartCompleted, finalConclusion: essay };
           void tracker.complete(finalAnswer, { finalAnswer });
           onComplete(finalAnswer);
         }}
       />
+      {conclusionEssay && lessonId === '3' && (
+        <IndicatorSummaryCard
+          consistency={
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#628ECB]/8 border border-[#628ECB]/15">
+                <CheckCircle className="w-4 h-4 text-[#628ECB] shrink-0" />
+                <span className="text-xs font-bold text-[#395886]">
+                  {flowchartCompleted
+                    ? 'Timeline Kelas IPv4 berhasil disusun: Kelas A (1–126) → Kelas B (128–191) → Kelas C (192–223)'
+                    : 'Aktivitas klasifikasi Kelas IPv4 diselesaikan'}
+                </span>
+              </div>
+            </div>
+          }
+          arguing={
+            <div className="space-y-2">
+              {module1Data?.argument && (
+                <div className="px-3 py-2.5 rounded-xl bg-[#FFFBEB] border border-[#F59E0B]/20">
+                  <p className="text-[10px] font-black text-[#F59E0B] mb-1">Studi Kasus 1 — Klasifikasi IP Jaringan Sekolah</p>
+                  <p className="text-xs text-[#78350F] leading-relaxed">{module1Data.argument}</p>
+                </div>
+              )}
+              {module2Data?.argument && (
+                <div className="px-3 py-2.5 rounded-xl bg-[#FFFBEB] border border-[#F59E0B]/20">
+                  <p className="text-[10px] font-black text-[#F59E0B] mb-1">Studi Kasus 2 — Menghitung Range Host Jaringan Rumah</p>
+                  <p className="text-xs text-[#78350F] leading-relaxed">{module2Data.argument}</p>
+                </div>
+              )}
+              {!module1Data?.argument && !module2Data?.argument && (
+                <div className="px-3 py-2.5 rounded-xl bg-[#FFFBEB] border border-[#F59E0B]/20">
+                  <p className="text-xs text-[#78350F]">Argumen diskusi kelompok tersimpan di papan kolaboratif.</p>
+                </div>
+              )}
+            </div>
+          }
+          conclusion={
+            <div className="px-3 py-2.5 rounded-xl bg-[#ECFDF5] border border-[#10B981]/20">
+              <p className="text-xs text-[#065F46] leading-relaxed">{conclusionEssay}</p>
+            </div>
+          }
+        />
+      )}
     </div>
   );
 

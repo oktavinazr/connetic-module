@@ -7,7 +7,7 @@ import {
   Cable, Wifi, Radio, Lock, PenLine, Server, Monitor,
 } from 'lucide-react';
 import { useActivityTracker } from '../../hooks/useActivityTracker';
-import { ContinueActivityButton, ATPConclusionBox } from './StageKit';
+import { ContinueActivityButton, ATPConclusionBox, IndicatorSummaryCard } from './StageKit';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1139,6 +1139,9 @@ function ModelingStageOriginal({
   // Argumentation essay
   const [showArgumentEssay, setShowArgumentEssay] = useState(false);
   const [argumentText, setArgumentText] = useState('');
+  // Conclusion (Penarikan Kesimpulan) — added for L3 3-indicator summary
+  const [showConclusionBox, setShowConclusionBox] = useState(false);
+  const [conclusionText, setConclusionText] = useState('');
   // UI
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -2140,21 +2143,67 @@ function ModelingStageOriginal({
               </span>
               <button
                 onClick={() => {
-                  if (argumentText.trim().split(/\s+/).filter(Boolean).length < 20) return;
-                  const finalAnswer = { userMessage, argument: argumentText.trim() };
-                  void tracker.complete(finalAnswer, { step, userMessage, argument: argumentText.trim(), completed: true });
-                  onComplete(finalAnswer);
+                  const wc = argumentText.trim().split(/\s+/).filter(Boolean).length;
+                  if (wc < 20) return;
+                  if (lessonId === '3') {
+                    // For L3, show conclusion box instead of completing directly
+                    setShowConclusionBox(true);
+                  } else {
+                    const finalAnswer = { userMessage, argument: argumentText.trim() };
+                    void tracker.complete(finalAnswer, { step, userMessage, argument: argumentText.trim(), completed: true });
+                    onComplete(finalAnswer);
+                  }
                 }}
-                disabled={argumentText.trim().split(/\s+/).filter(Boolean).length < 20}
+                disabled={argumentText.trim().split(/\s+/).filter(Boolean).length < 20 || (lessonId === '3' && showConclusionBox)}
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 shadow-sm
-                  ${argumentText.trim().split(/\s+/).filter(Boolean).length >= 20
+                  ${argumentText.trim().split(/\s+/).filter(Boolean).length >= 20 && !(lessonId === '3' && showConclusionBox)
                     ? 'bg-[#10B981] text-white hover:bg-[#059669]'
                     : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
               >
-                Simpan & Selesai <CheckCircle className="w-4 h-4" />
+                {lessonId === '3' ? 'Lanjut ke Penarikan Kesimpulan' : 'Simpan & Selesai'} <CheckCircle className="w-4 h-4" />
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── L3 Conclusion + Summary (Penarikan Kesimpulan) ── */}
+      {lessonId === '3' && showConclusionBox && (
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <ATPConclusionBox
+            atpBehavior="mampu mensimulasikan proses konversi alamat IPv4 dari format desimal ke biner secara sistematis"
+            objectiveCode="X.IP.6"
+            stageType="modeling"
+            defaultValue={conclusionText}
+            disabled={!!conclusionText}
+            minWords={10}
+            onSubmit={(text) => {
+              setConclusionText(text);
+              const finalAnswer = { userMessage, argument: argumentText.trim(), conclusion: text };
+              void tracker.complete(finalAnswer, { step, userMessage, argument: argumentText.trim(), conclusionText: text, completed: true });
+              onComplete(finalAnswer);
+            }}
+          />
+          {conclusionText && (
+            <IndicatorSummaryCard
+              consistency={
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#628ECB]/8 border border-[#628ECB]/15">
+                  <CheckCircle className="w-4 h-4 text-[#628ECB] shrink-0" />
+                  <span className="text-xs font-bold text-[#395886]">9 langkah simulasi konversi desimal ↔ biner IPv4 diselesaikan secara sistematis</span>
+                </div>
+              }
+              arguing={
+                <div className="px-3 py-2.5 rounded-xl bg-[#FFFBEB] border border-[#F59E0B]/20">
+                  <p className="text-xs text-[#78350F] leading-relaxed">{argumentText}</p>
+                </div>
+              }
+              conclusion={
+                <div className="px-3 py-2.5 rounded-xl bg-[#ECFDF5] border border-[#10B981]/20">
+                  <p className="text-xs text-[#065F46] leading-relaxed">{conclusionText}</p>
+                </div>
+              }
+            />
+          )}
         </div>
       )}
 
