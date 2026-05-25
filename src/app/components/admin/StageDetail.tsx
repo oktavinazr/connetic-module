@@ -76,6 +76,8 @@ export function getStageAnswerSummary(stage: Stage, answer: any): string {
     switch (stage.type) {
       case 'constructivism': {
         const a = answer as any;
+        if (a.summary) return a.summary.slice(0, 40) + '...';
+        if (a.essayText) return a.essayText.slice(0, 40) + '...';
         if (a.conclusion) return a.conclusion.slice(0, 40) + '...';
         if (a.essay2) return a.essay2.slice(0, 40) + '...';
         if (a.essay1) return a.essay1.slice(0, 40) + '...';
@@ -166,7 +168,119 @@ function MissingData() {
 
 // ── Stage-specific Review Components ─────────────────────────────────────────
 
-function ConstructivismReview({ answer, snap }: { answer: any; snap?: Record<string, any> }) {
+// Correct order labels for L3 ordering activity
+const L3_ORDER_LABELS = [
+  { icon: '📦', text: 'Membungkus data dengan aman', sub: 'Tugas TCP — Transport Layer' },
+  { icon: '🗺️', text: 'Menentukan alamat dan rute perjalanan paket', sub: 'Tugas IP — Network Layer' },
+  { icon: '🏠', text: 'Paket sampai dan dibuka oleh penerima', sub: 'Tujuan pengiriman tercapai' },
+];
+
+// Dropdown option labels for L3 conclusion
+const L3_DROPDOWN_LABELS: Record<string, Record<string, string>> = {
+  fungsi: {
+    keandalan: 'pengatur keandalan agar data tidak hilang',
+    alamat_rute: 'penentu alamat dan rute perjalanan data',
+    segmen: 'pemecah data menjadi segmen-segmen kecil',
+  },
+  dampak: {
+    tidak_tahu: 'data tidak mengetahui tujuan pengiriman',
+    lambat: 'data terkirim lebih lambat dari biasanya',
+    tidak_aman: 'koneksi menjadi tidak aman dan mudah disadap',
+  },
+};
+
+function ConstructivismL3Review({ answer, snap }: { answer: any; snap?: Record<string, any> }) {
+  const essayText = snap?.l3EssayText ?? answer?.essayText;
+  const conclusionAnswers: Record<string, string> = snap?.l3ConclusionAnswers ?? answer?.conclusionAnswers ?? {};
+  const summaryText = answer?.summary;
+
+  // Build the conclusion sentence from saved answers
+  const conclusionFungi = L3_DROPDOWN_LABELS.fungsi[conclusionAnswers.fungsi] ?? conclusionAnswers.fungsi;
+  const conclusionDampak = L3_DROPDOWN_LABELS.dampak[conclusionAnswers.dampak] ?? conclusionAnswers.dampak;
+  const builtConclusion = conclusionFungi && conclusionDampak
+    ? `Hari ini saya belajar bahwa Internet Protocol pada layer Network berfungsi sebagai ${conclusionFungi}. Jika lapisan ini tidak bekerja, maka ${conclusionDampak}.`
+    : summaryText;
+
+  const hasData = essayText || builtConclusion;
+  if (!hasData) return <MissingData />;
+
+  return (
+    <div className="space-y-3">
+      {/* Keruntutan Berpikir */}
+      <ReviewCard
+        title="Keruntutan Berpikir"
+        icon={<Layers className="w-3.5 h-3.5" />}
+        accentColor="text-[#395886]"
+        borderColor="border-[#395886]/20"
+        bgColor="bg-[#F8FAFF]/60"
+      >
+        <div className="space-y-2">
+          <ActivityBadge label="Animasi Analogi Interaktif (Sistem Kerja Kurir) — Selesai" />
+          <ActivityBadge label="Simulasi Kurir Tanpa Alamat — Selesai" />
+          <div className="mt-1">
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/50 mb-2">
+              Urutan Logika Pengiriman (Drag &amp; Drop)
+            </p>
+            <div className="space-y-1.5">
+              {L3_ORDER_LABELS.map((item, i) => (
+                <div key={i} className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#F0FDF9] border border-[#10B981]/15 text-xs">
+                  <CheckCircle className="w-3.5 h-3.5 text-[#10B981] shrink-0" />
+                  <span className="text-lg shrink-0">{item.icon}</span>
+                  <div>
+                    <span className="font-bold text-[#395886]">{item.text}</span>
+                    <span className="text-[#395886]/50 ml-1.5">— {item.sub}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </ReviewCard>
+
+      {/* Kemampuan Berargumen */}
+      <ReviewCard
+        title="Kemampuan Berargumen"
+        icon={<PenLine className="w-3.5 h-3.5" />}
+        accentColor="text-[#628ECB]"
+        borderColor="border-[#628ECB]/20"
+        bgColor="bg-[#EEF4FF]/40"
+      >
+        {essayText ? (
+          <>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]/60 mb-2">Argumen Logis</p>
+            <EssayDisplay text={essayText} />
+          </>
+        ) : (
+          <p className="text-xs text-[#395886]/40 italic">Argumen belum ditulis.</p>
+        )}
+      </ReviewCard>
+
+      {/* Penarikan Kesimpulan */}
+      <ReviewCard
+        title="Penarikan Kesimpulan"
+        icon={<Lightbulb className="w-3.5 h-3.5" />}
+        accentColor="text-[#10B981]"
+        borderColor="border-[#10B981]/20"
+        bgColor="bg-[#F0FDF9]/40"
+      >
+        {builtConclusion ? (
+          <>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981]/60 mb-2">Hasil Refleksi Dropdown</p>
+            <EssayDisplay text={builtConclusion} />
+          </>
+        ) : (
+          <p className="text-xs text-[#395886]/40 italic">Refleksi belum dilengkapi.</p>
+        )}
+      </ReviewCard>
+    </div>
+  );
+}
+
+function ConstructivismReview({ answer, snap, lessonId }: { answer: any; snap?: Record<string, any>; lessonId?: string }) {
+  // L3 uses a completely different activity flow — dedicated review
+  const isL3 = lessonId === '3' || snap?.l3Phase !== undefined || (answer?.essayText !== undefined && answer?.conclusionAnswers !== undefined);
+  if (isL3) return <ConstructivismL3Review answer={answer} snap={snap} />;
+
   const fa = snap?.finalAnswer ?? {};
   const essay1 = fa.essay1 ?? answer?.essay1;
   const essay2 = fa.essay2 ?? answer?.essay2;
@@ -777,7 +891,7 @@ export function StageAnswerDetail({ stage, answer, snapshot, lessonId }: StageAn
 
   switch (stage.type) {
     case 'constructivism':
-      return <ConstructivismReview answer={answer} snap={snap} />;
+      return <ConstructivismReview answer={answer} snap={snap} lessonId={lessonId} />;
     case 'inquiry':
       return <InquiryReview answer={answer} snap={snap} />;
     case 'questioning':
