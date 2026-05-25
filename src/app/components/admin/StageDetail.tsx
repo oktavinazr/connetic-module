@@ -207,6 +207,143 @@ const L3_DROPDOWN_LABELS: Record<string, Record<string, string>> = {
   },
 };
 
+function Lesson4ConstructivismReview({ answer }: { answer: any }) {
+  const essay1 = answer?.essay1;
+  const essay2 = answer?.essay2;
+  const conclusion = answer?.conclusionText ?? answer?.conclusion ?? answer?.summary;
+  if (!essay1 && !essay2 && !conclusion) return <MissingData />;
+
+  return (
+    <div className="space-y-3">
+      <ReviewCard title="Keruntutan Berpikir" icon={<Layers className="w-3.5 h-3.5" />} accentColor="text-[#395886]" borderColor="border-[#395886]/20" bgColor="bg-[#F8FAFF]/60">
+        <div className="space-y-2">
+          <ActivityBadge label="Kronologi krisis IPv4 dan adopsi IPv6 disusun" />
+          <ActivityBadge label="Kartu analogi IPv4 vs IPv6 dieksplorasi" />
+        </div>
+      </ReviewCard>
+      {essay1 && <ReviewCard title="Kemampuan Berargumen" icon={<PenLine className="w-3.5 h-3.5" />} accentColor="text-[#628ECB]" borderColor="border-[#628ECB]/20" bgColor="bg-[#EEF4FF]/40"><EssayDisplay text={essay1} /></ReviewCard>}
+      {essay2 && <ReviewCard title="Refleksi Aktivitas" icon={<MessageSquare className="w-3.5 h-3.5" />} accentColor="text-[#F59E0B]" borderColor="border-[#F59E0B]/20" bgColor="bg-[#FFFBEB]/50"><EssayDisplay text={essay2} /></ReviewCard>}
+      {conclusion && <ReviewCard title="Penarikan Kesimpulan" icon={<Lightbulb className="w-3.5 h-3.5" />} accentColor="text-[#10B981]" borderColor="border-[#10B981]/20" bgColor="bg-[#F0FDF9]/40"><EssayDisplay text={conclusion} /></ReviewCard>}
+    </div>
+  );
+}
+
+function Lesson4InquiryReview({ answer }: { answer: any }) {
+  const argumentText = answer?.reflection1 ?? answer?.essay1 ?? answer?.reflect1;
+  const reflectionText = answer?.reflection2 ?? answer?.reflect2;
+  const conclusion = answer?.conclusionText ?? answer?.conclusion ?? answer?.summary;
+  if (!argumentText && !reflectionText && !conclusion) return <MissingData />;
+
+  return (
+    <div className="space-y-3">
+      <ReviewCard title="Keruntutan Berpikir" icon={<Layers className="w-3.5 h-3.5" />} accentColor="text-[#395886]" borderColor="border-[#395886]/20" bgColor="bg-[#F8FAFF]/60">
+        <div className="space-y-2">
+          <ActivityBadge label="Eksplorasi materi IPv6 dan EUI-64 selesai" />
+          <ActivityBadge label="Alur pembentukan Link-Local EUI-64 dianalisis" />
+          <ActivityBadge label="Prefix alamat IPv6 dipasangkan dengan benar" />
+        </div>
+      </ReviewCard>
+      {argumentText && <ReviewCard title="Kemampuan Berargumen" icon={<PenLine className="w-3.5 h-3.5" />} accentColor="text-[#628ECB]" borderColor="border-[#628ECB]/20" bgColor="bg-[#EEF4FF]/40"><EssayDisplay text={argumentText} /></ReviewCard>}
+      {reflectionText && <ReviewCard title="Refleksi Aktivitas" icon={<MessageSquare className="w-3.5 h-3.5" />} accentColor="text-[#F59E0B]" borderColor="border-[#F59E0B]/20" bgColor="bg-[#FFFBEB]/50"><EssayDisplay text={reflectionText} /></ReviewCard>}
+      {conclusion && <ReviewCard title="Penarikan Kesimpulan" icon={<Lightbulb className="w-3.5 h-3.5" />} accentColor="text-[#10B981]" borderColor="border-[#10B981]/20" bgColor="bg-[#F0FDF9]/40"><EssayDisplay text={conclusion} /></ReviewCard>}
+    </div>
+  );
+}
+
+function Lesson4QuestioningReview({ answer, stage }: { answer: any; stage: Stage }) {
+  const selectedReason = answer?.selectedReason;
+  const selectedOption = (stage as any)?.reasonOptions?.find((opt: any) => opt.id === selectedReason);
+  const conclusion = answer?.conclusionText ?? answer?.conclusion ?? answer?.summary;
+  if (!selectedReason && !conclusion) return <MissingData />;
+
+  return (
+    <div className="space-y-3">
+      <ReviewCard title="Keruntutan Berpikir" icon={<Layers className="w-3.5 h-3.5" />} accentColor="text-[#395886]" borderColor="border-[#395886]/20" bgColor="bg-[#F8FAFF]/60">
+        <div className="space-y-2">
+          <ActivityBadge label="Tanya jawab aturan kompresi IPv6 dituntaskan" />
+          <ActivityBadge label="Skenario alamat IPv6 jebakan dianalisis" />
+        </div>
+      </ReviewCard>
+      {selectedOption && <ReviewCard title="Kemampuan Berargumen" icon={<PenLine className="w-3.5 h-3.5" />} accentColor="text-[#628ECB]" borderColor="border-[#628ECB]/20" bgColor="bg-[#EEF4FF]/40"><div className="space-y-2"><ActivityBadge label={selectedOption.text} /><EssayDisplay text={selectedOption.feedback} /></div></ReviewCard>}
+      {conclusion && <ReviewCard title="Penarikan Kesimpulan" icon={<Lightbulb className="w-3.5 h-3.5" />} accentColor="text-[#10B981]" borderColor="border-[#10B981]/20" bgColor="bg-[#F0FDF9]/40"><EssayDisplay text={conclusion} /></ReviewCard>}
+    </div>
+  );
+}
+
+function Lesson4LearningCommunityReview({ answer, stage }: { answer: any; stage: Stage }) {
+  const caseAChoice = answer?.module1Data?.caseAChoice ?? answer?.caseAChoice;
+  const caseBChoice = answer?.module2Data?.caseBChoice ?? answer?.caseBChoice;
+  const discussion = answer?.module2Data?.discussion ?? answer?.discussion;
+  const finalConclusion = answer?.finalConclusion ?? answer?.conclusionText ?? answer?.conclusion ?? answer?.summary;
+  const caseAOptions = (stage as any)?.encapsulationCase?.options ?? [];
+  const caseBOptions = (stage as any)?.decapsulationCase?.options ?? [];
+  const caseASelected = caseAOptions.find((opt: any) => opt.id === caseAChoice);
+  const caseBSelected = caseBOptions.find((opt: any) => opt.id === caseBChoice);
+  if (!caseAChoice && !caseBChoice && !discussion && !finalConclusion) return <MissingData />;
+
+  return (
+    <div className="space-y-3">
+      <ReviewCard title="Keruntutan Berpikir" icon={<Layers className="w-3.5 h-3.5" />} accentColor="text-[#395886]" borderColor="border-[#395886]/20" bgColor="bg-[#F8FAFF]/60">
+        <div className="space-y-2">
+          {caseASelected && <ActivityBadge label={`Audit Kartu A: ${caseASelected.text}`} />}
+          {caseBSelected && <ActivityBadge label={`Audit Kartu B: ${caseBSelected.text}`} />}
+        </div>
+      </ReviewCard>
+      {discussion && <ReviewCard title="Kemampuan Berargumen" icon={<PenLine className="w-3.5 h-3.5" />} accentColor="text-[#628ECB]" borderColor="border-[#628ECB]/20" bgColor="bg-[#EEF4FF]/40"><EssayDisplay text={discussion} /></ReviewCard>}
+      {finalConclusion && <ReviewCard title="Penarikan Kesimpulan" icon={<Lightbulb className="w-3.5 h-3.5" />} accentColor="text-[#10B981]" borderColor="border-[#10B981]/20" bgColor="bg-[#F0FDF9]/40"><EssayDisplay text={finalConclusion} /></ReviewCard>}
+    </div>
+  );
+}
+
+function Lesson4ReflectionReview({ answer }: { answer: any }) {
+  const argumentText = answer?.argumentText ?? answer?.essayMaterial;
+  const easyText = answer?.essayEasy;
+  const hardText = answer?.essayHard;
+  const evaluationData = answer?.evaluationData;
+  const conclusion = answer?.conclusionText ?? answer?.conclusion ?? answer?.summary;
+  const checkedCount = evaluationData ? Object.values(evaluationData).filter(Boolean).length : 0;
+  const totalCriteria = evaluationData ? Object.keys(evaluationData).length : 0;
+  if (!argumentText && !easyText && !hardText && !conclusion && !evaluationData) return <MissingData />;
+
+  return (
+    <div className="space-y-3">
+      <ReviewCard title="Keruntutan Berpikir" icon={<Layers className="w-3.5 h-3.5" />} accentColor="text-[#395886]" borderColor="border-[#395886]/20" bgColor="bg-[#F8FAFF]/60">
+        <div className="space-y-2">
+          <ActivityBadge label="Peta konsep IPv6 dibandingkan secara terstruktur" />
+          {totalCriteria > 0 && <ActivityBadge label={`Evaluasi diri: ${checkedCount} dari ${totalCriteria} kriteria tercapai`} />}
+        </div>
+      </ReviewCard>
+      {argumentText && <ReviewCard title="Kemampuan Berargumen" icon={<PenLine className="w-3.5 h-3.5" />} accentColor="text-[#628ECB]" borderColor="border-[#628ECB]/20" bgColor="bg-[#EEF4FF]/40"><EssayDisplay text={argumentText} /></ReviewCard>}
+      {(easyText || hardText) && <ReviewCard title="Refleksi Pembelajaran" icon={<MessageSquare className="w-3.5 h-3.5" />} accentColor="text-[#F59E0B]" borderColor="border-[#F59E0B]/20" bgColor="bg-[#FFFBEB]/50"><div className="space-y-3">{easyText && <EssayDisplay text={easyText} />}{hardText && <EssayDisplay text={hardText} />}</div></ReviewCard>}
+      {conclusion && <ReviewCard title="Penarikan Kesimpulan" icon={<Lightbulb className="w-3.5 h-3.5" />} accentColor="text-[#10B981]" borderColor="border-[#10B981]/20" bgColor="bg-[#F0FDF9]/40"><EssayDisplay text={conclusion} /></ReviewCard>}
+    </div>
+  );
+}
+
+function Lesson4AuthenticAssessmentReview({ answer, stage }: { answer: any; stage: Stage }) {
+  const scenario = (stage as any)?.branchingScenario;
+  const initialChoice = answer?.initialChoice;
+  const followUpChoice = answer?.followUpChoice;
+  const rca = answer?.rca;
+  const conclusion = answer?.conclusionText ?? answer?.conclusion ?? answer?.summary;
+  const initialBranch = (scenario?.choices ?? []).find((choice: any) => choice.id === initialChoice);
+  const followUpSelected = (initialBranch?.followUpChoices ?? []).find((choice: any) => choice.id === followUpChoice);
+  if (!initialChoice && !followUpChoice && !rca && !conclusion) return <MissingData />;
+
+  return (
+    <div className="space-y-3">
+      <ReviewCard title="Keruntutan Berpikir" icon={<Layers className="w-3.5 h-3.5" />} accentColor="text-[#395886]" borderColor="border-[#395886]/20" bgColor="bg-[#F8FAFF]/60">
+        <div className="space-y-2">
+          {initialBranch && <ActivityBadge label={`Investigasi awal: ${initialBranch.text}`} />}
+          {followUpSelected && <ActivityBadge label={`Tindak lanjut: ${followUpSelected.text}`} />}
+        </div>
+      </ReviewCard>
+      {rca && <ReviewCard title="Kemampuan Berargumen" icon={<PenLine className="w-3.5 h-3.5" />} accentColor="text-[#628ECB]" borderColor="border-[#628ECB]/20" bgColor="bg-[#EEF4FF]/40"><EssayDisplay text={rca} /></ReviewCard>}
+      {conclusion && <ReviewCard title="Penarikan Kesimpulan" icon={<Lightbulb className="w-3.5 h-3.5" />} accentColor="text-[#10B981]" borderColor="border-[#10B981]/20" bgColor="bg-[#F0FDF9]/40"><EssayDisplay text={conclusion} /></ReviewCard>}
+    </div>
+  );
+}
+
 function ConstructivismL3Review({ answer, snap }: { answer: any; snap?: Record<string, any> }) {
   const essayText = snap?.l3EssayText ?? answer?.essayText;
   const conclusionAnswers: Record<string, string> = snap?.l3ConclusionAnswers ?? answer?.conclusionAnswers ?? {};
@@ -1023,21 +1160,28 @@ export interface StageAnswerDetailProps {
 export function StageAnswerDetail({ stage, answer, snapshot, lessonId }: StageAnswerDetailProps) {
   if (!answer) return <MissingData />;
   const snap = snapshot;
+  const isLesson4 = lessonId === '4';
 
   switch (stage.type) {
     case 'constructivism':
+      if (isLesson4) return <Lesson4ConstructivismReview answer={answer} />;
       return <ConstructivismReview answer={answer} snap={snap} lessonId={lessonId} />;
     case 'inquiry':
+      if (isLesson4) return <Lesson4InquiryReview answer={answer} />;
       return <InquiryReview answer={answer} snap={snap} />;
     case 'questioning':
+      if (isLesson4) return <Lesson4QuestioningReview answer={answer} stage={stage} />;
       return <QuestioningReview answer={answer} snap={snap} stage={stage} lessonId={lessonId} />;
     case 'learning-community':
+      if (isLesson4) return <Lesson4LearningCommunityReview answer={answer} stage={stage} />;
       return <LearningCommunityReview answer={answer} snap={snap} />;
     case 'modeling':
       return <ModelingReview answer={answer} snap={snap} />;
     case 'reflection':
+      if (isLesson4) return <Lesson4ReflectionReview answer={answer} />;
       return <ReflectionReview answer={answer} snap={snap} />;
     case 'authentic-assessment':
+      if (isLesson4) return <Lesson4AuthenticAssessmentReview answer={answer} stage={stage} />;
       return <AuthenticAssessmentReview answer={answer} snap={snap} stage={stage} />;
     default:
       return <MissingData />;

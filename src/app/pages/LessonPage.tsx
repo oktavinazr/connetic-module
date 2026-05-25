@@ -435,8 +435,8 @@ export function LessonPage() {
       isCompleted: isStageCompleted || pendingReflection !== null,
     };
 
-    // Lesson 4: all stages except modeling use dedicated IPv6 components
-    if (lessonId === '4' && currentStage.type !== 'modeling') {
+    // Lesson 4: all stages except modeling and learning-community use dedicated IPv6 components
+    if (lessonId === '4' && currentStage.type !== 'modeling' && currentStage.type !== 'learning-community') {
       return (
         <Lesson4Stage
           stage={currentStage}

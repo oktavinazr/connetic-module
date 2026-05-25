@@ -679,10 +679,10 @@ export const stageLearningObjectivesByLesson: Record<string, Partial<Record<Stag
     'authentic-assessment': [
       {
         code: 'X.IP.15',
-        description: 'Mampu mengevaluasi keterkaitan TCP dan IP dalam arsitektur model TCP/IP saat proses komunikasi jaringan',
+        description: 'Mampu mengevaluasi penerapan pengalamatan dan konektivitas IPv6 pada proses komunikasi jaringan modern',
         atpAbcd: {
           audience: 'Peserta didik',
-          behavior: 'mampu mengevaluasi keterkaitan TCP dan IP dalam arsitektur model TCP/IP saat proses komunikasi jaringan',
+          behavior: 'mampu mengevaluasi penerapan pengalamatan dan konektivitas IPv6 pada proses komunikasi jaringan modern',
           condition: 'melalui aktivitas authentic assessment berupa studi kasus bercabang pada CONNETIC Module',
           degree: 'secara logis',
         },

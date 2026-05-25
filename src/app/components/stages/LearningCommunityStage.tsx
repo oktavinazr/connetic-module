@@ -8,6 +8,7 @@ import {
   Clock, Server, Lock, Unlock, ArrowDown, ArrowUp, Shuffle
 } from 'lucide-react';
 import { LearningCommunityLesson3 } from './LearningCommunityLesson3';
+import { LearningCommunityLesson4 } from './LearningCommunityLesson4';
 import { getCurrentUser } from '../../utils/auth';
 import {
   upsertGroupDiscussion,
@@ -1440,6 +1441,22 @@ export function LearningCommunityStage({
         stageIndex={stageIndex}
         groupName={groupName}
         isCompleted={isCompleted}
+        onComplete={onComplete}
+        onTrackerPhase={onTrackerPhase}
+      />
+    );
+  }
+
+  if (lessonId === '4') {
+    return (
+      <LearningCommunityLesson4
+        lessonId={lessonId}
+        stageIndex={stageIndex}
+        groupName={groupName}
+        isCompleted={isCompleted}
+        encapsulationCase={encapsulationCase as any}
+        decapsulationCase={decapsulationCase as any}
+        atpBehavior={atpBehavior}
         onComplete={onComplete}
         onTrackerPhase={onTrackerPhase}
       />

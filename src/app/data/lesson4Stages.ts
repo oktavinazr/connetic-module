@@ -604,7 +604,7 @@ export const lesson4Stages: Stage[] = [
     type: 'authentic-assessment',
     title: 'Authentic Assessment',
     description:
-      'Siswa mengevaluasi keterkaitan TCP dan IP dalam arsitektur TCP/IP melalui studi kasus investigasi paket IPv6 yang drop, mengikuti hierarki layer TCP/IP, dan menyusun dokumen Root Cause Analysis (RCA) sebagai output akhir.',
+      'Siswa mengevaluasi penerapan pengalamatan dan konektivitas IPv6 melalui studi kasus investigasi paket IPv6 yang gagal terkirim, mengikuti alur diagnosis yang runtut, dan menyusun dokumen Root Cause Analysis (RCA) sebagai output akhir.',
     objectiveCode: 'X.IP.15',
     activityGuide: [
       'Baca laporan insiden: paket IPv6 tidak sampai ke tujuan di jaringan SMK Nusantara.',
@@ -623,7 +623,7 @@ export const lesson4Stages: Stage[] = [
     ],
     atpAbcd: {
       audience: 'Peserta didik',
-      behavior: 'mampu mengevaluasi keterkaitan TCP dan IP dalam arsitektur model TCP/IP saat proses komunikasi jaringan',
+      behavior: 'mampu mengevaluasi penerapan pengalamatan dan konektivitas IPv6 pada proses komunikasi jaringan modern',
       condition: 'melalui aktivitas authentic assessment berupa studi kasus bercabang investigasi paket IPv6 pada CONNETIC Module',
       degree: 'secara logis',
     },
@@ -632,7 +632,7 @@ export const lesson4Stages: Stage[] = [
         'Laporan masuk dari Lab TKJ SMK Nusantara: sebuah PC Client (IPv6: 2001:db8:1::10) tidak bisa melakukan ping ke Server IPv6 (2001:db8:1::100) yang berada di ruangan berbeda namun satu LAN segment. Router R1 sudah dikonfigurasi Dual Stack. Semua PC lain di lab yang sama bisa ping normal. Tugas kamu: investigasi sistematis menggunakan hierarki layer TCP/IP.',
       initialQuestion:
         'Berdasarkan hierarki layer TCP/IP, layer mana yang harus kamu periksa PERTAMA KALI sebelum melangkah ke layer berikutnya?',
-      focusAreas: ['Physical Layer', 'Network/IPv6 Layer', 'Transport/TCP Layer'],
+      focusAreas: ['Konektivitas Fisik', 'Pengalamatan IPv6', 'Layanan Jaringan'],
       choices: [
         {
           id: 'c1',
@@ -713,6 +713,6 @@ export const lesson4Stages: Stage[] = [
       finalEvaluation:
         'Sekarang susunlah Dokumen Root Cause Analysis (RCA) berdasarkan investigasi yang kamu lakukan. Format RCA: (1) Problem Statement — deskripsikan masalah yang terjadi secara singkat, (2) Root Cause — apa penyebab utama yang ditemukan, (3) Evidence — bukti teknis apa yang mendukung temuanmu, (4) Corrective Action — langkah perbaikan yang telah atau harus dilakukan. Dokumen RCA yang baik adalah bukti bahwa kamu tidak hanya bisa memperbaiki masalah, tapi juga memahami mengapa masalah itu terjadi.',
     },
-    conclusionPrompt: 'Berdasarkan studi kasus investigasi paket IPv6 menggunakan hierarki layer TCP/IP yang telah kamu analisis, susunlah dokumen Root Cause Analysis (RCA) dengan format: (1) Problem Statement, (2) Root Cause, (3) Evidence teknis, (4) Corrective Action. Kemudian jelaskan bagaimana kamu mampu mengevaluasi keterkaitan TCP dan IP dalam arsitektur model TCP/IP saat proses komunikasi jaringan. Tuliskan secara logis dengan kata-katamu sendiri.',
+    conclusionPrompt: 'Berdasarkan studi kasus investigasi paket IPv6 yang telah kamu analisis, susunlah dokumen Root Cause Analysis (RCA) dengan format: (1) Problem Statement, (2) Root Cause, (3) Evidence teknis, (4) Corrective Action. Kemudian jelaskan bagaimana kamu mampu mengevaluasi penerapan pengalamatan dan konektivitas IPv6 pada proses komunikasi jaringan modern. Tuliskan secara logis dengan kata-katamu sendiri.',
   },
 ];
