@@ -526,8 +526,8 @@ function TcpBranchingAuthenticAssessment({
             <User className="h-5 w-5 text-[#8B5CF6]" />
           </div>
           <div className="flex-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#8B5CF6]">{scenario.caseTitle || 'Branching TCP Case Simulation'}</p>
-            <p className="text-sm font-bold text-[#395886]">Analisis jalur komunikasi TCP langkah demi langkah</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#8B5CF6]">{scenario.caseTitle || 'Branching IPv4 Addressing Case'}</p>
+            <p className="text-sm font-bold text-[#395886]">Analisis pengalamatan IPv4 Private & Public langkah demi langkah</p>
           </div>
         </div>
 

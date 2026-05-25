@@ -118,6 +118,14 @@ export function getStageAnswerSummary(stage: Stage, answer: any): string {
         if (a.argumentText) return a.argumentText.slice(0, 40) + '...';
         return 'Refleksi Selesai';
       }
+      case 'authentic-assessment': {
+        const a = answer as any;
+        if (a.conclusion) return a.conclusion.slice(0, 40) + '...';
+        if (a.summary) return a.summary.slice(0, 40) + '...';
+        if (a.argumentText) return a.argumentText.slice(0, 40) + '...';
+        if (a.conclusionChoice) return 'Analisis cabang selesai';
+        return 'Authentic Assessment Selesai';
+      }
       default:
         return 'Selesai';
     }
@@ -866,17 +874,18 @@ function AuthenticAssessmentReview({ answer, snap, stage }: { answer: any; snap?
     const argumentText = snap?.argumentText ?? answer?.argumentText;
     const conclusionChoice = snap?.conclusionChoice ?? answer?.conclusionChoice;
     const conclusionCorrect = answer?.conclusionCorrect;
+    const conclusionText = snap?.conclusionText ?? answer?.conclusionText ?? answer?.conclusion ?? answer?.summary;
     const steps = scenario.steps ?? [];
     const conclusionOptions = scenario.conclusionOptions ?? [];
     const selectedConclusion = conclusionOptions.find((opt: any) => opt.id === conclusionChoice);
 
-    const hasAny = Object.keys(selectedOptions).length > 0 || argumentText || conclusionChoice;
+    const hasAny = Object.keys(selectedOptions).length > 0 || argumentText || conclusionChoice || conclusionText;
     if (!hasAny) return <MissingData />;
 
     return (
       <div className="space-y-3">
         {Object.keys(selectedOptions).length > 0 && (
-          <ReviewCard title="Branching TCP Case Simulation" icon={<CheckCircle className="w-3.5 h-3.5" />} accentColor="text-[#8B5CF6]" borderColor="border-[#8B5CF6]/20" bgColor="bg-[#F5F3FF]/40">
+          <ReviewCard title="Branching IPv4 Addressing Case" icon={<CheckCircle className="w-3.5 h-3.5" />} accentColor="text-[#8B5CF6]" borderColor="border-[#8B5CF6]/20" bgColor="bg-[#F5F3FF]/40">
             <div className="space-y-2">
               {steps.map((step: any, index: number) => {
                 const selectedId = selectedOptions[step.id];
@@ -913,6 +922,12 @@ function AuthenticAssessmentReview({ answer, snap, stage }: { answer: any; snap?
             <div className={`rounded-xl p-3 ${conclusionCorrect ? 'bg-[#ECFDF5]' : 'bg-red-50'}`}>
               <p className="text-xs font-bold text-[#395886]">{selectedConclusion?.text || conclusionChoice}</p>
             </div>
+          </ReviewCard>
+        )}
+
+        {conclusionText && (
+          <ReviewCard title="Hasil Refleksi Kamu" icon={<Lightbulb className="w-3.5 h-3.5" />} accentColor="text-[#10B981]" borderColor="border-[#10B981]/20" bgColor="bg-[#F0FDF9]/40">
+            <EssayDisplay text={conclusionText} />
           </ReviewCard>
         )}
       </div>

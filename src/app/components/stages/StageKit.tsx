@@ -436,16 +436,17 @@ export function ATPConclusionBox({
   atpBehavior: string;
   objectiveCode: string;
   stageType?: string;
-  onSubmit: (text: string) => void;
+  onSubmit: (text: string) => void | Promise<void>;
   defaultValue?: string;
   disabled?: boolean;
   minWords?: number;
 }) {
   const [text, setText] = useState(defaultValue);
   const [submitted, setSubmitted] = useState(!!defaultValue && disabled);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
   const ready = wordCount >= minWords;
-  const isLocked = disabled || submitted;
+  const isLocked = disabled || submitted || isSubmitting;
 
   const stageLabels: Record<string, string> = {
     constructivism: 'Constructivism',
@@ -547,12 +548,21 @@ export function ATPConclusionBox({
 
           {!isLocked && (
             <button
-              onClick={() => { if (!ready) return; setSubmitted(true); onSubmit(text.trim()); }}
-              disabled={!ready}
+              onClick={async () => {
+                if (!ready || isSubmitting) return;
+                setIsSubmitting(true);
+                try {
+                  await Promise.resolve(onSubmit(text.trim()));
+                  setSubmitted(true);
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}
+              disabled={!ready || isSubmitting}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all active:scale-95 shadow-sm
-                ${ready ? 'bg-[#10B981] text-white hover:bg-[#059669]' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
+                ${ready && !isSubmitting ? 'bg-[#10B981] text-white hover:bg-[#059669]' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
             >
-              Simpan Kesimpulan <ChevronRight className="w-3.5 h-3.5" />
+              {isSubmitting ? 'Menyimpan Kesimpulan...' : 'Simpan Kesimpulan'} <ChevronRight className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
