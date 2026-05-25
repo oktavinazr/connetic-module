@@ -31,6 +31,7 @@ import { LearningCommunityStage } from '../components/stages/LearningCommunitySt
 import { ModelingStage } from '../components/stages/ModelingStage';
 import { ReflectionStage } from '../components/stages/ReflectionStage';
 import { AuthenticAssessmentStage } from '../components/stages/AuthenticAssessmentStage';
+import { Lesson4Stage } from '../components/stages/Lesson4Stages';
 import { LessonFlowSidebar } from '../components/LessonFlowSidebar';
 import { Logo } from '../components/layout/Logo';
 import { getStageDisplayTitle, lessons, stageLearningObjectivesByLesson } from '../data/lessons';
@@ -176,10 +177,11 @@ const stageNeedsExternalReflection = (type: StageType, lid: string): boolean => 
   // Stages that handle their own conclusion internally
   if (type === 'reflection') return false;
   if (type === 'learning-community') return false;
-  if (type === 'modeling' && (lid === '2' || lid === '3')) return false;
-  if (type === 'constructivism' && (lid === '1' || lid === '2' || lid === '3')) return false;
-  if (type === 'questioning' && (lid === '1' || lid === '2' || lid === '3')) return false;
-  if (type === 'inquiry' && (lid === '1' || lid === '2' || lid === '3')) return false;
+  if (type === 'modeling' && (lid === '2' || lid === '3' || lid === '4')) return false;
+  if (type === 'constructivism' && (lid === '1' || lid === '2' || lid === '3' || lid === '4')) return false;
+  if (type === 'questioning' && (lid === '1' || lid === '2' || lid === '3' || lid === '4')) return false;
+  if (type === 'inquiry' && (lid === '1' || lid === '2' || lid === '3' || lid === '4')) return false;
+  if (type === 'authentic-assessment' && lid === '4') return false;
   return true;
 };
 
@@ -432,6 +434,20 @@ export function LessonPage() {
       stageIndex: currentStageIndex,
       isCompleted: isStageCompleted || pendingReflection !== null,
     };
+
+    // Lesson 4: all stages except modeling use dedicated IPv6 components
+    if (lessonId === '4' && currentStage.type !== 'modeling') {
+      return (
+        <Lesson4Stage
+          stage={currentStage}
+          lessonId={lessonId}
+          stageIndex={currentStageIndex}
+          onComplete={handleStageActivityComplete}
+          isCompleted={isStageCompleted || pendingReflection !== null}
+          onTrackerPhase={setTrackerPhase}
+        />
+      );
+    }
 
     switch (currentStage.type) {
       case 'constructivism':

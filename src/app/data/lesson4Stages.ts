@@ -1,16 +1,18 @@
 import type { Stage } from './lessons';
 
 export const lesson4Stages: Stage[] = [
+  // ─── Tahap 1: Constructivism — X.IP.9 ───────────────────────────────────────
   {
     type: 'constructivism',
     title: 'Constructivism',
     description:
-      'Siswa membangun pemahaman awal tentang keterbatasan IPv4 dan kebutuhan IPv6 melalui analogi pertumbuhan perangkat digital yang pesat.',
+      'Siswa membangun pemahaman awal tentang keterbatasan IPv4 dan kebutuhan IPv6 melalui analogi pertumbuhan perangkat digital yang terus meningkat pesat.',
     objectiveCode: 'X.IP.9',
     activityGuide: [
-      'Susun 6 potongan cerita tentang mengapa dunia membutuhkan IPv6 menjadi urutan yang logis.',
-      'Tulis refleksi: apa yang terjadi jika alamat IPv4 habis sementara perangkat terus bertambah.',
-      'Urutkan proses evolusi dari IPv4 ke IPv6 melalui aktivitas Process Chain.',
+      'Klik setiap infografis kronologis pertumbuhan IoT dan habisnya alamat IPv4 secara berurutan untuk memahami konteks krisis.',
+      'Tulis argumen mengapa teknik NAT pada IPv4 tidak lagi ideal untuk masa depan jaringan yang terus berkembang.',
+      'Susun perbandingan IPv4 vs IPv6 melalui aktivitas Analogy Sorting.',
+      'Lengkapi Box Refleksi Standar untuk menyimpulkan mengapa migrasi ke IPv6 bersifat mutlak.',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
@@ -22,7 +24,7 @@ export const lesson4Stages: Stage[] = [
       'Pernahkah kamu membayangkan apa yang terjadi jika semua orang di dunia punya 10 gadget yang butuh internet? IPv4 hanya punya sekitar 4,3 miliar alamat. Penduduk bumi saja sudah 8 miliar — belum termasuk jutaan kamera CCTV, sensor rumah pintar, dan kendaraan otonom. Kita butuh sistem pengalamatan yang jauh lebih besar!',
     storyScramble: {
       instruction:
-        'Bagaimana dunia menyadari kebutuhan mendesak akan IPv6 dan mengapa transisi ini tidak bisa dihindari? Susun 6 potongan cerita berikut menjadi urutan yang logis.',
+        'Bagaimana dunia menyadari kebutuhan mendesak akan IPv6 dan mengapa transisi ini tidak bisa dihindari? Susun 6 potongan infografis kronologis berikut menjadi urutan yang logis.',
       fragments: [
         {
           id: 'f1',
@@ -59,7 +61,7 @@ export const lesson4Stages: Stage[] = [
         'Tepat! IPv6 lahir bukan karena sekadar pembaruan teknologi, melainkan karena kebutuhan mendesak akan ruang alamat yang hampir tak terbatas.',
     },
     constructivismEssay1:
-      'Jika IPv4 sudah memiliki 4,3 miliar alamat, mengapa kita baru merasakan kekurangannya sekarang dan bukan 30 tahun yang lalu? Jelaskan faktor-faktor apa saja yang mempercepat habisnya alamat IPv4!',
+      'Teknik NAT (Network Address Translation) awalnya dirancang sebagai "solusi sementara" atas keterbatasan alamat IPv4 — satu IP publik digunakan bersama oleh banyak perangkat di jaringan lokal. Namun, mengapa teknik NAT ini tidak lagi ideal untuk masa depan jaringan yang semakin penuh dengan perangkat IoT, smart city, dan komunikasi end-to-end? Jelaskan kelemahan teknis NAT dan mengapa IPv6 memberikan solusi yang lebih fundamental!',
     analogySortGroups: [
       { id: 'ipv6', label: 'Perbandingan IPv4 vs IPv6', colorClass: 'blue' },
     ],
@@ -74,7 +76,7 @@ export const lesson4Stages: Stage[] = [
       {
         id: 'ap2',
         text: 'IPv6 menggunakan 128-bit, menghasilkan ~340 undecillion alamat — secara praktis tidak terbatas.',
-        courierAnalogy: 'Seperti memberikan alamat unik pada setiap pasir di pantai di seluruh dunia, masih tersisa cadangan yang hampir tidak terhitung.',
+        courierAnalogy: 'Seperti memberikan alamat unik pada setiap butir pasir di seluruh pantai di dunia, masih tersisa cadangan yang hampir tidak terhitung.',
         correctGroup: 'ipv6',
         correctOrder: 2,
       },
@@ -94,8 +96,8 @@ export const lesson4Stages: Stage[] = [
       },
       {
         id: 'ap5',
-        text: 'IPv4 memerlukan NAT (Network Address Translation) untuk mengatasi keterbatasan alamat di jaringan lokal.',
-        courierAnalogy: 'Seperti apartemen dengan satu alamat gedung tapi ratusan kamar di dalamnya — hanya gedung yang punya alamat publik.',
+        text: 'IPv4 memerlukan NAT untuk mengatasi keterbatasan alamat — satu IP publik dipakai bersama banyak perangkat lokal.',
+        courierAnalogy: 'Seperti apartemen dengan satu alamat gedung tapi ratusan kamar di dalamnya — hanya gedung yang punya alamat publik, isi tidak dikenal dari luar.',
         correctGroup: 'ipv6',
         correctOrder: 5,
       },
@@ -108,42 +110,43 @@ export const lesson4Stages: Stage[] = [
       },
     ],
     constructivismEssay2:
-      'Berdasarkan perbandingan IPv4 dan IPv6 yang baru saja kamu susun, jelaskan apa keuntungan terbesar dari beralih ke IPv6 selain sekadar jumlah alamat yang lebih banyak!',
-    conclusionPrompt: 'Berdasarkan aktivitas Story Scramble dan Analogy Sorting tentang keterbatasan IPv4 & kebutuhan IPv6 yang telah kamu lakukan, jelaskan bagaimana kamu mampu menjelaskan konsep dasar IPv6 sebagai solusi keterbatasan ruang alamat IPv4. Tuliskan dengan tepat menggunakan kata-katamu sendiri.',
+      'Berdasarkan perbandingan IPv4 dan IPv6 yang baru saja kamu susun, jelaskan apa keuntungan terbesar dari beralih ke IPv6 selain sekadar jumlah alamat yang lebih banyak! Pertimbangkan aspek keamanan (IPsec), efisiensi header, dan kemampuan end-to-end connectivity.',
+    conclusionPrompt: 'Berdasarkan aktivitas infografis kronologis dan Analogy Sorting tentang keterbatasan IPv4 & kebutuhan IPv6 yang telah kamu lakukan, jelaskan bagaimana kamu mampu menjelaskan konsep dasar IPv6 sebagai solusi keterbatasan ruang alamat IPv4. Mengapa migrasi ke struktur bit IPv6 bersifat mutlak? Tuliskan dengan tepat menggunakan kata-katamu sendiri.',
   },
 
+  // ─── Tahap 2: Inquiry — X.IP.10 ─────────────────────────────────────────────
   {
     type: 'inquiry',
     title: 'Inquiry',
     description:
-      'Siswa mengeksplorasi format penulisan IPv6, aturan kompresi alamat, jenis-jenis alamat IPv6, dan proses pembentukan IPv6 Link Local menggunakan standar EUI-64.',
+      'Siswa mengeksplorasi format penulisan IPv6 dan secara mandiri mengurutkan 6 langkah standar EUI-64 untuk membentuk IPv6 Link Local Address dari MAC Address.',
     objectiveCode: 'X.IP.10',
     activityGuide: [
-      'Pelajari struktur 128-bit IPv6 dan aturan kompresi (Zero Suppression & Double Colon) melalui panel eksplorasi.',
-      'Urutkan 5 langkah proses kompresi alamat IPv6 dari format lengkap ke format paling singkat.',
-      'Cocokkan jenis alamat IPv6 (Global Unicast, Link-Local, Loopback, dll.) dengan karakteristiknya.',
-      'Tulis refleksi: mengapa IPv6 perlu aturan kompresi yang ketat?',
+      'Pelajari format 128-bit IPv6 dan jenis-jenis alamatnya melalui panel eksplorasi.',
+      'Urutkan 6 langkah proses EUI-64 (MAC → split → sisipkan FF:FE → format 64-bit → flip bit ke-7 → tambah prefix fe80::) secara tepat.',
+      'Jelaskan mengapa bit ke-7 pada oktet pertama harus dibalik berdasarkan standar IEEE.',
+      'Tulis hasil akhir IPv6 Link-Local Address yang terbentuk dari proses EUI-64.',
     ],
     logicalThinkingIndicators: [
-      'Keruntutan Berpikir: mengurutkan proses kompresi IPv6 secara sistematis.',
-      'Analisis Format: membedakan jenis alamat IPv6 berdasarkan prefix dan karakteristiknya.',
-      'Refleksi Konsep: menjelaskan mengapa desain IPv6 memprioritaskan skalabilitas over kemudahan manusia.',
+      'Keruntutan Berpikir: mengurutkan 6 langkah EUI-64 dari MAC Address hingga IPv6 Link-Local Address secara tepat.',
+      'Kemampuan Berargumen: menjelaskan alasan teknis mengapa bit ke-7 harus dibalik sesuai standar IEEE 802.',
+      'Penarikan Kesimpulan: mengetikkan hasil akhir IPv6 Link-Local Address yang terbentuk dari proses EUI-64.',
     ],
     facilitatorNotes: [
-      'Guru menekankan bahwa aturan "::" hanya boleh digunakan SATU KALI dalam satu alamat IPv6.',
-      'Guru mendorong siswa mencoba kompresi sendiri sebelum melihat jawabannya di panel eksplorasi.',
+      'Guru menekankan bahwa "FF:FE" adalah penanda standar IEEE untuk membedakan EUI-64 yang diturunkan dari EUI-48 (MAC).',
+      'Guru mendemonstrasikan "flip bit ke-7" dalam EUI-64: AA (10101010) → A8 (10101000) — bit ke-7 dihitung dari kiri = bit ke-2 dari kanan pada oktet pertama.',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
       behavior: 'mampu menerapkan tahapan standar EUI-64 untuk membentuk IPv6 Link Local Address dari alamat MAC secara berurutan',
-      condition: 'melalui aktivitas inquiry berupa eksplorasi materi rangkai alur pada CONNETIC Module',
+      condition: 'melalui aktivitas inquiry berupa eksplorasi materi dan rangkai alur pada CONNETIC Module',
       degree: 'secara runtut',
     },
     material: {
-      title: 'Format dan Struktur Alamat IPv6',
+      title: 'Format IPv6 dan Proses EUI-64',
       content: [
         'IPv6 menggunakan 128-bit yang ditulis dalam 8 kelompok (blok) heksadesimal 16-bit, dipisahkan tanda titik dua. Contoh lengkap: 2001:0db8:85a3:0000:0000:8a2e:0370:7334.',
-        'Karena sangat panjang untuk diketik dan dibaca manusia, IPv6 memiliki dua aturan kompresi: (1) Leading zeros boleh dihapus dari setiap blok, (2) satu kelompok berurutan blok nol bisa disingkat menjadi "::".',
+        'Link Local Address (fe80::/10) adalah alamat IPv6 yang otomatis dibuat perangkat untuk berkomunikasi dalam satu jaringan lokal. Pembentukannya menggunakan standar EUI-64 dari MAC Address 48-bit.',
       ],
       examples: [
         '2001:db8::1 → Alamat Global Unicast (untuk routing internet publik).',
@@ -155,7 +158,7 @@ export const lesson4Stages: Stage[] = [
     explorationSections: [
       {
         id: 'e1',
-        title: 'Format Heksadesimal 128-bit',
+        title: 'Format Heksadesimal 128-bit IPv6',
         content:
           'IPv6 menggunakan sistem bilangan heksadesimal (basis 16: angka 0–9 dan huruf A–F). Setiap blok terdiri dari 4 digit hex (16-bit). Total: 8 blok × 16-bit = 128-bit. Contoh satu blok: "0db8" = 0000 1101 1011 1000 dalam biner.',
         example:
@@ -167,7 +170,7 @@ export const lesson4Stages: Stage[] = [
         content:
           'Nol di posisi paling kiri dalam setiap blok boleh dihilangkan. Contoh: "0db8" → "db8", "0001" → "1", "0000" → "0" (minimal satu digit harus ada). Aturan ini berlaku untuk setiap blok secara independen.',
         example:
-          '2001:0db8:0000:0000:0000:0000:0000:0001 → Setelah hapus leading zeros: 2001:db8:0:0:0:0:0:1. (Perhatikan: "0000" menjadi "0", bukan kosong.)',
+          '2001:0db8:0000:0000:0000:0000:0000:0001 → Setelah hapus leading zeros: 2001:db8:0:0:0:0:0:1.',
       },
       {
         id: 'e3',
@@ -175,15 +178,15 @@ export const lesson4Stages: Stage[] = [
         content:
           'SATU kelompok berurutan dari blok "0" bisa disingkat menjadi "::". PERINGATAN KRITIS: "::" hanya boleh muncul SATU KALI dalam satu alamat IPv6! Jika muncul dua kali, alamat menjadi ambigu dan tidak valid.',
         example:
-          '2001:db8:0:0:0:0:0:1 → Gunakan "::" untuk 5 blok nol berurutan: 2001:db8::1. SALAH: 2001::db8::1 (dua "::" tidak diizinkan karena tidak jelas berapa blok yang dihilangkan masing-masing).',
+          '2001:db8:0:0:0:0:0:1 → Gunakan "::" untuk 5 blok nol berurutan: 2001:db8::1. SALAH: 2001::db8::1 (dua "::" tidak diizinkan).',
       },
       {
         id: 'e4',
-        title: 'IPv6 Link Local Address & EUI-64',
+        title: 'Proses EUI-64: MAC Address → IPv6 Link-Local',
         content:
-          'Link Local Address (fe80::/10) adalah alamat IPv6 yang otomatis dibuat perangkat untuk berkomunikasi dalam satu jaringan lokal tanpa konfigurasi manual. Pembentukannya menggunakan standar EUI-64: ambil MAC Address 48-bit, sisipkan "FFFE" di tengahnya, flip bit ke-7, lalu gabungkan dengan prefix fe80::.',
+          'EUI-64 (Extended Unique Identifier 64-bit) adalah standar IEEE untuk menghasilkan Interface ID 64-bit dari MAC Address 48-bit. Langkah-langkahnya: (1) Ambil MAC 48-bit, (2) Pisah dua bagian 24-bit, (3) Sisipkan FF:FE di tengah, (4) Format sebagai 64-bit hex, (5) Flip bit ke-7 oktet pertama, (6) Gabungkan dengan prefix fe80::.',
         example:
-          'MAC: AA:BB:CC:DD:EE:FF → EUI-64: AABB:CCFF:FEDD:EEFF → Flip bit ke-7 → A8BB:CCFF:FEDD:EEFF → Link Local: fe80::a8bb:ccff:fedd:eeff.',
+          'MAC: AA:BB:CC:DD:EE:FF → Split: [AA:BB:CC] & [DD:EE:FF] → Sisip FF:FE: AA:BB:CC:FF:FE:DD:EE:FF → Format 64-bit: AABB:CCFF:FEDD:EEFF → Flip bit ke-7: A8BB:CCFF:FEDD:EEFF → Link-Local: fe80::A8BB:CCFF:FEDD:EEFF.',
       },
       {
         id: 'e5',
@@ -195,16 +198,53 @@ export const lesson4Stages: Stage[] = [
       },
     ],
     flowInstruction:
-      'Urutkan 5 langkah proses kompresi alamat IPv6 berikut dari format paling lengkap (awal) hingga format paling singkat yang valid (akhir).',
+      'Urutkan 6 langkah proses pembentukan IPv6 Link Local Address dari MAC Address menggunakan standar EUI-64 berikut — dari langkah awal hingga hasil akhir yang benar.',
     flowItems: [
-      { id: 'fl1', text: 'Alamat IPv6 Penuh (128-bit, 8 blok lengkap)', correctOrder: 1, description: 'Format asli tanpa kompresi apapun.', colorClass: 'purple' },
-      { id: 'fl2', text: 'Hapus Leading Zeros tiap blok', correctOrder: 2, description: 'Hilangkan nol di kiri setiap blok 4-digit.', colorClass: 'blue' },
-      { id: 'fl3', text: 'Identifikasi Kelompok Blok Nol Terpanjang', correctOrder: 3, description: 'Cari kelompok nol berurutan yang paling panjang.', colorClass: 'green' },
-      { id: 'fl4', text: 'Terapkan "::" pada Kelompok Nol Terpanjang', correctOrder: 4, description: 'Singkat satu kelompok nol berurutan terpanjang dengan ::.', colorClass: 'amber' },
-      { id: 'fl5', text: 'Verifikasi: "::" hanya muncul Satu Kali', correctOrder: 5, description: 'Pastikan alamat tidak ambigu dan valid.', colorClass: 'pink' },
+      {
+        id: 'fl1',
+        text: 'Ambil MAC Address 48-bit perangkat (contoh: AA:BB:CC:DD:EE:FF)',
+        correctOrder: 1,
+        description: 'Titik awal: MAC Address adalah identitas hardware 48-bit yang akan dikonversi menjadi Interface ID IPv6.',
+        colorClass: 'purple',
+      },
+      {
+        id: 'fl2',
+        text: 'Pisahkan MAC Address menjadi dua bagian 24-bit: OUI (AA:BB:CC) dan NIC ID (DD:EE:FF)',
+        correctOrder: 2,
+        description: 'MAC Address dipecah persis di tengah — 3 oktet pertama (OUI/vendor) dan 3 oktet terakhir (nomor seri perangkat).',
+        colorClass: 'blue',
+      },
+      {
+        id: 'fl3',
+        text: 'Sisipkan "FF:FE" di antara OUI dan NIC ID → AA:BB:CC:FF:FE:DD:EE:FF',
+        correctOrder: 3,
+        description: '"FF:FE" adalah penanda standar IEEE 802 bahwa Interface ID ini berasal dari EUI-48 (MAC Address 48-bit), bukan EUI-64 asli.',
+        colorClass: 'green',
+      },
+      {
+        id: 'fl4',
+        text: 'Tulis ulang dalam format blok IPv6 64-bit heksadesimal: AABB:CCFF:FEDD:EEFF',
+        correctOrder: 4,
+        description: 'Kelompokkan 8 oktet EUI-64 menjadi 4 blok 16-bit sesuai format IPv6 — siap menjadi Interface ID 64-bit.',
+        colorClass: 'amber',
+      },
+      {
+        id: 'fl5',
+        text: 'Balik (flip) bit ke-7 dari oktet pertama: AA (10101010) → A8 (10101000)',
+        correctOrder: 5,
+        description: 'Bit ke-7 disebut Universal/Local (U/L) bit. Membaliknya dari 1 ke 0 menandai bahwa alamat ini locally administered — dibentuk secara lokal, bukan dari registry global.',
+        colorClass: 'pink',
+      },
+      {
+        id: 'fl6',
+        text: 'Gabungkan dengan prefix fe80::/10 → IPv6 Link-Local: fe80::A8BB:CCFF:FEDD:EEFF',
+        correctOrder: 6,
+        description: 'IPv6 Link-Local selalu diawali prefix fe80::/10. Interface ID hasil EUI-64 melengkapi sisa 64-bit untuk membentuk alamat 128-bit.',
+        colorClass: 'indigo',
+      },
     ],
     inquiryReflection1:
-      'Jelaskan pemahamanmu tentang kedua aturan kompresi IPv6. Mengapa aturan "::" hanya boleh digunakan satu kali? Apa yang terjadi jika "::" muncul dua kali dalam satu alamat?',
+      'Pada langkah ke-5 proses EUI-64, bit ke-7 dari oktet pertama MAC Address harus dibalik (flip). Mengapa IEEE mewajibkan pembalikan bit ini? Apa makna teknis dari bit ke-7 (disebut Universal/Local bit) dan apa yang terjadi jika bit ini TIDAK dibalik?',
     matchingPairs: [
       { left: '2001::/3', right: 'Global Unicast — alamat untuk komunikasi internet publik.' },
       { left: 'fe80::/10', right: 'Link-Local — hanya berlaku dalam satu jaringan lokal langsung.' },
@@ -213,294 +253,326 @@ export const lesson4Stages: Stage[] = [
       { left: '::1', right: 'Loopback — untuk testing komunikasi dengan dirinya sendiri.' },
     ],
     inquiryReflection2:
-      'Setelah mempelajari jenis-jenis alamat IPv6, jelaskan mengapa IPv6 tidak memerlukan NAT (Network Address Translation) seperti IPv4! Apa implikasinya bagi koneksi perangkat IoT di masa depan?',
-    conclusionPrompt: 'Berdasarkan eksplorasi materi IPv6 dan aktivitas kompresi alamat yang telah kamu lakukan, jelaskan bagaimana kamu mampu menerapkan tahapan standar EUI-64 untuk membentuk IPv6 Link Local Address dari alamat MAC secara berurutan. Tuliskan secara runtut dengan kata-katamu sendiri.',
+      'Setelah memahami proses EUI-64, jelaskan mengapa IPv6 tidak memerlukan NAT (Network Address Translation) seperti IPv4! Bagaimana kemampuan setiap perangkat memiliki IP publik unik berdampak pada koneksi perangkat IoT di masa depan?',
+    conclusionPrompt: 'Berdasarkan eksplorasi materi IPv6 dan aktivitas mengurutkan 6 langkah EUI-64 yang telah kamu lakukan, jelaskan bagaimana kamu mampu menerapkan tahapan standar EUI-64 untuk membentuk IPv6 Link Local Address dari alamat MAC secara berurutan. Tuliskan juga hasil akhir IPv6 Link-Local Address dari MAC AA:BB:CC:DD:EE:FF menggunakan proses EUI-64. Jawab secara runtut dengan kata-katamu sendiri.',
   },
 
+  // ─── Tahap 3: Questioning — X.IP.11 ─────────────────────────────────────────
   {
     type: 'questioning',
     title: 'Questioning',
     description:
-      'Siswa menganalisis tantangan kompatibilitas saat perangkat lama IPv4 dan perangkat baru IPv6 harus berkomunikasi di jaringan yang sama.',
+      'Siswa menganalisis aturan penyederhanaan IPv6 melalui interaksi tanya jawab dua arah, menerapkan hierarki aturan kompresi dengan benar, dan mengidentifikasi alamat jebakan dengan double "::".',
     objectiveCode: 'X.IP.11',
     activityGuide: [
-      'Amati skenario "IPv4-IPv6 Incompatibility": perangkat lama tidak bisa langsung berkomunikasi dengan perangkat IPv6.',
-      'Pilih strategi transisi yang paling tepat untuk skenario yang diberikan.',
-      'Jelaskan alasan teknis mengapa strategi tersebut lebih baik dari alternatif lainnya.',
+      'Pelajari aturan kompresi IPv6 melalui tanya jawab dengan Virtual Assistant.',
+      'Terapkan hierarki aturan: hapus leading zeros dulu sebelum menerapkan "::".',
+      'Identifikasi dan berikan sanggahan terhadap alamat IPv6 jebakan yang menggunakan double "::".',
+      'Tuliskan bentuk paling sederhana yang valid dari alamat IPv6 yang diberikan.',
     ],
     logicalThinkingIndicators: [
-      'Kemampuan Berargumen: memilih strategi transisi yang tepat berdasarkan kondisi infrastruktur yang ada.',
-      'Penarikan Kesimpulan: menghubungkan keterbatasan IPv4 dengan solusi teknis yang tersedia.',
+      'Keruntutan Berpikir: menerapkan hierarki aturan kompresi (hapus leading zeros terlebih dahulu, baru terapkan ::) secara berurutan.',
+      'Kemampuan Berargumen: memberikan sanggahan teknis ketika disajikan alamat IPv6 jebakan dengan double "::".',
+      'Penarikan Kesimpulan: menuliskan bentuk paling sederhana dan valid dari alamat IPv6 yang diberikan.',
     ],
     facilitatorNotes: [
-      'Guru menjelaskan perbedaan antara Dual Stack (menjalankan keduanya), Tunneling (membungkus IPv6 dalam IPv4), dan NAT64 (menerjemahkan).',
-      'Guru mendorong siswa berpikir tentang trade-off: kemudahan vs biaya vs risiko setiap strategi.',
+      'Guru menekankan hierarki aturan: WAJIB hapus leading zeros dulu di setiap blok, BARU kemudian terapkan "::" untuk blok nol berurutan.',
+      'Guru mendorong siswa menemukan sendiri contoh alamat tidak valid dengan double "::" sebelum Virtual Assistant mengonfirmasi.',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
-      behavior: 'mampu menerapkan aturan penyederhanaan IPv6 pada skenario yang diberikan',
-      condition: 'melalui aktivitas questioning berupa tanya jawab dua arah pada CONNETIC Module',
+      behavior: 'mampu menerapkan aturan penyederhanaan IPv6 (leading zeros dan double colon) pada skenario yang diberikan',
+      condition: 'melalui aktivitas questioning berupa tanya jawab dua arah dengan Virtual Assistant pada CONNETIC Module',
       degree: 'secara tepat',
     },
     problemVisual: {
-      icon: '!',
-      title: 'Inkompatibilitas IPv4 dan IPv6',
+      icon: '?',
+      title: 'Aturan Kompresi IPv6 yang Membingungkan',
       description:
-        'Laptop baru dengan IPv6 tidak bisa berkomunikasi langsung dengan server lama yang hanya paham IPv4. Mereka berbicara "bahasa" yang berbeda!',
+        'Ada dua aturan kompresi IPv6 — namun banyak siswa salah menerapkan urutannya atau menggunakan "::" lebih dari sekali. Mana yang benar?',
       problemType: 'delay',
     },
     teacherQuestion:
-      'Bisakah satu kabel jaringan yang sama membawa trafik IPv4 dan IPv6 secara bersamaan? Bagaimana cara memastikan perangkat lama dan baru bisa saling berkomunikasi?',
+      'Diberikan alamat IPv6 penuh: 2001:0DB8:0000:0000:0000:0000:0000:0001 — berapa banyak cara kompresi yang valid untuk alamat ini, dan mana yang PALING SINGKAT?',
     scenario:
-      'Sekolah mendapat hibah bandwidth internet 1 Gbps yang menggunakan IPv6 murni dari ISP. Namun, Lab Komputer masih memiliki 20 PC lama dengan Windows 7 yang driver jaringannya hanya mendukung IPv4. Server e-learning sekolah sudah IPv6-ready. Siswa mengeluh beberapa website tidak bisa diakses dari PC lama.',
+      'Seorang siswa bernama Rudi ingin menyingkat alamat IPv6 berikut: 2001:0DB8:0000:0000:0034:0000:0000:0001. Rudi langsung menggunakan "::" di dua tempat sekaligus dan menghasilkan: 2001:DB8::34::1. Guru mengatakan hasil Rudi SALAH. Temukan apa yang salah dan tentukan bentuk paling singkat yang benar!',
     whyQuestion:
-      'Metode transisi mana yang paling direkomendasikan agar semua perangkat (lama dan baru) bisa mengakses internet dan server sekolah tanpa harus mengganti semua hardware sekaligus?',
+      'Mengapa aturan "::" (double colon) HANYA boleh digunakan SATU KALI dalam satu alamat IPv6, dan apa yang terjadi jika digunakan dua kali seperti yang dilakukan Rudi?',
     hint:
-      'Cari metode yang memungkinkan KEDUA protokol (IPv4 dan IPv6) berjalan bersamaan di perangkat yang sama tanpa harus memilih salah satu.',
+      'Pikirkan: jika ada dua "::" dalam satu alamat, bagaimana router akan tahu berapa blok nol yang diwakili oleh masing-masing "::"? Total blok yang ada harus selalu 8.',
     reasonOptions: [
       {
         id: 'r1',
-        text: 'Dual Stack — perangkat yang mendukung menjalankan IPv4 dan IPv6 secara bersamaan, sedangkan perangkat lama tetap pakai IPv4 saja.',
+        text: 'Karena "::" mewakili satu kelompok nol berurutan yang jumlahnya tidak tentu — jika ada dua "::", router tidak bisa menghitung dengan pasti berapa blok nol total yang dihilangkan.',
         isCorrect: true,
         feedback:
-          'Tepat! Dual Stack adalah metode transisi paling aman dan direkomendasikan IETF. Perangkat baru bisa bicara dalam dua "bahasa" sekaligus. Perangkat lama tetap pakai IPv4. Migrasi bisa dilakukan bertahap tanpa downtime.',
+          'Tepat! Jika "2001::34::1" digunakan, apakah "::" pertama mewakili 2 blok atau 3 blok nol? Tidak ada cara untuk menentukan ini secara algoritmik. Itulah mengapa standar RFC 5952 melarang keras penggunaan "::" lebih dari sekali. Bentuk paling singkat yang benar untuk alamat Rudi adalah: 2001:db8:0:0:34::1',
       },
       {
         id: 'r2',
-        text: 'Mematikan semua IPv4 seketika dan memaksa seluruh jaringan sekolah beralih ke IPv6 dalam satu malam.',
+        text: 'Karena "::" adalah simbol spesial yang hanya boleh muncul di awal atau akhir alamat saja, bukan di tengah-tengah alamat IPv6.',
         isCorrect: false,
         feedback:
-          'Migrasi "big bang" seperti ini sangat berisiko. PC Windows 7 lama tidak mendukung IPv6 penuh — semuanya akan kehilangan koneksi sekaligus dan kegiatan belajar terhenti total.',
+          'Kurang tepat. "::" boleh muncul di mana saja dalam alamat — di awal (::1 = loopback), di tengah (2001:db8::1), atau di akhir (fe80::). Yang dilarang adalah kemunculannya LEBIH DARI SATU KALI dalam satu alamat.',
       },
       {
         id: 'r3',
-        text: 'Tunneling — membungkus paket IPv6 di dalam paket IPv4 agar bisa melintas jaringan yang hanya mengenal IPv4.',
+        text: 'Karena aturan "::" hanya berlaku untuk blok nol yang berjumlah minimal 4 blok berurutan — jika hanya 2-3 blok nol, tidak boleh menggunakan "::".',
         isCorrect: false,
         feedback:
-          'Tunneling adalah solusi valid untuk menghubungkan dua "pulau IPv6" melewati jaringan IPv4. Namun untuk skenario ini (PC lama yang hanya IPv4 ingin akses resource IPv6), Dual Stack lebih tepat karena menangani kompatibilitas dua arah secara langsung.',
+          'Tidak benar. "::" bisa digunakan untuk menggantikan berapa pun blok nol berurutan — bahkan satu blok nol "0" yang berdiri sendiri pun bisa diganti "::" (meskipun tidak efisien). Tidak ada batasan jumlah minimum blok.',
       },
       {
         id: 'r4',
-        text: 'Membeli semua perangkat baru yang mendukung IPv6 dan membuang semua PC lama.',
+        text: 'Karena aturan "::" adalah opsional dan tidak wajib digunakan — cukup hapus leading zeros saja untuk menyingkat IPv6.',
         isCorrect: false,
         feedback:
-          'Ini solusi brute-force yang tidak efisien secara biaya. Dual Stack memungkinkan perangkat lama tetap digunakan selama masa transisi — penggantian hardware bisa dilakukan secara bertahap sesuai anggaran.',
+          'Penggunaan "::" memang opsional, tapi pernyataan ini tidak menjawab MENGAPA "::" tidak boleh dua kali. Jika hanya menghapus leading zeros tanpa "::", alamat 2001:db8:0:0:34:0:0:1 sudah lebih pendek tapi bukan yang paling singkat.',
       },
     ],
     questionBank: [
       {
         id: 'q1',
-        text: 'Apa perbedaan utama antara Dual Stack dan Tunneling?',
+        text: 'Apa aturan pertama yang HARUS dilakukan sebelum menerapkan "::"?',
         response:
-          'Dual Stack: perangkat menjalankan IPv4 DAN IPv6 secara bersamaan — bisa berkomunikasi dengan siapa pun. Tunneling: paket IPv6 "dibungkus" dalam paket IPv4 untuk melintas jaringan IPv4 — seperti mengirim surat modern menggunakan amplop lama.',
+          'Aturan pertama yang WAJIB dilakukan terlebih dahulu adalah menghapus leading zeros dari setiap blok. Contoh: "0DB8" → "DB8", "0034" → "34", "0000" → "0". Setelah semua blok sudah bersih dari leading zeros, baru identifikasi kelompok blok nol terpanjang untuk diterapkan "::".',
       },
       {
         id: 'q2',
-        text: 'Apa itu NAT64 dan kapan digunakan?',
+        text: 'Jika ada dua kelompok blok nol dengan panjang yang SAMA, kelompok mana yang dipilih untuk "::"?',
         response:
-          'NAT64 adalah mekanisme yang menerjemahkan alamat IPv6 ke IPv4 agar perangkat IPv6-only bisa mengakses server IPv4-only (dan sebaliknya dengan DNS64). Berguna saat jaringan sudah full IPv6 tapi masih ada resource lama yang hanya IPv4.',
+          'Berdasarkan RFC 5952 (standar penulisan IPv6), jika ada dua kelompok blok nol dengan panjang sama, pilih kelompok yang pertama (paling di kiri). Contoh: 2001:db8:0:0:1234:0:0:1 — ada dua kelompok "0:0" yang sama panjang, pilih yang pertama → 2001:db8::1234:0:0:1.',
       },
       {
         id: 'q3',
-        text: 'Apakah IPv6 lebih aman dari IPv4 secara bawaan?',
+        text: 'Berapa blok nol yang diwakili oleh "::" dalam alamat fe80::1?',
         response:
-          'Ya, IPv6 dirancang dengan dukungan IPsec (enkripsi dan autentikasi) sebagai fitur wajib (bukan opsional seperti di IPv4). Ini membuat komunikasi end-to-end lebih mudah dienkripsi secara standar. Namun implementasinya tetap tergantung pada konfigurasi pengguna.',
+          'Total blok dalam IPv6 harus selalu 8. Dalam "fe80::1", kita punya 2 blok yang dituliskan (fe80 dan 1). Jadi "::" mewakili 8 - 2 = 6 blok nol. Bentuk lengkap: fe80:0000:0000:0000:0000:0000:0000:0001.',
       },
     ],
-    conclusionPrompt: 'Berdasarkan analisis skenario inkompatibilitas IPv4-IPv6 dan tanya jawab yang telah kamu lakukan, jelaskan bagaimana kamu mampu menerapkan aturan penyederhanaan IPv6 pada skenario yang diberikan. Tuliskan secara tepat dengan kata-katamu sendiri.',
+    conclusionPrompt: 'Berdasarkan tanya jawab tentang aturan kompresi IPv6 yang telah kamu lakukan, jelaskan bagaimana kamu mampu menerapkan aturan penyederhanaan IPv6 secara tepat. Sertakan juga bentuk paling singkat dari alamat 2001:0DB8:0000:0000:0034:0000:0000:0001 beserta langkah-langkah singkatnya. Tuliskan dengan kata-katamu sendiri.',
   },
 
+  // ─── Tahap 4: Learning Community — X.IP.12 ──────────────────────────────────
   {
     type: 'learning-community',
     title: 'Learning Community',
     description:
-      'Siswa berdiskusi dalam kelompok tentang implementasi IPv6 dalam konteks masa depan: IoT, Smart City, dan keamanan jaringan.',
+      'Siswa menganalisis dan mengaudit kartu hasil kerja rekan sejawat fiktif yang mengandung error konseptual pada proses EUI-64, menentukan letak kesalahan spesifik, dan memberikan koreksi objektif.',
     objectiveCode: 'X.IP.12',
     activityGuide: [
-      'Baca skenario Smart Agriculture: ribuan sensor IoT yang butuh IP publik unik.',
-      'Analisis Studi Kasus 1 (IPv6 untuk IoT): pilih jawaban, tulis argumen, kirim ke kelompok.',
-      'Analisis Studi Kasus 2 (Keamanan Header IPv6): pilih jawaban, tulis argumen, kirim ke kelompok.',
-      'Diskusikan dan beri vote pada argumen paling logis dan visioner secara teknis.',
+      'Baca kartu hasil kerja Rekan A — audit baris demi baris proses EUI-64 untuk menemukan letak error.',
+      'Tandai langkah spesifik yang salah dan tulis komentar koreksi yang objektif dan teknis.',
+      'Baca kartu hasil kerja Rekan B — lakukan audit yang sama.',
+      'Tentukan keputusan akhir (Approved / Rejected) untuk setiap kartu beserta intisari temuanmu.',
     ],
     logicalThinkingIndicators: [
-      'Kemampuan Berargumen: menghubungkan fitur teknis IPv6 dengan manfaat praktis di dunia nyata.',
-      'Validasi Komunal: mengevaluasi argumen rekan berdasarkan pemahaman teknis IPv6.',
+      'Keruntutan Berpikir: mengaudit baris demi baris setiap langkah EUI-64 untuk menemukan letak spesifik error konversi.',
+      'Kemampuan Berargumen: menulis komentar sanggahan dan koreksi yang objektif berdasarkan pemahaman teknis EUI-64.',
+      'Penarikan Kesimpulan: menentukan keputusan Approved/Rejected beserta intisari audit yang tepat.',
+    ],
+    facilitatorNotes: [
+      'Guru mengarahkan siswa untuk menelusuri setiap langkah EUI-64 secara sistematis, bukan langsung menebak hasilnya salah.',
+      'Guru mendorong siswa menuliskan koreksi dengan bahasa teknis yang spesifik, bukan sekadar "salah" tanpa penjelasan.',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
       behavior: 'mampu menganalisis setiap langkah proses EUI-64 untuk menentukan kebenaran hasil konversi alamat MAC menjadi IPv6 Link Local Address',
-      condition: 'melalui aktivitas learning community berupa papan kolaborasi studi kasus pada CONNETIC Module',
+      condition: 'melalui aktivitas learning community berupa papan peer-review studi kasus pada CONNETIC Module',
       degree: 'secara logis',
     },
     layers5: [
-      { id: 'L5', name: 'Application', pdu: 'Data', color: '#8B5CF6', desc: 'Aplikasi sensor mengirim data kelembapan ke server pertanian cloud.' },
-      { id: 'L4', name: 'Transport', pdu: 'Segment', color: '#628ECB', desc: 'UDP membawa data sensor secara cepat (realtime tidak perlu TCP).' },
-      { id: 'L3', name: 'Network (IPv6)', pdu: 'Packet', color: '#10B981', desc: 'IPv6 memberi setiap sensor IP publik unik tanpa NAT.' },
-      { id: 'L2', name: 'Data Link', pdu: 'Frame', color: '#F59E0B', desc: 'IEEE 802.15.4 atau LoRaWAN untuk transmisi IoT jarak jauh.' },
-      { id: 'L1', name: 'Physical', pdu: 'Bits', color: '#395886', desc: 'Gelombang radio atau kabel sensor membawa bit di lapangan.' },
+      { id: 'L5', name: 'Application', pdu: 'Data', color: '#8B5CF6', desc: 'Aplikasi menggunakan IPv6 Link-Local untuk auto-discovery perangkat dalam LAN.' },
+      { id: 'L4', name: 'Transport', pdu: 'Segment', color: '#628ECB', desc: 'TCP/UDP menggunakan IPv6 sebagai alamat sumber dan tujuan di header.' },
+      { id: 'L3', name: 'Network (IPv6)', pdu: 'Packet', color: '#10B981', desc: 'IPv6 Link-Local (EUI-64) mengidentifikasi perangkat dalam satu segmen LAN.' },
+      { id: 'L2', name: 'Data Link', pdu: 'Frame', color: '#F59E0B', desc: 'MAC Address 48-bit di layer ini menjadi bahan baku proses EUI-64.' },
+      { id: 'L1', name: 'Physical', pdu: 'Bits', color: '#395886', desc: 'Kabel atau sinyal wireless membawa frame yang berisi alamat IPv6 EUI-64.' },
     ],
     encapsulationCase: {
-      id: 'X.IPv6.5.A',
-      title: 'Studi Kasus: IPv6 untuk Smart Agriculture',
+      id: 'X.IPv6.LC.A',
+      title: 'Kartu Peer Review A — Hasil Kerja Siti (Error pada Langkah ke-5)',
       concept:
-        'Dengan IPv6, setiap sensor IoT bisa memiliki IP publik unik secara global — tidak perlu NAT, tidak perlu konfigurasi router rumit. Ini memungkinkan pemantauan langsung dari mana saja di dunia.',
+        'Audit proses EUI-64 Siti: MAC Address DD:33:44:55:66:77 harus dikonversi menjadi IPv6 Link-Local. Temukan di langkah mana Siti melakukan kesalahan.',
       scenario:
-        'Seorang petani modern ingin memasang 1.000 sensor kelembapan dan suhu tanah di kebun seluas 50 hektar. Setiap sensor perlu terhubung ke internet secara mandiri untuk mengirim data realtime ke dashboard pertanian cloud-nya.',
+        'Siti mengumpulkan hasil kerja konversi EUI-64 berikut: MAC: DD:33:44:55:66:77 → Split: [DD:33:44] & [55:66:77] → Sisip FF:FE: DD:33:44:FF:FE:55:66:77 → Format 64-bit: DD33:44FF:FE55:6677 → LANGSUNG gabung dengan prefix → Link-Local: fe80::DD33:44FF:FE55:6677. Apakah hasil Siti benar?',
       question:
-        'Apa keuntungan TEKNIS terbesar menggunakan IPv6 murni (tanpa NAT) untuk ribuan sensor ini dibandingkan tetap menggunakan IPv4 dengan NAT?',
+        'Di langkah mana Siti melakukan kesalahan dalam proses EUI-64, dan apa dampak teknis dari kesalahan tersebut?',
       options: [
         {
           id: 'A',
-          text: 'Setiap sensor mendapat IP publik unik sehingga bisa dipantau langsung dari cloud tanpa konfigurasi port forwarding yang rumit di router.',
-          logic: 'Tepat. Dengan IPv6, end-to-end connectivity menjadi langsung. Tidak perlu NAT = tidak perlu port forwarding = konfigurasi lebih sederhana dan lebih scalable untuk ribuan sensor.',
+          text: 'Siti melewati langkah flip bit ke-7 (Universal/Local bit). Seharusnya: DD (11011101) dibalik bit ke-7 → DF (11011111), sehingga Interface ID yang benar adalah DF33:44FF:FE55:6677.',
+          logic: 'Tepat! Siti melewati langkah ke-5: flip bit ke-7 oktet pertama. DD dalam biner adalah 11011101 — bit ke-7 (dari kiri) adalah 1, dibalik menjadi 0 → hasilnya DF = 11011111. Link-Local yang benar: fe80::DF33:44FF:FE55:6677. Tanpa flip, alamat yang dihasilkan tidak sesuai standar IEEE EUI-64.',
         },
         {
           id: 'B',
-          text: 'Sensor menjadi lebih tahan air karena IPv6 memiliki lapisan perlindungan fisik tambahan.',
-          logic: 'Salah. Protokol jaringan (IPv4/IPv6) tidak berpengaruh pada ketahanan fisik perangkat. Ketahanan air adalah masalah desain hardware, bukan protokol.',
+          text: 'Siti salah memisahkan MAC Address — seharusnya dipotong 2 oktet bukan 3 oktet per bagian.',
+          logic: 'Tidak tepat. Pemisahan MAC Address pada EUI-64 selalu di tengah: 3 oktet pertama (OUI) dan 3 oktet terakhir (NIC ID). Siti memisahkan dengan benar [DD:33:44] & [55:66:77].',
         },
         {
           id: 'C',
-          text: 'Sinyal WiFi sensor menjadi lebih kuat karena IPv6 memancarkan gelombang radio yang lebih efisien.',
-          logic: 'Salah. IPv6 adalah protokol layer 3 (logis) — sama sekali tidak mengubah kekuatan sinyal radio di layer 1 (fisik). Sinyal bergantung pada hardware antena, bukan protokol IP.',
+          text: 'Siti menggunakan FF:FE sebagai penanda sisipan, padahal seharusnya menggunakan FE:FF.',
+          logic: 'Tidak tepat. Berdasarkan standar IEEE 802 dan RFC 2373, penanda yang disisipkan adalah "FF:FE" (bukan "FE:FF"). Siti menggunakan "FF:FE" dengan benar.',
         },
       ],
     },
     decapsulationCase: {
-      id: 'X.IPv6.6.B',
-      title: 'Studi Kasus: Keamanan Header IPv6 untuk Perbankan',
+      id: 'X.IPv6.LC.B',
+      title: 'Kartu Peer Review B — Hasil Kerja Budi (Error pada Posisi Sisipan)',
       concept:
-        'Header IPv6 dirancang lebih sederhana dari IPv4 tetapi dengan dukungan IPsec yang lebih kuat sejak awal. Ini memudahkan implementasi enkripsi end-to-end untuk aplikasi kritis seperti perbankan.',
+        'Audit proses EUI-64 Budi: MAC Address 00:1A:2B:3C:4D:5E harus dikonversi menjadi IPv6 Link-Local. Temukan di mana Budi membuat kesalahan posisi sisipan.',
       scenario:
-        'Sebuah bank nasional sedang memigrasi infrastruktur mereka ke IPv6. Tim keamanan ingin memanfaatkan fitur IPsec yang sudah terintegrasi dalam IPv6 untuk mengamankan transaksi nasabah.',
+        'Budi mengumpulkan hasil kerja berikut: MAC: 00:1A:2B:3C:4D:5E → Split: [00:1A:2B] & [3C:4D:5E] → Budi menyisipkan FF:FE di AKHIR: 00:1A:2B:3C:4D:5E:FF:FE → Format 64-bit: 001A:2B3C:4D5E:FFFE → Flip bit ke-7 oktet pertama: 02 (00→02 flip) → Link-Local: fe80::021A:2B3C:4D5E:FFFE. Apakah proses Budi benar?',
       question:
-        'Bagaimana dukungan IPsec built-in dalam IPv6 membantu keamanan transaksi perbankan digital dibandingkan IPv4?',
+        'Apa yang salah dari cara Budi menyisipkan "FF:FE" dalam proses EUI-64, dan bagaimana seharusnya posisi yang benar?',
       options: [
         {
           id: 'A',
-          text: 'Mempermudah implementasi enkripsi end-to-end secara standar — setiap koneksi bisa dienkripsi tanpa perlu konfigurasi tambahan yang rumit.',
-          logic: 'Tepat. IPsec sebagai fitur wajib IPv6 berarti semua perangkat yang compliant sudah siap untuk enkripsi — tidak perlu plugin atau software tambahan yang berbeda-beda di setiap perangkat.',
+          text: 'Budi sudah benar — FF:FE boleh disisipkan di mana saja, termasuk di akhir, selama total oktetnya menjadi 8.',
+          logic: 'Salah. Posisi "FF:FE" dalam EUI-64 sudah ditentukan standar — wajib disisipkan DI ANTARA OUI dan NIC ID, bukan di akhir atau tempat lain. Posisi yang spesifik ini penting agar alat dan router dapat mengidentifikasi bahwa Interface ID ini berasal dari EUI-48.',
         },
         {
           id: 'B',
-          text: 'Nasabah tidak perlu lagi menggunakan password karena IPv6 address sudah membuktikan identitas pemilik rekening.',
-          logic: 'Berbahaya dan salah. IP address bisa dipalsukan (spoofed). Autentikasi identitas manusia tetap harus menggunakan password, MFA, atau biometrik — bukan IP address.',
+          text: 'Budi menyisipkan FF:FE di posisi yang salah — seharusnya disisipkan DI ANTARA OUI (3 oktet pertama) dan NIC ID (3 oktet terakhir), bukan di akhir.',
+          logic: 'Tepat! Standar EUI-64 mengharuskan "FF:FE" disisipkan DI TENGAH — persis antara OUI dan NIC ID. Untuk MAC 00:1A:2B:3C:4D:5E, hasil yang benar setelah sisipan adalah: 00:1A:2B:FF:FE:3C:4D:5E → Format 64-bit: 001A:2BFF:FE3C:4D5E → Flip bit ke-7: 021A:2BFF:FE3C:4D5E → Link-Local: fe80::021A:2BFF:FE3C:4D5E.',
         },
         {
           id: 'C',
-          text: 'Saldo nasabah otomatis bertambah karena efisiensi pengiriman data paket IPv6 lebih hemat biaya operasional bank.',
-          logic: 'Tidak logis. Efisiensi protokol jaringan tidak berkaitan dengan saldo rekening nasabah. Protokol mengoptimalkan pengiriman data, bukan keuangan.',
+          text: 'Budi tidak perlu menyisipkan apa pun — cukup tambah 2 oktet 00:00 di akhir MAC untuk menghasilkan EUI-64 64-bit.',
+          logic: 'Salah. Standar EUI-64 menggunakan "FF:FE" — bukan "00:00" — sebagai penanda khusus. Penggunaan "FF:FE" secara spesifik menandai bahwa Interface ID ini diturunkan dari MAC 48-bit (EUI-48), sehingga router dapat mengidentifikasinya secara otomatis.',
         },
       ],
     },
     groupActivity: {
       groupNames: ['Kelompok 1', 'Kelompok 2', 'Kelompok 3', 'Kelompok 4', 'Kelompok 5', 'Kelompok 6', 'Kelompok 7', 'Kelompok 8'],
       discussionPrompt:
-        'Diskusikan: Apakah Indonesia harus segera migrasi total ke IPv6, atau tetap menggunakan IPv4 selama mungkin dengan NAT? Apa hambatan terbesar migrasi IPv6 di Indonesia? Berikan vote pada argumen yang paling realistis dan berbasis data.',
+        'Diskusikan: Dari kedua kartu peer review yang baru saja diaudit, kesalahan mana yang lebih berbahaya — lupa flip bit ke-7 atau salah posisi sisipan FF:FE? Jelaskan konsekuensi teknis dari masing-masing kesalahan, dan berikan keputusan akhir Approved/Rejected beserta intisari audit untuk setiap kartu.',
     },
-    conclusionPrompt: 'Berdasarkan diskusi kelompok tentang IPv6 untuk IoT dan keamanan yang telah kamu lakukan, jelaskan bagaimana kamu mampu menganalisis setiap langkah proses EUI-64 untuk menentukan kebenaran hasil konversi alamat MAC menjadi IPv6 Link Local Address. Tuliskan secara logis dengan kata-katamu sendiri.',
+    conclusionPrompt: 'Berdasarkan aktivitas peer-review audit proses EUI-64 yang telah kamu lakukan, jelaskan bagaimana kamu mampu menganalisis setiap langkah proses EUI-64 untuk menentukan kebenaran hasil konversi alamat MAC menjadi IPv6 Link Local Address. Sertakan keputusan Approved/Rejected untuk kartu A dan kartu B beserta alasan teknisnya. Tuliskan secara logis dengan kata-katamu sendiri.',
   },
 
+  // ─── Tahap 5: Modeling — X.IP.13 ────────────────────────────────────────────
   {
     type: 'modeling',
-    title: 'Modeling — Kompresi IPv6 & Pembentukan Link Local',
+    title: 'Modeling — Simulasi Konfigurasi IPv6 Gateway pada Router',
     description:
-      'Siswa mempraktikkan teknik penyederhanaan penulisan IPv6 dan memahami proses pembentukan IPv6 Link Local Address menggunakan standar EUI-64.',
+      'Siswa mempraktikkan simulasi perencanaan pengalamatan IPv6 Global Unicast pada interface router melalui rangkaian perintah CLI yang terstruktur, dari conf t hingga verifikasi ping.',
     objectiveCode: 'X.IP.13',
     activityGuide: [
-      'Ikuti demonstrasi penghapusan leading zeros dari setiap blok IPv6.',
-      'Terapkan aturan "::" untuk menyingkat blok nol berurutan terpanjang.',
-      'Praktikkan pembentukan IPv6 Link Local dari MAC Address menggunakan EUI-64.',
+      'Ikuti perintah CLI router secara berurutan: enable → conf t → int → ipv6 address → no shutdown.',
+      'Jawab pertanyaan mengapa prefix /64 dipilih untuk segmen LAN pada router IPv6.',
+      'Jalankan "Run Ping Test" dan evaluasi status keterhubungan perangkat setelah konfigurasi.',
     ],
     logicalThinkingIndicators: [
-      'Keruntutan Berpikir: mengikuti langkah kompresi IPv6 secara sistematis tanpa melanggar aturan.',
-      'Penerapan Konsep: menerapkan proses EUI-64 untuk menghasilkan Link Local dari MAC Address.',
+      'Keruntutan Berpikir: mengeksekusi perintah CLI secara terstruktur mengikuti hierarki konfigurasi router (conf t → int → ipv6 address → no shutdown).',
+      'Kemampuan Berargumen: menjelaskan alasan logis pemilihan alokasi prefix /64 dibandingkan prefix lainnya pada segmen LAN router.',
+      'Penarikan Kesimpulan: mengevaluasi status keterhubungan perangkat setelah tombol "Run Ping Test" dieksekusi.',
     ],
     facilitatorNotes: [
-      'Guru memperingatkan: "::" hanya boleh satu kali. Minta siswa menunjukkan alamat yang SALAH jika "::" dua kali.',
-      'Guru mendemonstrasikan "flip bit ke-7" dalam EUI-64 sebagai mekanisme untuk membedakan alamat global dari lokal.',
+      'Guru menjelaskan hierarki perintah Cisco IOS: EXEC mode → Privileged EXEC → Global Config → Interface Config.',
+      'Guru mendorong siswa memahami mengapa "no shutdown" wajib dieksekusi — interface router defaultnya dalam kondisi "administratively down".',
+      'Guru mendiskusikan mengapa /64 adalah standar de facto untuk segmen LAN IPv6 — berkaitan dengan EUI-64 yang membutuhkan tepat 64-bit untuk Interface ID.',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
       behavior: 'mampu mensimulasikan proses perencanaan pengalamatan IPv6 Gateway (Global Unicast) pada interface router',
-      condition: 'melalui aktivitas modeling berupa simulasi step-by-step pada CONNETIC Module',
+      condition: 'melalui aktivitas modeling berupa simulasi CLI router step-by-step pada CONNETIC Module',
       degree: 'secara sistematis',
     },
     practiceInstructions: {
       forTeacher: [
-        'Tampilkan alamat penuh: 2001:0db8:0000:0000:0000:0000:0000:0001.',
-        'Demonstrasikan step 1 (hapus leading zeros): 2001:db8:0:0:0:0:0:1.',
-        'Demonstrasikan step 2 (gunakan ::): 2001:db8::1 — hitung ada 5 blok nol yang disingkat.',
-        'Untuk EUI-64: MAC AA:BB:CC:DD:EE:FF → sisipkan FFFE → AA:BB:CC:FF:FE:DD:EE:FF → flip bit ke-7 → A8:BB:CC:FF:FE:DD:EE:FF → Link Local: fe80::a8bb:ccff:fedd:eeff.',
+        'Tampilkan topologi: Router (R1) terhubung ke Switch, 3 PC client dalam satu LAN segment.',
+        'Demonstrasikan urutan CLI: enable → configure terminal → interface GigabitEthernet0/0 → ipv6 address 2001:db8:1::1/64 → no shutdown → exit → show ipv6 interface brief.',
+        'Jelaskan output "show ipv6 interface brief": interface UP/UP, alamat IPv6 tertera, status "FE80" (Link-Local) otomatis terbentuk.',
+        'Jalankan simulasi ping: ping ipv6 2001:db8:1::10 untuk verifikasi koneksi ke PC client.',
       ],
       forStudent: [
-        'Hapus leading zeros dari setiap blok IPv6 yang diberikan.',
-        'Identifikasi kelompok blok nol terpanjang dan terapkan "::".',
-        'Klik "Jalankan Proses" untuk memvalidasi hasil kompresimu.',
+        'Ikuti setiap langkah CLI secara berurutan sesuai panduan yang ditampilkan.',
+        'Klik "Jalankan" setelah setiap perintah untuk melihat respons simulator.',
+        'Setelah semua langkah selesai, klik "Run Ping Test" untuk mengevaluasi hasil konfigurasi.',
       ],
     },
     modelingSteps: [
       {
         id: 'v6m1',
         type: 'example',
-        title: 'Langkah 1: Hapus Leading Zeros Setiap Blok',
+        title: 'Langkah 1: Masuk Privileged EXEC Mode',
         content:
-          'Ambil alamat: 2001:0db8:0000:0000:1234:0000:0000:0567. Hapus nol di kiri setiap blok: 0db8 → db8, 0000 → 0, 0567 → 567. Hasil: 2001:db8:0:0:1234:0:0:567.',
-        interactiveAction: 'Amati animasi penghapusan leading zeros satu per satu dari setiap blok.',
+          'Dari prompt "Router>", ketikkan perintah "enable" untuk masuk ke mode Privileged EXEC (ditandai prompt "Router#"). Mode ini diperlukan untuk mengakses konfigurasi global. Tanpa ini, kamu tidak bisa mengubah konfigurasi apapun di router.\n\n🖥️ Simulator CLI:\nRouter> enable\nRouter#',
+        interactiveAction: 'Klik "Jalankan enable" — amati prompt berubah dari ">" menjadi "#", tanda kamu masuk Privileged EXEC Mode.',
       },
       {
         id: 'v6m2',
         type: 'example',
-        title: 'Langkah 2: Terapkan "::" pada Blok Nol Terpanjang',
+        title: 'Langkah 2: Masuk Global Configuration Mode',
         content:
-          'Dari hasil sebelumnya: 2001:db8:0:0:1234:0:0:567. Ada dua kelompok nol: "0:0" di posisi 3-4 dan "0:0" di posisi 6-7 (sama panjang). Pilih SALAH SATU (pilih yang lebih di kiri sebagai konvensi). Hasil: 2001:db8::1234:0:0:567.',
-        interactiveAction: 'Amati pemilihan kelompok nol dan penerapan "::".',
+          'Dari "Router#", ketikkan "configure terminal" (disingkat "conf t") untuk masuk ke Global Configuration Mode (prompt: "Router(config)#"). Di sinilah semua perubahan konfigurasi global diterapkan, termasuk pengaktifan IPv6 routing.\n\n🖥️ Simulator CLI:\nRouter# configure terminal\nRouter(config)# ipv6 unicast-routing',
+        interactiveAction: 'Klik "Jalankan conf t" — aktifkan IPv6 unicast routing agar router bisa mem-forward paket IPv6.',
       },
       {
         id: 'v6m3',
-        type: 'practice',
-        title: 'Langkah 3: Tantangan Kompresi Mandiri',
+        type: 'example',
+        title: 'Langkah 3: Masuk Interface Configuration Mode',
         content:
-          'Singkatlah alamat ini: 2001:0000:0000:0000:0000:0000:0000:0001. (Petunjuk: ada 6 blok nol berurutan di tengah. Hapus leading zeros, lalu gunakan "::" untuk semua nol tersebut. Jawaban: 2001::1).',
-        interactiveAction: 'Klik "Jalankan Proses" setelah kamu menentukan bentuk paling singkat yang valid.',
+          'Dari "Router(config)#", ketikkan "interface GigabitEthernet0/0" (disingkat "int g0/0") untuk masuk konfigurasi interface spesifik (prompt: "Router(config-if)#"). Interface ini yang akan terhubung ke LAN dan berfungsi sebagai Default Gateway IPv6.\n\n🖥️ Simulator CLI:\nRouter(config)# interface GigabitEthernet0/0\nRouter(config-if)#',
+        interactiveAction: 'Klik "Masuk Interface G0/0" — amati perubahan prompt ke (config-if) yang menandai kamu berada di konteks interface.',
+      },
+      {
+        id: 'v6m4',
+        type: 'practice',
+        title: 'Langkah 4: Assign Alamat IPv6 Global Unicast /64',
+        content:
+          'Ketikkan "ipv6 address 2001:db8:1::1/64" untuk menetapkan alamat IPv6 Global Unicast pada interface. Prefix /64 dipilih karena ini adalah standar de facto untuk segmen LAN IPv6 — prefix /64 menyediakan tepat 64-bit untuk Interface ID yang dibutuhkan mekanisme EUI-64 dan SLAAC.\n\n🖥️ Simulator CLI:\nRouter(config-if)# ipv6 address 2001:db8:1::1/64\nRouter(config-if)# [Alamat berhasil dikonfigurasi]',
+        interactiveAction: 'Klik "Assign IPv6 Address" — verifikasi bahwa alamat 2001:db8:1::1/64 berhasil diterapkan pada interface.',
+      },
+      {
+        id: 'v6m5',
+        type: 'practice',
+        title: 'Langkah 5: Aktifkan Interface dengan "no shutdown"',
+        content:
+          'Interface router secara default dalam kondisi "administratively down" untuk alasan keamanan. Ketikkan "no shutdown" untuk mengaktifkannya. Setelah perintah ini, interface berubah status menjadi "up/up" dan siap memproses paket IPv6.\n\n🖥️ Simulator CLI:\nRouter(config-if)# no shutdown\n%LINK-5-CHANGED: Interface GigabitEthernet0/0, changed state to up\n%LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/0, changed state to up',
+        interactiveAction: 'Klik "no shutdown" — amati pesan sistem yang mengonfirmasi interface berubah ke status "up". Ini tanda konfigurasi IPv6 berhasil!',
       },
     ],
-    conclusionPrompt: 'Berdasarkan simulasi kompresi IPv6 dan pembentukan Link Local yang telah kamu praktikkan, jelaskan bagaimana kamu mampu mensimulasikan proses perencanaan pengalamatan IPv6 Gateway (Global Unicast) pada interface router. Tuliskan secara sistematis dengan kata-katamu sendiri.',
+    conclusionPrompt: 'Berdasarkan simulasi konfigurasi IPv6 Gateway pada router yang telah kamu praktikkan, jelaskan bagaimana kamu mampu mensimulasikan proses perencanaan pengalamatan IPv6 Gateway (Global Unicast) pada interface router. Sertakan urutan perintah CLI yang benar dan jelaskan mengapa prefix /64 adalah standar untuk segmen LAN IPv6. Tuliskan secara sistematis dengan kata-katamu sendiri.',
   },
 
+  // ─── Tahap 6: Reflection — X.IP.14 ──────────────────────────────────────────
   {
     type: 'reflection',
     title: 'Reflection',
     description:
-      'Siswa menyusun peta konsep menyeluruh yang membandingkan IPv4 dan IPv6 serta menghubungkan semua konsep yang dipelajari dalam Pertemuan 4.',
+      'Siswa menyusun matriks sintesis perbandingan IPv4 vs IPv6 secara menyeluruh, memilih strategi transisi yang tepat (Dual-Stack vs Tunneling), dan merumuskan satu kalimat sintesis final tentang masa depan arsitektur jaringan.',
     objectiveCode: 'X.IP.14',
     activityGuide: [
-      'Hubungkan konsep-konsep IPv6 dan perbandingannya dengan IPv4 menggunakan label yang tepat.',
-      'Pastikan peta konsepmu mencerminkan perbedaan format, mekanisme, dan kegunaan IPv4 vs IPv6.',
-      'Tulis ringkasan menyeluruh tentang semua konsep IPv6 yang dipelajari hari ini secara runtut dan logis.',
+      'Lengkapi peta konsep perbandingan IPv4 vs IPv6 menggunakan label koneksi yang tepat dari dropdown.',
+      'Kelompokkan fitur-fitur dari layer header (terbawah) hingga layer aplikasi menggunakan urutan yang terstruktur.',
+      'Pilih argumen strategi transisi (Dual-Stack vs Tunneling) yang tepat untuk skenario perusahaan modern.',
+      'Tulis 1 kalimat sintesis final tentang masa depan arsitektur jaringan global.',
     ],
     logicalThinkingIndicators: [
-      'Penarikan Kesimpulan: menghubungkan fitur-fitur IPv6 dengan keterbatasan IPv4 yang diatasi.',
+      'Keruntutan Berpikir: mengelompokkan komparasi fitur IPv4/IPv6 dari layer header (terbawah) ke layer aplikasi menggunakan dropdown terstruktur.',
+      'Kemampuan Berargumen: memilih argumen risiko transisi (Dual-Stack vs Tunneling) yang tepat untuk skenario perusahaan modern.',
+      'Penarikan Kesimpulan: menyusun 1 kalimat sintesis final tentang masa depan arsitektur jaringan global.',
     ],
     facilitatorNotes: [
-      'Guru mendorong siswa merefleksikan perjalanan belajar selama 4 pertemuan: dari TCP hingga IPv6.',
-      'Guru mengajak siswa membayangkan bagaimana internet akan terlihat jika IPv6 sudah diadopsi 100%.',
+      'Guru mendorong siswa merefleksikan perjalanan belajar selama 4 pertemuan: dari TCP → IP → IPv4/IPv6.',
+      'Guru mengajak siswa membandingkan Dual-Stack dan Tunneling dari perspektif risiko operasional perusahaan besar.',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
       behavior: 'mampu menyimpulkan perbedaan karakteristik antara pengalamatan IPv4 dan IPv6 serta kesesuaian penggunaannya dalam konteks jaringan modern',
-      condition: 'melalui aktivitas reflection berupa konstruksi rekap materi pada CONNETIC Module',
+      condition: 'melalui aktivitas reflection berupa konstruksi matriks sintesis dan peta konsep pada CONNETIC Module',
       degree: 'secara tepat',
     },
     conceptMapNodes: [
       { id: 'cn1', label: 'IPv6', description: 'Protokol pengalamatan 128-bit generasi berikutnya.', colorClass: 'blue' },
       { id: 'cn2', label: 'Format Heksadesimal', description: '8 blok 16-bit dipisahkan titik dua.', colorClass: 'purple' },
-      { id: 'cn3', label: 'Kompresi "::"', description: 'Menyingkat blok nol berurutan menjadi ::.', colorClass: 'green' },
-      { id: 'cn4', label: 'Link Local (fe80::)', description: 'Dibentuk otomatis menggunakan EUI-64.', colorClass: 'amber' },
-      { id: 'cn5', label: 'EUI-64', description: 'Standar pembentukan Interface ID dari MAC Address.', colorClass: 'pink' },
-      { id: 'cn6', label: 'Dual Stack', description: 'Metode transisi menjalankan IPv4 dan IPv6 bersamaan.', colorClass: 'indigo' },
-      { id: 'cn7', label: 'IPv4', description: 'Protokol 32-bit yang sedang digantikan.', colorClass: 'amber' },
-      { id: 'cn8', label: 'IPsec Built-in', description: 'Keamanan terintegrasi sebagai fitur wajib IPv6.', colorClass: 'purple' },
+      { id: 'cn3', label: 'Kompresi "::"', description: 'Menyingkat blok nol berurutan menjadi :: (hanya sekali).', colorClass: 'green' },
+      { id: 'cn4', label: 'Link Local (fe80::)', description: 'Dibentuk otomatis menggunakan EUI-64 dari MAC Address.', colorClass: 'amber' },
+      { id: 'cn5', label: 'EUI-64', description: 'Standar pembentukan Interface ID 64-bit dari MAC Address 48-bit.', colorClass: 'pink' },
+      { id: 'cn6', label: 'Dual Stack', description: 'Metode transisi menjalankan IPv4 dan IPv6 bersamaan — migrasi bertahap.', colorClass: 'indigo' },
+      { id: 'cn7', label: 'IPv4', description: 'Protokol 32-bit yang sedang digantikan — membutuhkan NAT.', colorClass: 'amber' },
+      { id: 'cn8', label: 'IPsec Built-in', description: 'Keamanan enkripsi terintegrasi sebagai fitur wajib IPv6.', colorClass: 'purple' },
     ],
     conceptMapConnections: [
       { from: 'cn1', to: 'cn2', label: 'menggunakan format', options: ['menggunakan format', 'menghapus', 'mengabaikan', 'bertentangan dengan'] },
@@ -513,132 +585,134 @@ export const lesson4Stages: Stage[] = [
     ],
     essayReflection: {
       materialSummaryPrompt:
-        'Jelaskan secara runtut semua konsep IPv6 yang kamu pelajari hari ini: mulai dari alasan kebutuhan IPv6, format penulisannya yang berbeda dengan IPv4, aturan kompresi (leading zeros dan double colon), cara pembentukan IPv6 Link Local menggunakan EUI-64, jenis-jenis alamat IPv6, hingga strategi transisi dari IPv4 ke IPv6. Tulis perbandingan IPv4 vs IPv6 dengan bahasamu sendiri secara lengkap.',
-      easyPartPrompt: 'Konsep IPv6 mana yang paling mudah kamu pahami dibandingkan IPv4? Mengapa?',
-      hardPartPrompt: 'Bagian IPv6 mana yang paling menantang untuk dipahami dan perlu kamu pelajari lebih lanjut?',
+        'Bandingkan secara sistematis IPv4 dan IPv6 dalam format matriks perbandingan: mulai dari panjang bit header (layer terbawah), format penulisan, mekanisme pengalamatan (NAT vs langsung), dukungan keamanan (IPsec), hingga strategi transisi (Dual-Stack vs Tunneling). Untuk perusahaan besar yang ingin mempertahankan layanan 24/7 tanpa downtime, mana yang lebih aman diterapkan: Dual-Stack atau Tunneling, dan mengapa?',
+      easyPartPrompt: 'Konsep IPv6 mana yang paling mudah kamu pahami dalam pertemuan ini dan mengapa?',
+      hardPartPrompt: 'Bagian IPv6 mana yang paling menantang dan perlu kamu eksplorasi lebih lanjut?',
     },
     selfEvaluationCriteria: [
-      { id: 'sc1', label: 'Saya memahami mengapa IPv6 diciptakan untuk menggantikan IPv4.' },
-      { id: 'sc2', label: 'Saya dapat menerapkan aturan kompresi alamat IPv6 dengan benar.' },
-      { id: 'sc3', label: 'Saya memahami proses pembentukan IPv6 Link Local menggunakan EUI-64.' },
-      { id: 'sc4', label: 'Saya dapat membedakan jenis-jenis alamat IPv6 (Global, Link-Local, Loopback).' },
-      { id: 'sc5', label: 'Saya memahami perbedaan mendasar antara IPv4 dan IPv6.' },
+      { id: 'sc1', label: 'Saya memahami mengapa IPv6 diciptakan untuk menggantikan IPv4 dan apa kelemahan NAT.' },
+      { id: 'sc2', label: 'Saya dapat menerapkan aturan kompresi alamat IPv6 (leading zeros + ::) dengan benar.' },
+      { id: 'sc3', label: 'Saya memahami 6 langkah proses pembentukan IPv6 Link Local menggunakan EUI-64.' },
+      { id: 'sc4', label: 'Saya dapat membedakan jenis-jenis alamat IPv6 (Global Unicast, Link-Local, Loopback, Multicast).' },
+      { id: 'sc5', label: 'Saya dapat mensimulasikan konfigurasi IPv6 pada interface router dengan perintah CLI yang benar.' },
     ],
-    conclusionPrompt: 'Berdasarkan penyusunan peta konsep perbandingan IPv4 vs IPv6 dan refleksi yang telah kamu lakukan, jelaskan bagaimana kamu mampu menyimpulkan perbedaan karakteristik antara pengalamatan IPv4 dan IPv6 serta kesesuaian penggunaannya dalam konteks jaringan modern. Tuliskan secara tepat dengan kata-katamu sendiri.',
+    conclusionPrompt: 'Berdasarkan penyusunan peta konsep dan matriks perbandingan IPv4 vs IPv6 yang telah kamu lakukan, tuliskan SATU kalimat sintesis final yang merangkum masa depan arsitektur jaringan global — mengapa dunia pasti akan beralih penuh ke IPv6 dan apa yang menjadi kunci keberhasilannya. Kemudian jelaskan bagaimana kamu mampu menyimpulkan perbedaan karakteristik antara IPv4 dan IPv6 serta kesesuaian penggunaannya. Tuliskan secara tepat dengan kata-katamu sendiri.',
   },
 
+  // ─── Tahap 7: Authentic Assessment — X.IP.15 ────────────────────────────────
   {
     type: 'authentic-assessment',
     title: 'Authentic Assessment',
     description:
-      'Siswa merancang strategi implementasi IPv6 untuk jaringan sekolah dengan mempertimbangkan kompatibilitas perangkat lama dan kebutuhan transisi yang aman.',
+      'Siswa mengevaluasi keterkaitan TCP dan IP dalam arsitektur TCP/IP melalui studi kasus investigasi paket IPv6 yang drop, mengikuti hierarki layer TCP/IP, dan menyusun dokumen Root Cause Analysis (RCA) sebagai output akhir.',
     objectiveCode: 'X.IP.15',
     activityGuide: [
-      'Analisis kondisi jaringan sekolah: 50% perangkat IPv4 lama, 50% perangkat baru IPv6-ready.',
-      'Pilih metode transisi (Dual Stack, Tunneling, atau langsung IPv6) yang paling aman dan realistis.',
-      'Jelaskan rencana implementasi bertahap dan ikuti cabang keputusan hingga solusi final.',
+      'Baca laporan insiden: paket IPv6 tidak sampai ke tujuan di jaringan SMK Nusantara.',
+      'Ikuti alur investigasi dari layer Physical (kabel/sinyal) → Network/IPv6 (routing/prefix) → Transport/TCP (port/firewall).',
+      'Pilih tindakan diagnosis yang tepat di setiap percabangan dan jelaskan alasan teknisnya.',
+      'Susun dokumen Root Cause Analysis (RCA) final berdasarkan temuan investigasimu.',
     ],
     logicalThinkingIndicators: [
-      'Keruntutan Berpikir: merencanakan migrasi IPv6 secara bertahap dan sistematis.',
-      'Kemampuan Berargumen: membenarkan strategi transisi dengan pertimbangan teknis dan operasional.',
-      'Penarikan Kesimpulan: menyeimbangkan kebutuhan masa depan dengan realitas infrastruktur yang ada.',
+      'Keruntutan Berpikir: mengikuti hierarki investigasi TCP/IP dari Physical Layer → Network/IPv6 Layer → Transport/TCP Layer secara terstruktur.',
+      'Kemampuan Berargumen: memilih dan menjelaskan alasan teknis di setiap percabangan rute diagnosis.',
+      'Penarikan Kesimpulan: menyusun dokumen Root Cause Analysis (RCA) dengan format: Problem Statement, Root Cause, Evidence, Corrective Action.',
     ],
     facilitatorNotes: [
-      'Guru memosisikan diri sebagai kepala IT sekolah yang meminta proposal implementasi IPv6.',
-      'Guru mendorong siswa mempertimbangkan: waktu downtime, biaya, kompetensi staf, dan risiko operasional.',
+      'Guru mengingatkan: investigasi jaringan yang benar selalu dimulai dari layer terbawah (Physical) naik ke atas — jangan langsung melompat ke layer Transport.',
+      'Guru mendorong siswa memahami mengapa "paket IPv6 drop" bisa disebabkan oleh banyak layer yang berbeda dan pentingnya metodologi sistematis.',
     ],
     atpAbcd: {
       audience: 'Peserta didik',
       behavior: 'mampu mengevaluasi keterkaitan TCP dan IP dalam arsitektur model TCP/IP saat proses komunikasi jaringan',
-      condition: 'melalui aktivitas authentic assessment berupa studi kasus bercabang pada CONNETIC Module',
+      condition: 'melalui aktivitas authentic assessment berupa studi kasus bercabang investigasi paket IPv6 pada CONNETIC Module',
       degree: 'secara logis',
     },
     branchingScenario: {
       context:
-        'Sekolahmu mendapat hibah bandwidth internet 1 Gbps murni IPv6 dari pemerintah. Kondisi infrastruktur: 15 PC Lab A menggunakan Windows 7 (IPv4 only), 15 PC Lab B menggunakan Windows 11 (IPv6-ready), 1 server e-learning (IPv6-ready), dan 1 router utama yang mendukung Dual Stack. Guru-guru mengeluh ingin semua bisa internetan tanpa gangguan.',
+        'Laporan masuk dari Lab TKJ SMK Nusantara: sebuah PC Client (IPv6: 2001:db8:1::10) tidak bisa melakukan ping ke Server IPv6 (2001:db8:1::100) yang berada di ruangan berbeda namun satu LAN segment. Router R1 sudah dikonfigurasi Dual Stack. Semua PC lain di lab yang sama bisa ping normal. Tugas kamu: investigasi sistematis menggunakan hierarki layer TCP/IP.',
       initialQuestion:
-        'Strategi pertama apa yang kamu rekomendasikan untuk diterapkan di Router utama agar semua perangkat — lama maupun baru — tetap bisa terhubung internet?',
-      focusAreas: ['Dual Stack Router', 'Kompatibilitas PC Lama', 'Migrasi Bertahap'],
+        'Berdasarkan hierarki layer TCP/IP, layer mana yang harus kamu periksa PERTAMA KALI sebelum melangkah ke layer berikutnya?',
+      focusAreas: ['Physical Layer', 'Network/IPv6 Layer', 'Transport/TCP Layer'],
       choices: [
         {
           id: 'c1',
-          text: 'Aktifkan Dual Stack di Router — router menangani IPv4 dan IPv6 sekaligus, PC lama pakai IPv4, PC baru pakai IPv6.',
+          text: 'Physical Layer — periksa kondisi kabel, koneksi port switch, dan status lampu indikator NIC pada PC yang bermasalah.',
           isOptimal: true,
           consequence:
-            'Keputusan sangat tepat! PC Windows 11 langsung menikmati IPv6 penuh. PC Windows 7 tetap terhubung via IPv4. Server e-learning bisa diakses dari kedua jenis PC. Tidak ada downtime, tidak ada perangkat yang terputus.',
+            'Metodologi investigasi yang tepat! Kamu memulai dari layer terbawah sesuai prinsip OSI/TCP-IP troubleshooting. Kamu memeriksa kabel UTP — ternyata kabel dari PC ke switch longgar di port switch. Setelah dipasang ulang, lampu indikator NIC berubah hijau. Namun ping IPv6 masih gagal — berarti masalahnya ada di layer yang lebih tinggi juga.',
           followUpQuestion:
-            'Ada website penting yang HANYA bisa diakses via IPv4, tapi ISP sekolah HANYA memberikan IPv6. Teknik apa yang bisa digunakan untuk menjembatani akses ini?',
+            'Physical Layer sudah beres. Sekarang pindah ke Network/IPv6 Layer. Perintah apa yang kamu jalankan di PC client untuk memeriksa konfigurasi alamat IPv6-nya?',
           followUpChoices: [
             {
               id: 'f1a',
-              text: 'NAT64 + DNS64 — router menerjemahkan request IPv6 ke IPv4 secara otomatis untuk website yang belum IPv6.',
+              text: 'ipconfig /all (Windows) — melihat apakah PC sudah mendapat alamat IPv6 yang benar dan default gateway-nya menunjuk ke Router R1.',
               isCorrect: true,
               explanation:
-                'Sangat profesional! NAT64/DNS64 adalah standar industri untuk menghubungkan jaringan IPv6-only ke resource IPv4 lama. Pengguna tidak perlu tahu perbedaannya — akses tetap mulus.',
+                'Langkah yang tepat! Dari output ipconfig, terlihat PC client memiliki alamat Autoconfiguration IPv6 (fe80::... saja, tanpa Global Unicast 2001:db8:1::/64). Ini berarti PC tidak mendapat alamat IPv6 dari Router karena RA (Router Advertisement) tidak diterima — kemungkinan IPv6 routing belum diaktifkan di R1.',
             },
             {
               id: 'f1b',
-              text: 'Meminta pemilik website tersebut segera upgrade server mereka ke IPv6.',
+              text: 'ping 8.8.8.8 — menguji apakah koneksi internet bekerja untuk mengkonfirmasi Physical Layer sudah oke.',
               isCorrect: false,
               explanation:
-                'Ini bukan wewenangmu dan tidak menyelesaikan masalah akses segera. Ribuan website masih IPv4-only dan tidak bisa langsung diubah — solusi teknis di sisi jaringanmu yang diperlukan.',
+                'Ping ke 8.8.8.8 menguji koneksi internet (IPv4), bukan masalah IPv6 lokal yang kita investigasi. Untuk mendiagnosis masalah IPv6 di LAN, perintah yang tepat adalah ipconfig /all atau ip -6 addr show (Linux) untuk memeriksa apakah alamat IPv6 sudah dikonfigurasi dengan benar.',
             },
           ],
         },
         {
           id: 'c2',
-          text: 'Matikan IPv4 sepenuhnya di router dan paksa semua perangkat pakai IPv6 mulai hari pertama.',
+          text: 'Transport/TCP Layer — langsung periksa apakah firewall Windows memblokir paket ICMPv6 yang digunakan oleh ping IPv6.',
           isOptimal: false,
           consequence:
-            'Semua PC Windows 7 di Lab A langsung kehilangan koneksi internet! Driver kartu jaringan Windows 7 tidak mendukung IPv6 penuh. Kelas menjadi kacau, guru-guru mengeluh, dan kepala sekolah memanggil kamu.',
+            'Melompat ke Transport Layer tanpa memeriksa Physical dan Network Layer dulu adalah kesalahan metodologi. Kamu mematikan Windows Firewall sementara — ping IPv6 masih gagal. Kamu sudah menghabiskan waktu di layer yang salah. Prinsip investigasi jaringan: SELALU mulai dari Physical Layer, naik ke atas secara berurutan.',
           followUpQuestion:
-            'Setelah terjadi kekacauan, apa langkah mitigasi tercepat yang bisa kamu lakukan?',
+            'Setelah menghabiskan waktu di Transport Layer tanpa hasil, apa langkah korektif yang harus kamu ambil?',
           followUpChoices: [
             {
               id: 'f2a',
-              text: 'Aktifkan kembali IPv4 di router dan beralih ke strategi Dual Stack sambil merencanakan migrasi bertahap.',
+              text: 'Kembali ke metodologi yang benar: mulai dari Physical Layer (periksa kabel dan port switch), kemudian naik ke Network Layer untuk memeriksa konfigurasi IPv6.',
               isCorrect: true,
               explanation:
-                'Mengakui kesalahan dan kembali ke pendekatan yang lebih aman adalah sikap teknisi yang profesional. Dual Stack memungkinkan migrasi bertahap tanpa mengorbankan operasional sekolah.',
+                'Mengakui kesalahan dan kembali ke metodologi yang sistematis adalah sikap teknisi profesional. Investigasi dari Physical Layer → Network/IPv6 Layer → Transport/TCP Layer adalah urutan yang tepat dan efisien untuk menemukan root cause.',
             },
             {
               id: 'f2b',
-              text: 'Biarkan Lab A tanpa internet sambil mencari solusi — Lab B yang IPv6 bisa tetap dipakai.',
+              text: 'Reinstall operating system PC client karena kemungkinan ada kerusakan pada stack IPv6 Windows.',
               isCorrect: false,
               explanation:
-                'Membiarkan setengah lab tanpa internet tidak bisa diterima. Semua siswa berhak mendapat akses yang sama. Solusi harus mencakup SEMUA perangkat, bukan hanya sebagian.',
+                'Reinstall OS adalah solusi terakhir (last resort) yang drastis dan membuang waktu. Sebelum ke sana, investigasi sistematis dari Physical Layer akan jauh lebih cepat dan efektif menemukan masalah sebenarnya.',
             },
           ],
         },
         {
           id: 'c3',
-          text: 'Tunda semua perubahan sampai semua PC di sekolah diganti yang baru (IPv6-ready).',
+          text: 'Network/IPv6 Layer — langsung periksa routing table IPv6 di Router R1 menggunakan "show ipv6 route".',
           isOptimal: false,
           consequence:
-            'Menunda bukan strategi teknis — ini penghindaran masalah. ISP sudah memberikan bandwidth IPv6, dan menolak menggunakannya berarti kehilangan manfaat teknologi yang sudah tersedia.',
+            'Memeriksa routing table di router tanpa memastikan Physical Layer dulu bisa menyesatkan. Kamu menemukan routing table normal, tapi masalah sebenarnya ada di kabel longgar yang tidak kamu periksa. Diagnosis yang tidak lengkap menghasilkan kesimpulan yang salah. Ingat: Physical Layer SELALU diperiksa pertama.',
           followUpQuestion:
-            'Jika anggaran terbatas dan tidak bisa mengganti semua PC sekaligus, apa alternatif teknis yang tetap memungkinkan sekolah memanfaatkan IPv6 sambil PC lama masih digunakan?',
+            'Routing table R1 terlihat normal. PC masih tidak bisa ping. Apa yang seharusnya kamu periksa sebelum routing table?',
           followUpChoices: [
             {
               id: 'f3a',
-              text: 'Terapkan Dual Stack di router — PC lama tetap pakai IPv4, PC baru menikmati IPv6, kedua jenis bisa bekerja bersamaan.',
+              text: 'Kembali ke Physical Layer: periksa kabel, port switch, dan status lampu NIC di PC yang bermasalah — sebelum naik ke layer yang lebih tinggi.',
               isCorrect: true,
               explanation:
-                'Tepat! Dual Stack adalah solusi paling pragmatis: memanfaatkan IPv6 untuk perangkat baru sekarang, sambil memastikan perangkat lama tetap berfungsi. Penggantian PC bisa dilakukan bertahap sesuai anggaran.',
+                'Tepat! Kabel longgar di port switch adalah root cause sebenarnya. Jika Physical Layer diperiksa dulu, masalah akan ditemukan lebih cepat. Metodologi bottom-up (Physical → Network → Transport) adalah pendekatan standar industri untuk troubleshooting jaringan.',
             },
             {
               id: 'f3b',
-              text: 'Gunakan koneksi internet cadangan IPv4 untuk Lab A dan koneksi IPv6 untuk Lab B.',
+              text: 'Periksa konfigurasi VLAN di switch karena mungkin PC client dan server berada di VLAN berbeda.',
               isCorrect: false,
               explanation:
-                'Memelihara dua infrastruktur internet terpisah adalah pemborosan biaya dan kompleksitas. Dual Stack di satu router sudah cukup menangani kedua kebutuhan tanpa biaya tambahan.',
+                'VLAN mismatch adalah kemungkinan yang valid, tapi pemeriksaan ini juga masuk di layer 2 (Data Link), yang artinya masih di atas Physical Layer. Urutan pemeriksaan yang benar: Physical (kabel/sinyal fisik) → Data Link (VLAN, MAC, switch) → Network (IP, routing).',
             },
           ],
         },
       ],
       finalEvaluation:
-        'Tunjukkan bahwa kamu mampu menjaga stabilitas operasional sekolah sambil mengadopsi teknologi IPv6 secara bertahap dan terencana. Keputusan teknisi yang baik selalu mempertimbangkan dampak nyata terhadap pengguna, bukan hanya kecanggihan teknologi.',
+        'Sekarang susunlah Dokumen Root Cause Analysis (RCA) berdasarkan investigasi yang kamu lakukan. Format RCA: (1) Problem Statement — deskripsikan masalah yang terjadi secara singkat, (2) Root Cause — apa penyebab utama yang ditemukan, (3) Evidence — bukti teknis apa yang mendukung temuanmu, (4) Corrective Action — langkah perbaikan yang telah atau harus dilakukan. Dokumen RCA yang baik adalah bukti bahwa kamu tidak hanya bisa memperbaiki masalah, tapi juga memahami mengapa masalah itu terjadi.',
     },
-    conclusionPrompt: 'Berdasarkan studi kasus bercabang tentang strategi transisi IPv6 di sekolah yang telah kamu analisis, jelaskan bagaimana kamu mampu mengevaluasi keterkaitan TCP dan IP dalam arsitektur model TCP/IP saat proses komunikasi jaringan. Tuliskan secara logis dengan kata-katamu sendiri.',
+    conclusionPrompt: 'Berdasarkan studi kasus investigasi paket IPv6 menggunakan hierarki layer TCP/IP yang telah kamu analisis, susunlah dokumen Root Cause Analysis (RCA) dengan format: (1) Problem Statement, (2) Root Cause, (3) Evidence teknis, (4) Corrective Action. Kemudian jelaskan bagaimana kamu mampu mengevaluasi keterkaitan TCP dan IP dalam arsitektur model TCP/IP saat proses komunikasi jaringan. Tuliskan secara logis dengan kata-katamu sendiri.',
   },
 ];

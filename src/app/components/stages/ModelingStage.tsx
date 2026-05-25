@@ -3116,10 +3116,429 @@ function ModelingStageOriginal({
   );
 }
 
+// ─── ModelingLesson4: IPv6 Router CLI Simulator ───────────────────────────────
+
+const CLI_PING_LINES = [
+  '!! Success rate is 100 percent (5/5)',
+  'Round-trip min/avg/max = 1/2/4 ms',
+  '',
+  'Type escape sequence to abort.',
+  'Sending 5, 100-byte ICMP Echos to 2001:DB8:1::10, timeout is 2 seconds:',
+  '!!!!!',
+];
+
+function CliTerminal({ lines, prompt, label }: { lines: string[]; prompt?: string; label?: string }) {
+  return (
+    <div className="rounded-xl overflow-hidden border border-slate-700 shadow-xl">
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 border-b border-slate-700">
+        <div className="flex gap-1.5">
+          <span className="w-3 h-3 rounded-full bg-red-500/70" />
+          <span className="w-3 h-3 rounded-full bg-yellow-500/70" />
+          <span className="w-3 h-3 rounded-full bg-green-500/70" />
+        </div>
+        <span className="text-[10px] font-mono text-slate-400 ml-1">{label || 'Router R1 — Cisco IOS CLI'}</span>
+      </div>
+      <div className="bg-slate-900 p-4 space-y-1 min-h-[100px]">
+        {lines.map((line, i) => (
+          <p key={i} className={`font-mono text-[11px] leading-relaxed ${
+            line.startsWith('Router') ? 'text-emerald-400' :
+            line.startsWith('%') ? 'text-yellow-400' :
+            line.startsWith('!!') || line === '!!!!!' ? 'text-emerald-300 font-bold' :
+            line === '' ? 'h-1' :
+            'text-slate-300'
+          }`}>{line || ' '}</p>
+        ))}
+        {prompt && (
+          <p className="font-mono text-[11px] text-emerald-400 animate-pulse">{prompt}<span className="inline-block w-2 h-3 bg-emerald-400 ml-0.5 align-middle" /></p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ModelingLesson4({
+  lessonId,
+  stageIndex,
+  onComplete,
+  objectiveCode = 'X.IP.13',
+  onTrackerPhase,
+  modelingSteps = [],
+}: ModelingStageProps) {
+  const tracker = useActivityTracker({ lessonId, stageIndex, stageType: 'modeling' });
+
+  type Phase = 'intro' | 'cli' | 'arguing' | 'ping' | 'conclusion';
+  const [phase, setPhase] = useState<Phase>('intro');
+  const [currentStep, setCurrentStep] = useState(0);
+  const [argumentText, setArgumentText] = useState('');
+  const [argumentSaved, setArgumentSaved] = useState(false);
+  const [pingRunning, setPingRunning] = useState(false);
+  const [pingLines, setPingLines] = useState<string[]>([]);
+  const [pingDone, setPingDone] = useState(false);
+  const [conclusionText, setConclusionText] = useState('');
+  const [isRestored, setIsRestored] = useState(false);
+
+  const cliSteps = modelingSteps;
+
+  useEffect(() => {
+    if (!tracker.isLoading && !isRestored) {
+      const snap = tracker.session?.latestSnapshot;
+      if (snap) {
+        if (snap.phase) setPhase(snap.phase as Phase);
+        if (typeof snap.currentStep === 'number') setCurrentStep(snap.currentStep);
+        if (typeof snap.argumentText === 'string') setArgumentText(snap.argumentText);
+        if (typeof snap.argumentSaved === 'boolean') setArgumentSaved(snap.argumentSaved);
+        if (typeof snap.pingDone === 'boolean') setPingDone(snap.pingDone);
+        if (typeof snap.conclusionText === 'string') setConclusionText(snap.conclusionText);
+        if (snap.pingDone) setPingLines(CLI_PING_LINES);
+      }
+      setIsRestored(true);
+    }
+  }, [tracker.isLoading, tracker.session, isRestored]);
+
+  useEffect(() => {
+    const tp: 'consistency' | 'arguing' | 'conclusion' =
+      phase === 'conclusion' ? 'conclusion' :
+      (phase === 'arguing' || phase === 'ping') ? 'arguing' :
+      'consistency';
+    onTrackerPhase?.(tp);
+  }, [phase, onTrackerPhase]);
+
+  useEffect(() => {
+    if (!isRestored) return;
+    const pct =
+      phase === 'conclusion' ? 100 :
+      phase === 'ping' ? 85 :
+      phase === 'arguing' ? 70 :
+      phase === 'cli' ? Math.round(20 + (currentStep / Math.max(cliSteps.length, 1)) * 45) :
+      5;
+    void tracker.saveSnapshot(
+      { phase, currentStep, argumentText, argumentSaved, pingDone, conclusionText },
+      { progressPercent: pct },
+    );
+  }, [phase, currentStep, argumentText, argumentSaved, pingDone, conclusionText, isRestored, cliSteps.length, tracker]);
+
+  const argWords = argumentText.trim().split(/\s+/).filter(Boolean).length;
+  const concWords = conclusionText.trim().split(/\s+/).filter(Boolean).length;
+
+  const handleRunPing = () => {
+    if (pingRunning || pingDone) return;
+    setPingRunning(true);
+    setPingLines([]);
+    let idx = 0;
+    const interval = setInterval(() => {
+      setPingLines(prev => [...prev, CLI_PING_LINES[idx]]);
+      idx++;
+      if (idx >= CLI_PING_LINES.length) {
+        clearInterval(interval);
+        setPingRunning(false);
+        setPingDone(true);
+        void tracker.trackEvent('modeling_ping_success', { pingTarget: '2001:db8:1::10' }, { progressPercent: 88 });
+      }
+    }, 350);
+  };
+
+  const handleComplete = async () => {
+    await tracker.complete(
+      { phase: 'conclusion', conclusionText, argumentText, pingDone },
+      { phase, conclusionText, pingDone },
+    );
+    onComplete({ conclusionText, argumentText, pingDone });
+  };
+
+  if (tracker.isLoading || !isRestored) {
+    return <div className="flex justify-center items-center py-16"><div className="w-6 h-6 rounded-full border-2 border-[#628ECB]/30 border-t-[#628ECB] animate-spin" /></div>;
+  }
+
+  // ── Intro ──────────────────────────────────────────────────────────────────
+  if (phase === 'intro') {
+    return (
+      <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="rounded-2xl border-2 border-[#EC4899]/20 bg-white shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-[#EC4899]/8 to-transparent border-b border-[#EC4899]/10">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EC4899]/12">
+              <Server className="w-5 h-5 text-[#EC4899]" />
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-widest text-[#EC4899]/70">{objectiveCode} — Modeling</p>
+              <h3 className="text-sm font-bold text-[#395886]">Simulasi Konfigurasi IPv6 Gateway pada Router</h3>
+            </div>
+          </div>
+          <div className="p-5 space-y-4">
+            <p className="text-sm text-[#395886]/80 leading-relaxed">
+              Dalam simulasi ini kamu akan mengonfigurasi alamat <strong className="text-[#395886]">IPv6 Global Unicast /64</strong> pada interface GigabitEthernet router R1, menggunakan urutan perintah CLI Cisco IOS yang terstruktur. Setelah konfigurasi selesai, kamu akan menguji keterhubungan dengan <em>ping IPv6</em>.
+            </p>
+            <div className="rounded-xl border border-[#D5DEEF] bg-[#F8FAFF] p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB] mb-2">Topologi Jaringan</p>
+              <div className="flex items-center justify-center gap-3 py-3 flex-wrap">
+                {[
+                  { label: 'PC Client', sub: '2001:db8:1::10/64', icon: '💻', color: 'bg-[#628ECB]/10 border-[#628ECB]/20' },
+                  { label: '——Switch——', sub: '', icon: '', color: '' },
+                  { label: 'Router R1', sub: 'G0/0: 2001:db8:1::1/64', icon: '📡', color: 'bg-[#10B981]/10 border-[#10B981]/20' },
+                  { label: '——ISP——', sub: '', icon: '', color: '' },
+                  { label: 'Server IPv6', sub: '2001:db8:1::100/64', icon: '🖥️', color: 'bg-[#8B5CF6]/10 border-[#8B5CF6]/20' },
+                ].map((node, i) => node.icon ? (
+                  <div key={i} className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg border ${node.color}`}>
+                    <span className="text-xl">{node.icon}</span>
+                    <span className="text-[10px] font-bold text-[#395886]">{node.label}</span>
+                    {node.sub && <span className="text-[9px] font-mono text-[#395886]/60">{node.sub}</span>}
+                  </div>
+                ) : (
+                  <span key={i} className="text-xs text-[#395886]/40 font-mono">{node.label}</span>
+                ))}
+              </div>
+            </div>
+            <button
+              onClick={() => { setPhase('cli'); void tracker.trackEvent('modeling_intro_done', {}, { progressPercent: 15 }); }}
+              className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl bg-[#EC4899] text-white font-black text-sm hover:bg-[#DB2777] shadow-lg shadow-[#EC4899]/20 active:scale-95 transition-all"
+            >
+              <Monitor className="w-5 h-5" /> Mulai Simulasi CLI Router <ArrowRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── CLI Steps ──────────────────────────────────────────────────────────────
+  if (phase === 'cli') {
+    const step = cliSteps[currentStep];
+    const isLastStep = currentStep >= cliSteps.length - 1;
+    // Build cumulative CLI output from completed steps
+    const cliLines = cliSteps.slice(0, currentStep + 1).flatMap(s => {
+      const codeBlock = s.content.match(/🖥️ Simulator CLI:\n([\s\S]*?)(?:\n\n|$)/);
+      if (codeBlock) return codeBlock[1].trim().split('\n');
+      return [];
+    });
+
+    return (
+      <div className="space-y-4 animate-in fade-in duration-400">
+        {/* Step tracker */}
+        <div className="flex items-center gap-1.5 flex-wrap px-1">
+          {cliSteps.map((s, i) => (
+            <div key={i} className="flex items-center gap-1">
+              <div className={`flex items-center justify-center w-6 h-6 rounded-full text-[9px] font-black transition-all ${
+                i < currentStep ? 'bg-[#10B981] text-white' :
+                i === currentStep ? 'bg-[#EC4899] text-white scale-110 shadow-md' :
+                'bg-[#D5DEEF] text-[#395886]/40'
+              }`}>
+                {i < currentStep ? '✓' : i + 1}
+              </div>
+              {i < cliSteps.length - 1 && <div className={`h-px w-4 ${i < currentStep ? 'bg-[#10B981]/50' : 'bg-[#D5DEEF]'}`} />}
+            </div>
+          ))}
+        </div>
+
+        {/* Step card */}
+        <div className="rounded-xl border-2 border-[#EC4899]/20 bg-white shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-[#EC4899]/6 to-transparent border-b border-[#EC4899]/10">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#EC4899]/12">
+              <Activity className="w-3.5 h-3.5 text-[#EC4899]" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[9px] font-black uppercase tracking-widest text-[#EC4899]/70">Langkah {currentStep + 1} / {cliSteps.length}</p>
+              <h3 className="text-sm font-bold text-[#395886]">{step?.title}</h3>
+            </div>
+          </div>
+          <div className="p-4 space-y-3">
+            <p className="text-xs text-[#395886]/80 leading-relaxed">
+              {step?.content.split('\n\n')[0]}
+            </p>
+            {/* Terminal */}
+            <CliTerminal lines={cliLines} prompt={currentStep === cliSteps.length - 1 ? undefined : `Router# `} />
+            {step?.interactiveAction && (
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-[#FFFBEB] border border-[#F59E0B]/20">
+                <BookOpen className="w-3.5 h-3.5 text-[#F59E0B] shrink-0 mt-0.5" />
+                <p className="text-[11px] text-[#92400E] leading-relaxed">{step.interactiveAction}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <button
+          onClick={() => {
+            void tracker.trackEvent('modeling_cli_step', { stepId: step?.id, stepIndex: currentStep }, { progressPercent: Math.round(20 + ((currentStep + 1) / cliSteps.length) * 45) });
+            if (isLastStep) {
+              setPhase('arguing');
+            } else {
+              setCurrentStep(s => s + 1);
+            }
+          }}
+          className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-2xl bg-[#EC4899] text-white font-black text-sm hover:bg-[#DB2777] shadow-md active:scale-95 transition-all"
+        >
+          {isLastStep ? (
+            <><Lightbulb className="w-4 h-4" /> Semua Perintah Dijalankan — Lanjut ke Analisis</>
+          ) : (
+            <><Activity className="w-4 h-4" /> Jalankan Langkah {currentStep + 1} <ArrowRight className="w-4 h-4" /></>
+          )}
+        </button>
+      </div>
+    );
+  }
+
+  // ── Arguing: Why /64? ──────────────────────────────────────────────────────
+  if (phase === 'arguing') {
+    return (
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="rounded-xl border-2 border-[#F59E0B]/25 bg-white shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-[#F59E0B]/8 to-transparent border-b border-[#F59E0B]/10">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#F59E0B]/12">
+              <MessageSquare className="w-3.5 h-3.5 text-[#F59E0B]" />
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-widest text-[#F59E0B]/70">Kemampuan Berargumen — {objectiveCode}</p>
+              <h3 className="text-sm font-bold text-[#395886]">Mengapa Prefix /64 untuk Segmen LAN IPv6?</h3>
+            </div>
+          </div>
+          <div className="p-4 space-y-3">
+            <div className="p-4 rounded-xl bg-[#FFFBEB] border border-[#F59E0B]/20">
+              <p className="text-sm font-semibold text-[#395886] leading-relaxed">
+                Kamu baru saja menggunakan perintah <code className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[#EC4899] font-bold">ipv6 address 2001:db8:1::1<strong>/64</strong></code>. Mengapa prefix <strong>/64</strong> dipilih untuk segmen LAN IPv6 dibandingkan prefix lain seperti /48, /96, atau /128? Jelaskan kaitannya dengan mekanisme EUI-64 dan SLAAC (Stateless Address Autoconfiguration).
+              </p>
+            </div>
+            <textarea
+              value={argumentText}
+              onChange={e => !argumentSaved && setArgumentText(e.target.value)}
+              disabled={argumentSaved}
+              rows={4}
+              className={`w-full p-4 border-2 rounded-xl text-sm leading-relaxed outline-none transition-all resize-none ${
+                argumentSaved
+                  ? 'border-[#10B981]/20 bg-[#ECFDF5] text-[#065F46] cursor-not-allowed'
+                  : 'border-[#D5DEEF] bg-white text-[#395886] focus:border-[#F59E0B] focus:ring-4 focus:ring-[#F59E0B]/5'
+              }`}
+              placeholder="Tuliskan argumenmu di sini... (minimal 20 kata)"
+            />
+            <div className="flex items-center justify-between px-1">
+              <span className={`text-[10px] font-bold ${argWords >= 20 || argumentSaved ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
+                {argWords} / 20 kata{(argWords >= 20 || argumentSaved) ? ' ✓' : ''}
+              </span>
+              {!argumentSaved && (
+                <button
+                  disabled={argWords < 20}
+                  onClick={() => { setArgumentSaved(true); setPhase('ping'); void tracker.trackEvent('modeling_argument_saved', { argWords }, { progressPercent: 72 }); }}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-xl font-bold text-xs transition-all active:scale-95 ${argWords >= 20 ? 'bg-[#F59E0B] text-white hover:bg-[#D97706] shadow-sm' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
+                >
+                  Simpan Argumen <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Ping Test ──────────────────────────────────────────────────────────────
+  if (phase === 'ping') {
+    return (
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="rounded-xl border-2 border-[#10B981]/25 bg-white shadow-sm overflow-hidden">
+          <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-[#10B981]/8 to-transparent border-b border-[#10B981]/10">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#10B981]/12">
+              <Activity className="w-3.5 h-3.5 text-[#10B981]" />
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-widest text-[#10B981]/70">Verifikasi Koneksi — Run Ping Test</p>
+              <h3 className="text-sm font-bold text-[#395886]">Uji Keterhubungan Perangkat Pasca Konfigurasi</h3>
+            </div>
+          </div>
+          <div className="p-4 space-y-3">
+            <p className="text-xs text-[#395886]/80 leading-relaxed">
+              Konfigurasi IPv6 sudah selesai. Klik tombol <strong>"Run Ping Test"</strong> untuk mengirim paket ICMPv6 dari Router R1 ke PC Client (2001:db8:1::10) dan evaluasi hasilnya.
+            </p>
+            <CliTerminal
+              lines={pingLines.length > 0 ? pingLines : ['Router# ping ipv6 2001:DB8:1::10', '...']}
+              prompt={!pingRunning && !pingDone ? 'Router# ' : undefined}
+            />
+            {!pingDone && (
+              <button
+                disabled={pingRunning}
+                onClick={handleRunPing}
+                className={`w-full flex items-center justify-center gap-3 px-6 py-3 rounded-2xl font-black text-sm transition-all active:scale-95 shadow-md ${pingRunning ? 'bg-[#D5DEEF] text-[#395886]/40 cursor-wait' : 'bg-[#10B981] text-white hover:bg-[#059669]'}`}
+              >
+                {pingRunning ? <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" /> Mengirim Ping IPv6...</> : <><Activity className="w-4 h-4" /> Run Ping Test — IPv6 2001:db8:1::10</>}
+              </button>
+            )}
+            {pingDone && (
+              <div className="space-y-3 animate-in fade-in duration-500">
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-[#ECFDF5] border border-[#10B981]/25">
+                  <CheckCircle className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-[#065F46]">Ping IPv6 Berhasil! Success rate 100% (5/5)</p>
+                    <p className="text-[11px] text-[#065F46]/80 mt-0.5 leading-relaxed">Konfigurasi IPv6 Global Unicast /64 pada Router R1 berhasil. PC Client sudah dapat berkomunikasi melalui IPv6 via Gateway 2001:db8:1::1.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setPhase('conclusion')}
+                  className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-2xl bg-[#10B981] text-white font-black text-sm hover:bg-[#059669] shadow-md active:scale-95 transition-all"
+                >
+                  <CheckCircle className="w-4 h-4" /> Lanjut ke Penarikan Kesimpulan <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Conclusion / ATP Box ───────────────────────────────────────────────────
+  return (
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Indicator summary */}
+      <IndicatorSummaryCard
+        title="Rekap Simulasi — 3 Indikator Berpikir Logis"
+        consistency={<p className="text-xs text-[#395886]/80 leading-relaxed">Kamu mengeksekusi {cliSteps.length} perintah CLI secara berurutan: <span className="font-mono text-[#EC4899] font-bold">enable → conf t → int g0/0 → ipv6 address → no shutdown</span>.</p>}
+        arguing={<p className="text-xs text-[#395886]/80 leading-relaxed italic">"{argumentText.slice(0, 140)}{argumentText.length > 140 ? '...' : ''}"</p>}
+        conclusion={<p className="text-xs text-[#395886]/80 leading-relaxed">Ping Test IPv6 berhasil — success rate 100%. Konfigurasi IPv6 Gateway terverifikasi aktif dan perangkat dapat berkomunikasi.</p>}
+      />
+      {/* ATP Conclusion box */}
+      <div className="rounded-2xl border-2 border-[#10B981]/25 bg-gradient-to-br from-[#ECFDF5] to-white shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-[#10B981]/10 to-transparent border-b border-[#10B981]/15">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#10B981]/15">
+            <CheckCircle className="w-4 h-4 text-[#10B981]" />
+          </div>
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-widest text-[#10B981]/70">Penarikan Kesimpulan — {objectiveCode}</p>
+            <p className="text-xs font-bold text-[#065F46]">Tuliskan Kesimpulan Sistematis Konfigurasi IPv6</p>
+          </div>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="p-4 rounded-xl bg-[#F0FDF4] border border-[#10B981]/20">
+            <p className="text-sm font-bold text-[#065F46] leading-relaxed">
+              Berdasarkan simulasi konfigurasi IPv6 yang telah kamu lakukan, jelaskan secara sistematis urutan perintah CLI yang benar dan mengapa prefix /64 adalah standar untuk segmen LAN IPv6. Hubungkan dengan mekanisme EUI-64 yang kamu pelajari sebelumnya.
+            </p>
+          </div>
+          <textarea
+            value={conclusionText}
+            onChange={e => setConclusionText(e.target.value)}
+            disabled={concWords >= 20 && !!conclusionText && false}
+            rows={4}
+            className="w-full p-4 border-2 border-[#D5DEEF] rounded-xl text-sm leading-relaxed outline-none transition-all resize-none text-[#395886] focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/5"
+            placeholder="Tuliskan kesimpulanmu di sini... (minimal 20 kata)"
+          />
+          <div className="flex items-center justify-between px-1">
+            <span className={`text-[10px] font-bold ${concWords >= 20 ? 'text-[#10B981]' : 'text-[#395886]/40'}`}>
+              {concWords} / 20 kata{concWords >= 20 ? ' ✓' : ''}
+            </span>
+            <button
+              disabled={concWords < 20}
+              onClick={handleComplete}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all active:scale-95 shadow-sm ${concWords >= 20 ? 'bg-[#10B981] text-white hover:bg-[#059669]' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'}`}
+            >
+              Selesaikan Tahap Modeling <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Export ──────────────────────────────────────────────────────────────
 
 export function ModelingStage(props: ModelingStageProps) {
   if (props.lessonId === '2') return <ModelingLesson2 {...props} />;
   if (props.lessonId === '3') return <ModelingLesson3 {...props} />;
+  if (props.lessonId === '4') return <ModelingLesson4 {...props} />;
   return <ModelingStageOriginal {...props} />;
 }
