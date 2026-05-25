@@ -9,15 +9,16 @@ export const lesson3Stages: Stage[] = [
       'Siswa membangun pemahaman awal tentang peran Internet Protocol (IP) pada Network Layer melalui animasi analogi interaktif dan aktivitas mencocokkan fungsi komponen IP.',
     objectiveCode: 'X.IP.1',
     activityGuide: [
-      'Saksikan animasi interaktif tentang bagaimana IP Address memungkinkan data menemukan tujuannya di jaringan.',
-      'Pasangkan setiap komponen/konsep IP Address dengan fungsinya yang tepat menggunakan klik kiri-kanan (tarik garis).',
-      'Tulis argumen logis tentang mengapa IP Address harus unik di setiap jaringan.',
-      'Tulis kesimpulan mengenai peran IP dalam komunikasi jaringan berdasarkan seluruh aktivitas.',
+      'Saksikan animasi analogi interaktif tentang sistem kerja kurir ekspedisi sebagai representasi cara kerja Internet Protocol.',
+      'Susun urutan logika pengiriman paket data yang benar menggunakan drag & drop (3 langkah: TCP membungkus → IP menentukan alamat & rute → paket sampai).',
+      'Coba simulasi "Kirim Paket Tanpa Alamat" untuk melihat apa yang terjadi jika IP/Network Layer tidak bekerja.',
+      'Tulis argumen logis mengapa Internet Protocol sangat penting dan mengapa TCP tetap membutuhkan IP.',
+      'Lengkapi kalimat refleksi menggunakan dropdown untuk menyimpulkan peran IP pada Network Layer.',
     ],
     logicalThinkingIndicators: [
-      'Keruntutan Berpikir: mengeksplorasi peran IP Address pada Network Layer melalui animasi interaktif dan mencocokkan komponen dengan fungsinya secara runtut.',
-      'Kemampuan Berargumen: menjelaskan alasan mengapa IP Address harus unik dan bagaimana perannya dalam proses pengiriman data antar jaringan.',
-      'Penarikan Kesimpulan: menyimpulkan apa yang telah dipelajari tentang peran Internet Protocol pada Network Layer dalam komunikasi jaringan.',
+      'Keruntutan Berpikir: menyusun urutan logika pengiriman paket data (TCP → IP → penerima) secara runtut melalui animasi analogi dan aktivitas drag & drop.',
+      'Kemampuan Berargumen: menjelaskan mengapa Internet Protocol sangat penting dan mengapa TCP tetap membutuhkan IP meskipun data sudah dibungkus dengan aman.',
+      'Penarikan Kesimpulan: menyimpulkan peran Internet Protocol pada Network Layer sebagai penentu alamat dan rute perjalanan data melalui aktivitas dropdown refleksi.',
     ],
     facilitatorNotes: [
       'Guru menggambarkan IP Address sebagai "alamat rumah di dunia digital" — tanpa alamat unik, data tidak tahu ke mana harus pergi.',
@@ -27,7 +28,7 @@ export const lesson3Stages: Stage[] = [
     atpAbcd: {
       audience: 'Peserta didik',
       behavior: 'mampu menjelaskan peran Internet Protocol lapisan Network dalam protokol TCP/IP',
-      condition: 'melalui aktivitas constructivism berupa animasi analogi interaktif pada CONNETIC Module',
+      condition: 'melalui aktivitas constructivism berupa animasi analogi interaktif dan urutan logika pengiriman pada CONNETIC Module',
       degree: 'dengan tepat',
     },
     apersepsi:

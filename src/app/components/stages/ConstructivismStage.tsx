@@ -12,6 +12,7 @@ import { useActivityTracker } from '../../hooks/useActivityTracker';
 import { CourierDefinition } from './CourierDefinition';
 import { TcpHeaderIntro } from './TcpHeaderIntro';
 import { IpAddressIntro } from './IpAddressIntro';
+import { IpCourierConstructivism } from './IpCourierConstructivism';
 import { EssayBox, ContinueActivityButton, ATPConclusionBox } from './StageKit';
 
 // -- Types ----------------------------------------------------------------------
@@ -1710,6 +1711,7 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
 
   useEffect(() => {
     if (!isRestored) return;
+    if (lessonId === '3') return; // IpCourierConstructivism handles its own saves
     const progressMap = { scramble: 20, analogy: 55, mcq: 80, conclusion: 90 } as const;
     void tracker.saveImmediate(
       {
@@ -1760,6 +1762,19 @@ export function ConstructivismStage(props: ConstructivismStageProps) {
         <div className="w-12 h-12 border-4 border-[#628ECB] border-t-transparent rounded-full animate-spin" />
         <p className="text-sm font-bold text-[#395886]">Memuat progres...</p>
       </div>
+    );
+  }
+
+  // L3 uses a dedicated component with its own multi-phase flow
+  if (lessonId === '3') {
+    return (
+      <IpCourierConstructivism
+        tracker={tracker}
+        snapshot={tracker.session?.latestSnapshot}
+        isCompleted={isCompleted}
+        onTrackerPhase={onTrackerPhase}
+        onComplete={onComplete}
+      />
     );
   }
 
