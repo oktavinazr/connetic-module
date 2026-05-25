@@ -2,7 +2,7 @@ import { supabase } from './supabase';
 import { lessons, globalPretest, globalPosttest, type Stage, type TestQuestion } from '../data/lessons';
 
 // Bump this string whenever default questions are updated to force-reset stale DB overrides.
-const QUESTION_DEFAULTS_VERSION = 'v4-2026-05-18';
+const QUESTION_DEFAULTS_VERSION = 'v6-2026-05-25';
 
 async function maybeResetStaleDefault(key: string): Promise<void> {
   const storageKey = `qdefault_version_${key}`;

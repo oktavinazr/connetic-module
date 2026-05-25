@@ -1026,336 +1026,491 @@ export const globalPosttest = {
   title: 'Post-Test Umum',
   description: 'Tes ini mengukur pemahaman akhir Anda setelah menyelesaikan semua materi',
   questions: [
-    // 1 (Dokumen No. 61)
+    // 1
     {
-      question: 'Perhatikan pernyataan berikut tentang TCP/IP:\n\n1. TCP/IP adalah satu protokol tunggal yang menangani semua fungsi jaringan dari lapisan fisik hingga aplikasi.\n2. TCP (Transmission Control Protocol) berperan menjamin keandalan data dengan mekanisme ACK dan retransmission.\n3. IP (Internet Protocol) berperan memastikan setiap segmen data tiba secara berurutan dan lengkap di penerima.\n4. IP berperan memberikan pengalamatan logis dan menentukan rute terbaik pengiriman paket antar jaringan.\n5. TCP dan IP bekerja di lapisan yang sama (lapisan Transport) dalam arsitektur model TCP/IP.\n\nPernyataan yang BENAR tentang TCP/IP adalah ...',
+      question:
+        'Perhatikan pernyataan berikut tentang TCP/IP:\n\n' +
+        '1. TCP/IP adalah satu protokol tunggal yang menangani semua fungsi jaringan dari lapisan fisik hingga aplikasi.\n' +
+        '2. TCP berperan menjamin keandalan data dengan mekanisme ACK dan retransmission.\n' +
+        '3. IP berperan memastikan setiap segmen data tiba secara berurutan dan lengkap di penerima.\n' +
+        '4. IP berperan memberikan pengalamatan logis dan menentukan rute terbaik pengiriman paket antar jaringan.\n' +
+        '5. TCP dan IP bekerja di lapisan yang sama (lapisan Transport).\n\n' +
+        'Pernyataan yang **BENAR** tentang TCP/IP adalah ...',
       options: ['1 dan 3', '2 dan 4', '3 dan 5', '1 dan 5', '3 dan 4'],
       correctAnswer: 1,
     },
-    // 2 (Dokumen No. 62)
+    // 2
     {
-      question: 'Perhatikan lima lapisan model TCP/IP berikut yang disusun secara acak: Transport, Data Link, Application, Physical, Network. Urutan susunan lapisan model TCP/IP modern (5 layer) dari lapisan teratas (aplikasi) hingga lapisan terbawah (fisik) yang benar adalah ...',
+      question:
+        'Perhatikan lima lapisan model TCP/IP berikut yang **disusun secara acak**:\n\n' +
+        '- Transport\n' +
+        '- Data Link\n' +
+        '- Application\n' +
+        '- Physical\n' +
+        '- Network\n\n' +
+        'Urutan susunan lapisan dari **teratas (aplikasi)** hingga **terbawah (fisik)** yang benar adalah ...',
       options: [
-        'Application - Network - Transport - Data Link - Physical',
-        'Application - Transport - Data Link - Network - Physical',
-        'Application - Transport - Network - Data Link - Physical',
-        'Transport - Application - Network - Data Link - Physical',
-        'Physical - Data Link - Network - Transport - Application'
+        'Application – Network – Transport – Data Link – Physical',
+        'Application – Transport – Data Link – Network – Physical',
+        'Application – Transport – Network – Data Link – Physical',
+        'Transport – Application – Network – Data Link – Physical',
+        'Physical – Data Link – Network – Transport – Application',
       ],
       correctAnswer: 2,
     },
-    // 3 (Dokumen No. 63)
+    // 3
     {
-      question: 'Sebuah kartu referensi memuat lima pasangan lapisan dan fungsi model TCP/IP berikut.\n\n1. Application – antarmuka antara aplikasi pengguna dan layanan jaringan.\n2. Network – memberikan alamat IP dan menentukan rute pengiriman paket.\n3. Transport – memecah data menjadi segmen dan memastikan keutuhan pengirimannya.\n4. Data Link – mengelola pengiriman frame melalui media fisik menggunakan MAC Address.\n5. Network – memecah data menjadi segmen kecil agar lebih efisien di jaringan.\n\nPasangan yang TIDAK TEPAT adalah ...',
+      question:
+        'Sebuah kartu referensi memuat lima pasangan lapisan dan fungsi model TCP/IP berikut:\n\n' +
+        '1. Application – antarmuka antara aplikasi pengguna dan layanan jaringan.\n' +
+        '2. Network – memberikan alamat IP dan menentukan rute pengiriman paket.\n' +
+        '3. Transport – memecah data menjadi segmen dan memastikan keutuhan pengirimannya.\n' +
+        '4. Data Link – mengelola pengiriman frame melalui media fisik menggunakan MAC Address.\n' +
+        '5. Network – memecah data menjadi segmen kecil agar lebih efisien di jaringan.\n\n' +
+        'Pasangan yang **TIDAK TEPAT** adalah ...',
       options: [
-        'Pasangan (1) tidak tepat karena lapisan Application seharusnya hanya bertanggung jawab penuh dalam menangani proses enkripsi data digital.',
-        'Pasangan (2) tidak tepat karena lapisan Network tidak mengurus rute pengiriman paket data melainkan itu tugas dari lapisan Transport.',
-        'Pasangan (3) tidak tepat karena lapisan Transport tidak memecah data menjadi segmen melainkan itu adalah tugas utama lapisan Network.',
-        'Pasangan (4) tidak tepat karena lapisan Data Link tidak pernah menggunakan MAC Address melainkan menggunakan alamat IP dalam bekerja.',
-        'Pasangan (5) tidak tepat karena aktivitas memecah data menjadi segmen kecil merupakan tanggung jawab penuh dari lapisan Transport.'
+        'Pasangan (1) tidak tepat karena lapisan Application seharusnya hanya bertanggung jawab menangani proses enkripsi data digital.',
+        'Pasangan (2) tidak tepat karena lapisan Network tidak mengurus rute pengiriman paket, melainkan itu tugas lapisan Transport.',
+        'Pasangan (3) tidak tepat karena lapisan Transport tidak memecah data menjadi segmen; itu adalah tugas lapisan Network.',
+        'Pasangan (4) tidak tepat karena lapisan Data Link tidak menggunakan MAC Address, melainkan menggunakan alamat IP.',
+        'Pasangan (5) tidak tepat karena memecah data menjadi segmen kecil merupakan tanggung jawab lapisan Transport, bukan Network.',
       ],
       correctAnswer: 4,
     },
-    // 4 (Dokumen No. 34)
+    // 4
     {
-      question: 'Sebuah file gambar akan dikirim dari laptop ke server. Lapisan Transport sudah memecah data menjadi Segmen dengan nomor port. Langkah enkapsulasi berikutnya di lapisan Network yang tepat adalah ...',
+      question:
+        'Sebuah file gambar akan dikirim dari laptop ke server. Lapisan Transport sudah memecah data menjadi **Segmen** dengan nomor port.\n\n' +
+        'Langkah enkapsulasi berikutnya di lapisan **Network** yang tepat adalah ...',
       options: [
-        'A. Mengubah Segmen langsung menjadi sinyal fisik agar lebih cepat sampai ke server',
-        'B. Menggabungkan semua Segmen menjadi satu sebelum diberi alamat IP untuk efisiensi',
-        'C. Menambahkan MAC Address server pada Segmen agar langsung menjadi Frame',
-        'D. Kembali ke lapisan Application untuk memverifikasi format file gambar',
-        'E. Membungkus setiap Segmen ke dalam Paket dengan IP Header berisi alamat IP pengirim dan penerima, sehingga Router dapat meneruskan paket ke jaringan yang tepat'
+        'Mengubah Segmen langsung menjadi sinyal fisik agar lebih cepat sampai ke server.',
+        'Menggabungkan semua Segmen menjadi satu sebelum diberi alamat IP untuk efisiensi.',
+        'Menambahkan MAC Address server pada Segmen agar langsung menjadi Frame.',
+        'Kembali ke lapisan Application untuk memverifikasi format file gambar.',
+        'Membungkus setiap Segmen ke dalam Paket dengan IP Header berisi alamat IP pengirim dan penerima, sehingga Router dapat meneruskan paket ke jaringan yang tepat.',
       ],
       correctAnswer: 4,
     },
-    // 5 (Dokumen No. 35)
+    // 5
     {
-      question: 'Sebuah Paket berhasil diekstrak dari Frame oleh lapisan Data Link di komputer penerima. Langkah dekapsulasi berikutnya di lapisan Network yang tepat adalah ...',
+      question:
+        'Sebuah **Paket** berhasil diekstrak dari Frame oleh lapisan Data Link di komputer penerima.\n\n' +
+        'Langkah dekapsulasi berikutnya di lapisan **Network** yang tepat adalah ...',
       options: [
-        'A. Meneruskan Paket data secara langsung menuju lapisan Application tanpa memeriksa atau membuka header protokol di dalamnya.',
-        'B. Mengirimkan kembali Paket data tersebut ke jaringan untuk meminta konfirmasi ulang dari pihak pengirim sebelum diproses.',
-        'C. Mengakumulasikan seluruh Paket data yang sejenis menjadi satu kesatuan file utuh sebelum diserahkan ke lapisan atas.',
-        'D. Melepaskan Network Header dari Paket untuk mengambil Segmen, lalu meneruskannya ke lapisan Transport agar port bisa dibaca.',
-        'E. Menolak dan membuang Paket data tersebut dari memori jika struktur Network Header yang diterima mengalami kerusakan.'
+        'Meneruskan Paket data langsung menuju lapisan Application tanpa memeriksa header protokol di dalamnya.',
+        'Mengirimkan kembali Paket data ke jaringan untuk meminta konfirmasi ulang dari pengirim sebelum diproses.',
+        'Mengakumulasikan seluruh Paket data sejenis menjadi satu file utuh sebelum diserahkan ke lapisan atas.',
+        'Melepaskan Network Header dari Paket untuk mengambil Segmen, lalu meneruskannya ke lapisan Transport agar port bisa dibaca.',
+        'Menolak dan membuang Paket data jika struktur Network Header yang diterima mengalami kerusakan.',
       ],
       correctAnswer: 3,
     },
-    // 6 (Dokumen No. 36)
+    // 6
     {
-      question: 'Perhatikan tahapan-tahapan perjalanan data dalam sebuah jaringan komputer berikut ini (diurutkan secara acak): 1. Lapisan Transport pengirim memecah data menjadi Segmen, kemudian lapisan Network membungkusnya menjadi Paket data. 2. Lapisan Data Link pengirim mengemas paket menjadi Frame, lalu lapisan Physical mengirimkannya berupa sinyal fisik. 3. Lapisan Data Link penerima mendeteksi sinyal fisik yang masuk, lalu mengupas Frame Header untuk memeriksa MAC Address. 4. Lapisan Network penerima melepas IP Header dari paket, lalu lapisan Transport menyusun kembali segmen menjadi data utuh. Urutan alur transmisi data yang benar dari awal proses enkapsulasi di sisi pengirim hingga selesai proses dekapsulasi di sisi penerima adalah ...',
-      options: ['1 - 3 - 2 - 4', '2 - 1 - 3 - 4', '1 - 2 - 3 - 4', '2 - 1 - 4 - 3', '1 - 2 - 4 - 3'],
+      question:
+        'Perhatikan tahapan perjalanan data berikut ini (diurutkan secara **acak**):\n\n' +
+        '1. Lapisan Transport pengirim memecah data menjadi Segmen, kemudian lapisan Network membungkusnya menjadi Paket.\n' +
+        '2. Lapisan Data Link pengirim mengemas Paket menjadi Frame, lalu lapisan Physical mengirimkannya sebagai sinyal fisik.\n' +
+        '3. Lapisan Data Link penerima mendeteksi sinyal fisik, lalu mengupas Frame Header untuk memeriksa MAC Address.\n' +
+        '4. Lapisan Network penerima melepas IP Header dari Paket, lalu lapisan Transport menyusun kembali segmen menjadi data utuh.\n\n' +
+        'Urutan alur transmisi yang benar (dari enkapsulasi pengirim hingga dekapsulasi penerima) adalah ...',
+      options: ['1 – 3 – 2 – 4', '2 – 1 – 3 – 4', '1 – 2 – 3 – 4', '2 – 1 – 4 – 3', '1 – 2 – 4 – 3'],
       correctAnswer: 2,
     },
-    // 7 (Dokumen No. 67)
+    // 7
     {
-      question: 'Seorang mahasiswa teknik jaringan melakukan empat eksperimen pada sistem jaringan komputer:\n\n1. Router dimatikan - komunikasi antar jaringan berhenti.\n2. Alamat IP dihapus - paket data tidak bisa diarahkan ke tujuan.\n3. Protokol TCP dimatikan - file ukuran besar gagal terkirim.\n4. Kabel transmisi dicabut - tidak ada komunikasi sama sekali.\n\nMahasiswa tersebut menarik kesimpulan: "Lapisan Network (IP) adalah satu-satunya lapisan kritis dalam jaringan; sedangkan lapisan protokol lainnya hanyalah opsional."\n\nBerdasarkan keempat eksperimen tersebut, manakah analisis yang paling tepat terhadap kesimpulan mahasiswa tersebut?',
+      question:
+        'Seorang mahasiswa melakukan empat eksperimen pada sistem jaringan komputer:\n\n' +
+        '1. Router dimatikan → komunikasi antar jaringan berhenti.\n' +
+        '2. Alamat IP dihapus → paket data tidak bisa diarahkan ke tujuan.\n' +
+        '3. Protokol TCP dimatikan → file ukuran besar gagal terkirim.\n' +
+        '4. Kabel transmisi dicabut → tidak ada komunikasi sama sekali.\n\n' +
+        'Mahasiswa menarik kesimpulan: **"Lapisan Network (IP) adalah satu-satunya lapisan kritis; lapisan protokol lainnya hanyalah opsional."**\n\n' +
+        'Manakah analisis yang paling tepat terhadap kesimpulan tersebut?',
       options: [
-        'Benar; hasil pengujian nomor (1) dan (2) membuktikan bahwa protokol IP pada lapisan Network memegang peranan yang paling penting di dalam komunikasi data.',
-        'Benar sebagian; hanya lapisan Network dan Transport saja yang dianggap kritis, sedangkan konfigurasi pada lapisan protokol yang lainnya bersifat opsional.',
-        'Salah; keempat eksperimen tersebut membuktikan bahwa setiap lapisan memiliki peran unik yang tidak bisa digantikan sehingga seluruh lapisan sama kritisnya.',
-        'Benar; lapisan Physical tidak termasuk elemen kritis karena eksperimen nomor (4) secara murni hanya menguji komponen kabel fisik tanpa melibatkan protokol.',
-        'Salah; hasil eksperimen nomor (3) justru membuktikan bahwa sebuah penanganan segmentasi data pada lapisan Transport merupakan komponen yang paling kritis.'
+        'Benar; pengujian (1) dan (2) membuktikan bahwa protokol IP pada lapisan Network memegang peranan paling penting.',
+        'Benar sebagian; hanya lapisan Network dan Transport yang kritis, sedangkan lapisan lainnya bersifat opsional.',
+        'Salah; keempat eksperimen membuktikan bahwa setiap lapisan memiliki peran unik yang tidak bisa digantikan sehingga seluruh lapisan sama kritisnya.',
+        'Benar; lapisan Physical tidak termasuk elemen kritis karena eksperimen (4) hanya menguji komponen kabel fisik.',
+        'Salah; eksperimen (3) justru membuktikan bahwa lapisan Transport adalah komponen yang paling kritis.',
       ],
       correctAnswer: 2,
     },
-    // 8 (Dokumen No. 68)
+    // 8
     {
-      question: 'Admin menerima laporan bahwa mesin di lantai 3 tidak bisa mencetak dokumen ke printer server. Setelah dilakukan pemeriksaan berlapis, ditemukan tiga fakta berikut: 1. Kabel UTP terpasang dengan benar dan lampu indikator port pada perangkat switch menyala. 2. Pengujian traceroute menuju alamat IP printer server berhasil dilakukan dan paket dinyatakan sampai. 3. Job cetak dikirim, printer server menerima koneksi TCP tetapi tugas langsung ditolak dengan kode error 503. Kesimpulan analisis yang paling tepat berdasarkan seluruh hasil pemeriksaan tersebut adalah ...',
+      question:
+        'Admin menerima laporan bahwa mesin di lantai 3 tidak bisa mencetak ke printer server. Ditemukan tiga fakta:\n\n' +
+        '1. Kabel UTP terpasang dengan benar dan lampu indikator switch menyala.\n' +
+        '2. Traceroute menuju IP printer server berhasil dan paket dinyatakan sampai.\n' +
+        '3. Job cetak dikirim, printer server menerima koneksi TCP tetapi tugas ditolak dengan kode error **503**.\n\n' +
+        'Kesimpulan analisis yang paling tepat adalah ...',
       options: [
-        'Masalah terjadi pada lapisan Physical karena indikasi lampu menyala hijau pada perangkat switch belum menjamin bahwa data digital dapat mengalir dengan sempurna tanpa adanya interferensi.',
-        'Masalah terjadi pada lapisan Network karena keberhasilan eksekusi perintah traceroute menuju server tujuan terkadang memberikan kesimpulan palsu mengenai kondisi rute pengiriman.',
-        'Lapisan Physical dan Network terbukti normal, sedangkan masalah berada di lapisan Application karena kode error 503 menandakan adanya gangguan layanan cetak pada sisi server.',
-        'Tidak ditemukan gangguan pada arsitektur jaringan komputer karena kemunculan status kode error 503 merupakan sebuah kondisi operasional yang sangat normal ketika proses pencetakan.',
-        'Gangguan terjadi secara bersamaan di seluruh tingkatan lapisan model protokol akibat adanya kerusakan sistemik yang memutus jalinan komunikasi data dari pengirim menuju ke penerima.'
+        'Masalah pada lapisan Physical; lampu switch menyala belum menjamin data mengalir sempurna.',
+        'Masalah pada lapisan Network; keberhasilan traceroute terkadang memberikan kesimpulan palsu.',
+        'Lapisan Physical dan Network terbukti normal; masalah ada di lapisan Application karena error 503 menandakan gangguan layanan cetak di sisi server.',
+        'Tidak ada gangguan jaringan karena error 503 adalah kondisi operasional normal saat pencetakan.',
+        'Gangguan terjadi di semua lapisan akibat kerusakan sistemik yang memutus komunikasi data.',
       ],
       correctAnswer: 2,
     },
-    // 9 (Dokumen No. 39)
+    // 9
     {
-      question: 'Perhatikan komponen TCP Header: Source Port, Destination Port, Sequence Number, Acknowledgment Number, Window Size. Komponen yang mengontrol jumlah data yang boleh dikirim pengirim sebelum mendapat konfirmasi (flow control) adalah ...',
+      question:
+        'Perhatikan komponen-komponen **TCP Header** berikut:\n\n' +
+        '- Source Port\n' +
+        '- Destination Port\n' +
+        '- Sequence Number\n' +
+        '- Acknowledgment Number\n' +
+        '- Window Size\n\n' +
+        'Komponen yang mengontrol jumlah data yang boleh dikirim sebelum mendapat konfirmasi (**flow control**) adalah ...',
       options: ['Source Port', 'Sequence Number', 'Destination Port', 'Acknowledgment Number', 'Window Size'],
       correctAnswer: 4,
     },
-    // 10 (Dokumen No. 70)
+    // 10
     {
-      question: 'Aplikasi transfer file mengirim 4000 byte via TCP dipecah menjadi:\n\nSeq=1 (1000 byte), Seq=1001 (1000 byte), Seq=2001 (1000 byte), Seq=3001 (1000 byte)\n\nUrutan tiba di penerima: Seq=3001, Seq=1001, Seq=1, Seq=2001.\n\nSeorang siswa mengklaim \'Penerima akan menjalankan file dari Seq=3001 karena itu yang pertama tiba.\'\n\nBerdasarkan mekanisme TCP Sequence Number, urutan data yang benar diproses oleh penerima adalah ...',
+      question:
+        'Aplikasi transfer file mengirim **4000 byte** via TCP, dipecah menjadi 4 segmen:\n\n' +
+        '- Seq=1 (1000 byte)\n' +
+        '- Seq=1001 (1000 byte)\n' +
+        '- Seq=2001 (1000 byte)\n' +
+        '- Seq=3001 (1000 byte)\n\n' +
+        'Urutan tiba di penerima: Seq=3001 → Seq=1001 → Seq=1 → Seq=2001\n\n' +
+        'Seorang siswa mengklaim: **"Penerima akan menjalankan file dari Seq=3001 karena itu yang pertama tiba."**\n\n' +
+        'Berdasarkan mekanisme TCP Sequence Number, urutan data yang benar diproses penerima adalah ...',
       options: [
-        'Klien memutar video mulai dari Seq=3001 karena segmen itu yang pertama tiba di penerima.',
-        'Klien menyusun ulang segmen berdasarkan nilai Sequence Number menjadi Seq=1 → 1001 → 2001 → 3001, sehingga video ditampilkan dengan urutan yang benar meski segmen tiba secara acak.',
-        'Server mengirim ulang semua segmen dari awal karena urutan kedatangan yang acak menandakan seluruh transmisi gagal.',
-        'Klien membuang semua segmen selain yang pertama tiba, karena TCP hanya mengakui segmen pertama yang diterima.',
-        'Sequence Number hanya digunakan untuk mendeteksi kerusakan data, bukan untuk menyusun ulang urutan segmen di penerima.'
+        'Penerima memproses mulai dari Seq=3001 karena segmen itu yang pertama tiba.',
+        'Penerima menyusun ulang segmen berdasarkan Sequence Number menjadi Seq=1 → 1001 → 2001 → 3001, sehingga file diproses dengan urutan yang benar meski tiba secara acak.',
+        'Server mengirim ulang semua segmen dari awal karena urutan kedatangan acak menandakan transmisi gagal.',
+        'Penerima membuang semua segmen selain yang pertama tiba.',
+        'Sequence Number hanya untuk mendeteksi kerusakan data, bukan untuk menyusun ulang urutan segmen.',
       ],
       correctAnswer: 1,
     },
-    // 11 (Dokumen No. 41)
+    // 11
     {
-      question: 'Perhatikan dua kondisi komunikasi TCP berikut:\n\nKondisi Normal: Server kirim Seq=500 (200 byte) → Klien balas ACK=700.\nKondisi Error Recovery: Server kirim Seq=700 → tidak ada ACK (timeout) → Server kirim ulang Seq=700 → Klien balas ACK=900.\n\nArgumen yang tepat membedakan kedua kondisi adalah ...',
+      question:
+        'Perhatikan dua kondisi komunikasi TCP berikut:\n\n' +
+        '- **Kondisi Normal**: Server kirim Seq=500 (200 byte) → Klien balas ACK=700\n' +
+        '- **Kondisi Error Recovery**: Server kirim Seq=700 → tidak ada ACK (timeout) → Server kirim ulang Seq=700 → Klien balas ACK=900\n\n' +
+        'Argumen yang tepat untuk membedakan kedua kondisi tersebut adalah ...',
       options: [
-        'Tidak ada perbedaan; ACK dikirim hanya setelah semua data selesai diterima',
-        'Pada kondisi normal ACK meningkat sesuai data diterima; pada error recovery tidak ada ACK yang kembali, menandakan segmen hilang dan retransmission diperlukan',
-        'Perbedaannya hanya pada ukuran paket; segmen besar lebih sering hilang',
-        'Kondisi error terjadi karena Three-Way Handshake belum terbentuk',
-        'TCP selalu mengirim ulang dari Seq=1 setiap kali timeout, tanpa memandang kondisi'
+        'Tidak ada perbedaan; ACK dikirim hanya setelah semua data selesai diterima.',
+        'Pada kondisi normal ACK meningkat sesuai data diterima; pada error recovery tidak ada ACK yang kembali, menandakan segmen hilang dan retransmission diperlukan.',
+        'Perbedaannya hanya pada ukuran paket; segmen besar lebih sering hilang.',
+        'Kondisi error terjadi karena Three-Way Handshake belum terbentuk.',
+        'TCP selalu mengirim ulang dari Seq=1 setiap kali timeout.',
       ],
       correctAnswer: 1,
     },
-    // 12 (Dokumen No. 42)
+    // 12
     {
-      question: 'Laptop A (SEQ=300) mengirim SYN ke Server B. Server B membalas SYN-ACK (SEQ=800, ACK_NUM=?). Laptop A merespons ACK (SEQ=?, ACK_NUM=?). Nilai BENAR berdasarkan mekanisme Three-Way Handshake adalah ...',
+      question:
+        'Perhatikan proses **Three-Way Handshake** berikut:\n\n' +
+        '1. Laptop A (SEQ=300) mengirim SYN ke Server B\n' +
+        '2. Server B membalas SYN-ACK (SEQ=800, ACK_NUM=?)\n' +
+        '3. Laptop A merespons ACK (SEQ=?, ACK_NUM=?)\n\n' +
+        'Nilai yang **BENAR** pada langkah 2 dan 3 adalah ...',
       options: [
         'ACK_NUM=301; SEQ=301, ACK_NUM=801',
         'ACK_NUM=300; SEQ=301, ACK_NUM=801',
         'ACK_NUM=301; SEQ=800, ACK_NUM=301',
         'ACK_NUM=400; SEQ=401, ACK_NUM=801',
-        'ACK_NUM=301; SEQ=301, ACK_NUM=800'
+        'ACK_NUM=301; SEQ=301, ACK_NUM=800',
       ],
       correctAnswer: 0,
     },
-    // 13 (Dokumen No. 43)
+    // 13
     {
-      question: 'Mekanisme kerja TCP (urutan diacak):\n\n1. Penerima kirim ACK untuk setiap segmen.\n2. Pengirim kirim SYN untuk memulai koneksi.\n3. Koneksi ditutup dengan FIN.\n4. Penerima balas SYN-ACK.\n5. Data dikirim dalam segmen bernomor urut.\n\nUrutan BENAR dari awal hingga selesai adalah ...',
+      question:
+        'Perhatikan mekanisme kerja TCP berikut (urutan **diacak**):\n\n' +
+        '1. Penerima kirim ACK untuk setiap segmen.\n' +
+        '2. Pengirim kirim SYN untuk memulai koneksi.\n' +
+        '3. Koneksi ditutup dengan FIN.\n' +
+        '4. Penerima balas SYN-ACK.\n' +
+        '5. Data dikirim dalam segmen bernomor urut.\n\n' +
+        'Urutan yang **BENAR** dari awal hingga selesai adalah ...',
       options: ['2 – 4 – 5 – 1 – 3', '4 – 2 – 5 – 1 – 3', '2 – 5 – 4 – 1 – 3', '5 – 2 – 4 – 3 – 1', '2 – 5 – 1 – 4 – 3'],
       correctAnswer: 0,
     },
-    // 14 (Dokumen No. 44)
+    // 14
     {
-      question: 'Seorang siswa menyimpulkan: \'Keandalan TCP hanya ditentukan oleh Retransmission; Three-Way Handshake, Sequence Number, dan ACK hanya berfungsi sebagai pendukung opsional.\' Berdasarkan klaim tersebut, manakah analisis yang benar tentang mekanisme keandalan TCP?',
+      question:
+        'Seorang siswa menyimpulkan:\n\n' +
+        '**"Keandalan TCP hanya ditentukan oleh Retransmission; Three-Way Handshake, Sequence Number, dan ACK hanya berfungsi sebagai pendukung opsional."**\n\n' +
+        'Manakah analisis yang benar tentang mekanisme keandalan TCP?',
       options: [
-        'Benar; Retransmission memang satu-satunya yang langsung memastikan data sampai ke tujuan',
-        'Benar sebagian; Sequence Number dan Retransmission sudah cukup tanpa Three-Way Handshake',
-        'Salah; keandalan TCP dibangun dari keempat mekanisme yang saling melengkapi: Handshake menjamin kesiapan, Sequence Number menjamin urutan, ACK menjamin konfirmasi, dan Retransmission menjamin pemulihan',
-        'Benar; Three-Way Handshake dan ACK tidak aktif saat jaringan dalam kondisi normal',
-        'Salah; hanya Three-Way Handshake yang wajib; ketiga lainnya opsional'
+        'Benar; Retransmission memang satu-satunya yang langsung memastikan data sampai ke tujuan.',
+        'Benar sebagian; Sequence Number dan Retransmission sudah cukup tanpa Three-Way Handshake.',
+        'Salah; keandalan TCP dibangun dari keempat mekanisme yang saling melengkapi: Handshake menjamin kesiapan, Sequence Number menjamin urutan, ACK menjamin konfirmasi, dan Retransmission menjamin pemulihan.',
+        'Benar; Three-Way Handshake dan ACK tidak aktif saat jaringan dalam kondisi normal.',
+        'Salah; hanya Three-Way Handshake yang wajib; ketiga lainnya opsional.',
       ],
       correctAnswer: 2,
     },
-    // 15 (Dokumen No. 45)
+    // 15
     {
-      question: 'Log komunikasi TCP:\n\nSYN → SYN-ACK → ACK (koneksi terbentuk)\nKlien kirim Seq=1 (500 byte) → Server balas ACK=501\nKlien kirim Seq=501 → Server balas ACK=501 (Duplicate ACK)\nKlien kirim ulang Seq=501 → Server balas ACK=1001\nFIN, koneksi ditutup.\n\nKesimpulan paling tepat adalah ...',
+      question:
+        'Perhatikan log komunikasi TCP berikut:\n\n' +
+        '1. SYN → SYN-ACK → ACK (koneksi terbentuk)\n' +
+        '2. Klien kirim Seq=1 (500 byte) → Server balas ACK=501\n' +
+        '3. Klien kirim Seq=501 → Server balas ACK=501 (Duplicate ACK)\n' +
+        '4. Klien kirim ulang Seq=501 → Server balas ACK=1001\n' +
+        '5. FIN → koneksi ditutup\n\n' +
+        'Kesimpulan paling tepat adalah ...',
       options: [
-        'Komunikasi gagal; Duplicate ACK di [3] menandakan koneksi rusak permanen',
-        'Duplicate ACK adalah kondisi normal yang terjadi pada setiap segmen TCP',
-        'Komunikasi berhasil; Duplicate ACK di [3] menandakan Seq=501 hilang; retransmission di [4] berhasil mengirimkannya sehingga semua data tersampaikan',
-        'Langkah [5] tidak valid; FIN hanya boleh dikirim setelah dua kali retransmission berhasil',
-        'ACK=501 yang berulang menandakan Klien terus mengirim data yang sama'
+        'Komunikasi gagal; Duplicate ACK di langkah (3) menandakan koneksi rusak permanen.',
+        'Duplicate ACK adalah kondisi normal yang terjadi pada setiap segmen TCP.',
+        'Komunikasi berhasil; Duplicate ACK di langkah (3) menandakan Seq=501 hilang; retransmission di langkah (4) berhasil sehingga semua data tersampaikan.',
+        'Langkah (5) tidak valid; FIN hanya boleh dikirim setelah dua kali retransmission berhasil.',
+        'ACK=501 yang berulang menandakan Klien terus mengirim data yang sama.',
       ],
       correctAnswer: 2,
     },
-    // 16 (Dokumen No. 46)
+    // 16
     {
-      question: 'Perhatikan empat pernyataan tentang Internet Protocol (IP) di bawah ini:\n\n1. IP beroperasi secara aktif pada lapisan Network (Network Layer).\n2. IP memberikan identitas alamat logis unik kepada setiap perangkat.\n3. IP menentukan rute terbaik pengiriman paket data antar jaringan.\n4. IP menjamin setiap paket data diterima berurutan dan lengkap.\n\nPernyataan yang benar mengenai peran dan karakteristik dari IP adalah ...',
+      question:
+        'Perhatikan empat pernyataan tentang Internet Protocol (IP) berikut:\n\n' +
+        '1. IP beroperasi pada lapisan Network (Network Layer).\n' +
+        '2. IP memberikan identitas alamat logis unik kepada setiap perangkat.\n' +
+        '3. IP menentukan rute terbaik pengiriman paket data antar jaringan.\n' +
+        '4. IP menjamin setiap paket data diterima berurutan dan lengkap.\n\n' +
+        'Pernyataan yang **benar** mengenai peran IP adalah ...',
       options: [
         'Pernyataan 1, 2, dan 4',
         'Pernyataan 1, 3, dan 4',
         'Pernyataan 2, 3, dan 4',
         'Pernyataan 1, 2, dan 3',
-        'Pernyataan 1, 2, 3, dan 4'
+        'Pernyataan 1, 2, 3, dan 4',
       ],
       correctAnswer: 3,
     },
-    // 17 (Dokumen No. 77)
+    // 17
     {
-      question: 'Sebuah paket IP melewati 64 router dengan nilai awal TTL=64. Setelah melewati router ke-64, komponen IP Header mana yang berubah dan apa dampaknya ...',
+      question:
+        'Sebuah paket IP melewati **64 router** dengan nilai awal **TTL=64**.\n\n' +
+        'Setelah melewati router ke-64, komponen IP Header mana yang berubah dan apa dampaknya?',
       options: [
-        'Protocol berubah dari 6 ke 7; paket dialihkan ke UDP',
-        'Source IP berubah; router terakhir mengganti alamat pengirim untuk keamanan',
-        'TTL berkurang dari 64 menjadi 0; router ke-64 akan membuang paket ini dan mengirim ICMP Time Exceeded ke pengirim, mencegah paket berputar tanpa henti di jaringan',
-        'Header Checksum berubah; paket tidak bisa diteruskan dan harus dikirim ulang',
-        'Destination IP berubah; router terakhir mengganti alamat tujuan berdasarkan tabel routing'
+        'Protocol berubah dari 6 ke 7; paket dialihkan ke UDP.',
+        'Source IP berubah; router terakhir mengganti alamat pengirim untuk keamanan.',
+        'TTL berkurang dari 64 menjadi 0; router ke-64 membuang paket dan mengirim ICMP Time Exceeded ke pengirim untuk mencegah paket berputar tanpa henti.',
+        'Header Checksum berubah; paket tidak bisa diteruskan dan harus dikirim ulang.',
+        'Destination IP berubah; router terakhir mengganti alamat tujuan berdasarkan tabel routing.',
       ],
       correctAnswer: 2,
     },
-    // 18 (Dokumen No. 48)
+    // 18
     {
-      question: 'Seorang siswa menuliskan empat format alamat jaringan di bawah ini: 172.16.0.1, 300.0.0.1, 10.0.0.0/8, 192.168.ABC.1. Argumen yang paling tepat mengenai validitas format penulisan alamat tersebut adalah ...',
+      question:
+        'Seorang siswa menuliskan empat format alamat jaringan berikut:\n\n' +
+        '1. 172.16.0.1\n' +
+        '2. 300.0.0.1\n' +
+        '3. 10.0.0.0/8\n' +
+        '4. 192.168.ABC.1\n\n' +
+        'Argumen yang paling tepat mengenai validitas format penulisan alamat tersebut adalah ...',
       options: [
-        'Semua alamat valid; karena IPv4 mendukung berbagai format penulisan termasuk heksadesimal dan notasi CIDR.',
-        'Hanya alamat (1) yang valid murni; alamat (2) tidak valid karena 300 > 255; alamat (4) tidak valid karena mengandung huruf; sedangkan alamat (3) tidak valid karena merupakan notasi CIDR bukan alamat IPv4 murni.',
-        'Alamat (1) dan (2) valid; sedangkan alamat (3) dan (4) tidak valid.',
-        'Alamat (1) dan (3) valid; alamat (2) tidak valid karena bernilai 300 > 255; dan alamat (4) tidak valid karena menggunakan huruf.',
-        'E. Hanya alamat (1) dan (4) yang valid; karena huruf heksadesimal diizinkan dalam penulisan alamat IPv4.'
+        'Semua alamat valid; IPv4 mendukung berbagai format termasuk heksadesimal dan notasi CIDR.',
+        'Hanya alamat (1) yang valid murni; (2) tidak valid karena 300 > 255; (4) tidak valid karena mengandung huruf; (3) tidak valid karena merupakan notasi CIDR bukan alamat IPv4 murni.',
+        'Alamat (1) dan (2) valid; sedangkan (3) dan (4) tidak valid.',
+        'Alamat (1) dan (3) valid; (2) tidak valid karena 300 > 255; (4) tidak valid karena menggunakan huruf.',
+        'Hanya alamat (1) dan (4) yang valid; huruf heksadesimal diizinkan dalam penulisan IPv4.',
       ],
       correctAnswer: 3,
     },
-    // 19 (Dokumen No. 79)
+    // 19
     {
-      question: 'Administrator mendesain jaringan untuk 500 perangkat IoT dalam satu broadcast domain. Rekan A menyarankan Kelas C dengan subnetting; Rekan B menyarankan Kelas B langsung. Berdasarkan kedua saran tersebut, manakah keputusan penerapan kelas IPv4 yang tepat untuk satu broadcast domain?',
+      question:
+        'Administrator mendesain jaringan untuk **500 perangkat IoT** dalam satu broadcast domain.\n\n' +
+        '- Rekan A menyarankan: Kelas C dengan subnetting\n' +
+        '- Rekan B menyarankan: Kelas B langsung\n\n' +
+        'Manakah keputusan penerapan kelas IPv4 yang tepat untuk satu broadcast domain?',
       options: [
-        'Saran A benar; subnetting Kelas C bisa mengakomodasi 500 perangkat dalam satu broadcast domain',
-        'Saran B benar; Kelas B langsung dapat menampung 500 perangkat dalam satu broadcast domain (65.534 > 500), sedangkan Saran A salah karena subnetting justru membagi menjadi beberapa broadcast domain',
-        'Kedua saran benar; subnetting dan Kelas B sama-sama bisa mengakomodasi 500 perangkat',
-        'Kedua saran salah; hanya Kelas A yang bisa menampung 500 perangkat',
-        'Saran A benar; subnetting selalu lebih efisien dari memilih kelas yang lebih besar'
+        'Saran A benar; subnetting Kelas C bisa mengakomodasi 500 perangkat dalam satu broadcast domain.',
+        'Saran B benar; Kelas B langsung menampung 500 perangkat dalam satu broadcast domain (65.534 > 500), sedangkan Saran A salah karena subnetting justru membagi menjadi beberapa broadcast domain.',
+        'Kedua saran benar; subnetting dan Kelas B sama-sama bisa mengakomodasi 500 perangkat.',
+        'Kedua saran salah; hanya Kelas A yang bisa menampung 500 perangkat.',
+        'Saran A benar; subnetting selalu lebih efisien dari memilih kelas yang lebih besar.',
       ],
       correctAnswer: 1,
     },
-    // 20 (Dokumen No. 80)
+    // 20
     {
-      question: 'Jaringan 192.168.10.0/24. Seorang siswa mengklaim: \'Jumlah host yang tersedia adalah 256 karena subnet mask 255.255.255.0 mengalokasikan satu oktet penuh (2^8=256) untuk host.\' Berdasarkan klaim tersebut, manakah analisis yang benar tentang jumlah host yang tersedia?',
+      question:
+        'Jaringan **192.168.10.0/24**. Seorang siswa mengklaim:\n\n' +
+        '**"Jumlah host yang tersedia adalah 256 karena subnet mask 255.255.255.0 mengalokasikan satu oktet penuh (2⁸ = 256) untuk host."**\n\n' +
+        'Manakah analisis yang benar tentang jumlah host yang tersedia?',
       options: [
-        'Benar; 256 host tersedia karena 2^8=256 dan semua bisa digunakan',
-        'Salah; jumlah host sebenarnya 254 (bukan 256) karena 192.168.10.0 disisihkan sebagai Network Address (semua bit host=0) dan 192.168.10.255 disisihkan sebagai Broadcast Address (semua bit host=1), sehingga host = 2^8 – 2 = 254',
-        'Benar; 256 host tersedia karena pengecualian hanya berlaku untuk kelas A dan B',
-        'Salah; jumlah host sebenarnya 255 karena hanya Network Address yang dikurangi',
-        'Salah; jumlah host sebenarnya 253 karena Network, Broadcast, dan Default Gateway dikurangi'
+        'Benar; 256 host tersedia karena 2⁸=256 dan semua bisa digunakan.',
+        'Salah; jumlah host yang tersedia adalah 254 karena 192.168.10.0 disisihkan sebagai Network Address dan 192.168.10.255 sebagai Broadcast Address, sehingga host = 2⁸ – 2 = 254.',
+        'Benar; 256 host tersedia karena pengecualian hanya berlaku untuk kelas A dan B.',
+        'Salah; jumlah host sebenarnya 255 karena hanya Network Address yang dikurangi.',
+        'Salah; jumlah host sebenarnya 253 karena Network, Broadcast, dan Default Gateway dikurangi.',
       ],
       correctAnswer: 1,
     },
-    // 21 (Dokumen No. 81)
+    // 21
     {
-      question: 'Seorang siswa mengonversi alamat IPv4 10.1.1.1 ke biner dan mendapatkan hasil berikut: Oktet 1 (10): 00001010. Oktet 2 (1): 00000001. Oktet 3 (1): 00000001. Oktet 4 (1): 00000001. Sehingga hasil konversi = 00001010.00000001.00000001.00000001. Rekan siswa mengklaim: \'Hasil konversi tersebut salah.\' Berdasarkan konversi yang dilakukan siswa, manakah analisis yang benar?',
+      question:
+        'Seorang siswa mengonversi alamat IPv4 **10.1.1.1** ke biner dan mendapat hasil:\n\n' +
+        '1. Oktet 1 (10) → 00001010\n' +
+        '2. Oktet 2 (1) → 00000001\n' +
+        '3. Oktet 3 (1) → 00000001\n' +
+        '4. Oktet 4 (1) → 00000001\n\n' +
+        'Hasil konversi: **00001010.00000001.00000001.00000001**\n\n' +
+        'Rekan siswa mengklaim: **"Hasil konversi tersebut salah."**\n\n' +
+        'Manakah analisis yang benar?',
       options: [
-        'Rekan benar; oktet 1 (10) seharusnya 00001100',
-        'Rekan benar; oktet 2, 3, dan 4 (angka 1) seharusnya 00000010',
-        'Rekan benar; oktet 1 (10) seharusnya 00010000 dan oktet 2, 3, 4 (angka 1) seharusnya 00000010',
-        'Rekan salah; semua hasil konversi sudah benar: oktet 1 (10)=00001010, oktet 2, 3, 4 (1)=00000001',
-        'Rekan benar; oktet 1 (10) seharusnya 01010000 dan oktet 2, 3, 4 (1) seharusnya 10000000'
+        'Rekan benar; oktet 1 (10) seharusnya 00001100.',
+        'Rekan benar; oktet 2, 3, dan 4 (angka 1) seharusnya 00000010.',
+        'Rekan benar; oktet 1 seharusnya 00010000 dan oktet 2, 3, 4 seharusnya 00000010.',
+        'Rekan salah; semua hasil konversi sudah benar: oktet 1 (10) = 00001010, oktet 2, 3, 4 (1) = 00000001.',
+        'Rekan benar; oktet 1 seharusnya 01010000 dan oktet 2, 3, 4 seharusnya 10000000.',
       ],
       correctAnswer: 3,
     },
-    // 22 (Dokumen No. 82)
+    // 22
     {
-      question: 'Host X: IP 10.1.5.100, Mask 255.255.0.0, GW 10.1.0.1.\nHost Y: IP 10.1.200.50, Mask 255.255.0.0, GW 10.1.0.1.\n\nSeorang siswa mengklaim X dan Y tidak bisa berkomunikasi langsung karena oktet ketiga berbeda (5 vs 200).\n\nBerdasarkan klaim tersebut, manakah analisis yang benar tentang pengalamatan IPv4 Host X dan Y?',
+      question:
+        'Perhatikan konfigurasi dua host berikut:\n\n' +
+        '- **Host X**: IP 10.1.5.100, Mask 255.255.0.0, GW 10.1.0.1\n' +
+        '- **Host Y**: IP 10.1.200.50, Mask 255.255.0.0, GW 10.1.0.1\n\n' +
+        'Seorang siswa mengklaim: **"X dan Y tidak bisa berkomunikasi langsung karena oktet ketiga berbeda (5 vs 200)."**\n\n' +
+        'Manakah analisis yang benar?',
       options: [
-        'Benar; perbedaan oktet ketiga (5 vs 200) selalu berarti subnet berbeda',
-        'Benar; Subnet Mask 255.255.0.0 membatasi oktet ketiga harus sama',
-        'Salah; perbedaan oktet ketiga tidak menentukan subnet yang berbeda. Dengan Mask 255.255.0.0 (/16), bit host mencakup dua oktet terakhir, sehingga 10.1.5.100 dan 10.1.200.50 keduanya berada dalam subnet 10.1.0.0/16 dan bisa berkomunikasi langsung',
-        'Benar; untuk komunikasi langsung, tiga oktet pertama harus identik',
-        'Salah; X dan Y tidak bisa berkomunikasi karena menggunakan kelas A yang memerlukan router'
+        'Benar; perbedaan oktet ketiga (5 vs 200) selalu berarti subnet berbeda.',
+        'Benar; Subnet Mask 255.255.0.0 mengharuskan oktet ketiga harus sama.',
+        'Salah; perbedaan oktet ketiga tidak menentukan subnet berbeda. Dengan Mask 255.255.0.0 (/16), bit host mencakup dua oktet terakhir sehingga 10.1.5.100 dan 10.1.200.50 sama-sama berada di subnet 10.1.0.0/16 dan bisa berkomunikasi langsung.',
+        'Benar; untuk komunikasi langsung, tiga oktet pertama harus identik.',
+        'Salah; X dan Y tidak bisa berkomunikasi karena menggunakan kelas A yang memerlukan router.',
       ],
       correctAnswer: 2,
     },
-    // 23 (Dokumen No. 53)
+    // 23
     {
-      question: 'Bu Ratna memeriksa dua komputer yang tidak bisa berkomunikasi.\n\nKomputer X: IP 192.168.1.100, Mask 255.255.255.0, GW 192.168.1.1.\nKomputer Y: IP 192.168.2.100, Mask 255.255.255.0, GW 192.168.2.1.\n\nSwitch dan kabel berfungsi normal.\n\nKesimpulan yang tepat adalah ...',
+      question:
+        'Bu Ratna memeriksa dua komputer yang tidak bisa berkomunikasi.\n\n' +
+        '- **Komputer X**: IP 192.168.1.100, Mask 255.255.255.0, GW 192.168.1.1\n' +
+        '- **Komputer Y**: IP 192.168.2.100, Mask 255.255.255.0, GW 192.168.2.1\n\n' +
+        'Switch dan kabel berfungsi normal.\n\n' +
+        'Kesimpulan yang tepat adalah ...',
       options: [
-        'Komputer X tidak valid; oktet terakhir 100 dianggap sebagai alamat network',
-        'Kedua komputer konflik karena menggunakan subnet mask yang sama',
-        'Keduanya bisa berkomunikasi langsung karena sama-sama menggunakan kelas C',
-        'X dan Y berada di subnet berbeda (192.168.1.x vs 192.168.2.x); komunikasi memerlukan router yang dikonfigurasi untuk meneruskan paket antar kedua subnet tersebut',
-        'Subnet mask 255.255.255.0 tidak cocok untuk jaringan dengan dua segmen berbeda'
+        'Komputer X tidak valid; oktet terakhir 100 dianggap sebagai alamat network.',
+        'Kedua komputer konflik karena menggunakan subnet mask yang sama.',
+        'Keduanya bisa berkomunikasi langsung karena sama-sama menggunakan kelas C.',
+        'X dan Y berada di subnet berbeda (192.168.1.x vs 192.168.2.x); komunikasi memerlukan router yang dikonfigurasi untuk meneruskan paket antar kedua subnet.',
+        'Subnet mask 255.255.255.0 tidak cocok untuk jaringan dengan dua segmen berbeda.',
       ],
       correctAnswer: 3,
     },
-    // 24 (Dokumen No. 54)
+    // 24
     {
-      question: 'Perhatikan fakta tentang IPv4 dan IPv6:\n\n1. IPv4 menggunakan 32-bit dengan sekitar 4,3 miliar alamat.\n2. Pertumbuhan pesat perangkat menyebabkan kehabisan alamat IPv4.\n3. IPv6 menggunakan 128-bit dengan kapasitas jauh lebih besar.\n4. IPv6 menggantikan TCP sebagai protokol pengiriman data andal.\n\nPernyataan yang BENAR tentang IPv6 adalah ...',
+      question:
+        'Perhatikan fakta tentang IPv4 dan IPv6 berikut:\n\n' +
+        '1. IPv4 menggunakan 32-bit dengan sekitar 4,3 miliar alamat.\n' +
+        '2. Pertumbuhan pesat perangkat menyebabkan kehabisan alamat IPv4.\n' +
+        '3. IPv6 menggunakan 128-bit dengan kapasitas jauh lebih besar.\n' +
+        '4. IPv6 menggantikan TCP sebagai protokol pengiriman data andal.\n\n' +
+        'Pernyataan yang **BENAR** tentang IPv6 adalah ...',
       options: ['1, 2, 3, dan 4', '1, 2, dan 4', '2, 3, dan 4', '1, 2, dan 3', '1 dan 4 saja'],
       correctAnswer: 3,
     },
-    // 25 (Dokumen No. 85)
+    // 25
     {
-      question: 'Interface router MAC: C8:3A:35:44:55:66. Proses EUI-64:\n\nC8:3A:35 | 44:55:66\nSisipkan FF:FE: C8:3A:35:FF:FE:44:55:66\nC8=11001000, flip bit ke-7 → 11001010=CA\nInterface ID: CA:3A:35:FF:FE:44:55:66\n\nSeorang siswa mengklaim \'Langkah salah; bit ke-7 dari kiri pada 11001000 bernilai 0, setelah dibalik hasilnya 11001001=C9 bukan CA.\'\n\nBerdasarkan klaim tersebut, manakah analisis yang benar tentang hasil konversi EUI-64?',
+      question:
+        'Interface router MAC: **C8:3A:35:44:55:66**. Proses EUI-64 dilakukan sebagai berikut:\n\n' +
+        '1. Bagi MAC: C8:3A:35 | 44:55:66\n' +
+        '2. Sisipkan FF:FE: C8:3A:35:FF:FE:44:55:66\n' +
+        '3. C8 = 11001000, flip bit ke-7 → 11001010 = CA\n' +
+        '4. Interface ID: CA:3A:35:FF:FE:44:55:66\n\n' +
+        'Seorang siswa mengklaim: **"Langkah salah; bit ke-7 pada 11001000 bernilai 0, dibalik → 11001001 = C9, bukan CA."**\n\n' +
+        'Manakah analisis yang benar?',
       options: [
-        'Benar; C9 adalah hasil yang tepat dari membalik bit ke-7 pada 11001000',
-        'Benar; penghitungan bit ke-7 dimulai dari kanan (LSB) sehingga nilainya berbeda',
-        'Salah; klaim siswa keliru dalam menghitung posisi bit ke-7. Bit ke-7 dari kiri pada 11001000 adalah bit kedua dari kanan bernilai 0. Membaliknya menghasilkan 11001010=CA, bukan C9. Hasil CA adalah benar',
-        'Benar; C9 benar karena bit ke-7 pada 11001000 adalah 0 dan dibalik menjadi 1',
-        'Salah; bit ke-7 tidak perlu dibalik; yang dibalik seharusnya bit pertama (MSB)'
+        'Benar; C9 adalah hasil yang tepat dari membalik bit ke-7 pada 11001000.',
+        'Benar; penghitungan bit ke-7 dimulai dari kanan (LSB) sehingga nilainya berbeda.',
+        'Salah; klaim siswa keliru. Bit ke-7 dari kiri pada 11001000 adalah bit kedua dari kanan (bernilai 0); membaliknya menghasilkan 11001010 = CA. Hasil CA sudah benar.',
+        'Benar; C9 benar karena bit ke-7 pada 11001000 bernilai 0 dan dibalik menjadi 1.',
+        'Salah; bit ke-7 tidak perlu dibalik; yang dibalik seharusnya bit pertama (MSB).',
       ],
       correctAnswer: 2,
     },
-    // 26 (Dokumen No. 56)
+    // 26
     {
-      question: 'Alamat IPv6: FE80:0000:0000:0000:0204:61FF:FE9D:F156. Siswa menyederhanakan menjadi: FE80::204:61FF:FE9D:F156. Argumen paling tepat menilai hasil penyederhanaan tersebut adalah ...',
+      question:
+        'Alamat IPv6: **FE80:0000:0000:0000:0204:61FF:FE9D:F156**\n\n' +
+        'Siswa menyederhanakan menjadi: **FE80::204:61FF:FE9D:F156**\n\n' +
+        'Argumen paling tepat menilai hasil penyederhanaan tersebut adalah ...',
       options: [
-        'Benar; FE80::204:61FF:FE9D:F156 adalah bentuk paling ringkas yang memenuhi dua aturan penyederhanaan IPv6',
-        'Salah; :: hanya boleh digunakan jika ada minimal empat blok nol berurutan',
-        'Salah; leading zero pada grup 0204 tidak boleh dihapus',
-        'Benar hanya untuk menghapus leading zero; :: tidak seharusnya digunakan karena grup nol tidak berurutan',
-        'Salah; :: hanya boleh digunakan di awal atau akhir alamat'
+        'Benar; FE80::204:61FF:FE9D:F156 adalah bentuk paling ringkas yang memenuhi dua aturan penyederhanaan IPv6.',
+        'Salah; :: hanya boleh digunakan jika ada minimal empat blok nol berurutan.',
+        'Salah; leading zero pada grup 0204 tidak boleh dihapus.',
+        'Benar hanya untuk menghapus leading zero; :: tidak seharusnya digunakan karena grup nol tidak berurutan.',
+        'Salah; :: hanya boleh digunakan di awal atau akhir alamat.',
       ],
       correctAnswer: 0,
     },
-    // 27 (Dokumen No. 87)
+    // 27
     {
-      question: 'Siswa mengklaim EUI-64 dari MAC B8:27:EB:12:34:56 menghasilkan Interface ID BA:27:EB:FF:FE:12:34:56. Verifikasi:\n\nL1: B8:27:EB | 12:34:56 ✓\nL2: B8:27:EB:FF:FE:12:34:56 ✓\nL3: B8=10111000, bit ke-7 dari kiri=0, dibalik=1 → 10111010=BA ✓\n\nSeorang validator mengklaim \'Hasil BA salah; seharusnya BC.\'\n\nBerdasarkan klaim validator tersebut, manakah analisis yang benar tentang hasil konversi EUI-64?',
+      question:
+        'Siswa mengklaim EUI-64 dari MAC **B8:27:EB:12:34:56** menghasilkan Interface ID **BA:27:EB:FF:FE:12:34:56**.\n\n' +
+        'Verifikasi langkah:\n' +
+        '1. B8:27:EB | 12:34:56 ✓\n' +
+        '2. B8:27:EB:FF:FE:12:34:56 ✓\n' +
+        '3. B8 = 10111000, bit ke-7 dari kiri = 0, dibalik = 1 → 10111010 = BA ✓\n\n' +
+        'Seorang validator mengklaim: **"Hasil BA salah; seharusnya BC."**\n\n' +
+        'Manakah analisis yang benar?',
       options: [
-        'Validator benar; bit ke-7 dari kiri pada 10111000 menghasilkan 10111100=BC',
-        'Validator benar; bit ke-7 adalah bit ke-7 dari kanan (LSB ke-7) sehingga hasilnya berbeda',
-        'Siswa benar; bit ke-7 dari kiri pada 10111000 adalah bit kedua dari kanan yang bernilai 0; membaliknya menghasilkan 10111010=BA. Validator salah menghitung posisi bit',
-        'Keduanya salah; bit yang harus dibalik adalah bit ke-1 (MSB) menghasilkan 00111000=38',
-        'Validator benar; BC memang hasil yang benar dari operasi EUI-64 pada oktet B8'
+        'Validator benar; bit ke-7 dari kiri pada 10111000 menghasilkan 10111100 = BC.',
+        'Validator benar; bit ke-7 adalah bit ke-7 dari kanan (LSB ke-7) sehingga hasilnya berbeda.',
+        'Siswa benar; bit ke-7 dari kiri pada 10111000 adalah bit kedua dari kanan yang bernilai 0; membaliknya menghasilkan 10111010 = BA. Validator salah menghitung posisi bit.',
+        'Keduanya salah; bit yang harus dibalik adalah bit ke-1 (MSB) menghasilkan 00111000 = 38.',
+        'Validator benar; BC adalah hasil yang benar dari operasi EUI-64 pada oktet B8.',
       ],
       correctAnswer: 2,
     },
-    // 28 (Dokumen No. 58)
+    // 28
     {
-      question: 'Admin merencanakan IPv6 Global Unicast: Subnet-1 prefix 2001:DB8:1:1::/64, Subnet-2 prefix 2001:DB8:1:2::/64, keduanya menggunakan gateway ID ::1. Urutan langkah BENAR untuk menentukan alamat gateway Subnet-1 adalah ...',
+      question:
+        'Admin merencanakan IPv6 Global Unicast untuk dua subnet:\n\n' +
+        '- Subnet-1: prefix 2001:DB8:1:1::/64, gateway ID ::1\n' +
+        '- Subnet-2: prefix 2001:DB8:1:2::/64, gateway ID ::1\n\n' +
+        'Urutan langkah yang **BENAR** untuk menentukan alamat gateway Subnet-1 adalah ...',
       options: [
-        'Pilih prefix 2001:DB8:1:1 → tambah ID ::1 → tulis 2001:DB8:1:1::1/64 → verifikasi: dimulai 2001: = Global Unicast',
-        'Gunakan FE80:: sebagai prefix → tambah ID ::1 → tulis FE80::1:1::1/64',
-        'Pilih prefix → sisipkan FF:FE → balik bit ke-7 → tulis 2001:DB8:1:1:02FF:FFFE::1/64',
-        'Pilih prefix FC00: → tulis FC00:DB8:1:1::1/64',
-        'Gunakan FF00:: sebagai prefix → tulis FF00:1:1::1/64'
+        'Pilih prefix 2001:DB8:1:1 → tambahkan ID ::1 → tulis 2001:DB8:1:1::1/64 → verifikasi: dimulai 2001: = Global Unicast.',
+        'Gunakan FE80:: sebagai prefix → tambahkan ID ::1 → tulis FE80::1:1::1/64.',
+        'Pilih prefix → sisipkan FF:FE → balik bit ke-7 → tulis 2001:DB8:1:1:02FF:FFFE::1/64.',
+        'Pilih prefix FC00: → tulis FC00:DB8:1:1::1/64.',
+        'Gunakan FF00:: sebagai prefix → tulis FF00:1:1::1/64.',
       ],
       correctAnswer: 0,
     },
-    // 29 (Dokumen No. 59)
+    // 29
     {
-      question: 'Seorang siswa menyatakan: \'IPv6 selalu lebih baik dari IPv4 dalam semua aspek sehingga tidak ada alasan untuk tetap menggunakan IPv4.\' Berdasarkan pernyataan tersebut, manakah kesimpulan yang tepat tentang perbandingan IPv4 dan IPv6?',
+      question:
+        'Seorang siswa menyatakan:\n\n' +
+        '**"IPv6 selalu lebih baik dari IPv4 dalam semua aspek sehingga tidak ada alasan untuk tetap menggunakan IPv4."**\n\n' +
+        'Manakah kesimpulan yang tepat tentang perbandingan IPv4 dan IPv6?',
       options: [
-        'Benar; IPv6 unggul di semua aspek dan IPv4 harus segera dihentikan',
-        'Benar; IPv6 lebih aman, lebih besar, dan lebih efisien sehingga IPv4 tidak relevan',
-        'Tidak tepat; meskipun IPv6 unggul dalam kapasitas alamat, keamanan, dan efisiensi routing, IPv4 masih banyak digunakan karena kompatibilitas perangkat lama, biaya migrasi, dan infrastruktur yang sudah mapan',
-        'Salah; IPv4 lebih baik karena lebih sederhana dan terbukti stabil selama puluhan tahun',
-        'Tidak dapat dinilai; perbandingan bergantung sepenuhnya pada kebijakan tiap negara'
+        'Benar; IPv6 unggul di semua aspek dan IPv4 harus segera dihentikan.',
+        'Benar; IPv6 lebih aman, lebih besar, dan lebih efisien sehingga IPv4 tidak relevan.',
+        'Tidak tepat; meskipun IPv6 unggul dalam kapasitas alamat, keamanan, dan efisiensi routing, IPv4 masih banyak digunakan karena kompatibilitas perangkat lama, biaya migrasi, dan infrastruktur yang sudah mapan.',
+        'Salah; IPv4 lebih baik karena lebih sederhana dan terbukti stabil selama puluhan tahun.',
+        'Tidak dapat dinilai; perbandingan bergantung sepenuhnya pada kebijakan tiap negara.',
       ],
       correctAnswer: 2,
     },
-    // 30 (Dokumen No. 60)
+    // 30
     {
-      question: 'Dalam arsitektur model TCP/IP, protokol TCP bekerja di lapisan Transport sedangkan protokol IP bekerja di lapisan Network. Pernyataan yang paling tepat mengenai hubungan keterkaitan antara kedua protokol tersebut adalah ...',
+      question:
+        'Dalam arsitektur TCP/IP, **TCP** bekerja di lapisan Transport sedangkan **IP** bekerja di lapisan Network.\n\n' +
+        'Pernyataan yang paling tepat mengenai hubungan keterkaitan antara kedua protokol tersebut adalah ...',
       options: [
-        'Protokol TCP dan IP bekerja secara sepenuhnya independen di mana masing-masing dapat berjalan tanpa membutuhkan kehadiran protokol lain.',
-        'Protokol IP sangat bergantung pada TCP karena tanpa adanya jabat tangan TCP maka IP tidak dapat menjalankan fungsi pengalamatan dan routing.',
-        'Protokol TCP membutuhkan IP untuk mengirimkan segmennya, tetapi IP bersifat protocol-agnostic sehingga bisa membawa protokol lain seperti UDP.',
-        'Protokol TCP dan IP merupakan satu kesatuan fungsional yang berada pada lapisan yang sama sehingga tugas dan perannya tidak dapat dipisahkan.',
-        'Protokol IP beroperasi aktif di lapisan Transport dengan tujuan untuk membantu TCP dalam menjamin keandalan pengiriman paket data ke tujuan.'
+        'TCP dan IP bekerja sepenuhnya independen; masing-masing dapat berjalan tanpa kehadiran protokol lain.',
+        'IP sangat bergantung pada TCP; tanpa jabat tangan TCP, IP tidak dapat menjalankan fungsi pengalamatan dan routing.',
+        'TCP membutuhkan IP untuk mengirimkan segmennya, tetapi IP bersifat protocol-agnostic sehingga bisa membawa protokol lain seperti UDP.',
+        'TCP dan IP merupakan satu kesatuan fungsional di lapisan yang sama sehingga tugas dan perannya tidak dapat dipisahkan.',
+        'IP beroperasi di lapisan Transport untuk membantu TCP menjamin keandalan pengiriman paket.',
       ],
       correctAnswer: 2,
-    }
+    },
   ] as TestQuestion[],
 };
 
@@ -1904,45 +2059,271 @@ export const lessons: Record<string, Lesson> = {
     materials: ['Struktur IPv4', 'Kelas IP (A, B, C)', 'Konversi Biner-Desimal', 'Manajemen IP'],
     pretest: {
       questions: [
+        // 1 — Peran IP pada TCP/IP (C2, Keruntutan Berpikir)
         {
-          question: 'Berapa jumlah bit total dalam satu alamat IPv4?',
-          options: ['16 bit', '32 bit', '64 bit', '128 bit'],
+          question:
+            'Perhatikan empat pernyataan tentang Internet Protocol (IP) berikut:\n\n' +
+            '1. IP beroperasi pada lapisan Network (Network Layer).\n' +
+            '2. IP memberikan identitas alamat logis kepada setiap perangkat.\n' +
+            '3. IP menjamin setiap paket data diterima berurutan dan lengkap.\n' +
+            '4. IP menentukan rute terbaik pengiriman paket data ke tujuan.\n\n' +
+            'Manakah kombinasi pernyataan yang **BENAR** tentang peran Internet Protocol (IP)?',
+          options: [
+            '1, 2, dan 3',
+            '1, 2, dan 4',
+            '2, 3, dan 4',
+            '1, 3, dan 4',
+            '1, 2, 3, dan 4',
+          ],
           correctAnswer: 1,
         },
+        // 2 — Fungsi Komponen IP Header (C2, Keruntutan Berpikir)
         {
-          question: 'Berapakah nilai desimal dari biner 11000000?',
-          options: ['128', '192', '168', '224'],
+          question:
+            'Perhatikan komponen-komponen IP Header berikut:\n\n' +
+            '- Source IP Address\n' +
+            '- Destination IP Address\n' +
+            '- TTL (Time to Live)\n' +
+            '- Protocol\n' +
+            '- Header Checksum\n\n' +
+            'Komponen yang memberi tahu lapisan penerima bahwa isi paket harus diserahkan ke **TCP** (bukan UDP) adalah ...',
+          options: [
+            'Source IP Address',
+            'TTL (Time to Live)',
+            'Protocol',
+            'Header Checksum',
+            'Destination IP Address',
+          ],
+          correctAnswer: 2,
+        },
+        // 3 — Struktur Alamat IPv4 (C2, Kemampuan Berargumen)
+        {
+          question:
+            'Perhatikan lima format penulisan alamat jaringan berikut:\n\n' +
+            '1. 192.168.1.1\n' +
+            '2. 192.168.256.1\n' +
+            '3. 10.0.0.1/8\n' +
+            '4. 172.16.0.ABC\n' +
+            '5. 11000000.10101000.00000001.00000001\n\n' +
+            'Seorang siswa membuat klaim: **"Alamat (1) dan (5) merepresentasikan alamat yang berbeda, dan keduanya adalah format IPv4 yang valid."**\n\n' +
+            'Manakah analisis yang paling benar mengenai validitas dan kesetaraan format penulisan alamat IPv4 di atas?',
+          options: [
+            'Klaim benar sepenuhnya; alamat (1) dan (5) berbeda, serta alamat (3) dan (2) semuanya valid.',
+            'Klaim salah; alamat (1) dan (5) sebenarnya sama — desimal vs biner. Alamat (2) tidak valid (oktet > 255), alamat (3) valid (notasi CIDR), dan alamat (4) tidak valid (mengandung huruf).',
+            'Klaim benar hanya pada bagian alamat (1) dan (5) berbeda; sedangkan alamat (2) valid dan alamat (3) tidak valid.',
+            'Klaim salah; karena alamat (5) adalah format penulisan IPv6, bukan IPv4 biner.',
+            'Klaim benar; alamat (1) berformat desimal dan alamat (5) berformat biner sehingga keduanya menunjuk ke komputer yang berbeda.',
+          ],
           correctAnswer: 1,
         },
+        // 4 — Kelas-Kelas IPv4 (C3, Kemampuan Berargumen)
         {
-          question: 'Alamat 10.1.1.1 termasuk dalam kelas IP...',
-          options: ['Kelas A', 'Kelas B', 'Kelas C', 'Kelas D'],
-          correctAnswer: 0,
+          question:
+            'Sebuah kafe membutuhkan jaringan untuk **80 perangkat** dalam satu segmen jaringan. Administrator memilih kelas IPv4 Private.\n\n' +
+            'Keputusan paling logis beserta argumennya adalah ...',
+          options: [
+            'Kelas A (10.x.x.x), karena kelas A selalu terbaik untuk semua skala jaringan.',
+            'Kelas B (172.16.x.x), karena hanya kelas B yang mendukung jaringan hospitality.',
+            'Kelas C (192.168.x.x), karena 80 perangkat masih di bawah kapasitas kelas C (254 host) sehingga paling efisien.',
+            'Kelas A, karena memiliki sinyal lebih kuat untuk ruangan terbuka.',
+            'Kelas B, karena memiliki kecepatan transmisi lebih tinggi dari kelas C.',
+          ],
+          correctAnswer: 2,
+        },
+        // 5 — Konsep Range Host IPv4 (C3, Kemampuan Berargumen)
+        {
+          question:
+            'Sebuah jaringan memiliki alamat network **192.168.5.0** dengan subnet mask **255.255.255.0**.\n\n' +
+            'Manakah pernyataan yang **benar** tentang rentang host yang dapat digunakan dan alamat broadcast-nya?',
+          options: [
+            'Host yang dapat digunakan: 192.168.5.1 – 192.168.5.255, karena alamat .255 juga bisa digunakan untuk perangkat biasa.',
+            'Host yang dapat digunakan: 192.168.5.1 – 192.168.5.254, dengan broadcast 192.168.5.255 dan total 254 host.',
+            'Host yang dapat digunakan: 192.168.5.0 – 192.168.5.255, dengan broadcast 192.168.5.256.',
+            'Host yang dapat digunakan: 192.168.5.0 – 192.168.5.254, karena hanya .255 yang disisihkan sebagai broadcast.',
+            'Total host tersedia adalah 256 karena subnet mask 255.255.255.0 mengalokasikan 1 oktet penuh tanpa pengecualian.',
+          ],
+          correctAnswer: 1,
+        },
+        // 6 — Konversi Desimal ke Biner (C3, Keruntutan Berpikir)
+        {
+          question:
+            'Seorang siswa diminta mensimulasikan konversi alamat IPv4 **172.16.1.1** ke format biner menggunakan metode nilai posisi (128, 64, 32, 16, 8, 4, 2, 1).\n\n' +
+            'Manakah urutan konversi per oktet yang **BENAR**?',
+          options: [
+            '172 → 11001100 │ 16 → 00010000 │ 1 → 00000001 │ 1 → 00000001',
+            '172 → 10101100 │ 16 → 00010000 │ 1 → 00000001 │ 1 → 00000001',
+            '172 → 10101100 │ 16 → 00010000 │ 1 → 00000010 │ 1 → 00000010',
+            '172 → 10101110 │ 16 → 00010000 │ 1 → 00000001 │ 1 → 00000001',
+            '172 → 10101100 │ 16 → 00100000 │ 1 → 00000001 │ 1 → 00000001',
+          ],
+          correctAnswer: 1,
+        },
+        // 7 — Sistem Pengalamatan IPv4 / ARP (C4, Penarikan Kesimpulan)
+        {
+          question:
+            'Perhatikan konfigurasi jaringan berikut:\n\n' +
+            '- Host A: IP 172.16.5.10, Mask 255.255.0.0\n' +
+            '- Host B: IP 172.16.200.50, Mask 255.255.0.0\n' +
+            '- Gateway: 172.16.0.1\n\n' +
+            'Host A mengirim **ARP Request** untuk mencari MAC Address Host B.\n\n' +
+            'Kesimpulan yang tepat adalah ...',
+          options: [
+            'Paket tidak bisa dikirim; perbedaan besar oktet ketiga (5 vs 200) melebihi batas subnet.',
+            'Host A harus mengirim paket melalui Default Gateway 172.16.0.1 terlebih dahulu.',
+            'Host A dan B berada dalam subnet yang sama (172.16.0.0/16); ARP berhasil menemukan MAC Address B, paket dikirim langsung tanpa melewati gateway.',
+            'ARP Request gagal karena 172.16.200.50 berada di luar rentang subnet mask 255.255.0.0.',
+            'Host A harus mengubah subnet mask menjadi 255.255.255.0 agar bisa berkomunikasi langsung.',
+          ],
+          correctAnswer: 2,
+        },
+        // 8 — Pengalamatan IPv4 / Routing antar Subnet (C4, Penarikan Kesimpulan)
+        {
+          question:
+            'Pak Hendra memeriksa mengapa Mesin Produksi tidak bisa mengirim data ke Server Monitoring.\n\n' +
+            '- Mesin Produksi: IP 10.1.1.50, Mask 255.255.0.0, GW 10.1.0.1\n' +
+            '- Server Monitoring: IP 10.2.0.10, Mask 255.255.0.0, GW 10.2.0.1\n\n' +
+            'Seorang teknisi menyarankan: **"Ganti Subnet Mask Mesin menjadi 255.0.0.0 agar bisa menjangkau semua subnet."**\n\n' +
+            'Manakah analisis yang tepat tentang solusi koneksi antar subnet?',
+          options: [
+            'Benar; mengubah Subnet Mask menjadi 255.0.0.0 adalah solusi yang tepat.',
+            'Benar sebagian; mengubah Subnet Mask efektif untuk jangka pendek.',
+            'Salah; masalah sebenarnya adalah perbedaan subnet (10.1.x.x vs 10.2.x.x) yang memerlukan router atau Layer-3 switch. Mengubah Subnet Mask di satu perangkat saja tidak menyelesaikan masalah routing.',
+            'Benar; 255.0.0.0 akan membuat semua alamat 10.x.x.x berada dalam satu subnet.',
+            'Salah; solusinya adalah mengubah IP Server Monitoring menjadi 10.1.x.x agar satu subnet.',
+          ],
+          correctAnswer: 2,
         },
       ],
     },
     stages: lesson3Stages,
     posttest: {
       questions: [
+        // Posttest Pertemuan 3 — soal sama dengan pretest
         {
-          question: 'Subnet mask standar untuk alamat IP Kelas C adalah...',
-          options: ['255.0.0.0', '255.255.0.0', '255.255.255.0', '255.255.255.255'],
-          correctAnswer: 2,
-        },
-        {
-          question: 'Apa yang terjadi jika dua komputer dalam satu jaringan lokal menggunakan IP yang sama?',
+          question:
+            'Perhatikan empat pernyataan tentang Internet Protocol (IP) berikut:\n\n' +
+            '1. IP beroperasi pada lapisan Network (Network Layer).\n' +
+            '2. IP memberikan identitas alamat logis kepada setiap perangkat.\n' +
+            '3. IP menjamin setiap paket data diterima berurutan dan lengkap.\n' +
+            '4. IP menentukan rute terbaik pengiriman paket data ke tujuan.\n\n' +
+            'Manakah kombinasi pernyataan yang **BENAR** tentang peran Internet Protocol (IP)?',
           options: [
-            'Keduanya akan saling berbagi bandwidth',
-            'Terjadi konflik IP dan koneksi menjadi tidak stabil',
-            'Router akan otomatis mengganti salah satu IP',
-            'Kecepatan internet akan meningkat dua kali lipat',
+            '1, 2, dan 3',
+            '1, 2, dan 4',
+            '2, 3, dan 4',
+            '1, 3, dan 4',
+            '1, 2, 3, dan 4',
           ],
           correctAnswer: 1,
         },
         {
-          question: 'Alamat IP 172.16.0.100 termasuk dalam rentang kelas...',
-          options: ['Kelas A', 'Kelas B', 'Kelas C', 'Kelas D'],
+          question:
+            'Perhatikan komponen-komponen IP Header berikut:\n\n' +
+            '- Source IP Address\n' +
+            '- Destination IP Address\n' +
+            '- TTL (Time to Live)\n' +
+            '- Protocol\n' +
+            '- Header Checksum\n\n' +
+            'Komponen yang memberi tahu lapisan penerima bahwa isi paket harus diserahkan ke **TCP** (bukan UDP) adalah ...',
+          options: [
+            'Source IP Address',
+            'TTL (Time to Live)',
+            'Protocol',
+            'Header Checksum',
+            'Destination IP Address',
+          ],
+          correctAnswer: 2,
+        },
+        {
+          question:
+            'Perhatikan lima format penulisan alamat jaringan berikut:\n\n' +
+            '1. 192.168.1.1\n' +
+            '2. 192.168.256.1\n' +
+            '3. 10.0.0.1/8\n' +
+            '4. 172.16.0.ABC\n' +
+            '5. 11000000.10101000.00000001.00000001\n\n' +
+            'Seorang siswa membuat klaim: **"Alamat (1) dan (5) merepresentasikan alamat yang berbeda, dan keduanya adalah format IPv4 yang valid."**\n\n' +
+            'Manakah analisis yang paling benar mengenai validitas dan kesetaraan format penulisan alamat IPv4 di atas?',
+          options: [
+            'Klaim benar sepenuhnya; alamat (1) dan (5) berbeda, serta alamat (3) dan (2) semuanya valid.',
+            'Klaim salah; alamat (1) dan (5) sebenarnya sama — desimal vs biner. Alamat (2) tidak valid (oktet > 255), alamat (3) valid (notasi CIDR), dan alamat (4) tidak valid (mengandung huruf).',
+            'Klaim benar hanya pada bagian alamat (1) dan (5) berbeda; sedangkan alamat (2) valid dan alamat (3) tidak valid.',
+            'Klaim salah; karena alamat (5) adalah format penulisan IPv6, bukan IPv4 biner.',
+            'Klaim benar; alamat (1) berformat desimal dan alamat (5) berformat biner sehingga keduanya menunjuk ke komputer yang berbeda.',
+          ],
           correctAnswer: 1,
+        },
+        {
+          question:
+            'Sebuah kafe membutuhkan jaringan untuk **80 perangkat** dalam satu segmen jaringan. Administrator memilih kelas IPv4 Private.\n\n' +
+            'Keputusan paling logis beserta argumennya adalah ...',
+          options: [
+            'Kelas A (10.x.x.x), karena kelas A selalu terbaik untuk semua skala jaringan.',
+            'Kelas B (172.16.x.x), karena hanya kelas B yang mendukung jaringan hospitality.',
+            'Kelas C (192.168.x.x), karena 80 perangkat masih di bawah kapasitas kelas C (254 host) sehingga paling efisien.',
+            'Kelas A, karena memiliki sinyal lebih kuat untuk ruangan terbuka.',
+            'Kelas B, karena memiliki kecepatan transmisi lebih tinggi dari kelas C.',
+          ],
+          correctAnswer: 2,
+        },
+        {
+          question:
+            'Sebuah jaringan memiliki alamat network **192.168.5.0** dengan subnet mask **255.255.255.0**.\n\n' +
+            'Manakah pernyataan yang **benar** tentang rentang host yang dapat digunakan dan alamat broadcast-nya?',
+          options: [
+            'Host yang dapat digunakan: 192.168.5.1 – 192.168.5.255, karena alamat .255 juga bisa digunakan untuk perangkat biasa.',
+            'Host yang dapat digunakan: 192.168.5.1 – 192.168.5.254, dengan broadcast 192.168.5.255 dan total 254 host.',
+            'Host yang dapat digunakan: 192.168.5.0 – 192.168.5.255, dengan broadcast 192.168.5.256.',
+            'Host yang dapat digunakan: 192.168.5.0 – 192.168.5.254, karena hanya .255 yang disisihkan sebagai broadcast.',
+            'Total host tersedia adalah 256 karena subnet mask 255.255.255.0 mengalokasikan 1 oktet penuh tanpa pengecualian.',
+          ],
+          correctAnswer: 1,
+        },
+        {
+          question:
+            'Seorang siswa diminta mensimulasikan konversi alamat IPv4 **172.16.1.1** ke format biner menggunakan metode nilai posisi (128, 64, 32, 16, 8, 4, 2, 1).\n\n' +
+            'Manakah urutan konversi per oktet yang **BENAR**?',
+          options: [
+            '172 → 11001100 │ 16 → 00010000 │ 1 → 00000001 │ 1 → 00000001',
+            '172 → 10101100 │ 16 → 00010000 │ 1 → 00000001 │ 1 → 00000001',
+            '172 → 10101100 │ 16 → 00010000 │ 1 → 00000010 │ 1 → 00000010',
+            '172 → 10101110 │ 16 → 00010000 │ 1 → 00000001 │ 1 → 00000001',
+            '172 → 10101100 │ 16 → 00100000 │ 1 → 00000001 │ 1 → 00000001',
+          ],
+          correctAnswer: 1,
+        },
+        {
+          question:
+            'Perhatikan konfigurasi jaringan berikut:\n\n' +
+            '- Host A: IP 172.16.5.10, Mask 255.255.0.0\n' +
+            '- Host B: IP 172.16.200.50, Mask 255.255.0.0\n' +
+            '- Gateway: 172.16.0.1\n\n' +
+            'Host A mengirim **ARP Request** untuk mencari MAC Address Host B.\n\n' +
+            'Kesimpulan yang tepat adalah ...',
+          options: [
+            'Paket tidak bisa dikirim; perbedaan besar oktet ketiga (5 vs 200) melebihi batas subnet.',
+            'Host A harus mengirim paket melalui Default Gateway 172.16.0.1 terlebih dahulu.',
+            'Host A dan B berada dalam subnet yang sama (172.16.0.0/16); ARP berhasil menemukan MAC Address B, paket dikirim langsung tanpa melewati gateway.',
+            'ARP Request gagal karena 172.16.200.50 berada di luar rentang subnet mask 255.255.0.0.',
+            'Host A harus mengubah subnet mask menjadi 255.255.255.0 agar bisa berkomunikasi langsung.',
+          ],
+          correctAnswer: 2,
+        },
+        {
+          question:
+            'Pak Hendra memeriksa mengapa Mesin Produksi tidak bisa mengirim data ke Server Monitoring.\n\n' +
+            '- Mesin Produksi: IP 10.1.1.50, Mask 255.255.0.0, GW 10.1.0.1\n' +
+            '- Server Monitoring: IP 10.2.0.10, Mask 255.255.0.0, GW 10.2.0.1\n\n' +
+            'Seorang teknisi menyarankan: **"Ganti Subnet Mask Mesin menjadi 255.0.0.0 agar bisa menjangkau semua subnet."**\n\n' +
+            'Manakah analisis yang tepat tentang solusi koneksi antar subnet?',
+          options: [
+            'Benar; mengubah Subnet Mask menjadi 255.0.0.0 adalah solusi yang tepat.',
+            'Benar sebagian; mengubah Subnet Mask efektif untuk jangka pendek.',
+            'Salah; masalah sebenarnya adalah perbedaan subnet (10.1.x.x vs 10.2.x.x) yang memerlukan router atau Layer-3 switch. Mengubah Subnet Mask di satu perangkat saja tidak menyelesaikan masalah routing.',
+            'Benar; 255.0.0.0 akan membuat semua alamat 10.x.x.x berada dalam satu subnet.',
+            'Salah; solusinya adalah mengubah IP Server Monitoring menjadi 10.1.x.x agar satu subnet.',
+          ],
+          correctAnswer: 2,
         },
       ],
     },
@@ -1957,19 +2338,121 @@ export const lessons: Record<string, Lesson> = {
     materials: ['Krisis IPv4', 'Struktur 128-bit IPv6', 'Kompresi Alamat', 'Strategi Transisi'],
     pretest: {
       questions: [
+        // 1 — Konsep Dasar IPv6 (C2, Keruntutan Berpikir)
         {
-          question: 'Berapa jumlah bit total dalam satu alamat IPv6?',
-          options: ['32 bit', '64 bit', '128 bit', '256 bit'],
-          correctAnswer: 2,
+          question:
+            'Seorang guru menyatakan: **"IPv6 dikembangkan bukan karena IPv4 kehabisan alamat, melainkan karena IPv4 terlalu lambat dalam memproses routing sehingga perlu diganti."**\n\n' +
+            'Manakah pernyataan yang **BENAR** tentang latar belakang pengembangan IPv6?',
+          options: [
+            'IPv6 dikembangkan karena IPv4 kehabisan ruang alamat; IPv6 menggunakan 128-bit sehingga mampu menampung jauh lebih banyak perangkat.',
+            'IPv6 dikembangkan untuk menggantikan IPv4 yang terlalu lambat; kecepatan routing adalah satu-satunya alasan pengembangan IPv6.',
+            'IPv4 masih memiliki cukup ruang alamat; IPv6 hanya dikembangkan untuk meningkatkan keamanan jaringan global.',
+            'IPv6 menggunakan 32-bit alamat seperti IPv4, tetapi dengan format heksadesimal sehingga lebih mudah dikonfigurasi.',
+            'IPv6 dikembangkan karena IPv4 hanya mendukung 32-bit alamat (±4 miliar alamat) yang tidak lagi cukup untuk seluruh perangkat internet.',
+          ],
+          correctAnswer: 0,
         },
+        // 2 — Tahapan EUI-64 (C3, Keruntutan Berpikir)
         {
-          question: 'Sistem bilangan apa yang digunakan untuk menulis alamat IPv6?',
-          options: ['Desimal', 'Biner', 'Oktal', 'Heksadesimal'],
+          question:
+            'Sebuah perangkat memiliki MAC Address: **00:1A:2B:3C:4D:5E**. Administrator akan membuat IPv6 Link Local Address menggunakan standar EUI-64.\n\n' +
+            'Urutan langkah yang benar adalah ...',
+          options: [
+            '(1) Bagi MAC jadi dua bagian (00:1A:2B │ 3C:4D:5E) → (2) Sisipkan FF:FE di tengah → (3) Balikkan bit ke-7 oktet pertama → (4) Tambahkan prefix FE80::',
+            '(1) Balikkan bit ke-7 → (2) Sisipkan FF:FE di tengah MAC → (3) Bagi MAC menjadi dua bagian → (4) Tambahkan prefix FE80::',
+            '(1) Tambahkan prefix FE80:: langsung → (2) Sisipkan FF:FE → (3) Bagi MAC → (4) Balikkan bit ke-7',
+            '(1) Konversi seluruh MAC ke biner → (2) Balikkan semua bit → (3) Konversi kembali ke heksadesimal → (4) Tambahkan FE80::',
+            '(1) Bagi MAC menjadi dua bagian → (2) Balikkan bit ke-7 → (3) Sisipkan FF:FE → (4) Tambahkan prefix 2001:DB8::',
+          ],
+          correctAnswer: 0,
+        },
+        // 3 — Aturan Penyederhanaan IPv6 (C3, Kemampuan Berargumen)
+        {
+          question:
+            'Tiga siswa menyederhanakan alamat IPv6:\n**2001:0DB8:0000:000A:0000:0000:0000:0001**\n\n' +
+            '- Siswa P: 2001:DB8:0:A::1\n' +
+            '- Siswa Q: 2001:DB8::A:0:0:0:1\n' +
+            '- Siswa R: 2001:DB8:0:A:0::1\n\n' +
+            'Manakah analisis yang benar?',
+          options: [
+            'Siswa P benar; Q dan R salah dalam penempatan ::',
+            'Siswa Q benar; P dan R salah dalam penempatan ::',
+            'Siswa R benar; P dan Q salah dalam penempatan ::',
+            'Ketiganya benar; penempatan :: boleh di mana saja selama hanya digunakan satu kali.',
+            'Ketiganya salah; :: hanya boleh digunakan jika ada lebih dari 5 blok nol berurutan.',
+          ],
+          correctAnswer: 0,
+        },
+        // 4 — Langkah Proses EUI-64 (C4, Kemampuan Berargumen)
+        {
+          question:
+            'Siswa mengkonversi MAC **00:50:56:C0:00:08** dengan metode EUI-64:\n\n' +
+            '1. Bagi MAC: 00:50:56 │ C0:00:08\n' +
+            '2. Sisipkan FF:FE: 00:50:56:FF:FE:C0:00:08\n' +
+            '3. 00 = 00000000, flip bit ke-7 → 00000010 = 02\n' +
+            '4. Interface ID: 02:50:56:FF:FE:C0:00:08\n\n' +
+            'Analisis yang **BENAR** adalah ...',
+          options: [
+            'Langkah 1 salah; MAC harus dibagi menjadi tiga bagian 16-bit, bukan dua bagian 24-bit.',
+            'Langkah 2 salah; yang disisipkan seharusnya FE:FF bukan FF:FE.',
+            'Langkah 3 salah; bit yang di-flip seharusnya bit ke-8 (LSB) bukan bit ke-7.',
+            'Seluruh langkah benar; bit ke-7 dari kiri pada 00000000 adalah 0, setelah dibalik menjadi 1 menghasilkan 00000010 = 02, sehingga Interface ID sudah tepat.',
+            'Langkah 3 benar namun Interface ID harus ditulis tanpa tanda titik dua.',
+          ],
           correctAnswer: 3,
         },
+        // 5 — IPv6 Global Unicast — konflik alamat gateway (C4, Keruntutan Berpikir)
         {
-          question: 'Simbol apa yang digunakan untuk memisahkan blok pada IPv6?',
-          options: ['Titik (.)', 'Titik Dua (:)', 'Koma (,)', 'Strip (-)'],
+          question:
+            'Admin merencanakan IPv6 Global Unicast untuk 3 subnet:\n\n' +
+            '- Subnet-A: 2001:DB8:1:A::/64, GW ::1\n' +
+            '- Subnet-B: 2001:DB8:1:B::/64, GW ::1\n' +
+            '- Subnet-C: 2001:DB8:1:C::/64, GW ::1\n\n' +
+            'Admin mengklaim: **"Ketiga gateway memiliki host ID yang sama (::1) sehingga akan terjadi konflik alamat."**\n\n' +
+            'Manakah analisis yang benar tentang alamat gateway ketiga subnet secara berurutan?',
+          options: [
+            '2001:DB8:1:A::1, 2001:DB8:1:B::1, 2001:DB8:1:C::1 — setiap gateway menggunakan prefix subnet masing-masing; alamat lengkap berbeda, tidak ada konflik.',
+            '2001:DB8:1:A::1, 2001:DB8:1:A::2, 2001:DB8:1:A::3 — ketiga gateway menggunakan prefix Subnet-A karena prefix pertama paling efisien.',
+            'FE80::A::1, FE80::B::1, FE80::C::1 — ketiga gateway menggunakan prefix Link Local FE80:: sesuai standar.',
+            '2001:DB8:1::1, 2001:DB8:1::2, 2001:DB8:1::3 — ketiga gateway menggunakan prefix yang sama karena berada dalam satu router.',
+            'FF00::A::1, FF00::B::1, FF00::C::1 — ketiga gateway menggunakan prefix multicast FF00::.',
+          ],
+          correctAnswer: 0,
+        },
+        // 6 — Perbedaan IPv4 dan IPv6 (C5, Penarikan Kesimpulan)
+        {
+          question:
+            'Perhatikan lima pernyataan perbandingan IPv4 dan IPv6:\n\n' +
+            '1. IPv6 128-bit vs IPv4 32-bit.\n' +
+            '2. IPv6 tidak memerlukan NAT.\n' +
+            '3. IPv6 memiliki IPsec built-in.\n' +
+            '4. IPv4 lebih aman dari IPv6 karena memiliki lebih banyak field header untuk inspeksi.\n' +
+            '5. IPv6 menghapus broadcast dan menggantinya dengan multicast.\n\n' +
+            'Seorang siswa menyatakan **semua pernyataan benar**. Manakah kesimpulan yang paling tepat?',
+          options: [
+            'Benar; semua lima pernyataan benar tentang perbedaan IPv4-IPv6.',
+            'Salah; pernyataan (2) tidak benar karena IPv6 tetap memerlukan NAT.',
+            'Salah; pernyataan (4) tidak benar. IPv4 tidak lebih aman dari IPv6 — justru IPv6 memiliki IPsec built-in sedangkan di IPv4 hanya opsional. Field header yang lebih banyak tidak berarti lebih aman.',
+            'Salah; pernyataan (5) tidak benar karena IPv6 tetap menggunakan broadcast.',
+            'Salah; pernyataan (1) tidak benar karena IPv6 menggunakan 64-bit bukan 128-bit.',
+          ],
+          correctAnswer: 2,
+        },
+        // 7 — Keterkaitan TCP & IP (C5, Penarikan Kesimpulan)
+        {
+          question:
+            'Tiga mahasiswa berdebat tentang keterkaitan TCP dan IP:\n\n' +
+            '- Mhs A: "TCP dan IP saling bergantung secara setara."\n' +
+            '- Mhs B: "TCP bergantung pada IP, tapi IP tidak bergantung pada TCP karena IP juga bisa membawa UDP."\n' +
+            '- Mhs C: "IP bergantung pada TCP karena tanpa TCP paket IP tidak terjamin sampai."\n\n' +
+            'Manakah analisis yang tepat tentang keterkaitan TCP dan IP?',
+          options: [
+            'Mhs A paling tepat; TCP dan IP memang saling bergantung secara setara.',
+            'Mhs B paling tepat; TCP membutuhkan IP untuk mengirimkan segmennya, namun IP bersifat protocol-agnostic dan dapat membawa TCP, UDP, maupun ICMP tanpa bergantung pada TCP.',
+            'Mhs C paling tepat; paket IP memerlukan TCP untuk terjamin sampai ke tujuan.',
+            'Ketiganya benar dari perspektif berbeda.',
+            'Ketiganya salah; TCP dan IP bekerja sepenuhnya independen.',
+          ],
           correctAnswer: 1,
         },
       ],
@@ -1977,20 +2460,116 @@ export const lessons: Record<string, Lesson> = {
     stages: lesson4Stages,
     posttest: {
       questions: [
+        // Posttest Pertemuan 4 — soal sama dengan pretest
         {
-          question: 'Manakah penulisan kompresi IPv6 yang benar untuk "2001:0db8:0000:0000:0000:0000:0000:0001"?',
-          options: ['2001:db8:1', '2001:db8::1', '2001:db8:0:1', '2001:db8::0::1'],
-          correctAnswer: 1,
+          question:
+            'Seorang guru menyatakan: **"IPv6 dikembangkan bukan karena IPv4 kehabisan alamat, melainkan karena IPv4 terlalu lambat dalam memproses routing sehingga perlu diganti."**\n\n' +
+            'Manakah pernyataan yang **BENAR** tentang latar belakang pengembangan IPv6?',
+          options: [
+            'IPv6 dikembangkan karena IPv4 kehabisan ruang alamat; IPv6 menggunakan 128-bit sehingga mampu menampung jauh lebih banyak perangkat.',
+            'IPv6 dikembangkan untuk menggantikan IPv4 yang terlalu lambat; kecepatan routing adalah satu-satunya alasan pengembangan IPv6.',
+            'IPv4 masih memiliki cukup ruang alamat; IPv6 hanya dikembangkan untuk meningkatkan keamanan jaringan global.',
+            'IPv6 menggunakan 32-bit alamat seperti IPv4, tetapi dengan format heksadesimal sehingga lebih mudah dikonfigurasi.',
+            'IPv6 dikembangkan karena IPv4 hanya mendukung 32-bit alamat (±4 miliar alamat) yang tidak lagi cukup untuk seluruh perangkat internet.',
+          ],
+          correctAnswer: 0,
         },
         {
-          question: 'Metode transisi yang menjalankan IPv4 dan IPv6 secara bersamaan dalam satu perangkat disebut...',
-          options: ['Tunneling', 'NAT64', 'Dual Stack', 'Translation'],
+          question:
+            'Sebuah perangkat memiliki MAC Address: **00:1A:2B:3C:4D:5E**. Administrator akan membuat IPv6 Link Local Address menggunakan standar EUI-64.\n\n' +
+            'Urutan langkah yang benar adalah ...',
+          options: [
+            '(1) Bagi MAC jadi dua bagian (00:1A:2B │ 3C:4D:5E) → (2) Sisipkan FF:FE di tengah → (3) Balikkan bit ke-7 oktet pertama → (4) Tambahkan prefix FE80::',
+            '(1) Balikkan bit ke-7 → (2) Sisipkan FF:FE di tengah MAC → (3) Bagi MAC menjadi dua bagian → (4) Tambahkan prefix FE80::',
+            '(1) Tambahkan prefix FE80:: langsung → (2) Sisipkan FF:FE → (3) Bagi MAC → (4) Balikkan bit ke-7',
+            '(1) Konversi seluruh MAC ke biner → (2) Balikkan semua bit → (3) Konversi kembali ke heksadesimal → (4) Tambahkan FE80::',
+            '(1) Bagi MAC menjadi dua bagian → (2) Balikkan bit ke-7 → (3) Sisipkan FF:FE → (4) Tambahkan prefix 2001:DB8::',
+          ],
+          correctAnswer: 0,
+        },
+        {
+          question:
+            'Tiga siswa menyederhanakan alamat IPv6:\n**2001:0DB8:0000:000A:0000:0000:0000:0001**\n\n' +
+            '- Siswa P: 2001:DB8:0:A::1\n' +
+            '- Siswa Q: 2001:DB8::A:0:0:0:1\n' +
+            '- Siswa R: 2001:DB8:0:A:0::1\n\n' +
+            'Manakah analisis yang benar?',
+          options: [
+            'Siswa P benar; Q dan R salah dalam penempatan ::',
+            'Siswa Q benar; P dan R salah dalam penempatan ::',
+            'Siswa R benar; P dan Q salah dalam penempatan ::',
+            'Ketiganya benar; penempatan :: boleh di mana saja selama hanya digunakan satu kali.',
+            'Ketiganya salah; :: hanya boleh digunakan jika ada lebih dari 5 blok nol berurutan.',
+          ],
+          correctAnswer: 0,
+        },
+        {
+          question:
+            'Siswa mengkonversi MAC **00:50:56:C0:00:08** dengan metode EUI-64:\n\n' +
+            '1. Bagi MAC: 00:50:56 │ C0:00:08\n' +
+            '2. Sisipkan FF:FE: 00:50:56:FF:FE:C0:00:08\n' +
+            '3. 00 = 00000000, flip bit ke-7 → 00000010 = 02\n' +
+            '4. Interface ID: 02:50:56:FF:FE:C0:00:08\n\n' +
+            'Analisis yang **BENAR** adalah ...',
+          options: [
+            'Langkah 1 salah; MAC harus dibagi menjadi tiga bagian 16-bit, bukan dua bagian 24-bit.',
+            'Langkah 2 salah; yang disisipkan seharusnya FE:FF bukan FF:FE.',
+            'Langkah 3 salah; bit yang di-flip seharusnya bit ke-8 (LSB) bukan bit ke-7.',
+            'Seluruh langkah benar; bit ke-7 dari kiri pada 00000000 adalah 0, setelah dibalik menjadi 1 menghasilkan 00000010 = 02, sehingga Interface ID sudah tepat.',
+            'Langkah 3 benar namun Interface ID harus ditulis tanpa tanda titik dua.',
+          ],
+          correctAnswer: 3,
+        },
+        {
+          question:
+            'Admin merencanakan IPv6 Global Unicast untuk 3 subnet:\n\n' +
+            '- Subnet-A: 2001:DB8:1:A::/64, GW ::1\n' +
+            '- Subnet-B: 2001:DB8:1:B::/64, GW ::1\n' +
+            '- Subnet-C: 2001:DB8:1:C::/64, GW ::1\n\n' +
+            'Admin mengklaim: **"Ketiga gateway memiliki host ID yang sama (::1) sehingga akan terjadi konflik alamat."**\n\n' +
+            'Manakah analisis yang benar tentang alamat gateway ketiga subnet secara berurutan?',
+          options: [
+            '2001:DB8:1:A::1, 2001:DB8:1:B::1, 2001:DB8:1:C::1 — setiap gateway menggunakan prefix subnet masing-masing; alamat lengkap berbeda, tidak ada konflik.',
+            '2001:DB8:1:A::1, 2001:DB8:1:A::2, 2001:DB8:1:A::3 — ketiga gateway menggunakan prefix Subnet-A karena prefix pertama paling efisien.',
+            'FE80::A::1, FE80::B::1, FE80::C::1 — ketiga gateway menggunakan prefix Link Local FE80:: sesuai standar.',
+            '2001:DB8:1::1, 2001:DB8:1::2, 2001:DB8:1::3 — ketiga gateway menggunakan prefix yang sama karena berada dalam satu router.',
+            'FF00::A::1, FF00::B::1, FF00::C::1 — ketiga gateway menggunakan prefix multicast FF00::.',
+          ],
+          correctAnswer: 0,
+        },
+        {
+          question:
+            'Perhatikan lima pernyataan perbandingan IPv4 dan IPv6:\n\n' +
+            '1. IPv6 128-bit vs IPv4 32-bit.\n' +
+            '2. IPv6 tidak memerlukan NAT.\n' +
+            '3. IPv6 memiliki IPsec built-in.\n' +
+            '4. IPv4 lebih aman dari IPv6 karena memiliki lebih banyak field header untuk inspeksi.\n' +
+            '5. IPv6 menghapus broadcast dan menggantinya dengan multicast.\n\n' +
+            'Seorang siswa menyatakan **semua pernyataan benar**. Manakah kesimpulan yang paling tepat?',
+          options: [
+            'Benar; semua lima pernyataan benar tentang perbedaan IPv4-IPv6.',
+            'Salah; pernyataan (2) tidak benar karena IPv6 tetap memerlukan NAT.',
+            'Salah; pernyataan (4) tidak benar. IPv4 tidak lebih aman dari IPv6 — justru IPv6 memiliki IPsec built-in sedangkan di IPv4 hanya opsional. Field header yang lebih banyak tidak berarti lebih aman.',
+            'Salah; pernyataan (5) tidak benar karena IPv6 tetap menggunakan broadcast.',
+            'Salah; pernyataan (1) tidak benar karena IPv6 menggunakan 64-bit bukan 128-bit.',
+          ],
           correctAnswer: 2,
         },
         {
-          question: 'Alamat loopback pada IPv6 adalah...',
-          options: ['::1', '127.0.0.1', 'fe80::1', 'ff00::1'],
-          correctAnswer: 0,
+          question:
+            'Tiga mahasiswa berdebat tentang keterkaitan TCP dan IP:\n\n' +
+            '- Mhs A: "TCP dan IP saling bergantung secara setara."\n' +
+            '- Mhs B: "TCP bergantung pada IP, tapi IP tidak bergantung pada TCP karena IP juga bisa membawa UDP."\n' +
+            '- Mhs C: "IP bergantung pada TCP karena tanpa TCP paket IP tidak terjamin sampai."\n\n' +
+            'Manakah analisis yang tepat tentang keterkaitan TCP dan IP?',
+          options: [
+            'Mhs A paling tepat; TCP dan IP memang saling bergantung secara setara.',
+            'Mhs B paling tepat; TCP membutuhkan IP untuk mengirimkan segmennya, namun IP bersifat protocol-agnostic dan dapat membawa TCP, UDP, maupun ICMP tanpa bergantung pada TCP.',
+            'Mhs C paling tepat; paket IP memerlukan TCP untuk terjamin sampai ke tujuan.',
+            'Ketiganya benar dari perspektif berbeda.',
+            'Ketiganya salah; TCP dan IP bekerja sepenuhnya independen.',
+          ],
+          correctAnswer: 1,
         },
       ],
     },
