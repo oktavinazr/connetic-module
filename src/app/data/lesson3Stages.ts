@@ -76,18 +76,19 @@ export const lesson3Stages: Stage[] = [
     type: 'inquiry',
     title: 'Inquiry',
     description:
-      'Siswa mengeksplorasi komponen IP Header beserta fungsinya secara mendalam melalui eksplorasi materi interaktif dan aktivitas merangkai urutan pemrosesan paket IP.',
+      'Siswa mengeksplorasi komponen IP Header beserta fungsinya secara mendalam melalui eksplorasi materi interaktif, penyusunan komponen header, dan aktivitas memasangkan fungsi field.',
     objectiveCode: 'X.IP.2',
     activityGuide: [
-      'Buka dan pelajari setiap field IP Header melalui panel eksplorasi interaktif.',
-      'Urutkan 5 tahapan pemrosesan paket IP oleh router menggunakan drag & drop.',
-      'Tulis argumen logis tentang pentingnya field TTL dan Destination IP dalam IP Header.',
-      'Tulis kesimpulan tentang fungsi IP Header yang telah kamu pelajari.',
+      'Klik setiap komponen pada ilustrasi IP Header untuk mengeksplorasi nama, fungsi, dan perannya dalam pengiriman data jaringan.',
+      'Susun komponen IP Header secara runtut menggunakan drag & drop.',
+      'Pasangkan setiap komponen IP Header dengan fungsi yang sesuai.',
+      'Tuliskan Argumen Logis tentang pentingnya komponen IP Header dalam membantu data mencapai tujuan.',
+      'Tuliskan refleksi akhir sebagai kesimpulan tahap Inquiry.',
     ],
     logicalThinkingIndicators: [
-      'Keruntutan Berpikir: mengurutkan tahapan pemrosesan paket IP oleh router secara sistematis berdasarkan fungsi setiap field IP Header.',
-      'Kemampuan Berargumen: menjelaskan mengapa field TTL dan Destination IP merupakan komponen kritis dalam IP Header yang tidak dapat dihilangkan.',
-      'Penarikan Kesimpulan: menyimpulkan bagaimana IP Header memungkinkan paket data menemukan jalur yang tepat dari sumber ke tujuan.',
+      'Keruntutan Berpikir: mengenali, mengeksplorasi, dan menyusun komponen-komponen penting IP Header secara runtut berdasarkan struktur header.',
+      'Kemampuan Berargumen: memasangkan fungsi setiap komponen IP Header dengan tepat lalu menjelaskan mengapa komponen-komponen tersebut penting dalam pengiriman data jaringan.',
+      'Penarikan Kesimpulan: menyimpulkan hubungan antara komponen IP Header, fungsinya, dan perannya dalam membantu paket data mencapai tujuan.',
     ],
     facilitatorNotes: [
       'Guru menekankan perbedaan IP Header dengan TCP Header: IP Header mengurus ALAMAT & RUTE, TCP Header mengurus URUTAN & KEANDALAN.',
@@ -103,8 +104,8 @@ export const lesson3Stages: Stage[] = [
     material: {
       title: 'Komponen IP Header',
       content: [
-        'IP Header adalah bagian awal setiap paket IP yang berisi informasi kontrol penting. Router di sepanjang jalur membaca IP Header untuk memutuskan ke mana paket harus diteruskan selanjutnya.',
-        'Field terpenting dalam IP Header adalah Destination IP Address (menentukan tujuan), Source IP Address (mengidentifikasi pengirim), TTL (membatasi usia paket), dan Protocol (menunjukkan protokol Transport Layer yang membawa data).',
+        'IP Header adalah bagian awal setiap paket IP yang berisi informasi kontrol penting. Perangkat dan router membaca field-field di dalamnya untuk memahami identitas paket, tujuan pengiriman, dan cara memperlakukan payload.',
+        'Komponen penting pada IP Header meliputi Version, Header Length (IHL), TTL, Protocol, Header Checksum, Source IP Address, dan Destination IP Address. Masing-masing memiliki fungsi spesifik yang saling melengkapi.',
       ],
       examples: [
         'Version (4 bit): Nilai 4 untuk IPv4. Router memeriksa field ini pertama untuk memastikan paket adalah IPv4.',
@@ -158,7 +159,7 @@ export const lesson3Stages: Stage[] = [
       },
     ],
     flowInstruction:
-      'Urutkan 5 tahapan yang dilakukan router saat memproses sebuah paket IP yang masuk, mulai dari penerimaan hingga penelusuran tabel routing.',
+      'Susun komponen-komponen penting IP Header berikut dari field identitas dasar hingga field alamat tujuan agar struktur bacanya runtut.',
     flowItems: [
       { id: 'fl1', text: 'Router menerima paket dan memeriksa field Version — memastikan ini adalah paket IPv4 yang valid.', correctOrder: 1, description: 'Verifikasi versi protokol.', colorClass: 'purple' },
       { id: 'fl2', text: 'Router memeriksa nilai TTL; jika TTL = 0, paket dibuang dan ICMP "Time Exceeded" dikirim ke pengirim.', correctOrder: 2, description: 'Pengecekan TTL dan decrement.', colorClass: 'blue' },

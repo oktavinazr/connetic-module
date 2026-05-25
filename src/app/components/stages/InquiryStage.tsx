@@ -18,6 +18,13 @@ interface Group { id: string; label: string; colorClass: 'blue' | 'green' | 'pur
 interface GroupItem { id: string; text: string; correctGroup: string }
 interface FlowItem { id: string; text: string; correctOrder: number; description?: string; colorClass?: string }
 interface MatchingPair { left: string; right: string }
+interface MatchingState {
+  matches: Record<string, string>;
+  validated?: boolean;
+  attempts?: number;
+  correctCount?: number;
+  showArgument?: boolean;
+}
 
 interface InquiryStageProps {
   material?: {
@@ -62,7 +69,26 @@ const flowLayerColors: Record<string, { gradient: string; borderB: string }> = {
   green:  { gradient: 'bg-gradient-to-r from-[#10B981] to-[#059669]', borderB: 'border-b-[#047857]' },
   amber:  { gradient: 'bg-gradient-to-r from-[#F59E0B] to-[#D97706]', borderB: 'border-b-[#B45309]' },
   pink:   { gradient: 'bg-gradient-to-r from-[#EC4899] to-[#DB2777]', borderB: 'border-b-[#9D174D]' },
+  indigo: { gradient: 'bg-gradient-to-r from-[#6366F1] to-[#4F46E5]', borderB: 'border-b-[#3730A3]' },
 };
+
+const inquiryMatchPalette = [
+  { bg: 'bg-violet-50', border: 'border-violet-300', activeBorder: 'border-violet-500', text: 'text-violet-700', iconBg: 'bg-violet-500', ring: 'ring-violet-200', dot: 'bg-violet-400', badge: 'bg-violet-500 text-white' },
+  { bg: 'bg-sky-50', border: 'border-sky-300', activeBorder: 'border-sky-500', text: 'text-sky-700', iconBg: 'bg-sky-500', ring: 'ring-sky-200', dot: 'bg-sky-400', badge: 'bg-sky-500 text-white' },
+  { bg: 'bg-emerald-50', border: 'border-emerald-300', activeBorder: 'border-emerald-500', text: 'text-emerald-700', iconBg: 'bg-emerald-500', ring: 'ring-emerald-200', dot: 'bg-emerald-400', badge: 'bg-emerald-500 text-white' },
+  { bg: 'bg-amber-50', border: 'border-amber-300', activeBorder: 'border-amber-500', text: 'text-amber-700', iconBg: 'bg-amber-500', ring: 'ring-amber-200', dot: 'bg-amber-400', badge: 'bg-amber-500 text-white' },
+  { bg: 'bg-indigo-50', border: 'border-indigo-300', activeBorder: 'border-indigo-500', text: 'text-indigo-700', iconBg: 'bg-indigo-500', ring: 'ring-indigo-200', dot: 'bg-indigo-400', badge: 'bg-indigo-500 text-white' },
+  { bg: 'bg-rose-50', border: 'border-rose-300', activeBorder: 'border-rose-500', text: 'text-rose-700', iconBg: 'bg-rose-500', ring: 'ring-rose-200', dot: 'bg-rose-400', badge: 'bg-rose-500 text-white' },
+] as const;
+
+const inquiryPairIcons = [
+  <Network className="w-4 h-4" />,
+  <ArrowRight className="w-4 h-4" />,
+  <Zap className="w-4 h-4" />,
+  <Layers className="w-4 h-4" />,
+  <ShieldCheck className="w-4 h-4" />,
+  <Database className="w-4 h-4" />,
+];
 
 // -- Standardized Essay Box (Uses unified StageKit EssayBox) --------------------
 
@@ -93,7 +119,7 @@ function InquiryEssayBox({
 
 const DRAG_LAYER = 'LAYER_SORT_CARD';
 function DraggableFlowCard({ item }: { item: FlowItem }) {
-  const colors = flowLayerColors[(item.colorClass as keyof typeof flowLayerColors) || 'blue'];
+  const colors = flowLayerColors[(item.colorClass as keyof typeof flowLayerColors) || 'blue'] || flowLayerColors.blue;
   const [{ isDragging }, drag] = useDrag({
     type: DRAG_LAYER,
     item: { id: item.id },
@@ -612,22 +638,51 @@ function ExplorePhase({ explorationSections, onNext, onBackToMaterial, subtitle,
 
 // -- Matching Phase -----------------------------------------------------------
 
-function MatchingPhase({ pairs, lessonId, stageIndex, onComplete, onNext, shuffleRight, completeLabel, initialData }: {
+function MatchingPhase({
+  pairs,
+  lessonId,
+  stageIndex,
+  onComplete,
+  onNext,
+  shuffleRight,
+  completeLabel,
+  initialData,
+  activityLabel,
+  activityTitle,
+  leftColumnLabel,
+  rightColumnLabel,
+  successTitle,
+  successDescription,
+  autoAdvanceOnExhausted = false,
+  autoAdvanceDelayMs = 2600,
+}: {
   pairs: MatchingPair[]; lessonId: string; stageIndex: number;
-  onComplete: (matches: Record<string, string>) => void;
+  onComplete: (state: MatchingState) => void;
   onNext?: () => void;
   shuffleRight?: boolean; completeLabel?: string;
-  initialData?: { matches?: Record<string, string>; validated?: boolean };
+  initialData?: MatchingState;
+  activityLabel?: string;
+  activityTitle?: string;
+  leftColumnLabel?: string;
+  rightColumnLabel?: string;
+  successTitle?: string;
+  successDescription?: string;
+  autoAdvanceOnExhausted?: boolean;
+  autoAdvanceDelayMs?: number;
 }) {
   const user = getCurrentUser();
+  const pairIndexMap = Object.fromEntries(pairs.map((pair, index) => [pair.left, index]));
+  const rightIndexMap = Object.fromEntries(pairs.map((pair, index) => [pair.right, index]));
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
   const [matches, setMatches] = useState<Record<string, string>>(initialData?.matches || {});
   const [validated, setValidated] = useState(initialData?.validated || false);
-  const [attempts, setAttempts] = useState(0);
+  const [attempts, setAttempts] = useState(initialData?.attempts || 0);
+  const [isAutoAdvancing, setIsAutoAdvancing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const leftRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const rightRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const [, forceUpdate] = useState({});
+  const autoAdvancedRef = useRef(false);
 
   const [displayedRights] = useState<string[]>(() => {
     const rights = pairs.map(p => p.right);
@@ -647,6 +702,7 @@ function MatchingPhase({ pairs, lessonId, stageIndex, onComplete, onNext, shuffl
   useEffect(() => {
     if (initialData?.matches) setMatches(initialData.matches);
     if (initialData?.validated) setValidated(initialData.validated);
+    if (typeof initialData?.attempts === 'number') setAttempts(initialData.attempts);
   }, [initialData]);
 
   useEffect(() => {
@@ -663,25 +719,52 @@ function MatchingPhase({ pairs, lessonId, stageIndex, onComplete, onNext, shuffl
       const oldLeft = Object.keys(next).find(k => next[k] === right);
       if (oldLeft) delete next[oldLeft];
       next[selectedLeft] = right;
-      onComplete(next);
+      onComplete({ matches: next, validated: false, attempts });
       return next;
     });
     setSelectedLeft(null);
   };
 
   const isAllCorrect = pairs.every(p => matches[p.left] === p.right);
+  const matchedLeftIds = Object.keys(matches);
+  const allMatched = matchedLeftIds.length === pairs.length;
+  const correctCount = validated ? pairs.filter(p => matches[p.left] === p.right).length : 0;
+
+  useEffect(() => {
+    if (!autoAdvanceOnExhausted || autoAdvancedRef.current) return;
+    if (!validated || isAllCorrect || attempts < 3) return;
+
+    autoAdvancedRef.current = true;
+    setIsAutoAdvancing(true);
+    const timer = window.setTimeout(() => {
+      onComplete({ matches, validated: true, attempts, correctCount });
+      onNext?.();
+    }, autoAdvanceDelayMs);
+
+    return () => window.clearTimeout(timer);
+  }, [attempts, autoAdvanceDelayMs, autoAdvanceOnExhausted, isAllCorrect, matches, onComplete, onNext, validated]);
 
   const handleValidate = async () => {
     const ok = isAllCorrect;
     const newA = await saveStageAttempt(user!.id, lessonId, stageIndex, ok, `stage_${stageIndex}_matching`);
     setAttempts(newA);
     setValidated(true);
-    onComplete(matches);
+    onComplete({
+      matches,
+      validated: true,
+      attempts: newA,
+      correctCount: pairs.filter(p => matches[p.left] === p.right).length,
+    });
   };
 
-  const handleRetry = () => { setValidated(false); setMatches({}); setSelectedLeft(null); onComplete({}); };
-
-  const allMatched = Object.keys(matches).length === pairs.length;
+  const handleRetry = () => {
+    setValidated(false);
+    setMatches({});
+    setSelectedLeft(null);
+    setIsAutoAdvancing(false);
+    autoAdvancedRef.current = false;
+    onComplete({ matches: {}, validated: false, attempts });
+  };
 
   const renderLines = () => {
     if (!containerRef.current) return null;
@@ -692,115 +775,340 @@ function MatchingPhase({ pairs, lessonId, stageIndex, onComplete, onNext, shuffl
       const lR = lEl.getBoundingClientRect(), rR = rEl.getBoundingClientRect();
       const x1 = lR.right - rect.left, y1 = lR.top + lR.height / 2 - rect.top;
       const x2 = rR.left - rect.left, y2 = rR.top + rR.height / 2 - rect.top;
+      const paletteIndex = pairIndexMap[left] ?? 0;
+      const pal = inquiryMatchPalette[paletteIndex % inquiryMatchPalette.length];
       const ok = validated ? pairs.find(p => p.left === left)?.right === right : undefined;
-      const color = ok === false ? '#EF4444' : ok === true ? '#10B981' : '#628ECB';
-      return <line key={`${left}-${right}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth="3" strokeDasharray={validated ? '' : '5,5'} className="transition-all" />;
+      const color = ok === false ? '#EF4444' : ok === true ? '#10B981' : pal.iconBg.replace('bg-', '').includes('violet') ? '#8B5CF6' : pal.dot === 'bg-sky-400' ? '#38BDF8' : pal.dot === 'bg-emerald-400' ? '#34D399' : pal.dot === 'bg-amber-400' ? '#FBBF24' : pal.dot === 'bg-indigo-400' ? '#818CF8' : '#FB7185';
+      return <line key={`${left}-${right}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth="3.5" strokeDasharray={validated ? '' : '6,6'} className="drop-shadow-sm transition-all" />;
     });
   };
 
   return (
-    <div className="w-full space-y-6 animate-in fade-in duration-700">
-      <div className="bg-white rounded-[2rem] border-2 border-[#628ECB]/20 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-6 py-4 bg-[#628ECB]/5 border-b-2 border-[#628ECB]/10">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#628ECB]/15">
-            <Tag className="w-5 h-5 text-[#628ECB]" />
+    <div className="w-full space-y-4 animate-in fade-in duration-700">
+      <div className="overflow-hidden rounded-2xl border-2 border-[#395886]/15 shadow-md">
+        <div className="flex items-center gap-4 bg-gradient-to-r from-[#395886] via-[#4A6FA8] to-[#628ECB] px-5 py-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 shadow-inner border border-white/30">
+            <LinkIcon className="w-5 h-5 text-white" />
           </div>
-          <div className="flex-1 text-left">
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Aktivitas X.TCP.4</p>
-            <h3 className="text-sm font-bold text-[#395886]">Cocokkan Fungsi pada Setiap Layer</h3>
+          <div className="flex-1 min-w-0 text-left">
+            <p className="text-[9px] font-black uppercase tracking-[0.35em] text-white/55 mb-0.5">{activityLabel ?? 'Aktivitas Inquiry'}</p>
+            <h3 className="text-base font-black text-white leading-tight">{activityTitle ?? 'Cocokkan Fungsi pada Setiap Layer'}</h3>
           </div>
-          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold
-            ${attempts >= 3 ? 'border-red-200 bg-red-50 text-red-500' : 'border-[#628ECB]/20 bg-white text-[#628ECB]'}`}>
+          <div className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black shrink-0
+            ${attempts >= 3 ? 'border-red-300/60 bg-red-500/20 text-red-200' : 'border-white/25 bg-white/15 text-white'}`}>
             <AlertCircle className="w-3 h-3" />
-            {attempts >= 3 ? 'Habis' : `${3 - attempts} percobaan`}
+            {attempts >= 3 ? 'Habis' : `${3 - attempts}x lagi`}
           </div>
         </div>
 
-        <div className="p-8 relative" ref={containerRef}>
-          <svg className="absolute inset-0 pointer-events-none z-0" style={{ width: '100%', height: '100%' }}>{renderLines()}</svg>
-          <div className="grid grid-cols-2 gap-24 relative z-10">
-            <div className="space-y-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/40 mb-2 text-center">Lapisan (Layer)</p>
-              {pairs.map(p => (
-                <button
-                  key={p.left}
-                  ref={el => { leftRefs.current[p.left] = el; }}
-                  onClick={() => handleLeftClick(p.left)}
-                  disabled={validated}
-                  className={`w-full text-left p-5 rounded-2xl border-2 transition-all duration-300
-                    ${selectedLeft === p.left ? 'border-[#F59E0B] bg-[#FFFBEB] scale-[1.02] shadow-md' :
-                      matches[p.left] ? 'border-[#628ECB] bg-white shadow-sm' : 'border-[#D5DEEF] bg-white hover:border-[#628ECB]/40'}`}
-                >
-                  <span className="text-xs font-black uppercase tracking-tight text-[#395886]">{p.left}</span>
-                </button>
-              ))}
+        <div className="bg-white px-5 py-4 border-b border-[#D5DEEF]">
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB] mb-2.5">Komponen IP Header</p>
+          <div className="flex rounded-xl overflow-hidden border border-[#C8D8F0] shadow-sm text-[9px] font-bold">
+            {pairs.map((pair, index) => {
+              const pal = inquiryMatchPalette[index % inquiryMatchPalette.length];
+              return (
+                <div key={pair.left} className={`flex-1 py-2 text-center border-r border-[#C8D8F0] last:border-r-0 ${pal.bg} ${pal.text}`}>
+                  {pair.left.split(' ')[0]}
+                </div>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-[10px] text-[#628ECB]/70 font-medium text-center">
+            Setiap field memiliki fungsi penting agar paket dapat diarahkan, diperiksa, dan diteruskan dengan benar
+          </p>
+        </div>
+
+        <div className="bg-gradient-to-br from-[#F8FAFD] to-[#EEF3FB] px-5 py-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="flex items-center gap-2.5 flex-1">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#395886] text-white text-[10px] font-black">1</div>
+              <p className="text-xs font-semibold text-[#395886]/75">Klik komponen di <span className="font-black text-[#395886]">kiri</span></p>
             </div>
-            <div className="space-y-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/40 mb-2 text-center">Fungsi Utama</p>
-              {displayedRights.map((right, idx) => {
-                const isMatched = Object.values(matches).includes(right);
-                return (
-                  <button
-                    key={idx}
-                    ref={el => { rightRefs.current[right] = el; }}
-                    onClick={() => handleRightClick(right)}
-                    disabled={validated}
-                    className={`w-full text-left p-5 rounded-2xl border-2 transition-all duration-300
-                      ${isMatched ? 'border-[#628ECB] bg-white shadow-sm' : 'border-[#D5DEEF] bg-white hover:border-[#628ECB]/40'}`}
-                  >
-                    <span className="text-xs font-bold text-[#395886]/70 leading-relaxed">{right}</span>
-                  </button>
-                );
-              })}
+            <ArrowRight className="hidden sm:block w-4 h-4 text-[#395886]/30 shrink-0" />
+            <div className="flex items-center gap-2.5 flex-1">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#628ECB] text-white text-[10px] font-black">2</div>
+              <p className="text-xs font-semibold text-[#395886]/75">Klik fungsi yang sesuai di <span className="font-black text-[#395886]">kanan</span></p>
+            </div>
+            <ArrowRight className="hidden sm:block w-4 h-4 text-[#395886]/30 shrink-0" />
+            <div className="flex items-center gap-2.5 flex-1">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#10B981] text-white text-[10px] font-black">3</div>
+              <p className="text-xs font-semibold text-[#395886]/75">Ulangi sampai semua pasangan terhubung</p>
             </div>
           </div>
-
-          <div className="mt-12 space-y-4">
-            {!validated ? (
-              <button
-                onClick={handleValidate}
-                disabled={!allMatched}
-                className={`w-full py-4 rounded-2xl font-black text-sm transition-all shadow-lg
-                  ${allMatched ? 'bg-[#628ECB] text-white hover:bg-[#395886] shadow-blue-200' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed shadow-none'}`}
-              >
-                {allMatched ? 'Periksa Pasangan' : `Tentukan ${pairs.length - Object.keys(matches).length} pasangan lagi`}
-              </button>
-            ) : !isAllCorrect && attempts < 3 ? (
-              <button
-                onClick={handleRetry}
-                className="w-full py-4 rounded-2xl bg-red-50 text-red-600 font-black text-sm border-2 border-red-100 hover:bg-red-100 transition-all flex items-center justify-center gap-2"
-              >
-                <RotateCcw className="w-4 h-4" /> Coba Lagi ({3 - attempts} percobaan sisa)
-              </button>
-            ) : (
-              <button
-                onClick={() => { onComplete(matches); onNext?.(); }}
-                className="w-full py-4 rounded-2xl bg-[#10B981] text-white font-black text-sm hover:bg-[#059669] shadow-lg shadow-green-200 transition-all active:scale-95"
-              >
-                {completeLabel ?? 'Submit & Lanjut'} <ChevronRight className="w-4 h-4 ml-1 inline" />
-              </button>
-            )}
-
-            {validated && !isAllCorrect && attempts >= 3 && (
-              <div className="mt-6 p-6 rounded-[2rem] bg-amber-50 border-2 border-amber-200 animate-in fade-in zoom-in-95 text-left">
-                <div className="flex items-center gap-3 mb-4">
-                  <Lightbulb className="w-5 h-5 text-amber-500" />
-                  <h4 className="text-sm font-black text-amber-900 uppercase tracking-widest">Kunci Jawaban Benar</h4>
-                </div>
-                <div className="space-y-2">
-                  {pairs.map((p, i) => (
-                    <div key={i} className="flex items-start gap-3 bg-white/60 p-3 rounded-xl border border-amber-100">
-                      <span className="text-[10px] font-black text-amber-700 uppercase min-w-[100px]">{p.left}</span>
-                      <ArrowRight className="w-3 h-3 text-amber-400 mt-1 shrink-0" />
-                      <span className="text-[11px] font-bold text-amber-800 leading-relaxed">{p.right}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          {selectedLeft && (
+            <div className="mt-3 flex items-center gap-2 rounded-xl bg-[#395886] px-4 py-2.5 text-white shadow-md animate-pulse">
+              <Zap className="w-3.5 h-3.5 shrink-0" />
+              <p className="text-xs font-bold">
+                <span className="font-black">{selectedLeft}</span> dipilih - klik fungsi yang sesuai di kanan
+              </p>
+            </div>
+          )}
         </div>
       </div>
+
+      <div className="grid md:grid-cols-2 gap-4 relative" ref={containerRef}>
+        <svg className="absolute inset-0 pointer-events-none z-0 hidden md:block" style={{ width: '100%', height: '100%' }}>{renderLines()}</svg>
+
+        <div className="space-y-2.5 relative z-10">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="h-1.5 w-1.5 rounded-full bg-[#395886]" />
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#395886]">{leftColumnLabel ?? 'Komponen IP Header'}</p>
+          </div>
+          {pairs.map((p, index) => {
+            const pal = inquiryMatchPalette[index % inquiryMatchPalette.length];
+            const icon = inquiryPairIcons[index % inquiryPairIcons.length];
+            const isSelected = selectedLeft === p.left;
+            const isMatched = !!matches[p.left];
+            const matchedRightText = matches[p.left];
+            const matchedRightIdx = matchedRightText ? rightIndexMap[matchedRightText] ?? index : index;
+            const matchedPal = inquiryMatchPalette[matchedRightIdx % inquiryMatchPalette.length];
+            const isCorrectMatch = validated && matches[p.left] === p.right;
+            const isWrongMatch = validated && matches[p.left] && matches[p.left] !== p.right;
+
+            return (
+              <button
+                key={p.left}
+                ref={el => { leftRefs.current[p.left] = el; }}
+                onClick={() => handleLeftClick(p.left)}
+                disabled={validated}
+                className={`group w-full text-left rounded-2xl border-2 transition-all duration-200 select-none
+                  ${isSelected
+                    ? `${pal.bg} ${pal.activeBorder} ring-2 ${pal.ring} shadow-lg scale-[1.02]`
+                    : isCorrectMatch
+                      ? 'bg-[#ECFDF5] border-[#10B981] shadow-md shadow-[#10B981]/20'
+                      : isWrongMatch
+                        ? 'bg-red-50 border-red-300 shadow-sm'
+                        : isMatched
+                          ? `${matchedPal.bg} ${matchedPal.border} shadow-sm`
+                          : 'bg-white border-[#D5DEEF] hover:border-[#628ECB]/40 hover:shadow-md hover:-translate-y-0.5 cursor-pointer'
+                  }`}
+              >
+                <div className="flex items-center gap-3 px-4 py-3.5">
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all
+                    ${isCorrectMatch ? 'bg-[#10B981] text-white shadow-md shadow-[#10B981]/30'
+                      : isWrongMatch ? 'bg-red-400 text-white'
+                      : isMatched || isSelected ? `${pal.iconBg} text-white shadow-md`
+                      : 'bg-[#EEF3FB] text-[#395886]/50 group-hover:bg-[#628ECB]/15 group-hover:text-[#628ECB]'
+                    }`}>
+                    {isCorrectMatch ? <CheckCircle className="w-4 h-4" /> : isWrongMatch ? <XCircle className="w-4 h-4" /> : icon}
+                  </div>
+                  <span className={`flex-1 text-sm font-bold leading-snug
+                    ${isWrongMatch ? 'text-red-700' : isCorrectMatch ? 'text-[#065F46]' : isMatched || isSelected ? pal.text : 'text-[#395886]'}`}>
+                    {p.left}
+                  </span>
+                  {!validated && isMatched && (
+                    <span className={`text-[9px] font-black uppercase tracking-tight px-2 py-0.5 rounded-full shrink-0 ${matchedPal.badge}`}>
+                      terhubung
+                    </span>
+                  )}
+                  {!validated && isSelected && (
+                    <span className="text-[9px] font-black text-white bg-[#395886] px-2 py-0.5 rounded-full shrink-0 animate-pulse">
+                      pilih {'->'}
+                    </span>
+                  )}
+                  {!validated && !isMatched && !isSelected && (
+                    <span className="text-[9px] font-bold text-[#395886]/30 group-hover:text-[#628ECB]/60 transition-colors shrink-0">
+                      klik
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="space-y-2.5 relative z-10">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="h-1.5 w-1.5 rounded-full bg-[#628ECB]" />
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#628ECB]">{rightColumnLabel ?? 'Fungsi Komponen'}</p>
+          </div>
+          {displayedRights.map((right) => {
+            const pairIdx = rightIndexMap[right] ?? 0;
+            const pal = inquiryMatchPalette[pairIdx % inquiryMatchPalette.length];
+            const matchedLeftEntry = Object.entries(matches).find(([_, value]) => value === right);
+            const isMatched = !!matchedLeftEntry;
+            const matchedLeft = matchedLeftEntry?.[0];
+            const connectedLeftIdx = matchedLeft ? pairIndexMap[matchedLeft] ?? pairIdx : pairIdx;
+            const connectedPal = inquiryMatchPalette[connectedLeftIdx % inquiryMatchPalette.length];
+            const isCorrectMatch = validated && matchedLeft && pairs.find(p => p.left === matchedLeft)?.right === right;
+            const isWrongMatch = validated && matchedLeft && pairs.find(p => p.left === matchedLeft)?.right !== right;
+            const isSelectable = !!selectedLeft && !validated;
+
+            return (
+              <button
+                key={right}
+                ref={el => { rightRefs.current[right] = el; }}
+                onClick={() => handleRightClick(right)}
+                disabled={validated || !selectedLeft}
+                className={`group w-full text-left rounded-2xl border-2 transition-all duration-200 select-none
+                  ${isCorrectMatch
+                    ? 'bg-[#ECFDF5] border-[#10B981] shadow-md shadow-[#10B981]/20'
+                    : isWrongMatch
+                      ? 'bg-red-50 border-red-300 shadow-sm'
+                      : isMatched
+                        ? `${connectedPal.bg} ${connectedPal.border} shadow-sm`
+                        : isSelectable
+                          ? `bg-white border-[#D5DEEF] border-dashed hover:shadow-md hover:scale-[1.01] cursor-pointer`
+                          : 'bg-white border-[#D5DEEF]'
+                  }`}
+              >
+                <div className="flex items-start gap-3 px-4 py-3.5">
+                  <div className={`mt-1 h-3 w-3 rounded-full shrink-0 flex-none transition-all ring-2 ring-offset-2
+                    ${isCorrectMatch ? 'bg-[#10B981] ring-[#10B981]/30'
+                      : isWrongMatch ? 'bg-red-400 ring-red-200'
+                      : isMatched ? `${connectedPal.dot} ring-transparent`
+                      : isSelectable ? 'bg-[#628ECB]/30 ring-[#628ECB]/15 animate-pulse'
+                      : 'bg-[#D5DEEF] ring-transparent'
+                    }`}
+                  />
+                  <p className={`flex-1 text-xs leading-relaxed font-medium
+                    ${isWrongMatch ? 'text-red-700' : isCorrectMatch ? 'text-[#065F46]' : isMatched ? connectedPal.text : isSelectable ? 'text-[#395886]' : 'text-[#395886]/70'}`}>
+                    {right}
+                  </p>
+                  {validated && isCorrectMatch && <CheckCircle className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" />}
+                  {validated && isWrongMatch && <XCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />}
+                  {!validated && isSelectable && (
+                    <span className="text-[9px] font-black text-[#628ECB] shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">pilih</span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="rounded-2xl border-2 border-[#D5DEEF] bg-white p-4">
+        <div className="flex items-center gap-4 mb-3">
+          <div className="flex items-center gap-2 flex-1">
+            <LinkIcon className="w-4 h-4 text-[#628ECB]" />
+            <span className="text-xs font-bold text-[#395886]">Koneksi terbuat</span>
+          </div>
+          <span className={`text-sm font-black ${allMatched ? 'text-[#10B981]' : 'text-[#395886]/70'}`}>
+            {matchedLeftIds.length} / {pairs.length}
+          </span>
+        </div>
+
+        <div className="flex gap-1.5 mb-4">
+          {pairs.map((p, index) => {
+            const pal = inquiryMatchPalette[index % inquiryMatchPalette.length];
+            const isConnected = !!matches[p.left];
+            const isCorrectMatch = validated && matches[p.left] === p.right;
+            const isWrongMatch = validated && matches[p.left] && matches[p.left] !== p.right;
+            return (
+              <div key={p.left} className={`flex-1 h-2 rounded-full transition-all duration-500
+                ${isCorrectMatch ? 'bg-[#10B981]' : isWrongMatch ? 'bg-red-400' : isConnected ? pal.dot : 'bg-[#D5DEEF]'}`}
+              />
+            );
+          })}
+        </div>
+
+        <div className="space-y-3">
+          {validated && isAllCorrect && (
+            <div className="flex items-center gap-3 p-4 rounded-xl border-2 bg-[#ECFDF5] border-[#10B981]/40">
+              <CheckCircle className="w-5 h-5 text-[#10B981] shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-bold text-[#065F46]">{successTitle ?? 'Jawaban Benar'}</p>
+                <p className="text-xs leading-relaxed text-[#065F46]/80 mt-1">
+                  {successDescription ?? 'Setiap komponen IP Header memiliki peran berbeda agar paket dapat dikenali, diarahkan, dibatasi perjalanannya, dan diperiksa sebelum diteruskan.'}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {!validated ? (
+            <button
+              onClick={handleValidate}
+              disabled={!allMatched}
+              className={`w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2
+                ${allMatched
+                  ? 'bg-gradient-to-r from-[#395886] to-[#628ECB] text-white hover:from-[#2E4A75] hover:to-[#4A79BA] shadow-lg shadow-[#395886]/20 active:scale-[0.98]'
+                  : 'bg-[#F0F3FA] text-[#395886]/40 cursor-not-allowed'
+                }`}
+            >
+              {allMatched
+                ? <><CheckCircle className="w-4 h-4" /> Periksa Semua Pasangan</>
+                : <><LinkIcon className="w-4 h-4 opacity-40" /> Pasangkan {pairs.length - matchedLeftIds.length} lagi...</>
+              }
+            </button>
+          ) : !isAllCorrect && attempts < 3 ? (
+            <>
+              <div className="flex items-center gap-3 p-4 rounded-xl border-2 bg-red-50 border-red-200">
+                <XCircle className="w-5 h-5 text-red-500 shrink-0" />
+                <p className="text-sm font-bold flex-1 text-red-800">
+                  {correctCount}/{pairs.length} pasangan benar. Sisa {3 - attempts} percobaan.
+                </p>
+              </div>
+              <button
+                onClick={handleRetry}
+                className="w-full py-2.5 rounded-xl font-bold text-sm bg-white border-2 border-red-200 text-red-600 hover:bg-red-50 active:scale-[0.98] flex items-center justify-center gap-2 transition-all"
+              >
+                <RotateCcw className="w-4 h-4" /> Perbaiki Pasangan yang Salah
+              </button>
+            </>
+          ) : isAutoAdvancing ? (
+            <div className="w-full rounded-2xl border-2 border-[#10B981]/20 bg-gradient-to-r from-[#ECFDF5] to-white px-5 py-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="h-5 w-5 rounded-full border-2 border-[#10B981] border-t-transparent animate-spin shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-black text-[#065F46]">Membuka Argumen Logis...</p>
+                  <p className="text-xs text-[#065F46]/75 mt-0.5">
+                    Jawaban benar sudah ditampilkan. Sistem sedang memindahkan kamu ke bagian argumen.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => { onComplete({ matches, validated: true, attempts, correctCount, showArgument: true }); onNext?.(); }}
+              className="w-full py-4 rounded-2xl bg-[#10B981] text-white font-black text-sm hover:bg-[#059669] shadow-lg shadow-green-200 transition-all active:scale-95"
+            >
+              {completeLabel ?? 'Lanjut ke Argumen Logis'} <ChevronRight className="w-4 h-4 ml-1 inline" />
+            </button>
+          )}
+
+          {validated && !isAllCorrect && attempts >= 3 && (
+            <div className="flex items-center gap-3 p-4 rounded-xl border-2 bg-amber-50 border-amber-200">
+              <Info className="w-5 h-5 text-amber-600 shrink-0" />
+              <p className="text-sm font-bold flex-1 text-amber-800">
+                Jawaban benar ditampilkan sebagai bahan belajar sebelum masuk ke Argumen Logis.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {validated && !isAllCorrect && attempts >= 3 && (
+        <div className="rounded-2xl overflow-hidden border-2 border-amber-200 shadow-sm">
+          <div className="flex items-center gap-3 px-5 py-3 bg-amber-50 border-b border-amber-200">
+            <Lightbulb className="w-4 h-4 text-amber-500" />
+            <p className="text-xs font-black uppercase tracking-widest text-amber-600">Kunci Jawaban</p>
+          </div>
+          <div className="p-4 bg-white space-y-2">
+            {pairs.map((p, index) => {
+              const pal = inquiryMatchPalette[index % inquiryMatchPalette.length];
+              const icon = inquiryPairIcons[index % inquiryPairIcons.length];
+              return (
+                <div key={p.left} className={`flex items-start gap-3 p-3 rounded-xl border ${pal.bg} ${pal.border}`}>
+                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${pal.iconBg} text-white`}>
+                    {icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs font-black ${pal.text}`}>{p.left}</p>
+                    <p className="text-[11px] text-[#395886]/65 leading-relaxed mt-0.5">{p.right}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {isAutoAdvancing && (
+            <div className="border-t border-amber-200 bg-amber-50/70 px-4 py-3">
+              <p className="text-xs font-bold text-amber-800">
+                Aktivitas akan dilanjutkan otomatis ke <span className="font-black">Argumen Logis</span>.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -1225,6 +1533,450 @@ function InquiryLesson1Page(props: InquiryStageProps) {
   return null;
 }
 
+function IpHeaderIntro({ onComplete }: { onComplete: () => void }) {
+  const components = [
+    {
+      id: 'ver',
+      label: 'Version',
+      bits: '4 bit',
+      short: 'Menentukan versi IP yang digunakan',
+      detail: 'Field ini berisi informasi versi IP yang dipakai oleh paket, misalnya IPv4 atau IPv6. Pada IPv4 nilainya ditulis dalam biner 0100. Router membaca field ini terlebih dahulu agar paket diproses dengan format header yang benar.',
+    },
+    {
+      id: 'ihl',
+      label: 'Header Length',
+      bits: '4 bit',
+      short: 'Menunjukkan panjang header IPv4',
+      detail: 'Field ini menunjukkan panjang header IPv4 dalam satuan 32 bit. Nilai minimum adalah 5 yang berarti 20 byte header standar. Jika ada opsi tambahan, nilainya bisa bertambah hingga maksimum 20.',
+    },
+    {
+      id: 'tos',
+      label: 'Type of Service (ToS)',
+      bits: '8 bit',
+      short: 'Memberi prioritas layanan paket',
+      detail: 'ToS digunakan untuk pengaturan Quality of Service atau QoS. Field ini membantu jaringan memberikan prioritas tertentu pada paket data, misalnya agar layanan yang sensitif terhadap waktu seperti suara atau video dapat diproses lebih dulu.',
+    },
+    {
+      id: 'len',
+      label: 'Total Length',
+      bits: '16 bit',
+      short: 'Menunjukkan ukuran seluruh paket IP',
+      detail: 'Field ini menunjukkan ukuran keseluruhan paket IP, yaitu gabungan header dan data. Karena berukuran 16 bit, ukuran maksimum paket yang dapat ditunjukkan adalah 65.535 byte.',
+    },
+    {
+      id: 'ident',
+      label: 'Identification',
+      bits: '16 bit',
+      short: 'Identitas paket saat fragmentasi',
+      detail: 'Identification berfungsi sebagai identitas paket ketika proses fragmentasi terjadi. Jika satu paket dipecah menjadi beberapa fragmen, semua fragmen itu membawa nilai identification yang sama agar bisa dikenali sebagai bagian dari paket asal yang sama.',
+    },
+    {
+      id: 'flag',
+      label: 'IP Flag',
+      bits: '3 bit',
+      short: 'Mengatur proses fragmentasi',
+      detail: 'Field flag dipakai untuk mengatur fragmentasi paket. Bit penting di dalamnya adalah DF atau Don’t Fragment yang berarti paket tidak boleh dipecah, dan MF atau More Fragment yang berarti masih ada fragmen lain setelah fragmen ini.',
+    },
+    {
+      id: 'offset',
+      label: 'Fragment Offset',
+      bits: '13 bit',
+      short: 'Menentukan posisi fragmen',
+      detail: 'Fragment Offset menunjukkan posisi suatu fragmen di dalam paket aslinya. Informasi ini membantu perangkat penerima menyusun kembali fragmen-fragmen ke urutan yang benar setelah semuanya diterima.',
+    },
+    {
+      id: 'ttl',
+      label: 'TTL',
+      bits: '8 bit',
+      short: 'Membatasi perjalanan paket di jaringan',
+      detail: 'TTL atau Time to Live menentukan batas perjalanan paket dalam jaringan. Nilainya akan berkurang setiap kali paket melewati router. Jika TTL mencapai 0, paket dibuang agar tidak terus berputar dan menyebabkan looping.',
+    },
+    {
+      id: 'proto',
+      label: 'Protocol',
+      bits: '8 bit',
+      short: 'Menentukan protokol layer atas',
+      detail: 'Field Protocol menunjukkan protokol layer atas yang digunakan oleh data di dalam paket. Contohnya TCP bernilai 6 dan UDP bernilai 17. Dengan field ini, perangkat penerima tahu apakah data harus diteruskan ke TCP, UDP, atau protokol lain.',
+    },
+    {
+      id: 'sum',
+      label: 'Header Checksum',
+      bits: '16 bit',
+      short: 'Memeriksa kesalahan pada header IP',
+      detail: 'Header Checksum digunakan untuk memeriksa apakah terjadi kesalahan pada header IP selama pengiriman. Jika hasil pemeriksaan tidak cocok, perangkat mengetahui bahwa header bermasalah dan paket tidak diproses begitu saja.',
+    },
+    {
+      id: 'src',
+      label: 'Source Address',
+      bits: '32 bit',
+      short: 'Berisi alamat IP sumber',
+      detail: 'Source Address berisi alamat IP sumber atau pengirim paket. Field ini menunjukkan dari perangkat mana paket berasal dan dipakai saat perangkat tujuan perlu mengirim balasan kembali ke pengirim.',
+    },
+    {
+      id: 'dst',
+      label: 'Destination Address',
+      bits: '32 bit',
+      short: 'Berisi alamat IP tujuan',
+      detail: 'Destination Address berisi alamat IP tujuan atau penerima paket. Router menggunakan field ini untuk menentukan jalur pengiriman yang tepat agar paket sampai ke perangkat yang benar.',
+    },
+    {
+      id: 'option',
+      label: 'IP Option',
+      bits: 'Opsional',
+      short: 'Menyimpan opsi tambahan pada header',
+      detail: 'IP Option berisi opsi tambahan tertentu pada header IP, misalnya informasi route khusus atau kebutuhan kontrol tertentu. Jika field ini digunakan, panjang header akan bertambah melebihi ukuran minimum.',
+    },
+    {
+      id: 'data',
+      label: 'Data',
+      bits: 'Variabel',
+      short: 'Isi utama yang dikirim',
+      detail: 'Data adalah isi utama yang dibawa paket dari layer atas menuju layer bawah. Bagian inilah yang berisi pesan, file, atau informasi aplikasi yang ingin dikirim melalui jaringan.',
+    },
+  ];
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [openedIds, setOpenedIds] = useState<Set<string>>(() => new Set([components[0].id]));
+  const allOpened = openedIds.size === components.length;
+
+  const handleSelect = (index: number) => {
+    setActiveIndex(index);
+    setOpenedIds((prev) => new Set(prev).add(components[index].id));
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-700">
+      <div className="relative overflow-hidden rounded-[2rem] border-2 border-[#10B981]/25 bg-gradient-to-br from-[#ECFDF5] via-white to-[#EEF4FF] p-6 shadow-sm">
+        <div className="relative">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#10B981]/12 text-[#10B981] shadow-inner">
+              <Database className="w-7 h-7" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#10B981]">Keruntutan Berpikir</p>
+              <h3 className="text-2xl font-black tracking-tight text-[#395886]">Eksplorasi Konsep - Komponen IP Header</h3>
+              <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-[#395886]/75">
+                Klik setiap komponen pada ilustrasi IP Header untuk mempelajari nama komponen, ukuran bit, fungsi, dan perannya dalam proses pengiriman data jaringan.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="rounded-[1.75rem] border-2 border-[#D5DEEF] bg-white p-5 shadow-sm">
+              <div className="mb-4 flex items-center gap-2">
+                <Network className="w-4 h-4 text-[#628ECB]" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Ilustrasi IP Header</p>
+              </div>
+              <div className="rounded-[1.5rem] border-2 border-[#D5DEEF] bg-[#F8FAFF] p-4">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {components.map((component, index) => {
+                    const isActive = index === activeIndex;
+                    const isOpened = openedIds.has(component.id);
+                    return (
+                      <button
+                        key={component.id}
+                        type="button"
+                        onClick={() => handleSelect(index)}
+                        className={`rounded-2xl border-2 p-4 text-left transition-all ${
+                          isActive
+                            ? 'border-[#10B981] bg-[#ECFDF5] shadow-sm'
+                            : isOpened
+                              ? 'border-[#628ECB]/25 bg-white'
+                              : 'border-[#D5DEEF] bg-white hover:border-[#628ECB]/35'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <span className={`text-[10px] font-black uppercase tracking-wider ${isActive ? 'text-[#10B981]' : 'text-[#395886]/45'}`}>
+                            {String(index + 1).padStart(2, '0')}
+                          </span>
+                          {isOpened && <CheckCircle className={`w-3.5 h-3.5 ${isActive ? 'text-[#10B981]' : 'text-[#628ECB]'}`} />}
+                        </div>
+                        <p className="mt-3 text-xs font-black leading-snug text-[#395886]">{component.label}</p>
+                        <p className="mt-1 text-[11px] font-bold text-[#628ECB]">{component.bits}</p>
+                        <p className="mt-1 text-[11px] font-medium text-[#395886]/60">{component.short}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="mt-4 flex items-center justify-between rounded-2xl border border-[#D5DEEF] bg-[#F8FAFF] px-4 py-3">
+                <p className="text-xs font-semibold text-[#395886]/70">Komponen yang sudah dieksplorasi</p>
+                <span className="text-xs font-black text-[#10B981]">{openedIds.size}/{components.length}</span>
+              </div>
+            </div>
+
+            <div className="rounded-[1.75rem] border-2 border-[#628ECB]/20 bg-white p-5 shadow-sm">
+              <div className="mb-4 flex items-center gap-2">
+                <Lightbulb className="w-4 h-4 text-[#F59E0B]" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#F59E0B]">Penjelasan Komponen</p>
+              </div>
+              <div className="rounded-2xl border border-[#10B981]/15 bg-[#ECFDF5]/60 p-5">
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981]">{components[activeIndex].label}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#628ECB] border border-[#628ECB]/20">
+                    {components[activeIndex].bits}
+                  </span>
+                  <span className="text-sm font-bold text-[#395886]">{components[activeIndex].short}</span>
+                </div>
+                <p className="mt-3 text-sm leading-relaxed text-[#395886]/85">{components[activeIndex].detail}</p>
+              </div>
+              <div className="mt-4 space-y-2 rounded-2xl border border-[#D5DEEF] bg-[#F8FAFF] p-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#628ECB]">Komponen Penting Lainnya</p>
+                {components.map((component, index) => {
+                  const isActive = index === activeIndex;
+                  return (
+                    <button
+                      key={component.id}
+                      type="button"
+                      onClick={() => handleSelect(index)}
+                      className={`w-full rounded-xl border px-3 py-2 text-left text-xs font-bold transition-all ${
+                        isActive
+                          ? 'border-[#10B981] bg-white text-[#10B981]'
+                          : 'border-[#D5DEEF] bg-white text-[#395886]/70 hover:border-[#628ECB]/35'
+                      }`}
+                    >
+                      <span className="block">{component.label}</span>
+                      <span className="block mt-0.5 text-[10px] font-semibold text-[#628ECB]">{component.bits}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-4 text-xs font-medium leading-relaxed text-[#395886]/65">
+                Aktivitas ini selesai setelah semua komponen sudah kamu klik dan pahami.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button
+        onClick={onComplete}
+        disabled={!allOpened}
+        className={`w-full py-4 rounded-2xl text-white font-black text-sm shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${
+          allOpened
+            ? 'bg-gradient-to-r from-[#10B981] to-[#059669] shadow-[#10B981]/20 hover:shadow-xl hover:shadow-[#10B981]/30'
+            : 'bg-[#D5DEEF] text-[#395886]/50 shadow-none cursor-not-allowed'
+        }`}
+      >
+        Lanjut ke Aktivitas Interaktif
+        <ArrowRight className="w-5 h-5" />
+      </button>
+    </div>
+  );
+}
+
+function InquiryLesson3Page(props: InquiryStageProps) {
+  const { lessonId, stageIndex, onComplete, onTrackerPhase } = props;
+  const tracker = useActivityTracker({ lessonId, stageIndex, stageType: 'inquiry' });
+  const headerGroups: Group[] = [
+    { id: 'identity', label: 'Identitas Paket', colorClass: 'purple' },
+    { id: 'addressing', label: 'Pengalamatan', colorClass: 'blue' },
+    { id: 'delivery', label: 'Pengaturan Pengiriman', colorClass: 'green' },
+    { id: 'validation', label: 'Pemeriksaan Kesalahan', colorClass: 'amber' },
+    { id: 'fragmentation', label: 'Fragmentasi Paket', colorClass: 'pink' },
+  ];
+  const headerGroupItems: GroupItem[] = [
+    { id: 'gi1', text: 'Version', correctGroup: 'identity' },
+    { id: 'gi2', text: 'Header Length (IHL)', correctGroup: 'identity' },
+    { id: 'gi3', text: 'Type of Service (ToS)', correctGroup: 'delivery' },
+    { id: 'gi4', text: 'Total Length', correctGroup: 'delivery' },
+    { id: 'gi5', text: 'Source Address', correctGroup: 'addressing' },
+    { id: 'gi6', text: 'Destination Address', correctGroup: 'addressing' },
+    { id: 'gi7', text: 'TTL (Time to Live)', correctGroup: 'delivery' },
+    { id: 'gi8', text: 'Protocol', correctGroup: 'delivery' },
+    { id: 'gi9', text: 'Header Checksum', correctGroup: 'validation' },
+    { id: 'gi10', text: 'Identification', correctGroup: 'fragmentation' },
+    { id: 'gi11', text: 'IP Flag', correctGroup: 'fragmentation' },
+    { id: 'gi12', text: 'Fragment Offset', correctGroup: 'fragmentation' },
+    { id: 'gi13', text: 'IP Option', correctGroup: 'identity' },
+    { id: 'gi14', text: 'Data', correctGroup: 'delivery' },
+  ];
+  const headerMatchingPairs: MatchingPair[] = [
+    { left: 'Source Address', right: 'Menentukan alamat pengirim paket.' },
+    { left: 'Destination Address', right: 'Menentukan alamat tujuan paket.' },
+    { left: 'TTL', right: 'Membatasi perjalanan paket.' },
+    { left: 'Protocol', right: 'Menentukan protokol layer atas.' },
+    { left: 'Header Checksum', right: 'Memeriksa kesalahan header.' },
+    { left: 'Identification', right: 'Identitas paket saat fragmentasi.' },
+  ];
+  const argumentPrompt = 'Jelaskan secara singkat mengapa komponen-komponen pada IP Header memiliki fungsi penting dalam pengiriman data jaringan. Bagaimana fungsi setiap komponen tersebut membantu paket data mencapai tujuan dengan benar?';
+
+  const [phase, setPhase] = useState<'intro' | 'consistency' | 'matching' | 'argument' | 'conclusion'>('intro');
+  const [groupData, setGroupData] = useState<any>(null);
+  const [matchingData, setMatchingData] = useState<any>(null);
+  const [argumentText, setArgumentText] = useState('');
+  const [conclusionText, setConclusionText] = useState('');
+  const [isRestored, setIsRestored] = useState(false);
+  const showArgumentBox = phase === 'argument' || !!matchingData?.showArgument || !!argumentText;
+  const argumentSectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!tracker.isLoading && tracker.session?.latestSnapshot && !isRestored) {
+      const snap = tracker.session.latestSnapshot;
+      if (snap.phase) setPhase(snap.phase === 'explore' ? 'intro' : snap.phase === 'argument' ? 'matching' : snap.phase);
+      if (snap.groupData) setGroupData(snap.groupData);
+      if (snap.matchingData) setMatchingData(snap.matchingData);
+      if (snap.argumentText) setArgumentText(snap.argumentText);
+      if (snap.conclusionText) setConclusionText(snap.conclusionText);
+      setIsRestored(true);
+    } else if (!tracker.isLoading) {
+      setIsRestored(true);
+    }
+  }, [tracker.isLoading, tracker.session, isRestored]);
+
+  useEffect(() => {
+    if (!isRestored) return;
+    const progressMap = { intro: 25, consistency: 50, matching: 68, argument: 78, conclusion: 90 } as const;
+    void tracker.saveSnapshot(
+      { phase, groupData, matchingData, argumentText, conclusionText },
+      { progressPercent: progressMap[phase] },
+    );
+  }, [argumentText, conclusionText, groupData, isRestored, matchingData, phase, tracker]);
+
+  useEffect(() => {
+    if (!isRestored) return;
+    let trackerPhase: 'consistency' | 'arguing' | 'conclusion' = 'consistency';
+    if (phase === 'matching' || phase === 'argument') trackerPhase = 'arguing';
+    if (phase === 'conclusion') trackerPhase = 'conclusion';
+    onTrackerPhase?.(trackerPhase);
+  }, [isRestored, onTrackerPhase, phase]);
+
+  useEffect(() => {
+    if (!showArgumentBox) return;
+    const timer = window.setTimeout(() => {
+      argumentSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 180);
+    return () => window.clearTimeout(timer);
+  }, [showArgumentBox]);
+
+  if (tracker.isLoading || !isRestored) return (
+    <div className="flex flex-col items-center justify-center py-20 space-y-4">
+      <div className="w-12 h-12 border-4 border-[#10B981] border-t-transparent rounded-full animate-spin" />
+      <p className="text-sm font-bold text-[#395886]">Memuat progres...</p>
+    </div>
+  );
+
+  if (phase === 'intro') {
+    return <IpHeaderIntro onComplete={() => setPhase('consistency')} />;
+  }
+
+  if (phase === 'consistency') {
+    return (
+      <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+        <GroupClassifier
+          groups={headerGroups}
+          groupItems={headerGroupItems}
+          lessonId={lessonId}
+          stageIndex={stageIndex}
+          initialData={groupData}
+          activityTitle="Kelompokkan Komponen IP Header Sesuai Fungsinya"
+          poolHint="Komponen IP Header - seret ke kategori fungsi yang tepat"
+          onComplete={(data) => setGroupData(data)}
+          onNext={() => {
+            void tracker.trackEvent('inquiry_consistency_completed', {}, { progressPercent: 58 });
+            setPhase('matching');
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (phase === 'matching' || phase === 'argument') {
+    return (
+      <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+        <MatchingPhase
+          pairs={headerMatchingPairs}
+          lessonId={lessonId}
+          stageIndex={stageIndex}
+          shuffleRight
+          completeLabel="Lanjut ke Argumen Logis"
+          activityLabel="Aktivitas Kemampuan Berargumen"
+          activityTitle="Pasangkan Komponen IP Header dengan Fungsinya"
+          leftColumnLabel="Komponen IP Header"
+          rightColumnLabel="Fungsi Komponen"
+          successTitle="Jawaban Benar"
+          successDescription="Pasangan yang kamu buat sudah sesuai. Komponen seperti Source Address, Destination Address, TTL, Protocol, Header Checksum, dan Identification bekerja sama agar paket dapat dikenali, diarahkan, dibatasi perjalanannya, dan diperiksa saat dikirim di jaringan."
+          autoAdvanceOnExhausted
+          initialData={matchingData}
+          onComplete={(state) => setMatchingData(state)}
+          onNext={() => {
+            setMatchingData((prev: any) => ({ ...prev, validated: true, showArgument: true }));
+            void tracker.trackEvent('inquiry_matching_completed', {}, { progressPercent: 72 });
+            setPhase('argument');
+          }}
+        />
+
+        {showArgumentBox && (
+          <div ref={argumentSectionRef} className="space-y-8">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-[#D5DEEF]" />
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#395886] to-[#628ECB] shadow-sm">
+                <CheckCircle className="w-3.5 h-3.5 text-white" />
+                <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Kemampuan Berargumen</span>
+              </div>
+              <div className="flex-1 h-px bg-[#D5DEEF]" />
+            </div>
+
+            <InquiryEssayBox
+              objectiveLabel="X.IP.2"
+              headerLabel="Argumen Logis"
+              prompt={argumentPrompt}
+              submitLabel="Simpan Argumen"
+              minWords={10}
+              defaultValue={argumentText}
+              disabled={!!argumentText}
+              onSubmit={(text) => setArgumentText(text)}
+            />
+
+            {argumentText && (
+              <ContinueActivityButton
+                onClick={() => {
+                  void tracker.trackEvent('inquiry_arguing_completed', {}, { progressPercent: 82 });
+                  setPhase('conclusion');
+                }}
+                label="Lanjutkan ke Refleksi Inquiry"
+              />
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (phase === 'conclusion') {
+    return (
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+        <ATPConclusionBox
+          atpBehavior="mampu menguraikan komponen IP Header beserta fungsinya melalui aktivitas inquiry secara runtut"
+          objectiveCode="X.IP.2"
+          stageType="inquiry"
+          minWords={10}
+          defaultValue={conclusionText}
+          disabled={!!conclusionText}
+          onSubmit={(text) => {
+            setConclusionText(text);
+            const finalAnswer = { groupData, matchingData, essay1: argumentText, conclusion: text, summary: text };
+            void tracker.complete(finalAnswer, { phase: 'conclusion', finalAnswer });
+            onComplete(finalAnswer);
+          }}
+        />
+
+        {conclusionText && (
+          <div className="rounded-2xl border-2 border-[#10B981]/25 bg-gradient-to-br from-[#ECFDF5] to-white p-5 shadow-sm animate-in fade-in zoom-in-95 duration-300">
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981] mb-3">Hasil Refleksi Kamu</p>
+            <p className="text-sm font-semibold italic leading-relaxed text-[#065F46]">"{conclusionText}"</p>
+            <div className="mt-3 flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-[#10B981]" />
+              <span className="text-xs font-black text-[#10B981]">Tahap Inquiry selesai!</span>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return null;
+}
+
 // -- Group Classifier ----------------------------------------------------------
 
 const DRAG_GC = 'GC_ITEM';
@@ -1286,36 +2038,67 @@ function GCZone({ group, items, allItems, validated, onDrop }: {
   );
 }
 
-function GroupClassifier({ groups, groupItems, initialData, onComplete, onNext }: {
+function GroupClassifier({ groups, groupItems, initialData, onComplete, onNext, activityTitle, poolHint, lessonId, stageIndex }: {
   groups: Group[]; groupItems: GroupItem[];
   initialData?: any;
   onComplete: (data: any) => void;
   onNext?: () => void;
+  activityTitle?: string;
+  poolHint?: string;
+  lessonId?: string;
+  stageIndex?: number;
 }) {
+  const user = getCurrentUser();
   const [placements, setPlacements] = useState<Record<string, string>>(initialData?.placements || {});
   const [validated, setValidated] = useState(initialData?.validated || false);
+  const [attempts, setAttempts] = useState(0);
 
   const unplaced = groupItems.filter(item => !placements[item.id]);
   const allPlaced = unplaced.length === 0;
   const correctCount = Object.entries(placements).filter(([itemId, groupId]) =>
     groupItems.find(i => i.id === itemId)?.correctGroup === groupId
   ).length;
+  const hasAttemptLimit = !!lessonId && stageIndex !== undefined;
 
   useEffect(() => {
     if (initialData?.validated) setValidated(true);
   }, [initialData]);
+
+  useEffect(() => {
+    if (!hasAttemptLimit) return;
+    getLessonProgress(user!.id, lessonId!).then((p) => {
+      setAttempts(p.stageAttempts[`stage_${stageIndex}_group`] || 0);
+    });
+  }, [hasAttemptLimit, lessonId, stageIndex, user]);
 
   const handleDrop = (groupId: string, itemId: string) => {
     if (validated) return;
     setPlacements(prev => ({ ...prev, [itemId]: groupId }));
   };
 
-  const handleValidate = () => {
+  const handleValidate = async () => {
+    if (hasAttemptLimit) {
+      const nextAttempts = await saveStageAttempt(user!.id, lessonId!, stageIndex!, correctCount === groupItems.length, `stage_${stageIndex}_group`);
+      setAttempts(nextAttempts);
+    }
     setValidated(true);
     const data = { placements, validated: true, correctCount, total: groupItems.length };
     onComplete(data);
-    onNext?.();
   };
+
+  const handleRetry = () => {
+    const nextPlacements = { ...placements };
+    Object.keys(nextPlacements).forEach((itemId) => {
+      const correctGroup = groupItems.find((item) => item.id === itemId)?.correctGroup;
+      if (nextPlacements[itemId] !== correctGroup) delete nextPlacements[itemId];
+    });
+    setPlacements(nextPlacements);
+    setValidated(false);
+    onComplete({ placements: nextPlacements });
+  };
+
+  const attemptsExhausted = hasAttemptLimit && attempts >= 3;
+  const isCorrect = correctCount === groupItems.length;
 
   return (
     <div className="w-full space-y-4 animate-in fade-in duration-700">
@@ -1326,8 +2109,15 @@ function GroupClassifier({ groups, groupItems, initialData, onComplete, onNext }
           </div>
           <div className="flex-1 text-left">
             <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#10B981]">Aktivitas Klasifikasi</p>
-            <h3 className="text-sm font-bold text-[#395886]">Kelompokkan Analogi Fungsi yang Tepat</h3>
+            <h3 className="text-sm font-bold text-[#395886]">{activityTitle ?? 'Kelompokkan Analogi Fungsi yang Tepat'}</h3>
           </div>
+          {hasAttemptLimit && !validated && (
+            <span className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full ${
+              attemptsExhausted ? 'text-red-500 bg-red-50 border border-red-200' : 'text-[#10B981] bg-[#10B981]/10'
+            }`}>
+              <AlertCircle className="w-3 h-3" /> {attemptsExhausted ? 'Habis' : `${3 - attempts} percobaan`}
+            </span>
+          )}
           {validated && (
             <span className="flex items-center gap-1 text-[10px] font-bold text-[#10B981] bg-[#10B981]/10 px-2 py-1 rounded-full">
               <CheckCircle className="w-3 h-3" /> {correctCount}/{groupItems.length} Benar
@@ -1338,7 +2128,7 @@ function GroupClassifier({ groups, groupItems, initialData, onComplete, onNext }
 
       {!validated && (
         <div className="bg-white rounded-2xl border-2 border-dashed border-[#D5DEEF] p-4">
-          <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/40 mb-3">Alamat IP — Seret ke kelas yang tepat</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#395886]/40 mb-3">{poolHint ?? 'Alamat IP — Seret ke kelas yang tepat'}</p>
           {unplaced.length === 0 ? (
             <p className="text-xs text-[#10B981] font-bold italic text-center py-1">Semua sudah ditempatkan! Klik "Periksa Klasifikasi".</p>
           ) : (
@@ -1349,7 +2139,7 @@ function GroupClassifier({ groups, groupItems, initialData, onComplete, onNext }
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {groups.map(group => (
           <GCZone
             key={group.id}
@@ -1362,13 +2152,13 @@ function GroupClassifier({ groups, groupItems, initialData, onComplete, onNext }
         ))}
       </div>
 
-      {validated && correctCount < groupItems.length && (
+      {validated && attemptsExhausted && !isCorrect && (
         <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5">
           <div className="flex items-center gap-2 mb-3">
             <Lightbulb className="w-4 h-4 text-amber-500" />
             <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">Kunci Jawaban</p>
           </div>
-          <div className="grid sm:grid-cols-3 gap-3">
+          <div className="grid sm:grid-cols-2 xl:grid-cols-5 gap-3">
             {groups.map(group => {
               const cm = colorMap[group.colorClass] || colorMap.blue;
               return (
@@ -1386,6 +2176,21 @@ function GroupClassifier({ groups, groupItems, initialData, onComplete, onNext }
         </div>
       )}
 
+      {validated && isCorrect && (
+        <div className="bg-[#ECFDF5] border-2 border-[#10B981]/25 rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <CheckCircle className="w-4 h-4 text-[#10B981]" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981]">Jawaban Benar</p>
+          </div>
+          <p className="text-sm font-bold text-[#065F46] mb-2">
+            Pengelompokanmu sudah tepat.
+          </p>
+          <p className="text-xs leading-relaxed text-[#065F46]/80">
+            Komponen IP Header dipahami lebih logis jika dilihat dari fungsinya: ada komponen untuk identitas paket, ada yang mengatur alamat sumber dan tujuan, ada yang mengontrol pengiriman, ada yang memeriksa kesalahan, dan ada yang membantu proses fragmentasi paket.
+          </p>
+        </div>
+      )}
+
       {!validated ? (
         <button
           onClick={handleValidate}
@@ -1394,11 +2199,25 @@ function GroupClassifier({ groups, groupItems, initialData, onComplete, onNext }
             allPlaced ? 'bg-[#10B981] text-white hover:bg-[#059669] shadow-lg shadow-green-200' : 'bg-[#D5DEEF] text-[#395886]/40 cursor-not-allowed'
           }`}
         >
-          {allPlaced ? 'Periksa Klasifikasi' : `Tempatkan ${unplaced.length} alamat lagi`} <ChevronRight className="w-4 h-4 ml-1 inline" />
+          {allPlaced ? 'Periksa Klasifikasi' : `Tempatkan ${unplaced.length} komponen lagi`} <ChevronRight className="w-4 h-4 ml-1 inline" />
+        </button>
+      ) : hasAttemptLimit && !isCorrect && !attemptsExhausted ? (
+        <button
+          onClick={handleRetry}
+          className="w-full py-3.5 rounded-xl font-black text-sm transition-all active:scale-95 bg-red-50 text-red-600 border-2 border-red-200 hover:bg-red-100 flex items-center justify-center gap-2"
+        >
+          <RotateCcw className="w-4 h-4" /> Perbaiki yang Salah ({3 - attempts} sisa)
+        </button>
+      ) : hasAttemptLimit && (isCorrect || attemptsExhausted) ? (
+        <button
+          onClick={() => onNext?.()}
+          className="w-full py-3.5 rounded-xl font-black text-sm transition-all active:scale-95 bg-[#10B981] text-white hover:bg-[#059669] shadow-lg shadow-green-200"
+        >
+          Lanjut ke Aktivitas Berikutnya <ChevronRight className="w-4 h-4 ml-1 inline" />
         </button>
       ) : (
         <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20 text-sm font-black text-[#065F46]">
-          <CheckCircle className="w-4 h-4" /> Klasifikasi selesai — tulis refleksimu di bawah
+          <CheckCircle className="w-4 h-4" /> Klasifikasi selesai - lanjut ke aktivitas berikutnya
         </div>
       )}
     </div>
@@ -1409,6 +2228,7 @@ function GroupClassifier({ groups, groupItems, initialData, onComplete, onNext }
 
 export function InquiryStage(props: InquiryStageProps) {
   if (props.lessonId === '1') return <InquiryLesson1Page {...props} />;
+  if (props.lessonId === '3') return <InquiryLesson3Page {...props} />;
   return <InquiryStageGeneric {...props} />;
 }
 
@@ -1617,7 +2437,7 @@ function InquiryStageGeneric(props: InquiryStageProps) {
               stageIndex={props.stageIndex}
               shuffleRight
               initialData={matchingData}
-              onComplete={(matches) => setMatchingData({ matches })}
+              onComplete={(state) => setMatchingData(state)}
               onNext={() => setActivityStep(2)}
             />
             {activityStep >= 2 && props.inquiryReflection2 && (

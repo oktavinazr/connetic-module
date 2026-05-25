@@ -177,7 +177,7 @@ const stageNeedsExternalReflection = (type: StageType, lid: string): boolean => 
   if (type === 'modeling' && lid === '2') return false;
   if (type === 'constructivism' && (lid === '1' || lid === '2' || lid === '3')) return false;
   if (type === 'questioning' && (lid === '1' || lid === '2')) return false;
-  if (type === 'inquiry' && (lid === '1' || lid === '2')) return false;
+  if (type === 'inquiry' && (lid === '1' || lid === '2' || lid === '3')) return false;
   return true;
 };
 

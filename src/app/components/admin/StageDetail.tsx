@@ -383,17 +383,17 @@ function InquiryReview({ answer, snap }: { answer: any; snap?: Record<string, an
       )}
 
       {hasEssay && (
-        <ReviewCard title="Refleksi & Argumen" icon={<PenLine className="w-3.5 h-3.5" />} accentColor="text-[#10B981]" borderColor="border-[#10B981]/20" bgColor="bg-[#F0FDF9]/40">
+        <ReviewCard title="Argumen Logis" icon={<PenLine className="w-3.5 h-3.5" />} accentColor="text-[#10B981]" borderColor="border-[#10B981]/20" bgColor="bg-[#F0FDF9]/40">
           <div className="space-y-3">
             {mainEssay && (
               <div>
-                {reflection2 && <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981]/60 mb-1.5">Refleksi 1</p>}
+                {reflection2 && <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981]/60 mb-1.5">Argumen Utama</p>}
                 <EssayDisplay text={mainEssay} />
               </div>
             )}
             {reflection2 && (
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981]/60 mb-1.5">Refleksi 2</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#10B981]/60 mb-1.5">Refleksi Tambahan</p>
                 <EssayDisplay text={reflection2} />
               </div>
             )}
@@ -402,7 +402,7 @@ function InquiryReview({ answer, snap }: { answer: any; snap?: Record<string, an
       )}
 
       {conclusion && (
-        <ReviewCard title="Penarikan Kesimpulan" icon={<Lightbulb className="w-3.5 h-3.5" />} accentColor="text-[#8B5CF6]" borderColor="border-[#8B5CF6]/20" bgColor="bg-[#F5F3FF]/40">
+        <ReviewCard title="Hasil Refleksi Kamu" icon={<Lightbulb className="w-3.5 h-3.5" />} accentColor="text-[#8B5CF6]" borderColor="border-[#8B5CF6]/20" bgColor="bg-[#F5F3FF]/40">
           <EssayDisplay text={conclusion} />
         </ReviewCard>
       )}
