@@ -45,7 +45,7 @@ import { supabase } from '../utils/supabase';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DragAutoScroll } from '../components/DragAutoScroll';
-import { ActivityGuideBox, EssayBox, ATPConclusionBox, LogicalThinkingTracker } from '../components/stages/StageKit';
+import { ActivityGuideBox, EssayBox, ATPConclusionBox, LogicalThinkingTracker, IndicatorSummaryCard } from '../components/stages/StageKit';
 import { useGlobalStageSync } from '../hooks/useGlobalStageSync';
 
 type StageType =
@@ -937,12 +937,40 @@ export function LessonPage() {
                     </div>
                   </div>
                   <div className="px-5 py-4">
-                    <StageAnswerDetail
-                      stage={currentStage}
-                      answer={currentStageAnswer}
-                      snapshot={currentStageSession?.latestSnapshot}
-                      lessonId={lessonId}
-                    />
+                    {lessonId === '4' && currentStage.type === 'reflection' ? (
+                      <IndicatorSummaryCard
+                        consistency={(() => {
+                          const mapAns = (currentStageAnswer as any)?.mapAnswers ?? {};
+                          const conns: any[] = (currentStage as any).conceptMapConnections ?? [];
+                          const correct = conns.filter((c) => mapAns[`${c.from}-${c.to}`] === c.label).length;
+                          const answered = conns.filter((c) => !!mapAns[`${c.from}-${c.to}`]).length;
+                          return (
+                            <p className="text-xs text-[#395886]/70 leading-relaxed">
+                              Peta konsep IPv6 diselesaikan:{' '}
+                              <span className="font-bold text-[#628ECB]">{answered}/{conns.length}</span> koneksi dijawab,{' '}
+                              <span className="font-bold text-[#10B981]">{correct}</span> benar.
+                            </p>
+                          );
+                        })()}
+                        arguing={
+                          (currentStageAnswer as any)?.essayMaterial
+                            ? <p className="text-xs text-[#395886]/70 leading-relaxed whitespace-pre-wrap">{(currentStageAnswer as any).essayMaterial}</p>
+                            : <p className="text-xs text-[#395886]/40 italic">Belum ada jawaban.</p>
+                        }
+                        conclusion={
+                          (currentStageAnswer as any)?.conclusion
+                            ? <p className="text-xs text-[#395886]/70 leading-relaxed whitespace-pre-wrap">{(currentStageAnswer as any).conclusion}</p>
+                            : <p className="text-xs text-[#395886]/40 italic">Belum ada kesimpulan.</p>
+                        }
+                      />
+                    ) : (
+                      <StageAnswerDetail
+                        stage={currentStage}
+                        answer={currentStageAnswer}
+                        snapshot={currentStageSession?.latestSnapshot}
+                        lessonId={lessonId}
+                      />
+                    )}
                   </div>
                 </div>
               )}

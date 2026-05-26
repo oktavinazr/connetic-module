@@ -1061,7 +1061,7 @@ function Lesson4ReflectionStage({ stage, onComplete, onTrackerPhase }: Lesson4St
               </p>
               <h3 className="text-base font-bold text-[#395886]">Peta Konsep IPv6</h3>
               <p className="text-xs text-[#395886]/60 mt-0.5">
-                Pilih label koneksi yang tepat ({Object.keys(mapAnswers).length}/{connections.length} dijawab)
+                Pilih label koneksi yang tepat ({connections.filter((c: any) => !!mapAnswers[`${c.from}-${c.to}`]).length}/{connections.length} dijawab)
               </p>
             </div>
             <div className="p-5 space-y-2.5">
@@ -1105,7 +1105,7 @@ function Lesson4ReflectionStage({ stage, onComplete, onTrackerPhase }: Lesson4St
             </div>
           </div>
           {allConnected ? (
-            <ContinueActivityButton onClick={() => goPhase('essay')} label="Lanjut ke Refleksi Essay" />
+            <ContinueActivityButton onClick={() => { setSaved((p: any) => ({ ...p, mapAnswers: { ...mapAnswers } })); goPhase('essay'); }} label="Lanjut ke Refleksi Essay" />
           ) : (
             <p className="text-center text-xs text-[#395886]/40 font-medium">
               Jawab semua koneksi peta konsep untuk melanjutkan
