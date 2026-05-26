@@ -1579,14 +1579,13 @@ function ModelingLesson3({
             <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-[#D5DEEF] bg-white p-1">
             <button
               onClick={() => setMode('decToBin')}
-              disabled={phase === 'reflection'}
               className={`rounded-xl px-3 py-2 text-xs font-bold transition-all ${mode === 'decToBin' ? 'bg-[#395886] text-white shadow-sm' : 'text-[#395886]/70 hover:bg-[#F1F5F9]'}`}
             >
               Desimal ke Biner
             </button>
             <button
               onClick={() => canOpenReverseMode && setMode('binToDec')}
-              disabled={!canOpenReverseMode || phase === 'reflection'}
+              disabled={!canOpenReverseMode}
               className={`rounded-xl px-3 py-2 text-xs font-bold transition-all ${
                 mode === 'binToDec'
                   ? 'bg-[#10B981] text-white shadow-sm'

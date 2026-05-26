@@ -394,6 +394,15 @@ export function LessonPage() {
   const facilitatorNotes = currentStage.facilitatorNotes ?? [];
   const atpAbcd = currentStage.atpAbcd;
 
+  // Free-mode smart navigation: skip already-completed stages
+  const allStagesCompleted = progress.completedStages.length >= lesson.stages.length;
+  const nextIncompleteAfterCurrent = lesson.stages.findIndex(
+    (_, idx) => idx > currentStageIndex && !progress.completedStages.some(s => Number(s) === idx)
+  );
+  const firstIncompleteGlobal = lesson.stages.findIndex(
+    (_, idx) => !progress.completedStages.some(s => Number(s) === idx)
+  );
+
   const handleStageComplete = async (answer: unknown) => {
     await saveStageProgress(user!.id, lessonId!, currentStageIndex, answer);
     const [updatedProgress, updatedSessions] = await Promise.all([
@@ -859,6 +868,25 @@ export function LessonPage() {
                 </div>
               )}
 
+              {/* Free mode progress strip — always visible during active stage */}
+              {!globalSync.isPaused && isFreeMode && !isStageCompleted && (
+                <div className="rounded-xl border border-[#8B5CF6]/20 bg-[#8B5CF6]/5 px-4 py-2.5 flex items-center gap-3">
+                  <BookOpen className="w-3.5 h-3.5 text-[#8B5CF6] shrink-0" />
+                  <div className="flex-1 min-w-0 flex items-center gap-2">
+                    <p className="text-[10px] font-black text-[#8B5CF6] uppercase tracking-widest shrink-0">Belajar Mandiri</p>
+                    <div className="flex-1 h-1 bg-[#8B5CF6]/15 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#8B5CF6] rounded-full transition-all"
+                        style={{ width: `${Math.round((progress.completedStages.length / lesson.stages.length) * 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] font-bold text-[#8B5CF6] shrink-0">
+                      {progress.completedStages.length}/{lesson.stages.length}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* Logical Thinking Tracker — tepat di atas aktivitas */}
               {!globalSync.isPaused && (
                 <div className="flex justify-center pt-2 pb-1">
@@ -919,6 +947,34 @@ export function LessonPage() {
                 </div>
               )}
 
+              {/* Free mode: progress summary strip */}
+              {isFreeMode && (
+                <div className="rounded-xl border border-[#8B5CF6]/20 bg-[#8B5CF6]/5 px-4 py-3 flex items-center gap-3">
+                  <BookOpen className="w-4 h-4 text-[#8B5CF6] shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-black text-[#8B5CF6] uppercase tracking-widest">Mode Belajar Mandiri</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <div className="flex-1 h-1 bg-[#8B5CF6]/15 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-[#8B5CF6] rounded-full transition-all duration-500"
+                          style={{ width: `${Math.round((progress.completedStages.length / lesson.stages.length) * 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] font-bold text-[#8B5CF6] shrink-0">
+                        {progress.completedStages.length}/{lesson.stages.length} selesai
+                      </span>
+                    </div>
+                  </div>
+                  {!allStagesCompleted && firstIncompleteGlobal !== -1 && (
+                    <span className="text-[9px] font-bold text-[#8B5CF6]/60 shrink-0">
+                      Selanjutnya: {getStageDisplayTitle(lesson.stages[
+                        nextIncompleteAfterCurrent !== -1 ? nextIncompleteAfterCurrent : firstIncompleteGlobal
+                      ].type)}
+                    </span>
+                  )}
+                </div>
+              )}
+
               {/* Waiting indicator OR advance button */}
               <div className={`rounded-2xl border-2 p-5 text-center shadow-sm ${
                 isFreeMode
@@ -931,17 +987,30 @@ export function LessonPage() {
                     <div className="flex items-center justify-center gap-2 mb-3">
                       <CheckCircle className={`w-4 h-4 ${isFreeMode ? 'text-[#8B5CF6]' : 'text-[#10B981]'}`} />
                       <p className={`text-sm font-bold ${isFreeMode ? 'text-[#8B5CF6]' : 'text-[#10B981]'}`}>
-                        {isFreeMode ? 'Mode Belajar Mandiri — lanjutkan sesukamu' : 'Guru telah melanjutkan ke tahap berikutnya!'}
+                        {isFreeMode
+                          ? `Mode Belajar Mandiri — ${progress.completedStages.length}/${lesson.stages.length} tahap selesai`
+                          : 'Guru telah melanjutkan ke tahap berikutnya!'}
                       </p>
                     </div>
                     <button
                       onClick={() => {
-                        if (!isFreeMode) globalSync.acknowledgeAdvance();
-                        if (isLastStage) {
+                        if (!isFreeMode) {
+                          globalSync.acknowledgeAdvance();
+                          if (isLastStage) { setShowStageSummary(true); }
+                          else { setCurrentStageIndex(currentStageIndex + 1); window.scrollTo(0, 0); }
+                          return;
+                        }
+                        // Free mode: go to next incomplete stage, or summary if all done
+                        if (allStagesCompleted) {
                           setShowStageSummary(true);
-                        } else {
-                          setCurrentStageIndex(currentStageIndex + 1);
+                        } else if (nextIncompleteAfterCurrent !== -1) {
+                          setCurrentStageIndex(nextIncompleteAfterCurrent);
                           window.scrollTo(0, 0);
+                        } else if (firstIncompleteGlobal !== -1) {
+                          setCurrentStageIndex(firstIncompleteGlobal);
+                          window.scrollTo(0, 0);
+                        } else {
+                          setShowStageSummary(true);
                         }
                       }}
                       className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all font-bold text-sm shadow-md active:scale-95 ${
@@ -950,7 +1019,17 @@ export function LessonPage() {
                           : 'bg-[#628ECB] text-white hover:bg-[#395886]'
                       }`}
                     >
-                      {isLastStage ? 'Lanjut ke Post-Test' : `Lanjut ke ${getStageDisplayTitle(lesson.stages[currentStageIndex + 1].type)}`}
+                      {isFreeMode
+                        ? allStagesCompleted
+                          ? 'Semua Tahap Selesai — Lanjut ke Post-Test'
+                          : nextIncompleteAfterCurrent !== -1
+                          ? `Lanjut ke ${getStageDisplayTitle(lesson.stages[nextIncompleteAfterCurrent].type)}`
+                          : firstIncompleteGlobal !== -1
+                          ? `Kerjakan ${getStageDisplayTitle(lesson.stages[firstIncompleteGlobal].type)}`
+                          : 'Lanjut ke Post-Test'
+                        : isLastStage
+                        ? 'Lanjut ke Post-Test'
+                        : `Lanjut ke ${getStageDisplayTitle(lesson.stages[currentStageIndex + 1].type)}`}
                       <ArrowRight className="h-4 w-4" />
                     </button>
                   </>
