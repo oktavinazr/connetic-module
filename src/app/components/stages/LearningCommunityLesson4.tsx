@@ -13,7 +13,7 @@ import {
 import { supabase } from '../../utils/supabase';
 import {
   StepTracker, ActivityCard, InstructionBox, EssayBox, ATPConclusionBox,
-  anim, SectionDivider,
+  IndicatorSummaryCard, anim, SectionDivider,
 } from './StageKit';
 
 // =============================================================================
@@ -786,6 +786,27 @@ export function LearningCommunityLesson4({
   const [moduleAData, setModuleAData] = useState<any>(null);
   const [moduleBData, setModuleBData] = useState<any>(null);
   const [conclusionText, setConclusionText] = useState('');
+  const [atpConclusion, setAtpConclusion] = useState('');
+
+  // Fetch group discussion results from DB when entering conclusion (handles page refresh)
+  useEffect(() => {
+    if (phase !== 'conclusion' || !groupName) return;
+    const fetch = async () => {
+      const [dA, dB] = await Promise.all([
+        getGroupDiscussions(lessonId, 'X.IP.12.A', groupName),
+        getGroupDiscussions(lessonId, 'X.IP.12.B', groupName),
+      ]);
+      if (dA.length > 0) {
+        const best = [...dA].sort((a, b) => b.votes.length - a.votes.length)[0];
+        setModuleAData((prev: any) => prev ?? { bestArgument: best, discussions: dA });
+      }
+      if (dB.length > 0) {
+        const best = [...dB].sort((a, b) => b.votes.length - a.votes.length)[0];
+        setModuleBData((prev: any) => prev ?? { bestArgument: best, discussions: dB });
+      }
+    };
+    void fetch();
+  }, [phase, groupName, lessonId]);
 
   useEffect(() => {
     const phaseMap: Record<L4Phase, 'consistency' | 'arguing' | 'conclusion'> = {
@@ -934,6 +955,8 @@ export function LearningCommunityLesson4({
             submitLabel="Simpan Diskusi Kelompok"
             headerLabel="Diskusi Kelompok"
             minWords={15}
+            disabled={!!conclusionText}
+            defaultValue={conclusionText}
             onSubmit={(text) => setConclusionText(text)}
           />
           {conclusionText && (
@@ -945,8 +968,93 @@ export function LearningCommunityLesson4({
               objectiveCode="X.IP.12"
               stageType="learning-community"
               minWords={10}
-              onSubmit={(text) =>
-                onComplete({ conclusionText, atpConclusion: text, moduleAData, moduleBData })
+              disabled={!!atpConclusion}
+              onSubmit={(text) => {
+                setAtpConclusion(text);
+                onComplete({ conclusionText, atpConclusion: text, moduleAData, moduleBData });
+              }}
+            />
+          )}
+          {atpConclusion && (
+            <IndicatorSummaryCard
+              title="Rekap Aktivitas — 3 Indikator Berpikir Logis (X.IP.12)"
+              consistency={
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#628ECB]/8 border border-[#628ECB]/15">
+                    <CheckCircle className="w-4 h-4 text-[#628ECB] shrink-0" />
+                    <span className="text-xs font-bold text-[#395886]">
+                      6 langkah EUI-64 berhasil dianalisis: pisah MAC, sisipkan FF:FE, flip bit ke-7, dan bentuk alamat Link-Local
+                    </span>
+                  </div>
+                  {moduleAData?.bestArgument && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#628ECB]/8 border border-[#628ECB]/15">
+                      <CheckCircle className="w-4 h-4 text-[#628ECB] shrink-0" />
+                      <span className="text-xs font-bold text-[#395886]">
+                        Kartu A (Siti): pilihan kelompok — {moduleAData.bestArgument.choice_text}
+                      </span>
+                    </div>
+                  )}
+                  {moduleBData?.bestArgument && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#628ECB]/8 border border-[#628ECB]/15">
+                      <CheckCircle className="w-4 h-4 text-[#628ECB] shrink-0" />
+                      <span className="text-xs font-bold text-[#395886]">
+                        Kartu B (Budi): pilihan kelompok — {moduleBData.bestArgument.choice_text}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              }
+              arguing={
+                <div className="space-y-2">
+                  <div className="px-3 py-2.5 rounded-xl bg-[#FFFBEB] border border-[#F59E0B]/20">
+                    <p className="text-[10px] font-black text-[#F59E0B] mb-1">Poin Penting Pembelajaran</p>
+                    <p className="text-xs text-[#78350F] leading-relaxed">
+                      Kesalahan pada proses EUI-64 — baik lupa flip bit ke-7 maupun salah posisi FF:FE — mengakibatkan Link-Local Address yang tidak valid dan perangkat tidak dapat berkomunikasi di jaringan IPv6.
+                    </p>
+                  </div>
+                  {moduleAData?.bestArgument && (
+                    <div className="px-3 py-2.5 rounded-xl bg-[#FFFBEB] border border-[#F59E0B]/20">
+                      <p className="text-[10px] font-black text-[#F59E0B] mb-1">Hasil Diskusi X.IP.12.A — Kartu Siti</p>
+                      <p className="text-[10px] font-bold text-[#92400E] mb-1">
+                        Pilihan kelompok: {moduleAData.bestArgument.choice_text}
+                      </p>
+                      <p className="text-xs text-[#78350F] leading-relaxed">
+                        {moduleAData.bestArgument.argument}
+                      </p>
+                    </div>
+                  )}
+                  {moduleBData?.bestArgument && (
+                    <div className="px-3 py-2.5 rounded-xl bg-[#FFFBEB] border border-[#F59E0B]/20">
+                      <p className="text-[10px] font-black text-[#F59E0B] mb-1">Hasil Diskusi X.IP.12.B — Kartu Budi</p>
+                      <p className="text-[10px] font-bold text-[#92400E] mb-1">
+                        Pilihan kelompok: {moduleBData.bestArgument.choice_text}
+                      </p>
+                      <p className="text-xs text-[#78350F] leading-relaxed">
+                        {moduleBData.bestArgument.argument}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              }
+              conclusion={
+                <div className="space-y-2">
+                  {conclusionText && (
+                    <p className="text-xs text-[#065F46] leading-relaxed px-3 py-2.5 rounded-xl bg-[#ECFDF5] border border-[#10B981]/20">
+                      <span className="font-black">Diskusi Kelompok:</span> {conclusionText}
+                    </p>
+                  )}
+                  {atpConclusion && (
+                    <p className="text-xs text-[#065F46] leading-relaxed px-3 py-2.5 rounded-xl bg-[#ECFDF5] border border-[#10B981]/20">
+                      <span className="font-black">Kesimpulan ATP:</span> {atpConclusion}
+                    </p>
+                  )}
+                  <div className="px-3 py-2.5 rounded-xl bg-[#ECFDF5] border border-[#10B981]/20">
+                    <p className="text-[10px] font-black text-[#10B981] mb-1">Kesimpulan Umum Pembelajaran</p>
+                    <p className="text-xs text-[#065F46] leading-relaxed">
+                      Siswa telah menyelesaikan X.IP.12 melalui orientasi EUI-64, audit studi kasus kelompok dua kartu (Siti & Budi), voting argumen terbaik, dan refleksi akhir tentang pentingnya akurasi setiap langkah konversi MAC ke IPv6 Link-Local Address.
+                    </p>
+                  </div>
+                </div>
               }
             />
           )}

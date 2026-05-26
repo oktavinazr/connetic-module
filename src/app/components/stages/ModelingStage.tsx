@@ -3139,15 +3139,18 @@ function CliTerminal({ lines, prompt, label }: { lines: string[]; prompt?: strin
         <span className="text-[10px] font-mono text-slate-400 ml-1">{label || 'Router R1 — Cisco IOS CLI'}</span>
       </div>
       <div className="bg-slate-900 p-4 space-y-1 min-h-[100px]">
-        {lines.map((line, i) => (
-          <p key={i} className={`font-mono text-[11px] leading-relaxed ${
-            line.startsWith('Router') ? 'text-emerald-400' :
-            line.startsWith('%') ? 'text-yellow-400' :
-            line.startsWith('!!') || line === '!!!!!' ? 'text-emerald-300 font-bold' :
-            line === '' ? 'h-1' :
-            'text-slate-300'
-          }`}>{line || ' '}</p>
-        ))}
+        {lines.map((line, i) => {
+          const l = line ?? '';
+          return (
+            <p key={i} className={`font-mono text-[11px] leading-relaxed ${
+              l.startsWith('Router') ? 'text-emerald-400' :
+              l.startsWith('%') ? 'text-yellow-400' :
+              l.startsWith('!!') || l === '!!!!!' ? 'text-emerald-300 font-bold' :
+              l === '' ? 'h-1' :
+              'text-slate-300'
+            }`}>{l || ' '}</p>
+          );
+        })}
         {prompt && (
           <p className="font-mono text-[11px] text-emerald-400 animate-pulse">{prompt}<span className="inline-block w-2 h-3 bg-emerald-400 ml-0.5 align-middle" /></p>
         )}
@@ -3305,7 +3308,7 @@ function ModelingLesson4({
     const isLastStep = currentStep >= cliSteps.length - 1;
     // Build cumulative CLI output from completed steps
     const cliLines = cliSteps.slice(0, currentStep + 1).flatMap(s => {
-      const codeBlock = s.content.match(/🖥️ Simulator CLI:\n([\s\S]*?)(?:\n\n|$)/);
+      const codeBlock = s.content?.match(/🖥️ Simulator CLI:\n([\s\S]*?)(?:\n\n|$)/);
       if (codeBlock) return codeBlock[1].trim().split('\n');
       return [];
     });
@@ -3341,7 +3344,7 @@ function ModelingLesson4({
           </div>
           <div className="p-4 space-y-3">
             <p className="text-xs text-[#395886]/80 leading-relaxed">
-              {step?.content.split('\n\n')[0]}
+              {step?.content?.split('\n\n')[0]}
             </p>
             {/* Terminal */}
             <CliTerminal lines={cliLines} prompt={currentStep === cliSteps.length - 1 ? undefined : `Router# `} />
