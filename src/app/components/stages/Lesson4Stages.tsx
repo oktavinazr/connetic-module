@@ -1116,43 +1116,67 @@ function Lesson4ReflectionStage({ stage, onComplete, onTrackerPhase }: Lesson4St
 
       {/* Phase 2: Sequential essays */}
       {phase === 'essay' && (
-        <div className="animate-in fade-in duration-400">
+        <div className="animate-in fade-in duration-400 space-y-2">
           {!essaysDone.material ? (
-            <EssayBox
-              prompt={stage.essayReflection?.materialSummaryPrompt ?? ''}
-              objectiveLabel="X.IP.14"
-              submitLabel="Simpan Perbandingan"
-              headerLabel="Argumen Logis"
-              minWords={20}
-              onSubmit={(text) => {
-                setEssaysDone((p) => ({ ...p, material: true }));
-                setSaved((p: any) => ({ ...p, essayMaterial: text }));
-              }}
-            />
+            <>
+              <EssayBox
+                prompt={stage.essayReflection?.materialSummaryPrompt ?? ''}
+                objectiveLabel="X.IP.14"
+                submitLabel="Simpan Perbandingan"
+                headerLabel="Argumen Logis"
+                minWords={20}
+                onSubmit={(text) => {
+                  setEssaysDone((p) => ({ ...p, material: true }));
+                  setSaved((p: any) => ({ ...p, essayMaterial: text }));
+                }}
+              />
+              <button
+                onClick={() => { setEssaysDone((p) => ({ ...p, material: true })); setSaved((p: any) => ({ ...p, essayMaterial: '' })); }}
+                className="w-full text-center text-xs text-[#395886]/40 hover:text-[#395886]/70 py-1.5 font-medium transition-colors"
+              >
+                Lanjut tanpa menjawab →
+              </button>
+            </>
           ) : !essaysDone.easy ? (
-            <EssayBox
-              prompt={stage.essayReflection?.easyPartPrompt ?? ''}
-              objectiveLabel="X.IP.14"
-              submitLabel="Simpan Jawaban"
-              headerLabel="Refleksi Mandiri"
-              minWords={10}
-              onSubmit={(text) => {
-                setEssaysDone((p) => ({ ...p, easy: true }));
-                setSaved((p: any) => ({ ...p, essayEasy: text }));
-              }}
-            />
+            <>
+              <EssayBox
+                prompt={stage.essayReflection?.easyPartPrompt ?? ''}
+                objectiveLabel="X.IP.14"
+                submitLabel="Simpan Jawaban"
+                headerLabel="Refleksi Mandiri"
+                minWords={10}
+                onSubmit={(text) => {
+                  setEssaysDone((p) => ({ ...p, easy: true }));
+                  setSaved((p: any) => ({ ...p, essayEasy: text }));
+                }}
+              />
+              <button
+                onClick={() => { setEssaysDone((p) => ({ ...p, easy: true })); setSaved((p: any) => ({ ...p, essayEasy: '' })); }}
+                className="w-full text-center text-xs text-[#395886]/40 hover:text-[#395886]/70 py-1.5 font-medium transition-colors"
+              >
+                Lanjut tanpa menjawab →
+              </button>
+            </>
           ) : !essaysDone.hard ? (
-            <EssayBox
-              prompt={stage.essayReflection?.hardPartPrompt ?? ''}
-              objectiveLabel="X.IP.14"
-              submitLabel="Simpan Jawaban"
-              headerLabel="Refleksi Mandiri"
-              minWords={10}
-              onSubmit={(text) => {
-                setEssaysDone((p) => ({ ...p, hard: true }));
-                setSaved((p: any) => ({ ...p, essayHard: text }));
-              }}
-            />
+            <>
+              <EssayBox
+                prompt={stage.essayReflection?.hardPartPrompt ?? ''}
+                objectiveLabel="X.IP.14"
+                submitLabel="Simpan Jawaban"
+                headerLabel="Refleksi Mandiri"
+                minWords={10}
+                onSubmit={(text) => {
+                  setEssaysDone((p) => ({ ...p, hard: true }));
+                  setSaved((p: any) => ({ ...p, essayHard: text }));
+                }}
+              />
+              <button
+                onClick={() => { setEssaysDone((p) => ({ ...p, hard: true })); setSaved((p: any) => ({ ...p, essayHard: '' })); }}
+                className="w-full text-center text-xs text-[#395886]/40 hover:text-[#395886]/70 py-1.5 font-medium transition-colors"
+              >
+                Lanjut tanpa menjawab →
+              </button>
+            </>
           ) : (
             <ContinueActivityButton onClick={() => goPhase('selfeval')} label="Lanjut ke Evaluasi Diri" />
           )}
