@@ -375,7 +375,6 @@ function TcpBranchingAuthenticAssessment({
   const [isDone, setIsDone] = useState(false);
   const [isRestored, setIsRestored] = useState(false);
 
-  const MIN_WORDS = 20;
   const currentStep = scenario.steps[currentStepIndex];
   const argumentStepIndex = scenario.steps.findIndex((step) => step.id === scenario.argumentAfterStepId);
   const conclusionOptions = scenario.conclusionOptions || [];
@@ -479,7 +478,7 @@ function TcpBranchingAuthenticAssessment({
   };
 
   const handleArgumentSave = () => {
-    if (countWords(argumentText) < MIN_WORDS) return;
+    if (countWords(argumentText) < minWords) return;
     setArgumentSaved(true);
     void tracker.trackEvent('tcp_branch_argument_saved', { wordCount: countWords(argumentText) }, { isCorrect: true, progressPercent });
     const nextIndex = argumentStepIndex + 1;
