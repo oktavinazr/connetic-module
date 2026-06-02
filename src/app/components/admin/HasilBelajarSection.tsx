@@ -4,7 +4,7 @@ import {
   CheckCircle, XCircle, ChevronDown, ChevronUp, ChevronRight,
   Clock, Download, Eye, Filter, Lightbulb, PenLine, Search,
   TrendingUp, Users, X, RefreshCw, Activity, Calendar, AlignLeft,
-  BarChart2, Layers, BookOpen,
+  BarChart2, Layers, BookOpen, FileDown, FileText,
 } from 'lucide-react';
 import { lessons, globalPretest, globalPosttest } from '../../data/lessons';
 import { CTL_META, StageAnswerDetail } from './StageDetail';
@@ -65,6 +65,323 @@ function formatDuration(sec: number) {
   if (m > 0) return `${m}m ${s}d`;
   return `${s} detik`;
 }
+
+// ── PDF Report Generation ──────────────────────────────────────────────────────
+
+function htmlE(s: string | null | undefined): string {
+  if (!s) return '';
+  return s
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/\n/g, '<br>');
+}
+
+function openReportWindow(html: string) {
+  const w = window.open('', '_blank', 'width=960,height=800,scrollbars=yes');
+  if (!w) { alert('Pop-up diblokir browser. Izinkan pop-up untuk mengunduh laporan.'); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+}
+
+const REPORT_CSS = `
+  @page { margin: 1.5cm; size: A4; }
+  * { box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; font-size: 10.5pt; color: #333; margin: 0; padding: 20px; }
+  h1 { font-size: 15pt; color: #395886; border-bottom: 2.5px solid #628ECB; padding-bottom: 6px; margin: 0 0 4px; }
+  h2 { font-size: 12.5pt; color: #395886; margin: 18px 0 6px; }
+  h3 { font-size: 11pt; color: #628ECB; margin: 8px 0 4px; }
+  h4 { font-size: 10pt; font-weight: bold; color: #395886; margin: 4px 0; }
+  p { margin: 4px 0; line-height: 1.5; }
+  .meta { font-size: 9pt; color: #666; margin-bottom: 4px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 8.5pt; font-weight: bold; margin-right: 4px; }
+  .b-green { background: #D1FAE5; color: #065F46; }
+  .b-blue { background: #DBEAFE; color: #1E40AF; }
+  .b-yellow { background: #FEF3C7; color: #92400E; }
+  .b-gray { background: #F3F4F6; color: #6B7280; }
+  .b-red { background: #FEE2E2; color: #991B1B; }
+  .stage { border: 1.5px solid #D5DEEF; border-radius: 8px; margin: 8px 0; padding: 12px 14px; background: #fff; }
+  .ind { border-left: 3.5px solid #D5DEEF; margin: 8px 0; padding: 7px 12px; background: #FAFBFF; border-radius: 0 6px 6px 0; }
+  .ind-title { font-size: 7.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .essay { font-style: italic; background: #F0F5FF; border: 1px solid #D5DEEF; border-radius: 6px; padding: 8px 10px; margin-top: 4px; line-height: 1.6; }
+  .iitem { display: flex; align-items: flex-start; gap: 6px; padding: 2px 0; font-size: 9.5pt; }
+  .ok { color: #10B981; font-weight: bold; } .no { color: #EF4444; font-weight: bold; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 9.5pt; }
+  th, td { border: 1px solid #D5DEEF; padding: 5px 8px; text-align: left; vertical-align: top; }
+  th { background: #F0F3FA; font-weight: bold; color: #395886; }
+  tr:nth-child(even) td { background: #FAFBFF; }
+  .pb { page-break-after: always; break-after: page; }
+  .no-print { text-align: center; margin: 16px 0; padding: 12px; background: #F8FAFD; border-radius: 8px; }
+  .no-print button { background: #628ECB; color: white; border: none; padding: 10px 22px; border-radius: 8px; font-size: 11pt; font-weight: bold; cursor: pointer; margin: 0 6px; }
+  .no-print button:hover { background: #395886; }
+  @media print { .no-print { display: none !important; } }
+`;
+
+function getInteractiveSummaryHTML(session: CTLActivitySession, lessonId: string): string {
+  const snap = session.latestSnapshot; const answer = session.finalAnswer;
+  let html = '';
+  switch (session.stageType) {
+    case 'constructivism': {
+      const fa = snap?.finalAnswer ?? {};
+      const sel = fa.selectedOption ?? answer?.selectedOption;
+      const ok = fa.isCorrect ?? answer?.isCorrect;
+      if (sel) html += `<div class="iitem"><span class="${ok ? 'ok' : 'no'}">${ok ? '✓' : '✗'}</span> Pilihan: <strong>${htmlE(sel)}</strong> — ${ok ? 'Benar' : 'Salah'}</div>`;
+      const essay2 = fa.essay2 ?? answer?.essay2;
+      const essay1 = fa.essay1 ?? answer?.essay1;
+      if (essay1 && essay2) html += `<p style="font-size:8.5pt;font-weight:bold;margin:5px 0 2px">Esai 1:</p><div class="essay">${htmlE(essay1)}</div>`;
+      break;
+    }
+    case 'inquiry': {
+      const flow = snap?.flowData ?? answer?.flowData; const analogy = snap?.analogyData ?? answer?.analogyData;
+      const group = snap?.groupData ?? answer?.groupData; const match = snap?.matchingData ?? answer?.matchingData;
+      const refl2 = snap?.reflection2 ?? answer?.reflection2;
+      if (flow) html += `<div class="iitem"><span class="ok">✓</span> Pengurutan Alur/Layer${flow.validated ? ' (tervalidasi)' : ''}</div>`;
+      if (analogy) html += `<div class="iitem"><span class="ok">✓</span> Aktivitas Analogi</div>`;
+      if (group) { const cc=group.correctCount; const tot=group.total??group.totalItems; html += `<div class="iitem"><span class="ok">✓</span> Pengelompokan${cc!==undefined?` (${cc}/${tot??'?'} benar)`:''}</div>`; }
+      if (match) html += `<div class="iitem"><span class="ok">✓</span> Pencocokan Pasangan</div>`;
+      if (refl2) html += `<p style="font-size:8.5pt;font-weight:bold;margin:5px 0 2px">Refleksi Tambahan:</p><div class="essay">${htmlE(refl2)}</div>`;
+      break;
+    }
+    case 'questioning': {
+      const isL1 = lessonId === '1' || snap?.matchPlacements !== undefined;
+      const isL3 = !isL1 && (lessonId === '3' || snap?.l3QPhase !== undefined);
+      if (isL1) {
+        const mp = snap?.matchPlacements as Record<string,string>|undefined;
+        if (mp && Object.keys(mp).length) {
+          const LN: Record<string,string> = { lf1:'Application Layer',lf2:'Transport Layer',lf3:'Network Layer',lf4:'Data Link Layer',lf5:'Physical Layer' };
+          const LD: Record<string,string> = { lf1:'Protokol HTTP, SMTP, FTP',lf2:'Segmentasi & checksum TCP/UDP',lf3:'Routing & IP Address',lf4:'MAC Address & Frame',lf5:'Media fisik' };
+          html += '<p style="font-size:8.5pt;font-weight:bold;margin:4px 0 2px">Pencocokan Layer TCP/IP:</p>';
+          for (const [fId,lId] of Object.entries(mp)) { const ok=fId===lId; html+=`<div class="iitem"><span class="${ok?'ok':'no'}">${ok?'✓':'✗'}</span> ${htmlE(LD[fId]??fId)} → ${htmlE(LN[lId]??lId)}</div>`; }
+        }
+        const disDone = snap?.disruptionDone; const qaIds = snap?.openedQAIds??[];
+        if (disDone) html += `<div class="iitem"><span class="ok">✓</span> Analisis gangguan jaringan</div>`;
+        if (qaIds.length) html += `<div class="iitem"><span class="ok">✓</span> ${qaIds.length} pertanyaan eksplorasi dibuka</div>`;
+      } else if (isL3) {
+        const asked = answer?.askedQuestions??[]; const overload = snap?.l3QOverloadDone??answer?.overloadExperiment;
+        const reflAns = (snap?.l3QDropAnswers??answer?.reflectionAnswers??{}) as Record<string,string>;
+        if (asked.length) html += `<div class="iitem"><span class="ok">✓</span> ${asked.length} pertanyaan chat berhasil dijawab</div>`;
+        if (overload) html += `<div class="iitem"><span class="ok">✓</span> Oktet Overload Experiment</div>`;
+        if (reflAns.totalBit||reflAns.jumlahOktet||reflAns.bitPerOktet) {
+          html += `<p style="font-size:8.5pt;font-weight:bold;margin:5px 0 2px">Refleksi Struktur IPv4:</p>`;
+          if (reflAns.totalBit) html+=`<div class="iitem">• Total bit: <strong>${htmlE(reflAns.totalBit)}</strong></div>`;
+          if (reflAns.jumlahOktet) html+=`<div class="iitem">• Jumlah oktet: <strong>${htmlE(reflAns.jumlahOktet)}</strong></div>`;
+          if (reflAns.bitPerOktet) html+=`<div class="iitem">• Bit per oktet: <strong>${htmlE(reflAns.bitPerOktet)}</strong></div>`;
+        }
+      } else {
+        const selId = snap?.selectedId??answer?.selectedId; const ok = answer?.isCorrect;
+        if (selId) html+=`<div class="iitem"><span class="${ok?'ok':'no'}">${ok?'✓':'✗'}</span> Identifikasi: ${htmlE(String(selId))}</div>`;
+        const qaIds2 = snap?.openedQAIds??answer?.askedQuestions??[];
+        if (qaIds2.length) html+=`<div class="iitem"><span class="ok">✓</span> ${qaIds2.length} pertanyaan eksplorasi dibuka</div>`;
+      }
+      break;
+    }
+    case 'learning-community': {
+      const m1 = snap?.module1Data??answer?.module1Data; const m2 = snap?.module2Data??answer?.module2Data;
+      const arg1 = m1?.bestArgument??m1?.discussions?.[0]; const arg2 = m2?.bestArgument??m2?.discussions?.[0];
+      if (m1) html += `<div class="iitem"><span class="ok">✓</span> Diskusi Modul 1</div>`;
+      if (m2) html += `<div class="iitem"><span class="ok">✓</span> Diskusi Modul 2</div>`;
+      if (arg1?.argument) html += `<p style="font-size:8.5pt;font-weight:bold;margin:5px 0 2px">Argumen Modul 1:</p><div class="essay">${htmlE(arg1.argument)}</div>`;
+      if (arg2?.argument) html += `<p style="font-size:8.5pt;font-weight:bold;margin:5px 0 2px">Argumen Modul 2:</p><div class="essay">${htmlE(arg2.argument)}</div>`;
+      break;
+    }
+    case 'modeling': {
+      const bDecs = answer?.bitDecisions as Array<{weight:number;bit:number}>|undefined;
+      const revConv = answer?.reverseConversion as {binary?:string;decimal?:number}|undefined;
+      const compSteps = (snap?.completedSteps??answer?.completedSteps) as number[]|undefined;
+      const cpArg = answer?.checkpointArgument as string|undefined;
+      const uMsg = snap?.userMessage??answer?.userMessage;
+      if (bDecs?.length) {
+        html += `<div class="iitem"><span class="ok">✓</span> Simulasi biner: <strong>${bDecs.map(d=>d.bit).join('')}</strong></div>`;
+        const active = bDecs.filter(d=>d.bit===1).map(d=>d.weight);
+        if (active.length) html += `<div class="iitem">  Bobot aktif: ${active.join(' + ')}</div>`;
+        if (revConv?.binary) html += `<div class="iitem"><span class="ok">✓</span> Konversi biner→desimal: ${htmlE(revConv.binary)} = ${revConv.decimal??'?'}</div>`;
+      } else if (compSteps?.length) {
+        html += `<div class="iitem"><span class="ok">✓</span> ${compSteps.length} langkah simulasi diselesaikan</div>`;
+      }
+      if (uMsg) html += `<p style="font-size:8.5pt;font-weight:bold;margin:5px 0 2px">Konteks Analisis:</p><div class="essay">${htmlE(uMsg)}</div>`;
+      if (cpArg) html += `<p style="font-size:8.5pt;font-weight:bold;margin:5px 0 2px">Argumen Checkpoint:</p><div class="essay">${htmlE(cpArg)}</div>`;
+      break;
+    }
+    case 'reflection': {
+      const mapData = snap?.mapData??answer?.mapData; const evalData = snap?.evaluationData??answer?.evaluationData;
+      const easyText = answer?.essayEasy; const hardText = answer?.essayHard;
+      if (mapData) {
+        const isPipe = mapData.mode==='tcp-pipeline';
+        html += isPipe
+          ? `<div class="iitem"><span class="ok">✓</span> TCP Blueprint: ${mapData.isCorrect?'Benar':`${mapData.correctCount??'?'}/${mapData.total??'?'} langkah benar`}</div>`
+          : `<div class="iitem"><span class="ok">✓</span> Peta Konsep: ${mapData.correctCount!==undefined?`${mapData.correctCount}/${mapData.totalConnections??mapData.total??'?'} koneksi benar`:'Selesai'}</div>`;
+      }
+      if (evalData && Object.keys(evalData).length) {
+        const checked = Object.values(evalData).filter(Boolean).length;
+        html += `<div class="iitem"><span class="ok">✓</span> Evaluasi diri: ${checked}/${Object.keys(evalData).length} kriteria tercapai</div>`;
+        const criteria = Object.entries(evalData as Record<string,boolean>);
+        html += '<div style="margin-left:18px">' + criteria.map(([k,v])=>`<div class="iitem"><span class="${v?'ok':'no'}">${v?'✓':'✗'}</span> ${htmlE(k)}</div>`).join('') + '</div>';
+      }
+      if (easyText) html += `<p style="font-size:8.5pt;font-weight:bold;margin:5px 0 2px">Yang mudah dipahami:</p><div class="essay">${htmlE(easyText)}</div>`;
+      if (hardText) html += `<p style="font-size:8.5pt;font-weight:bold;margin:5px 0 2px">Yang masih sulit:</p><div class="essay">${htmlE(hardText)}</div>`;
+      break;
+    }
+    case 'authentic-assessment': {
+      const ic = snap?.initialChoice??answer?.initialChoice; const ir = snap?.initialReason??answer?.initialReason;
+      const fc = snap?.followUpChoice??answer?.followUpChoice; const fr = snap?.followUpReason??answer?.followUpReason;
+      const isOpt = answer?.isOptimal;
+      const selOpts = snap?.selectedOptions??answer?.selectedOptions;
+      const argText = snap?.argumentText??answer?.argumentText;
+      const concChoice = snap?.conclusionChoice??answer?.conclusionChoice; const concOk = answer?.conclusionCorrect;
+      if (ic) {
+        html+=`<div class="iitem"><span class="${isOpt?'ok':isOpt===false?'no':''}">●</span> Diagnosis awal: <strong>${htmlE(String(ic))}</strong>${isOpt!==undefined?` (${isOpt?'Optimal':'Bukan optimal'})`:''}</div>`;
+        if (ir) html+=`<div class="essay" style="margin-left:20px">${htmlE(ir)}</div>`;
+      }
+      if (fc) {
+        html+=`<div class="iitem"><span class="ok">✓</span> Tindak lanjut: <strong>${htmlE(String(fc))}</strong></div>`;
+        if (fr) html+=`<div class="essay" style="margin-left:20px">${htmlE(fr)}</div>`;
+      }
+      if (selOpts && Object.keys(selOpts).length) {
+        html+='<p style="font-size:8.5pt;font-weight:bold;margin:5px 0 2px">Pilihan kasus branching:</p>';
+        for (const [stepId,optId] of Object.entries(selOpts)) html+=`<div class="iitem">• Langkah ${stepId}: ${htmlE(String(optId))}</div>`;
+      }
+      if (argText) html+=`<p style="font-size:8.5pt;font-weight:bold;margin:5px 0 2px">Argumen:</p><div class="essay">${htmlE(argText)}</div>`;
+      if (concChoice) html+=`<div class="iitem"><span class="${concOk?'ok':'no'}">${concOk?'✓':'✗'}</span> Kesimpulan pilihan: <strong>${htmlE(String(concChoice))}</strong></div>`;
+      break;
+    }
+  }
+  return html;
+}
+
+function buildStageReportHTML(session: CTLActivitySession, lessonId: string, stageTitle: string): string {
+  const snap = session.latestSnapshot; const answer = session.finalAnswer;
+  if (session.status === 'not_started' && !snap && !answer) return `<div class="stage" style="opacity:0.45;border-left:4px solid #D5DEEF"><span class="badge b-gray">${htmlE(stageTitle)} — Belum dimulai</span></div>`;
+
+  const TYPE_COLORS: Record<string,string> = { constructivism:'#628ECB', inquiry:'#10B981', questioning:'#F59E0B', 'learning-community':'#8B5CF6', modeling:'#EC4899', reflection:'#6366F1', 'authentic-assessment':'#F43F5E' };
+  const TYPE_NAMES: Record<string,string> = { constructivism:'Constructivism', inquiry:'Inquiry', questioning:'Questioning', 'learning-community':'Learning Community', modeling:'Modeling', reflection:'Reflection', 'authentic-assessment':'Authentic Assessment' };
+  const color = TYPE_COLORS[session.stageType] ?? '#628ECB';
+  const typeName = TYPE_NAMES[session.stageType] ?? session.stageType;
+  const statusBadge = session.status === 'completed' ? '<span class="badge b-green">✓ Selesai</span>' : session.status === 'in_progress' ? '<span class="badge b-yellow">Sedang Berjalan</span>' : '<span class="badge b-gray">Belum Dimulai</span>';
+
+  const consistency = extractConsistency(session, lessonId);
+  const argument = extractArgument(session);
+  const conclusion = extractConclusion(session);
+  const interactiveHTML = getInteractiveSummaryHTML(session, lessonId);
+
+  let html = `<div class="stage" style="border-left:4px solid ${color}">
+    <div style="margin-bottom:6px"><span class="badge" style="background:${color}1A;color:${color}">${typeName}</span>${statusBadge}
+      <span style="color:#999;font-size:8.5pt;margin-left:4px">Progres: ${session.progressPercent}% | Percobaan: ${session.totalAttempts} | Durasi: ${formatDuration(session.totalDurationSec)}</span>
+    </div>
+    <h4 style="color:${color}">${htmlE(stageTitle)}</h4>`;
+
+  if (consistency && consistency !== '—') html += `<div class="ind" style="border-left-color:#628ECB"><div class="ind-title" style="color:#628ECB">Keruntutan Berpikir (Logical Sequence)</div><p>${htmlE(consistency)}</p></div>`;
+  if (argument) html += `<div class="ind" style="border-left-color:#10B981"><div class="ind-title" style="color:#10B981">Kemampuan Berargumen (Argumentation)</div><div class="essay">${htmlE(argument)}</div></div>`;
+  if (conclusion) html += `<div class="ind" style="border-left-color:#8B5CF6"><div class="ind-title" style="color:#8B5CF6">Penarikan Kesimpulan (Conclusion)</div><div class="essay">${htmlE(conclusion)}</div></div>`;
+  if (interactiveHTML) html += `<div class="ind" style="border-left-color:#F59E0B"><div class="ind-title" style="color:#F59E0B">Detail Aktivitas Interaktif</div>${interactiveHTML}</div>`;
+
+  html += '</div>';
+  return html;
+}
+
+function buildStudentReportHTML(student: StudentActivitySummary, filterLessonId?: string): string {
+  const targetLessons = filterLessonId ? Object.values(lessons).filter(l => l.id === filterLessonId) : Object.values(lessons);
+  const now = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
+
+  let body = `<div class="no-print"><button onclick="window.print()">🖨️ Cetak / Simpan PDF</button><button onclick="window.close()" style="background:#666">✕ Tutup</button></div>
+    <h1>${htmlE(student.student.name)}</h1>
+    <p class="meta">NIS: ${htmlE(student.student.nis)} | Kelas: ${htmlE(student.student.class)} | Kelompok: ${htmlE(student.group ?? '—')} | Progress: ${student.overallProgress}% | Dicetak: ${now}</p>
+    <hr style="border:none;border-top:1.5px solid #D5DEEF;margin:10px 0 14px">
+    <h2>Rekap Evaluasi</h2>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 16px">
+      <div style="border:1px solid #D5DEEF;border-radius:8px;padding:8px 14px;min-width:120px">
+        <p style="margin:0 0 3px;font-size:8pt;color:#666;font-weight:bold;text-transform:uppercase">Pre-Test Umum</p>
+        ${student.globalPretestCompleted?`<span style="font-size:13pt;font-weight:bold;color:#628ECB">${student.globalPretest}/${globalPretest.questions.length}</span> <span style="font-size:9pt;color:#628ECB">(${Math.round(((student.globalPretest??0)/globalPretest.questions.length)*100)}%)</span>`:'<span style="color:#999">Belum dikerjakan</span>'}
+      </div>
+      <div style="border:1px solid #D5DEEF;border-radius:8px;padding:8px 14px;min-width:120px">
+        <p style="margin:0 0 3px;font-size:8pt;color:#666;font-weight:bold;text-transform:uppercase">Post-Test Umum</p>
+        ${student.globalPosttestCompleted?`<span style="font-size:13pt;font-weight:bold;color:#F59E0B">${student.globalPosttest}/${globalPosttest.questions.length}</span> <span style="font-size:9pt;color:#F59E0B">(${Math.round(((student.globalPosttest??0)/globalPosttest.questions.length)*100)}%)</span>`:'<span style="color:#999">Belum dikerjakan</span>'}
+      </div>
+    </div>`;
+
+  for (const lesson of targetLessons) {
+    const ld = lessons[lesson.id]; if (!ld) continue;
+    const ls = student.lessons.find(l => l.lessonId === lesson.id); if (!ls) continue;
+    const preScore = ls.pretestCompleted ? `${ls.pretest}/${ld.pretest.questions.length} (${Math.round(((ls.pretest??0)/ld.pretest.questions.length)*100)}%)` : 'Belum dikerjakan';
+    const postScore = ls.posttestCompleted ? `${ls.posttest}/${ld.posttest.questions.length} (${Math.round(((ls.posttest??0)/ld.posttest.questions.length)*100)}%)` : 'Belum dikerjakan';
+
+    body += `<div class="pb"></div><h2>${htmlE(ld.title)} — ${htmlE(ld.topic)}</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+        <div style="border:1px solid #D5DEEF;border-radius:8px;padding:6px 12px"><p style="margin:0 0 2px;font-size:8pt;color:#666">Pre-Test</p><strong style="color:${ls.pretestCompleted?'#10B981':'#999'}">${preScore}</strong></div>
+        <div style="border:1px solid #D5DEEF;border-radius:8px;padding:6px 12px"><p style="margin:0 0 2px;font-size:8pt;color:#666">Tahap CTL</p><strong style="color:#628ECB">${ls.completedStages.length}/${ls.totalStages}</strong></div>
+        <div style="border:1px solid #D5DEEF;border-radius:8px;padding:6px 12px"><p style="margin:0 0 2px;font-size:8pt;color:#666">Post-Test</p><strong style="color:${ls.posttestCompleted?'#10B981':'#999'}">${postScore}</strong></div>
+      </div>`;
+
+    for (let si = 0; si < ld.stages.length; si++) {
+      const stage = ld.stages[si]; const tracking = ls.stageTracking[`stage_${si}`];
+      if (!tracking) { body += `<div class="stage" style="opacity:0.45;border-left:4px solid #D5DEEF"><span class="badge b-gray">Tahap ${si+1}: ${htmlE(stage.title)} — Belum dimulai</span></div>`; continue; }
+      body += buildStageReportHTML(tracking, lesson.id, `Tahap ${si+1}: ${stage.title}`);
+    }
+
+    body += `<h3 style="margin-top:16px">Rekap Indikator Berpikir Logis</h3>
+      <table><tr><th style="width:20%">Tahap</th><th style="width:27%">Keruntutan Berpikir</th><th style="width:27%">Kemampuan Berargumen</th><th style="width:26%">Penarikan Kesimpulan</th></tr>`;
+    for (let si = 0; si < ld.stages.length; si++) {
+      const tr = ls.stageTracking[`stage_${si}`];
+      if (!tr) { body += `<tr><td style="color:#999">${htmlE(ld.stages[si].title)}</td><td colspan="3" style="color:#999;font-style:italic">—</td></tr>`; continue; }
+      const c = extractConsistency(tr, lesson.id); const a = extractArgument(tr); const k = extractConclusion(tr);
+      body += `<tr><td><strong>${htmlE(ld.stages[si].title)}</strong></td>
+        <td>${c&&c!=='—'?htmlE(c):'<span style="color:#999">—</span>'}</td>
+        <td>${a?`<em>${htmlE(a.length>200?a.substring(0,200)+'…':a)}</em>`:'<span style="color:#999">—</span>'}</td>
+        <td>${k?`<em>${htmlE(k.length>200?k.substring(0,200)+'…':k)}</em>`:'<span style="color:#999">—</span>'}</td></tr>`;
+    }
+    body += '</table>';
+  }
+
+  return `<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><title>Laporan CTL — ${htmlE(student.student.name)}</title><style>${REPORT_CSS}</style></head><body>${body}</body></html>`;
+}
+
+function buildClassReportHTML(students: StudentActivitySummary[], filterLessonId?: string): string {
+  const now = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
+  const lessonList = filterLessonId ? Object.values(lessons).filter(l=>l.id===filterLessonId) : Object.values(lessons);
+
+  let body = `<div class="no-print"><button onclick="window.print()">🖨️ Cetak / Simpan PDF</button><button onclick="window.close()" style="background:#666">✕ Tutup</button></div>
+    <h1>Laporan Kelas — Aktivitas CTL${filterLessonId ? ' (Pertemuan ' + filterLessonId + ')' : ' (Semua Pertemuan)'}</h1>
+    <p class="meta">${students.length} siswa | Dicetak: ${now}</p>
+    <hr style="border:none;border-top:1.5px solid #D5DEEF;margin:10px 0 14px">
+    <h2>Ringkasan Skor Evaluasi</h2>
+    <table><tr><th>Nama</th><th>NIS</th><th>Kelas</th><th>Kelompok</th><th>Pre-Umum</th><th>Post-Umum</th>
+      ${lessonList.map(l=>`<th>Pre-P${l.id}</th><th>Post-P${l.id}</th>`).join('')}<th>CTL</th><th>%</th></tr>`;
+
+  const pOf = (s:number|null, t:number) => s!==null&&t>0?`${s}/${t} (${Math.round((s/t)*100)}%)`: '—';
+  for (const s of students) {
+    const tCS = s.lessons.reduce((sum,l)=>sum+l.completedStages.length,0);
+    const tSt = s.lessons.reduce((sum,l)=>sum+l.totalStages,0);
+    body += `<tr><td><strong>${htmlE(s.student.name)}</strong></td><td>${htmlE(s.student.nis)}</td><td>${htmlE(s.student.class)}</td><td>${htmlE(s.group??'—')}</td>
+      <td>${s.globalPretestCompleted?pOf(s.globalPretest,globalPretest.questions.length):'—'}</td>
+      <td>${s.globalPosttestCompleted?pOf(s.globalPosttest,globalPosttest.questions.length):'—'}</td>
+      ${lessonList.map(l=>{const ls=s.lessons.find(x=>x.lessonId===l.id);const ld=lessons[l.id];return`<td>${ls?.pretestCompleted?pOf(ls.pretest,ld?.pretest.questions.length??0):'—'}</td><td>${ls?.posttestCompleted?pOf(ls.posttest,ld?.posttest.questions.length??0):'—'}</td>`;}).join('')}
+      <td>${tCS}/${tSt}</td><td><strong>${s.overallProgress}%</strong></td></tr>`;
+  }
+  body += '</table>';
+
+  body += `<h2 style="margin-top:20px">Detail Aktivitas Per Siswa</h2>`;
+  for (const student of students) {
+    body += `<div class="pb"></div><h2>${htmlE(student.student.name)} <span style="font-size:10pt;color:#666">— ${htmlE(student.student.class)}, ${htmlE(student.group??'Belum Bergabung')}</span></h2>`;
+    for (const lesson of lessonList) {
+      const ld = lessons[lesson.id]; if (!ld) continue;
+      const ls = student.lessons.find(l=>l.lessonId===lesson.id); if (!ls) continue;
+      const hasActivity = ls.completedStages.length > 0 || Object.keys(ls.stageTracking).length > 0;
+      if (!hasActivity) continue;
+      body += `<h3>${htmlE(ld.title)} — ${htmlE(ld.topic)}</h3>`;
+      body += `<table><tr><th>Tahap</th><th>Keruntutan Berpikir</th><th>Kemampuan Berargumen</th><th>Penarikan Kesimpulan</th></tr>`;
+      for (let si = 0; si < ld.stages.length; si++) {
+        const tr = ls.stageTracking[`stage_${si}`];
+        if (!tr) { body+=`<tr><td style="color:#999">${htmlE(ld.stages[si].title)}</td><td colspan="3" style="color:#999">—</td></tr>`; continue; }
+        const c=extractConsistency(tr,lesson.id); const a=extractArgument(tr); const k=extractConclusion(tr);
+        body+=`<tr><td>${htmlE(ld.stages[si].title)}</td>
+          <td>${c&&c!=='—'?htmlE(c):'—'}</td>
+          <td>${a?`<em>${htmlE(a.length>120?a.substring(0,120)+'…':a)}</em>`:'—'}</td>
+          <td>${k?`<em>${htmlE(k.length>120?k.substring(0,120)+'…':k)}</em>`:'—'}</td></tr>`;
+      }
+      body += '</table>';
+    }
+  }
+
+  return `<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><title>Laporan Kelas CTL${filterLessonId?` — Pertemuan ${filterLessonId}`:''}</title><style>${REPORT_CSS}</style></head><body>${body}</body></html>`;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 
 function getLessonCtlMetrics(lesson: LessonSummary) {
   return Object.values(lesson.stageTracking).reduce(
@@ -908,6 +1225,8 @@ function MonitoringCTLTab({ students }: { students: StudentActivitySummary[] }) 
   const [lessonId, setLessonId] = useState(LESSON_LIST[0]?.id ?? '1');
   const [stageIndex, setStageIndex] = useState(0);
   const [searchQ, setSearchQ] = useState('');
+  const [expandedStudents, setExpandedStudents] = useState<Set<string>>(new Set());
+  const [showDlMenu, setShowDlMenu] = useState(false);
 
   const stageKey = `stage_${stageIndex}`;
   const lessonData = lessons[lessonId];
@@ -917,22 +1236,54 @@ function MonitoringCTLTab({ students }: { students: StudentActivitySummary[] }) 
     [students, searchQ]
   );
 
+  const toggleExpand = (studentId: string) => setExpandedStudents(prev => {
+    const next = new Set(prev);
+    if (next.has(studentId)) next.delete(studentId); else next.add(studentId);
+    return next;
+  });
+
   return (
     <div className="space-y-5">
       {/* Header info */}
       <div className="bg-gradient-to-r from-[#628ECB]/8 to-[#395886]/5 rounded-2xl border border-[#628ECB]/15 p-5">
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#628ECB]/15 flex items-center justify-center shrink-0">
-            <Lightbulb className="w-5 h-5 text-[#628ECB]" />
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#628ECB]/15 flex items-center justify-center shrink-0">
+              <Lightbulb className="w-5 h-5 text-[#628ECB]" />
+            </div>
+            <div>
+              <h3 className="font-bold text-[#395886]">3 Indikator Berpikir Logis CTL</h3>
+              <p className="text-xs text-[#395886]/60 mt-0.5 leading-relaxed">
+                Pilih pertemuan dan tahap CTL, lalu lihat detail setiap siswa berdasarkan 3 indikator:
+                <strong className="text-[#628ECB]"> Keruntutan Berpikir</strong> ·
+                <strong className="text-[#10B981]"> Kemampuan Berargumen</strong> ·
+                <strong className="text-[#8B5CF6]"> Penarikan Kesimpulan</strong>
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-bold text-[#395886]">3 Indikator Berpikir Logis CTL</h3>
-            <p className="text-xs text-[#395886]/60 mt-0.5 leading-relaxed">
-              Pilih pertemuan dan tahap CTL, lalu lihat detail setiap siswa berdasarkan 3 indikator:
-              <strong className="text-[#628ECB]"> Keruntutan Berpikir</strong> ·
-              <strong className="text-[#10B981]"> Kemampuan Berargumen</strong> ·
-              <strong className="text-[#8B5CF6]"> Penarikan Kesimpulan</strong>
-            </p>
+          {/* Class download dropdown */}
+          <div className="relative shrink-0">
+            <button onClick={() => setShowDlMenu(v => !v)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[#628ECB] text-white hover:bg-[#395886] shadow-sm transition-colors">
+              <FileDown className="w-3.5 h-3.5" /> Unduh Laporan <ChevronDown className="w-3 h-3" />
+            </button>
+            {showDlMenu && (
+              <div className="absolute right-0 top-10 z-20 bg-white border border-[#D5DEEF] rounded-2xl shadow-xl overflow-hidden min-w-[210px]">
+                <div className="px-4 py-2.5 bg-[#F8FAFD] border-b border-[#D5DEEF]">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#395886]/50">Unduh Laporan Kelas</p>
+                </div>
+                <button onClick={() => { openReportWindow(buildClassReportHTML(students)); setShowDlMenu(false); }}
+                  className="w-full text-left px-4 py-2.5 text-xs font-semibold text-[#395886] hover:bg-[#F0F5FF] transition-colors flex items-center gap-2">
+                  <FileText className="w-3.5 h-3.5 text-[#628ECB]" /> Semua Pertemuan (Kelas)
+                </button>
+                {LESSON_LIST.map(l => (
+                  <button key={l.id} onClick={() => { openReportWindow(buildClassReportHTML(students, l.id)); setShowDlMenu(false); }}
+                    className="w-full text-left px-4 py-2.5 text-xs font-semibold text-[#395886] hover:bg-[#F0F5FF] transition-colors flex items-center gap-2">
+                    <FileText className="w-3.5 h-3.5 text-[#10B981]" /> Pertemuan {l.id}: {l.title}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -941,7 +1292,7 @@ function MonitoringCTLTab({ students }: { students: StudentActivitySummary[] }) 
       <div className="flex flex-wrap gap-3 items-center bg-white border border-[#D5DEEF] rounded-2xl px-5 py-4">
         <div className="flex gap-2">
           {LESSON_LIST.map(l => (
-            <button key={l.id} onClick={() => setLessonId(l.id)}
+            <button key={l.id} onClick={() => { setLessonId(l.id); setExpandedStudents(new Set()); }}
               className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
                 lessonId === l.id ? 'bg-[#395886] text-white shadow-sm' : 'bg-white border border-[#D5DEEF] text-[#395886]/60 hover:text-[#395886] hover:border-[#628ECB]'
               }`}>
@@ -966,7 +1317,7 @@ function MonitoringCTLTab({ students }: { students: StudentActivitySummary[] }) 
               return ls?.stageTracking[sk]?.status === 'completed';
             }).length;
             return (
-              <button key={i} onClick={() => setStageIndex(i)}
+              <button key={i} onClick={() => { setStageIndex(i); setExpandedStudents(new Set()); }}
                 className={`flex-shrink-0 px-4 py-3 text-[10px] font-black uppercase tracking-widest whitespace-nowrap border-b-2 -mb-px transition-colors ${
                   stageIndex === i ? 'border-[#628ECB] text-[#628ECB] bg-[#F0F5FF]' : 'border-transparent text-[#395886]/40 hover:text-[#395886]/70 hover:bg-[#F8FAFD]'
                 }`}>
@@ -1008,12 +1359,14 @@ function MonitoringCTLTab({ students }: { students: StudentActivitySummary[] }) 
             const lessonSummary = s.lessons.find(l => l.lessonId === lessonId);
             const session = lessonSummary?.stageTracking[stageKey];
             const hasData = !!session;
+            const isExpanded = expandedStudents.has(s.student.id);
             const consistency = hasData ? extractConsistency(session, lessonId) : '—';
             const argument = hasData ? extractArgument(session) : null;
             const conclusion = hasData ? extractConclusion(session) : null;
 
             return (
               <div key={s.student.id} className="px-5 py-4">
+                {/* Student header row */}
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-full bg-[#628ECB]/10 flex items-center justify-center text-[#628ECB] text-xs font-black shrink-0">
                     {s.student.name[0].toUpperCase()}
@@ -1033,49 +1386,93 @@ function MonitoringCTLTab({ students }: { students: StudentActivitySummary[] }) 
                       )}
                     </div>
                   </div>
-                  {session && (
-                    <div className="text-right shrink-0">
-                      <p className="text-xs font-black text-[#628ECB]">{session.progressPercent}%</p>
-                      <p className="text-[9px] text-[#395886]/40">Progres</p>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2 shrink-0">
+                    {session && (
+                      <div className="text-right">
+                        <p className="text-xs font-black text-[#628ECB]">{session.progressPercent}%</p>
+                        <p className="text-[9px] text-[#395886]/40">Progres</p>
+                      </div>
+                    )}
+                    {hasData && lessonData && (
+                      <button onClick={() => toggleExpand(s.student.id)}
+                        title={isExpanded ? 'Sembunyikan detail' : 'Lihat detail aktivitas lengkap'}
+                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                          isExpanded ? 'bg-[#628ECB] text-white' : 'bg-[#628ECB]/10 text-[#628ECB] hover:bg-[#628ECB]/20'
+                        }`}>
+                        {isExpanded ? <ChevronUp className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                        {isExpanded ? 'Tutup' : 'Detail'}
+                      </button>
+                    )}
+                    <button onClick={() => openReportWindow(buildStudentReportHTML(s, lessonId))}
+                      title="Unduh laporan PDF siswa ini (pertemuan ini)"
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-[#10B981]/10 text-[#10B981] hover:bg-[#10B981] hover:text-white transition-all">
+                      <FileDown className="w-3 h-3" /> PDF
+                    </button>
+                  </div>
                 </div>
 
                 {!hasData ? (
                   <p className="text-xs text-[#395886]/30 italic pl-11">Belum ada aktivitas pada tahap ini.</p>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pl-0 sm:pl-11">
-                    {/* Keruntutan Berpikir */}
-                    <div className="rounded-xl border border-[#628ECB]/20 overflow-hidden">
-                      <div className="px-3 py-2 bg-[#628ECB]/5 border-b border-[#628ECB]/15">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-[#628ECB]">Keruntutan Berpikir</p>
+                  <>
+                    {/* 3 Indicator cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pl-0 sm:pl-11">
+                      {/* Keruntutan Berpikir */}
+                      <div className="rounded-xl border border-[#628ECB]/20 overflow-hidden">
+                        <div className="px-3 py-2 bg-[#628ECB]/5 border-b border-[#628ECB]/15">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-[#628ECB]">Keruntutan Berpikir</p>
+                        </div>
+                        <div className="px-3 py-2.5 max-h-40 overflow-y-auto">
+                          {consistency === '—' ? <p className="text-xs text-[#395886]/30 italic">Belum ada data aktivitas</p>
+                            : <p className="text-xs text-[#395886] leading-relaxed">{consistency}</p>}
+                        </div>
                       </div>
-                      <div className="px-3 py-2.5">
-                        {consistency === '—' ? <p className="text-xs text-[#395886]/30 italic">Belum ada data aktivitas</p>
-                          : <p className="text-xs text-[#395886] leading-relaxed">{consistency}</p>}
+                      {/* Kemampuan Berargumen */}
+                      <div className="rounded-xl border border-[#10B981]/20 overflow-hidden">
+                        <div className="px-3 py-2 bg-[#10B981]/5 border-b border-[#10B981]/15">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-[#10B981]">Kemampuan Berargumen</p>
+                        </div>
+                        <div className="px-3 py-2.5 max-h-40 overflow-y-auto">
+                          {argument
+                            ? <p className="text-xs text-[#395886] leading-relaxed whitespace-pre-wrap">"{argument}"</p>
+                            : <p className="text-xs text-[#395886]/30 italic">Belum ada argumen tertulis</p>}
+                        </div>
+                      </div>
+                      {/* Penarikan Kesimpulan */}
+                      <div className="rounded-xl border border-[#8B5CF6]/20 overflow-hidden">
+                        <div className="px-3 py-2 bg-[#8B5CF6]/5 border-b border-[#8B5CF6]/15">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-[#8B5CF6]">Penarikan Kesimpulan</p>
+                        </div>
+                        <div className="px-3 py-2.5 max-h-40 overflow-y-auto">
+                          {conclusion
+                            ? <p className="text-xs text-[#395886] leading-relaxed whitespace-pre-wrap">"{conclusion}"</p>
+                            : <p className="text-xs text-[#395886]/30 italic">Belum ada kesimpulan tertulis</p>}
+                        </div>
                       </div>
                     </div>
-                    {/* Kemampuan Berargumen */}
-                    <div className="rounded-xl border border-[#10B981]/20 overflow-hidden">
-                      <div className="px-3 py-2 bg-[#10B981]/5 border-b border-[#10B981]/15">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-[#10B981]">Kemampuan Berargumen</p>
+
+                    {/* Expandable full stage detail */}
+                    {isExpanded && lessonData && (
+                      <div className="mt-3 pl-0 sm:pl-11">
+                        <div className="rounded-2xl border border-[#628ECB]/25 bg-[#F8FAFD] overflow-hidden">
+                          <div className="px-4 py-3 bg-[#628ECB]/8 border-b border-[#628ECB]/20 flex items-center justify-between">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-[#628ECB]">
+                              Detail Lengkap Aktivitas — {STAGE_LABELS[stageIndex]}
+                            </p>
+                            <span className="text-[9px] text-[#395886]/40">{lessonData.stages[stageIndex]?.title}</span>
+                          </div>
+                          <div className="p-4">
+                            <StageAnswerDetail
+                              stage={lessonData.stages[stageIndex]}
+                              answer={session.finalAnswer ?? session.latestSnapshot}
+                              snapshot={session.latestSnapshot}
+                              lessonId={lessonId}
+                            />
+                          </div>
+                        </div>
                       </div>
-                      <div className="px-3 py-2.5">
-                        {argument ? <p className="text-xs text-[#395886] leading-relaxed line-clamp-4">"{argument}"</p>
-                          : <p className="text-xs text-[#395886]/30 italic">Belum ada argumen tertulis</p>}
-                      </div>
-                    </div>
-                    {/* Penarikan Kesimpulan */}
-                    <div className="rounded-xl border border-[#8B5CF6]/20 overflow-hidden">
-                      <div className="px-3 py-2 bg-[#8B5CF6]/5 border-b border-[#8B5CF6]/15">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-[#8B5CF6]">Penarikan Kesimpulan</p>
-                      </div>
-                      <div className="px-3 py-2.5">
-                        {conclusion ? <p className="text-xs text-[#395886] leading-relaxed line-clamp-4">"{conclusion}"</p>
-                          : <p className="text-xs text-[#395886]/30 italic">Belum ada kesimpulan tertulis</p>}
-                      </div>
-                    </div>
-                  </div>
+                    )}
+                  </>
                 )}
               </div>
             );
@@ -1140,7 +1537,7 @@ function DetailAktivitasTab({ students, setSelectedStudent }: {
                   <p className="font-bold text-[#395886]">{s.student.name}</p>
                   <p className="text-xs text-[#395886]/50">{s.student.nis} · {s.student.class} · {s.group ?? 'Belum berkelompok'}</p>
                 </div>
-                <div className="hidden sm:flex items-center gap-4 shrink-0">
+                <div className="hidden sm:flex items-center gap-3 shrink-0">
                   <div className="text-center">
                     <p className="text-sm font-black text-[#628ECB]">{completedStages}/{totalStages}</p>
                     <p className="text-[9px] text-[#395886]/40 uppercase">Tahap CTL</p>
@@ -1149,6 +1546,10 @@ function DetailAktivitasTab({ students, setSelectedStudent }: {
                     <p className={`text-sm font-black ${s.overallProgress === 100 ? 'text-[#10B981]' : 'text-[#628ECB]'}`}>{s.overallProgress}%</p>
                     <p className="text-[9px] text-[#395886]/40 uppercase">Progress</p>
                   </div>
+                  <button onClick={e => { e.stopPropagation(); openReportWindow(buildStudentReportHTML(s)); }}
+                    className="p-2 rounded-xl bg-[#10B981]/10 text-[#10B981] hover:bg-[#10B981] hover:text-white transition-all" title="Unduh laporan PDF siswa">
+                    <FileDown className="w-3.5 h-3.5" />
+                  </button>
                   <button onClick={e => { e.stopPropagation(); setSelectedStudent(s); }}
                     className="p-2 rounded-xl bg-[#628ECB]/10 text-[#628ECB] hover:bg-[#628ECB] hover:text-white transition-all" title="Detail lengkap">
                     <Eye className="w-3.5 h-3.5" />
@@ -1437,6 +1838,36 @@ function SnapshotTab({ students }: { students: StudentActivitySummary[] }) {
                                   )}
                                 </div>
                               )}
+                              {/* 3 CTL Indicator content */}
+                              {tracking && (() => {
+                                const consistency2 = extractConsistency(tracking, lessonId);
+                                const argument2 = extractArgument(tracking);
+                                const conclusion2 = extractConclusion(tracking);
+                                const hasContent = (consistency2 && consistency2 !== '—') || argument2 || conclusion2;
+                                if (!hasContent) return null;
+                                return (
+                                  <div className="px-4 pb-4 space-y-2">
+                                    {consistency2 && consistency2 !== '—' && (
+                                      <div className="rounded-lg bg-[#628ECB]/5 border border-[#628ECB]/15 px-3 py-2">
+                                        <p className="text-[8px] font-black uppercase tracking-widest text-[#628ECB]/70 mb-1">Keruntutan Berpikir</p>
+                                        <p className="text-xs text-[#395886] leading-relaxed">{consistency2}</p>
+                                      </div>
+                                    )}
+                                    {argument2 && (
+                                      <div className="rounded-lg bg-[#10B981]/5 border border-[#10B981]/15 px-3 py-2">
+                                        <p className="text-[8px] font-black uppercase tracking-widest text-[#10B981]/70 mb-1">Kemampuan Berargumen</p>
+                                        <p className="text-xs text-[#395886] leading-relaxed italic whitespace-pre-wrap">"{argument2}"</p>
+                                      </div>
+                                    )}
+                                    {conclusion2 && (
+                                      <div className="rounded-lg bg-[#8B5CF6]/5 border border-[#8B5CF6]/15 px-3 py-2">
+                                        <p className="text-[8px] font-black uppercase tracking-widest text-[#8B5CF6]/70 mb-1">Penarikan Kesimpulan</p>
+                                        <p className="text-xs text-[#395886] leading-relaxed italic whitespace-pre-wrap">"{conclusion2}"</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })()}
                             </div>
                           </div>
                         );
@@ -1459,6 +1890,7 @@ type HasilTab = 'pretest' | 'ctl' | 'detail' | 'snapshot';
 
 export function HasilBelajarSection({ studentActivities, exportCsv, setSelectedStudent, availableGroups }: HasilBelajarSectionProps) {
   const [activeTab, setActiveTab] = useState<HasilTab>('pretest');
+  const [showReportMenu, setShowReportMenu] = useState(false);
 
   const sortedStudents = useMemo(() =>
     [...studentActivities].sort((a, b) =>
@@ -1488,10 +1920,38 @@ export function HasilBelajarSection({ studentActivities, exportCsv, setSelectedS
           <h1 className="text-3xl font-bold text-[#395886] tracking-tight mb-1">Hasil Belajar Siswa</h1>
           <p className="text-sm text-[#395886]/60">Rekap lengkap evaluasi tes, aktivitas CTL, indikator berpikir logis, dan timeline pengerjaan.</p>
         </div>
-        <button onClick={exportCsv}
-          className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-[#628ECB] rounded-xl hover:bg-[#395886] shadow-md transition-colors shrink-0">
-          <Download className="w-4 h-4" /> Export CSV
-        </button>
+        <div className="flex items-center gap-3 shrink-0">
+          {/* PDF report download */}
+          <div className="relative">
+            <button onClick={() => setShowReportMenu(v => !v)}
+              className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-[#395886] rounded-xl hover:bg-[#2A4068] shadow-md transition-colors">
+              <FileDown className="w-4 h-4" /> Unduh Laporan <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+            {showReportMenu && (
+              <div className="absolute right-0 top-12 z-30 bg-white border border-[#D5DEEF] rounded-2xl shadow-2xl overflow-hidden min-w-[240px]">
+                <div className="px-4 py-2.5 bg-[#F8FAFD] border-b border-[#D5DEEF]">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#395886]/50">Laporan PDF Kelas</p>
+                </div>
+                <button onClick={() => { openReportWindow(buildClassReportHTML(sortedStudents)); setShowReportMenu(false); }}
+                  className="w-full text-left px-4 py-3 text-sm font-semibold text-[#395886] hover:bg-[#F0F5FF] transition-colors flex items-center gap-2.5 border-b border-[#D5DEEF]/50">
+                  <FileText className="w-4 h-4 text-[#628ECB]" />
+                  <div><p className="font-bold">Semua Pertemuan</p><p className="text-[10px] text-[#395886]/50">Seluruh data CTL kelas</p></div>
+                </button>
+                {Object.values(lessons).map(l => (
+                  <button key={l.id} onClick={() => { openReportWindow(buildClassReportHTML(sortedStudents, l.id)); setShowReportMenu(false); }}
+                    className="w-full text-left px-4 py-3 text-sm font-semibold text-[#395886] hover:bg-[#F0F5FF] transition-colors flex items-center gap-2.5 border-b border-[#D5DEEF]/40 last:border-b-0">
+                    <FileText className="w-4 h-4 text-[#10B981]" />
+                    <div><p className="font-bold">Pertemuan {l.id}: {l.title}</p><p className="text-[10px] text-[#395886]/50">{l.topic}</p></div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <button onClick={exportCsv}
+            className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-[#628ECB] rounded-xl hover:bg-[#395886] shadow-md transition-colors">
+            <Download className="w-4 h-4" /> Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Tab navigation */}

@@ -126,7 +126,7 @@ export async function getCurrentSession(
 
   const { data, error } = await supabase
     .from('ctl_activity_sessions')
-    .select('user_id,lesson_id,stage_index,stage_type,status,progress_percent,latest_snapshot,final_answer,attempt_count,error_count,total_events,started_at,completed_at,updated_at')
+    .select('user_id,lesson_id,stage_index,stage_type,status,progress_percent,latest_snapshot,final_answer,total_attempts,total_errors,correct_count,wrong_count,total_duration_sec,started_at,last_activity_at,completed_at,updated_at')
     .eq('user_id', userId)
     .eq('lesson_id', lessonId)
     .eq('stage_index', stageIndex)
@@ -360,16 +360,20 @@ export interface AdminDetailedSession {
   progressPercent: number;
   totalAttempts: number;
   totalErrors: number;
+  correctCount: number;
+  wrongCount: number;
+  totalDurationSec: number;
   latestSnapshot: Record<string, any>;
   finalAnswer: any;
   startedAt: string | null;
+  lastActivityAt: string | null;
   completedAt: string | null;
 }
 
 export async function getAllLessonSessionsDetailed(lessonId: string): Promise<AdminDetailedSession[]> {
   const { data, error } = await supabase
     .from('ctl_activity_sessions')
-    .select('user_id,stage_index,stage_type,status,progress_percent,total_attempts,total_errors,latest_snapshot,final_answer,started_at,completed_at')
+    .select('user_id,stage_index,stage_type,status,progress_percent,total_attempts,total_errors,correct_count,wrong_count,total_duration_sec,latest_snapshot,final_answer,started_at,last_activity_at,completed_at')
     .eq('lesson_id', lessonId);
 
   if (error || !data) {
@@ -385,9 +389,13 @@ export async function getAllLessonSessionsDetailed(lessonId: string): Promise<Ad
     progressPercent: normalizeNumber(row.progress_percent),
     totalAttempts: normalizeNumber(row.total_attempts),
     totalErrors: normalizeNumber(row.total_errors),
+    correctCount: normalizeNumber(row.correct_count),
+    wrongCount: normalizeNumber(row.wrong_count),
+    totalDurationSec: normalizeNumber(row.total_duration_sec),
     latestSnapshot: normalizeObject(row.latest_snapshot),
     finalAnswer: row.final_answer,
     startedAt: row.started_at ?? null,
+    lastActivityAt: row.last_activity_at ?? null,
     completedAt: row.completed_at ?? null,
   }));
 }
