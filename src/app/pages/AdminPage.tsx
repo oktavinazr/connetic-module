@@ -50,7 +50,7 @@ import { addAdminGroupName, assignGroup, deleteAdminGroupName, getAdminGroupName
 import { lessons, globalPretest, globalPosttest, type Stage } from '../data/lessons';
 import { getAllStudents, logout, getCurrentUser, resetStudentPassword } from '../utils/auth';
 import { getAllProgress, getGlobalTestProgress, getLessonProgress } from '../utils/progress';
-import { getLessonActivitySessions, getStudentActivityFeed, type CTLActivityEvent, type CTLActivitySession } from '../utils/activityTracking';
+import { getLessonActivitySessions, getStudentActivityFeed, type CTLActivityEvent, type CTLActivitySession, type CTLStageType } from '../utils/activityTracking';
 import { getStageTimers, setStageTimer, deleteStageTimer, type StageTimer } from '../utils/stageTimer';
 import { Header } from '../components/layout/Header';
 import { QuestionManagementSection } from '../components/admin/QuestionManagementSection';
@@ -900,6 +900,43 @@ export function AdminPage() {
               getLessonProgress(student.id, lesson.id),
               getLessonActivitySessions(student.id, lesson.id),
             ]);
+
+            // Build tracking map from ctl_activity_sessions
+            const trackingMap: Record<string, CTLActivitySession> = Object.fromEntries(
+              tracking.map((session) => [`stage_${session.stageIndex}`, session])
+            );
+
+            // Backfill: for completed stages missing from ctl_activity_sessions,
+            // create a synthetic session from lesson_progress.answers so monitoring data is always shown.
+            for (const completedStageIndex of lp.completedStages) {
+              const key = `stage_${completedStageIndex}`;
+              if (!trackingMap[key]) {
+                const stageAnswer = lp.answers[key] ?? lp.answers[completedStageIndex];
+                const stageType = lesson.stages[completedStageIndex]?.type as CTLStageType | undefined;
+                if (stageAnswer != null && stageType) {
+                  trackingMap[key] = {
+                    userId: student.id,
+                    lessonId: lesson.id,
+                    stageIndex: completedStageIndex,
+                    stageType,
+                    status: 'completed',
+                    progressPercent: 100,
+                    // Store answer directly so extractors can find fields at snap.key
+                    latestSnapshot: typeof stageAnswer === 'object' && stageAnswer !== null ? stageAnswer : { finalAnswer: stageAnswer },
+                    finalAnswer: stageAnswer,
+                    startedAt: null,
+                    lastActivityAt: null,
+                    completedAt: null,
+                    totalAttempts: 0,
+                    totalErrors: 0,
+                    correctCount: 0,
+                    wrongCount: 0,
+                    totalDurationSec: 0,
+                  };
+                }
+              }
+            }
+
             return {
               lessonId: lesson.id,
               lessonTitle: lesson.title,
@@ -913,7 +950,7 @@ export function AdminPage() {
               completedStages: lp.completedStages,
               totalStages: lesson.stages.length,
               stageAnswers: lp.answers,
-              stageTracking: Object.fromEntries(tracking.map((session) => [`stage_${session.stageIndex}`, session])),
+              stageTracking: trackingMap,
             };
           })
         );

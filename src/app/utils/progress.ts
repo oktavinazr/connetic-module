@@ -342,16 +342,19 @@ export const saveStageProgress = async (
   await upsertLessonProgress(progress);
   const stageType = lessons[lessonId]?.stages?.[indexNum]?.type as CTLStageType | undefined;
   if (stageType) {
+    // Store answer directly as latestSnapshot so extractors can find fields at snap.key.
+    // If a richer session was already saved by useActivityTracker, the guard in
+    // completeActivitySession prevents overwriting it (sessions are immutable once completed).
+    const snapshotPayload = answer && typeof answer === 'object' && !Array.isArray(answer)
+      ? answer as Record<string, any>
+      : { finalAnswer: answer };
     await completeActivitySession({
       userId,
       lessonId,
       stageIndex: indexNum,
       stageType,
       finalAnswer: answer,
-      latestSnapshot: {
-        completed: true,
-        finalAnswer: answer,
-      },
+      latestSnapshot: snapshotPayload,
     });
   }
 };

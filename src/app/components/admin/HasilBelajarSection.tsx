@@ -182,12 +182,18 @@ function getInteractiveSummaryHTML(session: CTLActivitySession, lessonId: string
       break;
     }
     case 'modeling': {
-      const bDecs = answer?.bitDecisions as Array<{weight:number;bit:number}>|undefined;
-      const revConv = answer?.reverseConversion as {binary?:string;decimal?:number}|undefined;
+      const twhSub = snap?.twhSub??answer?.twhSub; const segSub = snap?.segSub??answer?.segSub;
+      const xferStates = snap?.xferStates??answer?.xferStates;
+      const bDecs = (snap?.bitDecisions??answer?.bitDecisions) as Array<{weight:number;bit:number}>|undefined;
+      const revConv = (snap?.reverseConversion??answer?.reverseConversion) as {binary?:string;decimal?:number}|undefined;
       const compSteps = (snap?.completedSteps??answer?.completedSteps) as number[]|undefined;
-      const cpArg = answer?.checkpointArgument as string|undefined;
+      const cpArg = snap?.checkpointArgument??answer?.checkpointArgument as string|undefined;
       const uMsg = snap?.userMessage??answer?.userMessage;
-      if (bDecs?.length) {
+      if (twhSub || segSub || xferStates) {
+        html += `<div class="iitem"><span class="ok">✓</span> Simulasi TCP Handshake diselesaikan</div>`;
+        if (segSub) html += `<div class="iitem"><span class="ok">✓</span> Segmentasi TCP diselesaikan</div>`;
+        if (xferStates) html += `<div class="iitem"><span class="ok">✓</span> State transfer selesai</div>`;
+      } else if (bDecs?.length) {
         html += `<div class="iitem"><span class="ok">✓</span> Simulasi biner: <strong>${bDecs.map(d=>d.bit).join('')}</strong></div>`;
         const active = bDecs.filter(d=>d.bit===1).map(d=>d.weight);
         if (active.length) html += `<div class="iitem">  Bobot aktif: ${active.join(' + ')}</div>`;
@@ -395,26 +401,37 @@ function getLessonCtlMetrics(lesson: LessonSummary) {
 }
 
 // ── 3-Indicator extractors ────────────────────────────────────────────────────
+// Stages save data in multiple formats:
+//   1. Tracker-wrapped: snap = { phase, finalAnswer: { ...data } }, answer = { ...data }
+//   2. Legacy saveStageProgress: snap = { completed: true, finalAnswer: { ...data } }, answer = { ...data }
+//   3. Direct tracker: snap = { ...data directly }, answer = { ...data }
+// All extractors check: snap.fieldName, snap.finalAnswer.fieldName, answer.fieldName
 
 function extractConsistency(session: CTLActivitySession, lessonId: string): string {
-  const snap = session.latestSnapshot; const answer = session.finalAnswer;
+  const snap = session.latestSnapshot;
+  const answer = session.finalAnswer;
+  // Handle wrapped format (snap.finalAnswer is the actual answer data)
+  const fa: Record<string, any> = (snap?.finalAnswer && typeof snap.finalAnswer === 'object' && !Array.isArray(snap.finalAnswer)) ? snap.finalAnswer : {};
+  // Helper: get from snap, snap.finalAnswer, or answer
+  const get = (key: string) => snap?.[key] ?? fa[key] ?? answer?.[key];
+
   switch (session.stageType) {
     case 'constructivism': {
-      const fa = snap?.finalAnswer ?? {};
       const parts: string[] = [];
-      if (fa.essay1 ?? answer?.essay1) parts.push('Esai 1 ✓');
-      if (fa.essay2 ?? answer?.essay2) parts.push('Esai 2 ✓');
-      const sel = fa.selectedOption ?? answer?.selectedOption;
-      if (sel) parts.push(`Pilihan: ${sel} (${(fa.isCorrect ?? answer?.isCorrect) ? 'Benar' : 'Salah'})`);
+      if (get('essay1') || get('essayText')) parts.push('Esai 1 ✓');
+      if (get('essay2')) parts.push('Esai 2 ✓');
+      const sel = get('selectedOption');
+      if (sel) parts.push(`Pilihan: ${sel} (${get('isCorrect') ? 'Benar' : 'Salah'})`);
+      if (get('conclusionAnswers')) parts.push('Refleksi Dropdown ✓');
       return parts.join(' · ') || '—';
     }
     case 'inquiry': {
       const parts: string[] = [];
-      if (snap?.flowData ?? answer?.flowData) parts.push('Alur ✓');
-      if (snap?.analogyData ?? answer?.analogyData) parts.push('Analogi ✓');
-      const gd = snap?.groupData ?? answer?.groupData;
-      if (gd) parts.push(`Pengelompokan ✓${gd.correctCount !== undefined ? ` (${gd.correctCount}/${gd.total ?? '?'} benar)` : ''}`);
-      if (snap?.matchingData ?? answer?.matchingData) parts.push('Pencocokan ✓');
+      if (get('flowData')) parts.push('Alur ✓');
+      if (get('analogyData')) parts.push('Analogi ✓');
+      const gd = get('groupData');
+      if (gd) parts.push(`Pengelompokan ✓${gd.correctCount !== undefined ? ` (${gd.correctCount}/${gd.total ?? gd.totalItems ?? '?'} benar)` : ''}`);
+      if (get('matchingData')) parts.push('Pencocokan ✓');
       return parts.join(' · ') || '—';
     }
     case 'questioning': {
@@ -426,26 +443,54 @@ function extractConsistency(session: CTLActivitySession, lessonId: string): stri
         const correct = Object.entries(mp).filter(([k, v]) => k === v).length;
         return validated ? `Layer matching: ${correct}/${Object.keys(mp).length} benar` : `${Object.keys(mp).length} layer dipasangkan`;
       }
-      const selId = snap?.selectedId ?? answer?.selectedId;
-      if (!selId) return '—';
-      return `Identifikasi field TCP: ${answer?.isCorrect ? 'Benar' : 'Salah'}`;
+      const selId = get('selectedId');
+      if (!selId) {
+        // L3 Questioning
+        const asked = get('askedQuestions') as string[] | undefined;
+        const overload = get('overloadExperiment') || snap?.l3QOverloadDone;
+        if (asked?.length || overload) {
+          const parts: string[] = [];
+          if (asked?.length) parts.push(`${asked.length} pertanyaan dijawab`);
+          if (overload) parts.push('Overload Experiment ✓');
+          return parts.join(' · ') || '—';
+        }
+        return '—';
+      }
+      return `Identifikasi field TCP: ${get('isCorrect') ? 'Benar' : 'Salah'}`;
     }
     case 'learning-community': {
       const parts: string[] = [];
-      if (snap?.module1Data ?? answer?.module1Data) parts.push('Diskusi Modul 1 ✓');
-      if (snap?.module2Data ?? answer?.module2Data) parts.push('Diskusi Modul 2 ✓');
+      if (get('module1Data')) parts.push('Diskusi Modul 1 ✓');
+      if (get('module2Data')) parts.push('Diskusi Modul 2 ✓');
+      if (get('l3lc_a1_argue')) parts.push('Argumen Aktivitas 1 ✓');
+      if (get('l3lc_a2_argue')) parts.push('Argumen Aktivitas 2 ✓');
       return parts.join(' · ') || '—';
     }
     case 'modeling': {
-      const steps = (snap?.completedSteps ?? answer?.completedSteps) as number[] | undefined;
-      return steps?.length ? `${steps.length} langkah simulasi selesai` : '—';
+      // TCP simulation (lesson 1/2)
+      const twhSub = get('twhSub');
+      const segSub = get('segSub');
+      if (twhSub || segSub) return 'Simulasi TCP Handshake & Segment diselesaikan';
+      // L3 Binary simulation
+      const bitDecisions = get('bitDecisions') as Array<{weight: number; bit: number}> | undefined;
+      if (bitDecisions?.length) {
+        const binary = bitDecisions.map(d => d.bit).join('');
+        const active = bitDecisions.filter(d => d.bit === 1).map(d => d.weight);
+        return `Simulasi biner: ${binary}${active.length ? ` (${active.join('+')} = ${active.reduce((a,b)=>a+b,0)})` : ''}`;
+      }
+      // Standard step-based simulation
+      const completedSteps = get('completedSteps') as number[] | undefined;
+      if (completedSteps?.length) return `${completedSteps.length} langkah simulasi selesai`;
+      // L3 message chain has userMessage
+      if (get('userMessage') || get('argument') || get('arguingEssay') || get('argumentText')) return 'Simulasi pesan jaringan selesai';
+      return '—';
     }
     case 'reflection': {
       const parts: string[] = [];
-      const md = snap?.mapData ?? answer?.mapData;
+      const md = get('mapData');
       if (md?.correctCount !== undefined) parts.push(`Peta konsep: ${md.correctCount}/${md.totalConnections ?? md.total ?? '?'} benar`);
       else if (md) parts.push('Peta konsep ✓');
-      const ev = snap?.evaluationData ?? answer?.evaluationData;
+      const ev = get('evaluationData');
       if (ev && Object.keys(ev).length) {
         const checked = (Object.values(ev) as boolean[]).filter(Boolean).length;
         parts.push(`Evaluasi diri: ${checked}/${Object.keys(ev).length}`);
@@ -453,11 +498,13 @@ function extractConsistency(session: CTLActivitySession, lessonId: string): stri
       return parts.join(' · ') || '—';
     }
     case 'authentic-assessment': {
-      const ic = snap?.initialChoice ?? answer?.initialChoice;
-      const fc = snap?.followUpChoice ?? answer?.followUpChoice;
+      const ic = get('initialChoice');
+      const fc = get('followUpChoice');
+      const selOpts = get('selectedOptions');
       const parts: string[] = [];
-      if (ic) parts.push(`Diagnosis${answer?.isOptimal !== undefined ? `: ${answer.isOptimal ? 'Optimal' : 'Tidak optimal'}` : ' ✓'}`);
+      if (ic) parts.push(`Diagnosis${get('isOptimal') !== undefined ? `: ${get('isOptimal') ? 'Optimal' : 'Tidak optimal'}` : ' ✓'}`);
       if (fc) parts.push('Tindak lanjut ✓');
+      if (selOpts && Object.keys(selOpts).length) parts.push(`${Object.keys(selOpts).length} langkah kasus diselesaikan`);
       return parts.join(' · ') || '—';
     }
     default: return '—';
@@ -465,32 +512,70 @@ function extractConsistency(session: CTLActivitySession, lessonId: string): stri
 }
 
 function extractArgument(session: CTLActivitySession): string | null {
-  const snap = session.latestSnapshot; const answer = session.finalAnswer;
+  const snap = session.latestSnapshot;
+  const answer = session.finalAnswer;
+  const fa: Record<string, any> = (snap?.finalAnswer && typeof snap.finalAnswer === 'object' && !Array.isArray(snap.finalAnswer)) ? snap.finalAnswer : {};
+  const get = (key: string): string | null => {
+    const v = snap?.[key] ?? fa[key] ?? answer?.[key];
+    return v && typeof v === 'string' && v.trim() ? v : null;
+  };
+
   switch (session.stageType) {
-    case 'constructivism': { const fa = snap?.finalAnswer ?? {}; return fa.essay1 ?? fa.essay2 ?? answer?.essay1 ?? answer?.essay2 ?? null; }
-    case 'inquiry': return snap?.essay1Text ?? snap?.reflection1 ?? answer?.reflection1 ?? answer?.essay1 ?? null;
-    case 'questioning': return snap?.essay ?? answer?.justification ?? null;
+    case 'constructivism':
+      // essay1/essay2 (L1/L2/L4), essayText (L3 IpCourierConstructivism)
+      return get('essay1') ?? get('essay2') ?? get('essayText') ?? null;
+    case 'inquiry':
+      // essay1Text in snapshot (intermediate), essay1 in finalAnswer, reflection1 for L3/L4 variants
+      return get('essay1Text') ?? get('reflection1') ?? get('essay1') ?? get('essayText') ?? null;
+    case 'questioning':
+      // justification (L2), essay (some variants), l3 has essayText
+      return get('essay') ?? get('justification') ?? get('essayText') ?? null;
     case 'learning-community': {
-      const m1 = snap?.module1Data ?? answer?.module1Data; const m2 = snap?.module2Data ?? answer?.module2Data;
-      return m1?.bestArgument?.argument ?? m1?.discussions?.[0]?.argument ?? m2?.bestArgument?.argument ?? m2?.discussions?.[0]?.argument ?? null;
+      const m1 = snap?.module1Data ?? fa.module1Data ?? answer?.module1Data;
+      const m2 = snap?.module2Data ?? fa.module2Data ?? answer?.module2Data;
+      const m1arg = m1?.bestArgument?.argument ?? m1?.discussions?.[0]?.argument ?? null;
+      const m2arg = m2?.bestArgument?.argument ?? m2?.discussions?.[0]?.argument ?? null;
+      // L3 uses l3lc_a1_argue / l3lc_a2_argue
+      return m1arg ?? m2arg ?? get('l3lc_a1_argue') ?? get('l3lc_a2_argue') ?? null;
     }
-    case 'modeling': return snap?.essay ?? answer?.essay ?? answer?.argument ?? null;
-    case 'reflection': return snap?.argumentText ?? answer?.argumentText ?? null;
-    case 'authentic-assessment': return snap?.initialReason ?? answer?.initialReason ?? null;
+    case 'modeling':
+      // TCP: arguingEssay, L3 biner: checkpointArgument, L3 message: argument, generic: essay/argumentText
+      return get('essay') ?? get('arguingEssay') ?? get('checkpointArgument') ?? get('argumentText') ?? get('argument') ?? null;
+    case 'reflection':
+      // argumentText (standard), essayMaterial (L4)
+      return get('argumentText') ?? get('essayMaterial') ?? null;
+    case 'authentic-assessment':
+      // initialReason (branching), argumentText (tcp-branching)
+      return get('initialReason') ?? get('argumentText') ?? null;
     default: return null;
   }
 }
 
 function extractConclusion(session: CTLActivitySession): string | null {
-  const snap = session.latestSnapshot; const answer = session.finalAnswer;
+  const snap = session.latestSnapshot;
+  const answer = session.finalAnswer;
+  const fa: Record<string, any> = (snap?.finalAnswer && typeof snap.finalAnswer === 'object' && !Array.isArray(snap.finalAnswer)) ? snap.finalAnswer : {};
+  const get = (key: string): string | null => {
+    const v = snap?.[key] ?? fa[key] ?? answer?.[key];
+    return v && typeof v === 'string' && v.trim() ? v : null;
+  };
+
   switch (session.stageType) {
-    case 'constructivism': { const fa = snap?.finalAnswer ?? {}; return fa.conclusion ?? answer?.conclusion ?? answer?.summary ?? null; }
-    case 'inquiry': return snap?.conclusionText ?? answer?.conclusion ?? answer?.summary ?? null;
-    case 'questioning': return snap?.conclusionText ?? answer?.conclusion ?? null;
-    case 'learning-community': return answer?.finalConclusion ?? snap?.finalConclusion ?? null;
-    case 'modeling': return snap?.conclusionText ?? answer?.conclusion ?? null;
-    case 'reflection': return snap?.conclusionText ?? answer?.conclusionText ?? answer?.conclusion ?? null;
-    case 'authentic-assessment': return snap?.followUpReason ?? answer?.followUpReason ?? null;
+    case 'constructivism':
+      return get('conclusion') ?? get('conclusionText') ?? get('summary') ?? null;
+    case 'inquiry':
+      return get('conclusionText') ?? get('conclusion') ?? get('summary') ?? null;
+    case 'questioning':
+      return get('conclusionText') ?? get('conclusion') ?? get('summary') ?? null;
+    case 'learning-community':
+      return get('finalConclusion') ?? get('conclusionText') ?? get('l3lc_a1_reflection') ?? null;
+    case 'modeling':
+      return get('conclusionText') ?? get('conclusion') ?? null;
+    case 'reflection':
+      return get('conclusionText') ?? get('conclusion') ?? null;
+    case 'authentic-assessment':
+      // followUpReason (legacy branching), conclusionText (tcp-branching)
+      return get('followUpReason') ?? get('conclusionText') ?? get('conclusion') ?? null;
     default: return null;
   }
 }
