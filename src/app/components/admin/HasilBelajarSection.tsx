@@ -174,11 +174,22 @@ function getInteractiveSummaryHTML(session: CTLActivitySession, lessonId: string
     }
     case 'learning-community': {
       const m1 = snap?.module1Data??answer?.module1Data; const m2 = snap?.module2Data??answer?.module2Data;
+      const mA = snap?.moduleAData??answer?.moduleAData; const mB = snap?.moduleBData??answer?.moduleBData;
       const arg1 = m1?.bestArgument??m1?.discussions?.[0]; const arg2 = m2?.bestArgument??m2?.discussions?.[0];
+      const argA = mA?.bestArgument; const argB = mB?.bestArgument;
       if (m1) html += `<div class="iitem"><span class="ok">✓</span> Diskusi Modul 1</div>`;
       if (m2) html += `<div class="iitem"><span class="ok">✓</span> Diskusi Modul 2</div>`;
+      if (mA) html += `<div class="iitem"><span class="ok">✓</span> Diskusi Modul A</div>`;
+      if (mB) html += `<div class="iitem"><span class="ok">✓</span> Diskusi Modul B</div>`;
+      const caseA = snap?.caseAChoice??answer?.caseAChoice; const caseB = snap?.caseBChoice??answer?.caseBChoice;
+      if (caseA) html += `<div class="iitem"><span class="ok">✓</span> Audit Kartu A: ${htmlE(String(caseA))}</div>`;
+      if (caseB) html += `<div class="iitem"><span class="ok">✓</span> Audit Kartu B: ${htmlE(String(caseB))}</div>`;
       if (arg1?.argument) html += `<p style="font-size:8.5pt;font-weight:bold;margin:5px 0 2px">Argumen Modul 1:</p><div class="essay">${htmlE(arg1.argument)}</div>`;
       if (arg2?.argument) html += `<p style="font-size:8.5pt;font-weight:bold;margin:5px 0 2px">Argumen Modul 2:</p><div class="essay">${htmlE(arg2.argument)}</div>`;
+      if (argA?.argument) html += `<p style="font-size:8.5pt;font-weight:bold;margin:5px 0 2px">Argumen Modul A:</p><div class="essay">${htmlE(argA.argument)}</div>`;
+      if (argB?.argument) html += `<p style="font-size:8.5pt;font-weight:bold;margin:5px 0 2px">Argumen Modul B:</p><div class="essay">${htmlE(argB.argument)}</div>`;
+      const disc = snap?.discussion??answer?.discussion;
+      if (disc) html += `<p style="font-size:8.5pt;font-weight:bold;margin:5px 0 2px">Diskusi Kelompok:</p><div class="essay">${htmlE(disc)}</div>`;
       break;
     }
     case 'modeling': {
@@ -454,6 +465,9 @@ function extractConsistency(session: CTLActivitySession, lessonId: string): stri
           if (overload) parts.push('Overload Experiment ✓');
           return parts.join(' · ') || '—';
         }
+        // L4 Questioning uses selectedReason (predefined choice) instead of selectedId
+        const selReason = get('selectedReason');
+        if (selReason) return 'Sanggahan dipilih ✓';
         return '—';
       }
       return `Identifikasi field TCP: ${get('isCorrect') ? 'Benar' : 'Salah'}`;
@@ -462,6 +476,13 @@ function extractConsistency(session: CTLActivitySession, lessonId: string): stri
       const parts: string[] = [];
       if (get('module1Data')) parts.push('Diskusi Modul 1 ✓');
       if (get('module2Data')) parts.push('Diskusi Modul 2 ✓');
+      // L4 LearningCommunityLesson4 uses moduleAData/moduleBData
+      if (get('moduleAData')) parts.push('Diskusi Modul A ✓');
+      if (get('moduleBData')) parts.push('Diskusi Modul B ✓');
+      // Lesson4Stages LC uses caseAChoice/caseBChoice/discussion
+      if (get('caseAChoice')) parts.push('Audit Kartu A ✓');
+      if (get('caseBChoice')) parts.push('Audit Kartu B ✓');
+      if (get('discussion')) parts.push('Diskusi Kelompok ✓');
       if (get('l3lc_a1_argue')) parts.push('Argumen Aktivitas 1 ✓');
       if (get('l3lc_a2_argue')) parts.push('Argumen Aktivitas 2 ✓');
       return parts.join(' · ') || '—';
@@ -490,10 +511,17 @@ function extractConsistency(session: CTLActivitySession, lessonId: string): stri
       const md = get('mapData');
       if (md?.correctCount !== undefined) parts.push(`Peta konsep: ${md.correctCount}/${md.totalConnections ?? md.total ?? '?'} benar`);
       else if (md) parts.push('Peta konsep ✓');
+      // L4 Lesson4Stages uses mapAnswers (Record) instead of mapData
+      else if (get('mapAnswers')) parts.push('Peta konsep ✓');
       const ev = get('evaluationData');
       if (ev && Object.keys(ev).length) {
         const checked = (Object.values(ev) as boolean[]).filter(Boolean).length;
         parts.push(`Evaluasi diri: ${checked}/${Object.keys(ev).length}`);
+      }
+      // L4 Lesson4Stages uses selfEval (array of checked IDs) instead of evaluationData
+      const selfEvalArr = get('selfEval');
+      if (!ev && Array.isArray(selfEvalArr) && selfEvalArr.length) {
+        parts.push(`Evaluasi diri: ${selfEvalArr.length} kriteria ✓`);
       }
       return parts.join(' · ') || '—';
     }
@@ -525,18 +553,24 @@ function extractArgument(session: CTLActivitySession): string | null {
       // essay1/essay2 (L1/L2/L4), essayText (L3 IpCourierConstructivism)
       return get('essay1') ?? get('essay2') ?? get('essayText') ?? null;
     case 'inquiry':
-      // essay1Text in snapshot (intermediate), essay1 in finalAnswer, reflection1 for L3/L4 variants
-      return get('essay1Text') ?? get('reflection1') ?? get('essay1') ?? get('essayText') ?? null;
+      // essay1Text in snapshot (intermediate), essay1 in finalAnswer
+      // reflection1 for L3 InquiryStage, reflect1 for L4 Lesson4Stages Inquiry
+      return get('essay1Text') ?? get('reflect1') ?? get('reflection1') ?? get('essay1') ?? get('essayText') ?? null;
     case 'questioning':
       // justification (L2), essay (some variants), l3 has essayText
       return get('essay') ?? get('justification') ?? get('essayText') ?? null;
     case 'learning-community': {
       const m1 = snap?.module1Data ?? fa.module1Data ?? answer?.module1Data;
       const m2 = snap?.module2Data ?? fa.module2Data ?? answer?.module2Data;
+      // L4 LearningCommunityLesson4 uses moduleAData/moduleBData
+      const mA = snap?.moduleAData ?? fa.moduleAData ?? answer?.moduleAData;
+      const mB = snap?.moduleBData ?? fa.moduleBData ?? answer?.moduleBData;
       const m1arg = m1?.bestArgument?.argument ?? m1?.discussions?.[0]?.argument ?? null;
       const m2arg = m2?.bestArgument?.argument ?? m2?.discussions?.[0]?.argument ?? null;
-      // L3 uses l3lc_a1_argue / l3lc_a2_argue
-      return m1arg ?? m2arg ?? get('l3lc_a1_argue') ?? get('l3lc_a2_argue') ?? null;
+      const mAarg = mA?.bestArgument?.argument ?? null;
+      const mBarg = mB?.bestArgument?.argument ?? null;
+      // L3 uses l3lc_a1_argue / l3lc_a2_argue; Lesson4Stages LC uses discussion essay
+      return m1arg ?? m2arg ?? mAarg ?? mBarg ?? get('l3lc_a1_argue') ?? get('l3lc_a2_argue') ?? get('discussion') ?? null;
     }
     case 'modeling':
       // TCP: arguingEssay, L3 biner: checkpointArgument, L3 message: argument, generic: essay/argumentText
@@ -545,8 +579,8 @@ function extractArgument(session: CTLActivitySession): string | null {
       // argumentText (standard), essayMaterial (L4)
       return get('argumentText') ?? get('essayMaterial') ?? null;
     case 'authentic-assessment':
-      // initialReason (branching), argumentText (tcp-branching)
-      return get('initialReason') ?? get('argumentText') ?? null;
+      // initialReason (branching), argumentText (tcp-branching), rca (Lesson4Stages AA essay)
+      return get('initialReason') ?? get('argumentText') ?? get('rca') ?? null;
     default: return null;
   }
 }
@@ -818,22 +852,114 @@ function PrePostTab({ students, availableGroups, uniqueClasses, setSelectedStude
     XLSX.writeFile(wb, 'HasilBelajar_PrePostTest.xlsx');
   };
 
-  // ── Excel export (matrix only for current analysis) ──────────────────────────
+  // ── Excel export (matrix — 2 sheet) ─────────────────────────────────────────
   const handleExportMatrix = () => {
     const { questions, title } = analysisConfig;
-    const header = ['Nama', 'NIS', 'Kelas', ...questions.map((_, i) => `No.${i + 1}`), 'Benar', 'Nilai (%)'];
-    const keyRow = ['KUNCI JAWABAN', '', '', ...questions.map(q => OPTION_LABELS[q.correctAnswer]), '', ''];
-    const accuracyRow = ['Akurasi (%)', '', '', ...questionStats.map(s => `${s.pct}%`), '', ''];
-    const rows = analysisResults.map(r => {
+    const n = questions.length;
+    const wb = XLSX.utils.book_new();
+
+    // Hitung per-item stats sekali, dipakai di kedua sheet
+    const itemStats = questions.map((_, qi) => {
+      const answered = analysisResults.filter(r => r.answers[qi] !== null);
+      const correct  = analysisResults.filter(r => r.isCorrect[qi]).length;
+      const pct      = answered.length > 0 ? Math.round((correct / answered.length) * 100) : 0;
+      const p        = answered.length > 0 ? correct / answered.length : null;
+      return { correct, answered: answered.length, pct, p };
+    });
+
+    // ── SHEET 1 — Data Jawaban Asli ──────────────────────────────────────────
+    const s1Header   = ['Nama', 'NIS', 'Kelas', ...questions.map((_, i) => `No.${i + 1}`), 'Benar', 'Nilai (%)'];
+    const s1KeyRow   = ['KUNCI JAWABAN', '', '', ...questions.map(q => OPTION_LABELS[q.correctAnswer]), '', ''];
+    const s1AccRow   = ['Akurasi (%)', '', '', ...itemStats.map(s => `${s.pct}%`), '', ''];
+    const s1DataRows = analysisResults.map(r => {
       const correct = r.isCorrect.filter(Boolean).length;
-      return [r.student.name, r.student.nis, r.student.class,
+      return [
+        r.student.name, r.student.nis, r.student.class,
         ...r.answers.map(a => a !== null ? OPTION_LABELS[a] : '—'),
         r.completed ? correct : '—',
-        r.completed ? (questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0) : '—'];
+        r.completed && n > 0 ? Math.round((correct / n) * 100) : '—',
+      ];
     });
-    const ws = XLSX.utils.aoa_to_sheet([header, keyRow, accuracyRow, ...rows]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Analisis Butir Soal');
+    const ws1 = XLSX.utils.aoa_to_sheet([s1Header, s1KeyRow, s1AccRow, ...s1DataRows]);
+    XLSX.utils.book_append_sheet(wb, ws1, 'Data Jawaban Asli');
+
+    // ── SHEET 2 — Matriks Benar/Salah (0–1) ─────────────────────────────────
+    // Struktur:
+    //   Baris 1 : Header
+    //   Baris 2 : Kunci jawaban (huruf)
+    //   Baris 3 : Σ Benar per butir
+    //   Baris 4 : P = Tingkat Kesukaran (proporsi benar)
+    //   Baris 5+: Data siswa  — 1 = benar, 0 = salah, — = tidak mengerjakan
+    //   Baris N : Rata-rata
+
+    const s2Header = [
+      'Nama', 'NIS', 'Kelas',
+      ...questions.map((_, i) => `No.${i + 1}`),
+      'Total Benar', 'Total Salah', 'Skor Akhir (%)',
+    ];
+    const s2KeyRow = [
+      'KUNCI JAWABAN', '', '',
+      ...questions.map(q => OPTION_LABELS[q.correctAnswer]),
+      '', '', '',
+    ];
+
+    const completedResults = analysisResults.filter(r => r.completed);
+    const totalBenarSemua  = completedResults.reduce(
+      (sum, r) => sum + r.isCorrect.filter(Boolean).length, 0
+    );
+    const s2SigmaRow = [
+      'Σ Benar', '', '',
+      ...itemStats.map(s => s.correct),
+      completedResults.length > 0 ? totalBenarSemua : '—',
+      '', '',
+    ];
+    const s2PRow = [
+      'P (Tk. Kesukaran)', '', '',
+      ...itemStats.map(s => s.p !== null ? parseFloat(s.p.toFixed(3)) : '—'),
+      '', '', '',
+    ];
+
+    const s2DataRows = analysisResults.map(r => {
+      const binaryAnswers = questions.map((_, i) => {
+        if (!r.completed || r.answers[i] === null) return '—';
+        return r.isCorrect[i] ? 1 : 0;
+      });
+      const totalBenar = r.isCorrect.filter(Boolean).length;
+      const totalSalah = n - totalBenar;
+      const skorAkhir  = n > 0 ? Math.round((totalBenar / n) * 100) : 0;
+      return [
+        r.student.name, r.student.nis, r.student.class,
+        ...binaryAnswers,
+        r.completed ? totalBenar : '—',
+        r.completed ? totalSalah : '—',
+        r.completed ? skorAkhir  : '—',
+      ];
+    });
+
+    const avgBenar = completedResults.length > 0
+      ? parseFloat((totalBenarSemua / completedResults.length).toFixed(2))
+      : '—';
+    const avgSkor = completedResults.length > 0
+      ? Math.round(
+          completedResults.reduce((sum, r) => {
+            const benar = r.isCorrect.filter(Boolean).length;
+            return sum + (n > 0 ? (benar / n) * 100 : 0);
+          }, 0) / completedResults.length
+        )
+      : '—';
+    const s2AvgRow = [
+      `Rata-rata (n=${completedResults.length})`, '', '',
+      ...itemStats.map(s => s.answered > 0 ? parseFloat((s.correct / s.answered).toFixed(2)) : '—'),
+      avgBenar, '', avgSkor,
+    ];
+
+    const ws2 = XLSX.utils.aoa_to_sheet([
+      s2Header, s2KeyRow, s2SigmaRow, s2PRow,
+      ...s2DataRows,
+      s2AvgRow,
+    ]);
+    XLSX.utils.book_append_sheet(wb, ws2, 'Matriks Benar-Salah (0-1)');
+
     XLSX.writeFile(wb, `AnalisisButir_${title.replace(/\s+/g, '_')}.xlsx`);
   };
 
