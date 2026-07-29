@@ -128,7 +128,12 @@ const COLOR_MAP: Record<string, { bg: string; border: string; text: string; line
   purple: { bg: 'bg-[#EDE9FE]', border: 'border-[#8B5CF6]', text: 'text-[#5B21B6]', line: '#8B5CF6' },
   amber: { bg: 'bg-[#FFFBEB]', border: 'border-[#F59E0B]', text: 'text-[#78350F]', line: '#F59E0B' },
   pink: { bg: 'bg-[#FDF2F8]', border: 'border-[#EC4899]', text: 'text-[#831843]', line: '#EC4899' },
+  indigo: { bg: 'bg-[#EEF2FF]', border: 'border-[#6366F1]', text: 'text-[#312E81]', line: '#6366F1' },
 };
+
+function getConceptColor(colorClass?: string) {
+  return COLOR_MAP[colorClass || 'blue'] || COLOR_MAP.blue;
+}
 
 const REFLECTION_PHASES = [
   { key: 'review', label: 'Tinjau Hasil', icon: <Eye className="w-3.5 h-3.5" /> },
@@ -484,7 +489,7 @@ function ConceptMapPhase({
                 const isCorrect = validated && chosen === connection.label;
                 const isWrong = validated && chosen && chosen !== connection.label;
                 const fromNode = nodes.find((node) => node.id === connection.from);
-                const color = COLOR_MAP[fromNode?.colorClass || 'blue'];
+                const color = getConceptColor(fromNode?.colorClass);
 
                 return (
                   <g key={`${connection.from}-${connection.to}`}>
@@ -526,7 +531,7 @@ function ConceptMapPhase({
             {nodes.map((node) => {
               const position = nodePositions[node.id];
               if (!position) return null;
-              const color = COLOR_MAP[node.colorClass || 'blue'];
+              const color = getConceptColor(node.colorClass);
               return (
                 <div
                   key={node.id}
@@ -547,8 +552,8 @@ function ConceptMapPhase({
               const isWrong = validated && chosen && chosen !== connection.label;
               const fromNode = nodes.find((node) => node.id === connection.from);
               const toNode = nodes.find((node) => node.id === connection.to);
-              const fromColor = COLOR_MAP[fromNode?.colorClass || 'blue'];
-              const toColor = COLOR_MAP[toNode?.colorClass || 'blue'];
+              const fromColor = getConceptColor(fromNode?.colorClass);
+              const toColor = getConceptColor(toNode?.colorClass);
 
               return (
                 <div
