@@ -32,6 +32,17 @@ import {
 } from '../components/ui/dialog';
 import { Header } from '../components/layout/Header';
 
+const clampNumber = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, value));
+
+const safeScore = (score: number | null | undefined, total: number) =>
+  total > 0 ? clampNumber(Number(score ?? 0), 0, total) : 0;
+
+const safePercentage = (score: number | null | undefined, total: number) =>
+  total > 0 ? Math.round((safeScore(score, total) / total) * 100) : 0;
+
+const safeCompletedStagesCount = (completedStages: number[] | undefined, totalStages: number) =>
+  clampNumber(completedStages?.length ?? 0, 0, totalStages);
 
 export function DashboardPage() {
   const navigate = useNavigate();
@@ -184,7 +195,8 @@ export function DashboardPage() {
               {(() => {
                 const completedLessons = progress.filter(p => {
                   const lesson = lessons[p.lessonId];
-                  return p.pretestCompleted && p.completedStages.length === lesson?.stages.length && p.posttestCompleted;
+                  const totalStages = lesson?.stages.length ?? 0;
+                  return p.pretestCompleted && totalStages > 0 && safeCompletedStagesCount(p.completedStages, totalStages) === totalStages && p.posttestCompleted;
                 }).length;
                 const totalLessons = Object.keys(lessons).length;
                 return (
@@ -287,7 +299,7 @@ export function DashboardPage() {
                   </div>
                   <p className={`text-xs font-medium ${globalTestProgress.globalPretestCompleted ? 'text-[#065F46]/60' : 'text-[#3B1F6E]/55'}`}>
                     {globalTestProgress.globalPretestCompleted 
-                      ? `Nilai: ${globalTestProgress.globalPretestScore}/${globalPretest.questions.length}` 
+                      ? `Nilai: ${safeScore(globalTestProgress.globalPretestScore, globalPretest.questions.length)}/${globalPretest.questions.length}` 
                       : 'Belum dikerjakan — kerjakan sebelum memulai pertemuan'}
                   </p>
                 </div>
@@ -311,8 +323,8 @@ export function DashboardPage() {
           {Object.values(lessons).map((lesson) => {
             const lessonProgress = progress.find((p) => p.lessonId === lesson.id);
             const pretestCompleted = lessonProgress?.pretestCompleted || false;
-            const completedStages = lessonProgress?.completedStages.length || 0;
             const totalStages = lesson.stages.length;
+            const completedStages = safeCompletedStagesCount(lessonProgress?.completedStages, totalStages);
             const posttestCompleted = lessonProgress?.posttestCompleted || false;
             const unlocked = lessonUnlockMap[lesson.id] ?? false;
 
@@ -322,7 +334,7 @@ export function DashboardPage() {
             completedSteps += completedStages;
             if (posttestCompleted) completedSteps += 1;
 
-            const progressPercentage = Math.round((completedSteps / totalSteps) * 100);
+            const progressPercentage = totalSteps > 0 ? clampNumber(Math.round((completedSteps / totalSteps) * 100), 0, 100) : 0;
             const fullyCompleted = pretestCompleted && completedStages === totalStages && posttestCompleted;
 
             return (
@@ -434,7 +446,7 @@ export function DashboardPage() {
                   </div>
                   <p className={`text-xs font-medium ${globalTestProgress.globalPosttestCompleted ? 'text-[#92400E]/60' : 'text-[#92400E]/55'}`}>
                     {globalTestProgress.globalPosttestCompleted
-                      ? `Nilai: ${globalTestProgress.globalPosttestScore}/${globalPosttest.questions.length}`
+                      ? `Nilai: ${safeScore(globalTestProgress.globalPosttestScore, globalPosttest.questions.length)}/${globalPosttest.questions.length}`
                       : globalPosttestUnlocked
                       ? 'Siap dikerjakan — selesaikan evaluasi akhir Anda'
                       : 'Selesaikan semua pertemuan terlebih dahulu'}
@@ -481,8 +493,9 @@ export function DashboardPage() {
                   {/* Global Pretest */}
                   {(() => {
                     const done = globalTestProgress.globalPretestCompleted;
-                    const score = globalTestProgress.globalPretestScore ?? 0;
                     const total = globalPretest.questions.length;
+                    const score = safeScore(globalTestProgress.globalPretestScore, total);
+                    const percentage = safePercentage(globalTestProgress.globalPretestScore, total);
                     return (
                       <div className={`group relative p-6 rounded-[2rem] border-2 transition-all duration-300 ${
                         done 
@@ -511,7 +524,7 @@ export function DashboardPage() {
                               <div className="relative">
                                 <div className="absolute -inset-4 bg-[#8B5CF6]/10 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
                                 <p className="relative text-4xl font-black text-[#395886] leading-none">
-                                  {Math.round((score/total)*100)}<span className="text-lg opacity-40">%</span>
+                                  {percentage}<span className="text-lg opacity-40">%</span>
                                 </p>
                                 <p className="text-[10px] font-black text-[#8B5CF6] mt-1.5 uppercase tracking-widest">{score}/{total} BENAR</p>
                               </div>
@@ -533,8 +546,9 @@ export function DashboardPage() {
                   {/* Global Posttest */}
                   {(() => {
                     const done = globalTestProgress.globalPosttestCompleted;
-                    const score = globalTestProgress.globalPosttestScore ?? 0;
                     const total = globalPosttest.questions.length;
+                    const score = safeScore(globalTestProgress.globalPosttestScore, total);
+                    const percentage = safePercentage(globalTestProgress.globalPosttestScore, total);
                     const unlocked = globalPosttestUnlocked;
                     return (
                       <div className={`group relative p-6 rounded-[2rem] border-2 transition-all duration-300 ${
@@ -564,7 +578,7 @@ export function DashboardPage() {
                               <div className="relative">
                                 <div className="absolute -inset-4 bg-[#F59E0B]/10 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
                                 <p className="relative text-4xl font-black text-[#395886] leading-none">
-                                  {Math.round((score/total)*100)}<span className="text-lg opacity-40">%</span>
+                                  {percentage}<span className="text-lg opacity-40">%</span>
                                 </p>
                                 <p className="text-[10px] font-black text-[#F59E0B] mt-1.5 uppercase tracking-widest">{score}/{total} BENAR</p>
                               </div>
@@ -591,7 +605,8 @@ export function DashboardPage() {
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#628ECB] px-2">Detail Per Pertemuan</p>
                   {Object.values(lessons).map((lesson) => {
                     const lp = progress.find((p) => p.lessonId === lesson.id);
-                    const ctlDone = (lp?.completedStages.length ?? 0) === lesson.stages.length;
+                    const completedStages = safeCompletedStagesCount(lp?.completedStages, lesson.stages.length);
+                    const ctlDone = completedStages === lesson.stages.length;
                     const preDone = lp?.pretestCompleted ?? false;
                     const postDone = lp?.posttestCompleted ?? false;
                     const unlocked = lessonUnlockMap[lesson.id] ?? false;
@@ -612,17 +627,17 @@ export function DashboardPage() {
                           <div className="flex flex-wrap items-center gap-3">
                             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#D5DEEF] shadow-sm">
                               <span className="text-[10px] font-bold text-[#395886]/40 uppercase">Pre</span>
-                              <span className={`text-xs font-black ${preDone ? 'text-[#628ECB]' : 'text-gray-300'}`}>{preDone ? `${lp?.pretestScore}/${lesson.pretest.questions.length}` : '—'}</span>
+                              <span className={`text-xs font-black ${preDone ? 'text-[#628ECB]' : 'text-gray-300'}`}>{preDone ? `${safeScore(lp?.pretestScore, lesson.pretest.questions.length)}/${lesson.pretest.questions.length}` : '—'}</span>
                             </div>
                             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#D5DEEF] shadow-sm">
                               <span className="text-[10px] font-bold text-[#395886]/40 uppercase">CTL</span>
-                              <span className={`text-xs font-black ${ctlDone ? 'text-[#10B981]' : lp?.completedStages.length ? 'text-[#F59E0B]' : 'text-gray-300'}`}>
-                                {lp?.completedStages.length ?? 0}/{lesson.stages.length}
+                              <span className={`text-xs font-black ${ctlDone ? 'text-[#10B981]' : completedStages ? 'text-[#F59E0B]' : 'text-gray-300'}`}>
+                                {completedStages}/{lesson.stages.length}
                               </span>
                             </div>
                             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#D5DEEF] shadow-sm">
                               <span className="text-[10px] font-bold text-[#395886]/40 uppercase">Post</span>
-                              <span className={`text-xs font-black ${postDone ? 'text-[#628ECB]' : 'text-gray-300'}`}>{postDone ? `${lp?.posttestScore}/${lesson.posttest.questions.length}` : '—'}</span>
+                              <span className={`text-xs font-black ${postDone ? 'text-[#628ECB]' : 'text-gray-300'}`}>{postDone ? `${safeScore(lp?.posttestScore, lesson.posttest.questions.length)}/${lesson.posttest.questions.length}` : '—'}</span>
                             </div>
                             <Link to={`/review/${lesson.id}`} className="ml-2 flex items-center gap-2 px-5 py-2.5 bg-[#395886] text-white rounded-2xl text-xs font-bold hover:bg-[#628ECB] shadow-md shadow-[#395886]/10 transition-all active:scale-95">
                               Review Lengkap <ArrowRight className="w-3.5 h-3.5" />
@@ -649,20 +664,25 @@ export function DashboardPage() {
                 <DialogDescription className="hidden">
                   Tinjauan hasil pengerjaan tes dan jawaban benar.
                 </DialogDescription>
-                {reviewModal && (
-                  <div className="mt-2 flex items-center gap-3">
-                    <div className="bg-[#628ECB]/10 px-3 py-1 rounded-full border border-[#628ECB]/20">
-                      <p className="text-sm font-bold text-[#395886]">
-                        Skor: <span className="text-[#628ECB]">{reviewModal.score}/{reviewModal.questions.length}</span>
-                      </p>
+                {reviewModal && (() => {
+                  const reviewTotal = reviewModal.questions.length;
+                  const reviewScore = safeScore(reviewModal.score, reviewTotal);
+                  const reviewPercentage = safePercentage(reviewModal.score, reviewTotal);
+                  return (
+                    <div className="mt-2 flex items-center gap-3">
+                      <div className="bg-[#628ECB]/10 px-3 py-1 rounded-full border border-[#628ECB]/20">
+                        <p className="text-sm font-bold text-[#395886]">
+                          Skor: <span className="text-[#628ECB]">{reviewScore}/{reviewTotal}</span>
+                        </p>
+                      </div>
+                      <div className={`px-3 py-1 rounded-full border ${reviewPercentage >= 70 ? 'bg-[#10B981]/10 border-[#10B981]/20 text-[#10B981]' : 'bg-[#F59E0B]/10 border-[#F59E0B]/20 text-[#F59E0B]'}`}>
+                        <p className="text-sm font-black">
+                          {reviewPercentage}%
+                        </p>
+                      </div>
                     </div>
-                    <div className={`px-3 py-1 rounded-full border ${Math.round((reviewModal.score / reviewModal.questions.length) * 100) >= 70 ? 'bg-[#10B981]/10 border-[#10B981]/20 text-[#10B981]' : 'bg-[#F59E0B]/10 border-[#F59E0B]/20 text-[#F59E0B]'}`}>
-                      <p className="text-sm font-black">
-                        {Math.round((reviewModal.score / reviewModal.questions.length) * 100)}%
-                      </p>
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
           </DialogHeader>
